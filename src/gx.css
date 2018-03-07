@@ -1,0 +1,51 @@
+.ark {
+    font-size: 12px;
+    font-family: "Times New Roman", serif;
+}
+p {
+    margin: 0;
+}
+div.person {
+    border: 2px;
+    padding: 2px;
+    border-style: ridge;
+    max-width: 400px;
+    border-color: saddlebrown;
+    background-color: lightgoldenrodyellow;
+    margin-bottom: 3px;
+    border-radius: 5px;
+    box-shadow: 4px 4px 2px #cccccc;
+}
+div.person p:first-child span:first-child { /* gender box */
+    border: 1px;
+    border-style: solid;
+    border-radius: 2px;
+    width: 20px;
+    padding-left: 1px;
+    padding-right: 1px;
+    margin-right: 3px;
+}
+.male {
+    border: 1px;
+    border-style: solid;
+    border-color: blue;
+    background-color: lightblue;
+}
+.female {
+    border: 1px;
+    border-style: solid;
+    border-color: deeppink;
+    background-color: pink;
+}
+.unknown {
+    border-color: darkslategrey;
+    background-color: lightgrey;
+}
+.name {
+    font-size: 15px;
+    color: blue;
+}
+.fact {
+    font-size: 13px;
+    color: cornflowerblue;
+}
