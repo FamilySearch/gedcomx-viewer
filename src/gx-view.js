@@ -83,7 +83,7 @@ function makeNameHtml(name) {
  * @returns {string}
  */
 function makePersonHtml(doc, person, idMap) {
-  var s = "<div class='person' " + (person.id ? " id='" + person.id + "'" : "") + ">";
+  var s = "<div class='person' " + (person.id ? " id='" + encode(person.id) + "'" : "") + ">";
   s += makeGenderHtml(person.hasOwnProperty('gender') ? person.gender : null) + " P" + idMap[person.id] + ". ";
 
   var i;
@@ -116,21 +116,26 @@ function makePersonHtml(doc, person, idMap) {
 
 function getFieldHtml(field) {
   var s = "";
-  var fieldType = field.type.
-      // Remove everything up to the last "/"
-      replace(/.*\//gi, "").
-      // Insert spaces before capitals, e.g., "SomeType" -> "Some Type"
-      replace(/([A-Z])/g, ' $1');
+  var fieldType = parseType(field.type);
   // Get iterpreted value, if any, or else the original value.
   var bestValue = GedxPersonaPOJO.getBestValue(field);
-  s += "<p class='field'>" + fieldType + ": " + bestValue + "</p>";
+  s += "<p class='field'>" + encode(fieldType) + ": " + encode(bestValue) + "</p>";
   //todo: Add field values.
   return s;
 }
 
+function parseType(typeUri) {
+  return typeUri === null || typeUri === undefined ? "(No type)" :
+      typeUri.
+        // Remove everything up to the last "/"
+        replace(/.*\//gi, "").
+        // Insert spaces before capitals, e.g., "SomeType" -> "Some Type"
+        replace(/([A-Z])/g, ' $1');
+        // Get iterpreted value, if any, or else the original value.
+}
+
 function getFieldsHtml(fields) {
   var i;
-  var field;
   var s = "";
   for (i = 0; i < fields.length; i++) {
     s += getFieldHtml(fields[i]);
@@ -178,13 +183,13 @@ function getRelativesHtml(doc, person, idMap) {
   spouseAndChildren = GedxPersonaPOJO.getSpousesAndChildren(doc, person);
   for (i = 0; i < spouseAndChildren.length; i++) {
     spouseFamily = spouseAndChildren[i];
-    if (spouseFamily.hasOwnProperty("spouse")) {
-      var spouse = spouseFamily.spouse;
+    var spouse = spouseFamily.spouse;
+    if (!empty(spouse)) {
       spouseLabel = relativeLabel(spouse.gender, "Husband", "Wife", "Spouse");
       s += relativeHtml(spouseLabel, idMap[spouse.id], spouse.name);
       s += relationshipFactsHtml(person.id, spouse.id, "http://gedcomx.org/Couple", doc.relationships);
     }
-    if (spouseFamily.hasOwnProperty("children")) {
+    if (!empty(spouseFamily.children)) {
       for (j = 0; j < spouseFamily.children.length; j++) {
         child = spouseFamily.children[j];
         childLabel = relativeLabel(child.gender, "Son", "Daughter", "Child");
@@ -203,7 +208,7 @@ function getRelativesHtml(doc, person, idMap) {
    * @returns {string}
    */
   function relativeHtml(relativeType, relativeIndex, relativeName, shouldIndent) {
-    if (relativeType === undefined || relativeType === null) {
+    if (empty(relativeType)) {
       relativeType = '(Unknown relative type)';
     }
     return "<p class='" + (shouldIndent ? "child" : "relative") + "'>" + relativeType + ": P" + relativeIndex + ". " + relativeName + "</p>";
@@ -221,29 +226,30 @@ function getRelativesHtml(doc, person, idMap) {
 }
 
 function getFactsHtml(facts, shouldIndent) {
-  var i, fact, pos, hadDate;
+  var i, fact, hadStuff;
   var s = "";
   for (i = 0; i < facts.length; i++) {
     s += "<p class='fact" + (shouldIndent ? " indented" : "") + "'>";
     fact = facts[i];
-    if (empty(fact.type)) {
-      s += "Other";
-    }
-    else {
-      pos = fact.type.lastIndexOf("/");
-      s += encode(pos >= 0 ? fact.type.substring(pos + 1) : fact.type);
-    }
+    s += encode(parseType(fact.type));
     s += ": ";
-    hadDate = false;
+    hadStuff = false;
     if (fact.hasOwnProperty('date') && !empty(fact.date.original)) {
       s += encode(fact.date.original);
-      hadDate = true;
+      hadStuff = true;
     }
     if (fact.hasOwnProperty('place') && !empty(fact.place.original)) {
-      if (hadDate) {
+      if (hadStuff) {
         s += encode("; ");
       }
       s += encode(fact.place.original);
+      hadStuff = true;
+    }
+    if (fact.hasOwnProperty('value') && !empty(fact.value)) {
+      if (hadStuff) {
+        s += encode("; ");
+      }
+      s += encode(fact.value);
     }
     s += "</p>\n";
   }
@@ -272,7 +278,7 @@ function getIdentifier(object) {
 }
 
 function getFirst(array) {
-  if (array !== null && array !== undefined && array.length > 0) {
+  if (!empty(array)) {
     return array[0];
   }
   return null;

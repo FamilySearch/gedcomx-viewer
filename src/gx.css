@@ -55,9 +55,13 @@ div.person p:first-child span:first-child { /* gender box */
     font-size: 15px;
     color: blue;
 }
-.fact, .field {
+.fact {
     font-size: 13px;
     color: cornflowerblue;
+}
+.field {
+    font-size: 13px;
+    color: darkslateblue;
 }
 .principal {
     font-size: 13px;
