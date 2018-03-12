@@ -160,6 +160,8 @@ function showRecord(url, doc) {
   //buildDocMaps(doc);
   var s = "<p>Record URL: " + url + "</p>\n";
   var i;
+
+  var spouses = GedxPersonaPOJO.getSpousesAndChildren(doc, doc.persons[0]);
   if (doc.hasOwnProperty('persons')) {
     for (i = 0; i < doc.persons.length; i++) {
       s += makePersonHtml(doc.persons[i], doc, i);
