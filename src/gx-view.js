@@ -75,8 +75,8 @@ function makeNameHtml(name) {
   return s;
 }
 
-function makePersonHtml(person, doc, index) {
-  var s = "<div class='person' " + (person.id ? " id='" + person.id + "'" : "") + ">";
+function makePersonHtml(person, doc) {
+  var s = "<div class='person' " + (person.id ? " id='" + person.id + "'" : "") + ">P" + person.index + " ";
   s += makeGenderHtml(person.hasOwnProperty('gender') ? person.gender : null) + " ";
   var i, j, k;
   var name, nameForm, namePart;
@@ -161,11 +161,13 @@ function showRecord(url, doc) {
   var s = "<p>Record URL: " + url + "</p>\n";
   var i;
 
-  var spouses = GedxPersonaPOJO.getSpousesAndChildren(doc, doc.persons[0]);
   if (doc.hasOwnProperty('persons')) {
+    // Create a short 1-based person index for viewing.
     for (i = 0; i < doc.persons.length; i++) {
-      s += makePersonHtml(doc.persons[i], doc, i);
-
+      doc.persons[i].index = i + 1;
+    }
+    for (i = 0; i < doc.persons.length; i++) {
+      s += makePersonHtml(doc.persons[i], doc);
     }
   }
   if (doc.hasOwnProperty('relationships')) {
