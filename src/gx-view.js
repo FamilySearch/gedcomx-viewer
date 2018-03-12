@@ -111,16 +111,17 @@ function makePersonHtml(doc, person, idMap) {
 function getRelativesHtml(doc, person, idMap) {
   var s = "";
   var parentsAndSiblings = GedxPersonaPOJO.getParentsAndSiblings(doc, person);
-  var parentFamily, parent, parentType;
-  var spouseAndChildren, spouseFamily, spouseType;
+  var parentFamily, parent, parentLabel;
+  var spouseAndChildren, spouseFamily, spouseLabel;
+  var child, childLabel;
   var i, j;
   for (i = 0; i < parentsAndSiblings.length; i++) {
     parentFamily = parentsAndSiblings[i];
     if (parentFamily.parents) {
       for (j = 0; j < parentFamily.parents.length; j++) {
         parent = parentFamily.parents[j];
-        parentType = parent.gender === "M" ? "Father" : (parent.gender === "F" ? "Mother" : "Parent");
-        s += relativeHtml(parentType, idMap[parent.id], parent.name);
+        parentLabel = relativeLabel(parent.gender, "Father", "Mother", "Parent");
+        s += relativeHtml(parentLabel, idMap[parent.id], parent.name);
       }
     }
   }
@@ -129,8 +130,15 @@ function getRelativesHtml(doc, person, idMap) {
     spouseFamily = spouseAndChildren[i];
     if (spouseFamily.spouse) {
       var spouse = spouseFamily.spouse;
-      spouseType = spouse.gender === "M" ? "Husband" : (spouse.gender === "F" ? "Wife" : "Spouse");
-      s += relativeHtml(spouseType, idMap[spouse.id], spouse.name);
+      spouseLabel = relativeLabel(spouse.gender, "Husband", "Wife", "Spouse");
+      s += relativeHtml(spouseLabel, idMap[spouse.id], spouse.name);
+    }
+    if (spouseFamily.children) {
+      for (j = 0; j < spouseFamily.children.length; j++) {
+        child = spouseFamily.children[j];
+        childLabel = relativeLabel(child.gender, "Son", "Daughter", "Child");
+        s += relativeHtml(childLabel, idMap[child.id], child.name);
+      }
     }
   }
   return s;
@@ -141,7 +149,18 @@ function getRelativesHtml(doc, person, idMap) {
     }
     return "<p class='relative'>" + relativeType + ": P" + relativeIndex + ". " + relativeName + "</p>";
   }
+
+  function relativeLabel(gender, maleType, femaleType, neutralType) {
+    if (gender === "M") {
+      return maleType;
+    }
+    if (gender === "F") {
+      return femaleType;
+    }
+    return neutralType;
+  }
 }
+
 
 function getPersonFactsHtml(person) {
   var s = "";

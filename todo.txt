@@ -1,0 +1,28 @@
+GedcomX viewer/editor prioritized list of what still needs to be done.
+
+I. Viewer
+- Text box to paste GedcomX JSON, with button to do viewer.
+- Paste persona Ark to fetch GedcomX and display.
+x Display name, gender, facts, relatives.
+- Relationship facts (e.g., marriage)
+- Detailed display:
+  - name forms, name parts, name fields.
+  - fact value, date, place, fields
+  - person fields
+- Show/hide details
+- Highlight person when hover over them as a relative.
+[Time permitting:]
+- Display relationship graph
+
+II. Editor
+- Checkbox next to each line to help user keep track of what they've validated.
+- Click text to edit.
+- Click fact type to do drop-down and change type, including "[Delete fact]".
+- Drop-down on relationship type, including "[Delete relationship]".
+- Drop-down on relative.
+- Add new relationship.
+- Add new fact.
+- Drop-down to change gender.
+- Output updated GedcomX JSON.
+[If possible:]
+- Save GedcomX to labeled data store.
