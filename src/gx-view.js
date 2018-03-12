@@ -94,16 +94,47 @@ function makePersonHtml(doc, person, idMap) {
     }
   }
 
-  s += getPersonFactsHtml(person);
+  if (person.hasOwnProperty('facts')) {
+    s += getFactsHtml(person.facts);
+  }
 
-  //todo: fields
+  if (person.hasOwnProperty('fields')) {
+    s += getFieldsHtml(person.fields);
+  }
 
   s += getRelativesHtml(doc, person, idMap);
 
-  //todo: isPrincipal
+  if (person.principal) {
+    s += "<p class='principal'>Principal: true</p>";
+  }
+
   var identifier = getIdentifier(person);
   s += "  <p class='ark'><a href='" + identifier +"'>" + identifier + "</a> (" + person.id + ")</p>\n";
   s += "</div>\n"; // person div.
+  return s;
+}
+
+function getFieldHtml(field) {
+  var s = "";
+  var fieldType = field.type.
+      // Remove everything up to the last "/"
+      replace(/.*\//gi, "").
+      // Insert spaces before capitals, e.g., "SomeType" -> "Some Type"
+      replace(/([A-Z])/g, ' $1');
+  // Get iterpreted value, if any, or else the original value.
+  var bestValue = GedxPersonaPOJO.getBestValue(field);
+  s += "<p class='field'>" + fieldType + ": " + bestValue + "</p>";
+  //todo: Add field values.
+  return s;
+}
+
+function getFieldsHtml(fields) {
+  var i;
+  var field;
+  var s = "";
+  for (i = 0; i < fields.length; i++) {
+    s += getFieldHtml(fields[i]);
+  }
   return s;
 }
 
@@ -189,15 +220,6 @@ function getRelativesHtml(doc, person, idMap) {
   }
 }
 
-
-function getPersonFactsHtml(person) {
-  var s = "";
-  if (person.hasOwnProperty('facts')) {
-    s += getFactsHtml(person.facts);
-  }
-  return s;
-}
-
 function getFactsHtml(facts, shouldIndent) {
   var i, fact, pos, hadDate;
   var s = "";
@@ -278,6 +300,9 @@ function showRecord(url, doc) {
     for (i = 0; i < doc.persons.length; i++) {
       s += makePersonHtml(doc, doc.persons[i], idMap);
     }
+  }
+  if (doc.hasOwnProperty('fields')) {
+    s += getFieldsHtml(doc.fields);
   }
   if (doc.hasOwnProperty('relationships')) {
     //todo: Show relationship graph.
