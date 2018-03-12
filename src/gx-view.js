@@ -107,6 +107,25 @@ function makePersonHtml(doc, person, idMap) {
   return s;
 }
 
+function relationshipFactsHtml(person1Id, person2Id, relationshipType, relationships) {
+  var i;
+  var rel;
+  var s = "";
+  for (i = 0; i < relationships.length; i++) {
+    rel = relationships[i];
+    if (relationshipType === rel.type && rel.hasOwnProperty("facts")) {
+      if ("#" + person1Id === rel.person1.resource && "#" + person2Id === rel.person2.resource) {
+        s += getFactsHtml(rel.facts, true);
+      }
+      else if (relationshipType === "http://gedcomx.org/Couple" && "#" + person2Id === rel.person1.resource && "#" + person1Id === rel.person2.resource) {
+        // For couples, display the marriage under both the husband and the wife.
+        s += getFactsHtml(rel.facts, true);
+      }
+    }
+  }
+  return s;
+}
+
 // Get the HTML for the list of a person's relatives.
 function getRelativesHtml(doc, person, idMap) {
   var s = "";
@@ -128,26 +147,35 @@ function getRelativesHtml(doc, person, idMap) {
   spouseAndChildren = GedxPersonaPOJO.getSpousesAndChildren(doc, person);
   for (i = 0; i < spouseAndChildren.length; i++) {
     spouseFamily = spouseAndChildren[i];
-    if (spouseFamily.spouse) {
+    if (spouseFamily.hasOwnProperty("spouse")) {
       var spouse = spouseFamily.spouse;
       spouseLabel = relativeLabel(spouse.gender, "Husband", "Wife", "Spouse");
       s += relativeHtml(spouseLabel, idMap[spouse.id], spouse.name);
+      s += relationshipFactsHtml(person.id, spouse.id, "http://gedcomx.org/Couple", doc.relationships);
     }
-    if (spouseFamily.children) {
+    if (spouseFamily.hasOwnProperty("children")) {
       for (j = 0; j < spouseFamily.children.length; j++) {
         child = spouseFamily.children[j];
         childLabel = relativeLabel(child.gender, "Son", "Daughter", "Child");
-        s += relativeHtml(childLabel, idMap[child.id], child.name);
+        s += relativeHtml(childLabel, idMap[child.id], child.name, spouseFamily.hasOwnProperty("spouse"));
       }
     }
   }
   return s;
 
-  function relativeHtml(relativeType, relativeIndex, relativeName) {
+  /**
+   * Create HTML for information about a relative. (e.g., "Father: P2. Fred Jones")
+   * @param relativeType - Type of relative (e.g., "Father")
+   * @param relativeIndex - Index of the relative (e.g., 2)
+   * @param relativeName - Name of the relative (e.g., "Fred Jones")
+   * @param shouldIndent - Flag for whether to indent (i.e., indent children under the spouse they go with, if any).
+   * @returns {string}
+   */
+  function relativeHtml(relativeType, relativeIndex, relativeName, shouldIndent) {
     if (relativeType === undefined || relativeType === null) {
       relativeType = '(Unknown relative type)';
     }
-    return "<p class='relative'>" + relativeType + ": P" + relativeIndex + ". " + relativeName + "</p>";
+    return "<p class='" + (shouldIndent ? "child" : "relative") + "'>" + relativeType + ": P" + relativeIndex + ". " + relativeName + "</p>";
   }
 
   function relativeLabel(gender, maleType, femaleType, neutralType) {
@@ -164,32 +192,38 @@ function getRelativesHtml(doc, person, idMap) {
 
 function getPersonFactsHtml(person) {
   var s = "";
-  var fact, pos, hadDate;
   if (person.hasOwnProperty('facts')) {
-    for (var i = 0; i < person.facts.length; i++) {
-      s += "<p class='fact'>";
-      fact = person.facts[i];
-      if (empty(fact.type)) {
-        s += "Other";
-      }
-      else {
-        pos = fact.type.lastIndexOf("/");
-        s += encode(pos >= 0 ? fact.type.substring(pos + 1) : fact.type);
-      }
-      s += ": ";
-      hadDate = false;
-      if (fact.hasOwnProperty('date') && !empty(fact.date.original)) {
-        s += encode(fact.date.original);
-        hadDate = true;
-      }
-      if (fact.hasOwnProperty('place') && !empty(fact.place.original)) {
-        if (hadDate) {
-          s += encode("; ");
-        }
-        s += encode(fact.place.original);
-      }
-      s += "</p>\n";
+    s += getFactsHtml(person.facts);
+  }
+  return s;
+}
+
+function getFactsHtml(facts, shouldIndent) {
+  var i, fact, pos, hadDate;
+  var s = "";
+  for (i = 0; i < facts.length; i++) {
+    s += "<p class='fact" + (shouldIndent ? " indented" : "") + "'>";
+    fact = facts[i];
+    if (empty(fact.type)) {
+      s += "Other";
     }
+    else {
+      pos = fact.type.lastIndexOf("/");
+      s += encode(pos >= 0 ? fact.type.substring(pos + 1) : fact.type);
+    }
+    s += ": ";
+    hadDate = false;
+    if (fact.hasOwnProperty('date') && !empty(fact.date.original)) {
+      s += encode(fact.date.original);
+      hadDate = true;
+    }
+    if (fact.hasOwnProperty('place') && !empty(fact.place.original)) {
+      if (hadDate) {
+        s += encode("; ");
+      }
+      s += encode(fact.place.original);
+    }
+    s += "</p>\n";
   }
   return s;
 }
@@ -222,11 +256,16 @@ function getFirst(array) {
   return null;
 }
 
+/**
+ * Fetch the GedcomX historical record from the given URL, generate HTML for it, and put that HTML into the div with local id "gx".
+ * @param url - URL of a GedcomX historical record.
+ * @param doc - GedcomX document read from there.
+ */
 function showRecord(url, doc) {
   var gxDiv = $("#gx");
   gxDiv.text("Processing record...");
   //buildDocMaps(doc);
-  var s = "<p>Record URL: " + url + "</p>\n";
+  var s = "<p>GedcomX URL: " + url + "</p>\n";
   var i;
   // Map of local person id (p_1234567) to index (1, 2, 3...)
   var idMap = {};
@@ -241,7 +280,7 @@ function showRecord(url, doc) {
     }
   }
   if (doc.hasOwnProperty('relationships')) {
-    //todo
+    //todo: Show relationship graph.
   }
   gxDiv.html(s);
   $("#p_15024659740");

@@ -25,18 +25,24 @@ div.person p:first-child span:first-child { /* gender box */
     padding-right: 1px;
     margin-right: 3px;
 }
-.relative {
+.relative, .child {
     font-size: 13px;
     color: green;
 }
-.male {
+.indented, .child {
+    text-indent: 10px;
+}
+.male, .female {
     border: 1px;
+    border-radius: 2px;
+    box-shadow: 1px 1px 1px #cccccc;
+}
+.male {
     border-style: solid;
     border-color: blue;
     background-color: lightblue;
 }
 .female {
-    border: 1px;
     border-style: solid;
     border-color: deeppink;
     background-color: pink;
