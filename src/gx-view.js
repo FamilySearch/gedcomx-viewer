@@ -46,12 +46,9 @@ function makeGenderHtml(gender) {
   return genderString;
 }
 
-function makeNameHtml(name, genderString) {
+function makeNameHtml(name) {
   var j, k, nameForm, namePart;
-  var s = "<p class=\'name\'>";
-  if (genderString) {
-    s += genderString + ' ';
-  }
+  var s = "<span class=\'name\'>";
   if (!empty(name.type) && name.type !== "http://gedcomx.org/BirthName") {
     s += "[" + name.type.replace("http://gedcomx.org/", "") + "]";
   }
@@ -59,7 +56,7 @@ function makeNameHtml(name, genderString) {
     for (j = 0; j < name.nameForms.length; j++) {
       nameForm = name.nameForms[j];
       if (j > 0) {
-        s += "</p><p>[Form" + (empty(nameForm.lang) ? "" : " (" + nameForm.lang + ")") + ": ";
+        s += "</span><br/><span>[Form" + (empty(nameForm.lang) ? "" : " (" + nameForm.lang + ")") + ": ";
       }
       s += (empty(nameForm.fullText) ? encode("<Empty>") : encode(nameForm.fullText));
       if (j > 0) {
@@ -74,24 +71,24 @@ function makeNameHtml(name, genderString) {
       //todo: name parts, fields...
     }
   }
-  s += "</p>";
+  s += "</span>";
   return s;
 }
 
-function makePersonHtml(person) {
+function makePersonHtml(person, doc, index) {
   var s = "<div class='person' " + (person.id ? " id='" + person.id + "'" : "") + ">";
+  s += makeGenderHtml(person.hasOwnProperty('gender') ? person.gender : null) + " ";
   var i, j, k;
   var name, nameForm, namePart;
   var fact, pos, hadDate;
-  var genderString = makeGenderHtml(person.hasOwnProperty('gender') ? person.gender : null);
 
   if (person.hasOwnProperty('names')) {
     for (i = 0; i < person.names.length; i++) {
-      s += makeNameHtml(person.names[i], i === 0 ? genderString : null);
+      s += makeNameHtml(person.names[i]);
     }
   }
   else {
-    s += "  <p class='name'>" + genderString + encode("<No name>") + "</p>\n";
+    s += "<p class='name'>" + genderString + encode("<No name>") + "</p>\n";
   }
 
   if (person.hasOwnProperty('facts')) {
@@ -158,21 +155,20 @@ function getFirst(array) {
 }
 
 function showRecord(url, doc) {
-  var gx = $("#gx");
-  gx.text("Processing record...");
+  var gxDiv = $("#gx");
+  gxDiv.text("Processing record...");
   //buildDocMaps(doc);
   var s = "<p>Record URL: " + url + "</p>\n";
   var i;
-
-
   if (doc.hasOwnProperty('persons')) {
     for (i = 0; i < doc.persons.length; i++) {
-      s += makePersonHtml(doc.persons[i]);
+      s += makePersonHtml(doc.persons[i], doc, i);
+
     }
   }
   if (doc.hasOwnProperty('relationships')) {
     //todo
   }
-  gx.html(s);
+  gxDiv.html(s);
   $("#p_15024659740");
 }
