@@ -25,6 +25,9 @@ div.person p:first-child span:first-child { /* gender box */
     padding-right: 1px;
     margin-right: 3px;
 }
+.relative {
+    color: green;
+}
 .male {
     border: 1px;
     border-style: solid;
