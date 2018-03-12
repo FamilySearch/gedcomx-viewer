@@ -1,5 +1,5 @@
 .ark {
-    font-size: 12px;
+    font-size: 10px;
     font-family: "Times New Roman", serif;
 }
 p {
@@ -26,6 +26,7 @@ div.person p:first-child span:first-child { /* gender box */
     margin-right: 3px;
 }
 .relative {
+    font-size: 13px;
     color: green;
 }
 .male {
