@@ -1,10 +1,11 @@
-function readGedcomX(url, callback) {
+function readGedcomX(url) {
   $.ajax({type: "GET",
-    dataType: "json",
-    accepts: {json: "application/x-gedcomx-v1+json"},
+    dataType: "text",
+    accepts: {text: "application/x-gedcomx-v1+json"},
     url: url,
     success: function (stuff, textStatus, jqKHR) {
-      callback(url, stuff);
+      $("#record-json").val(stuff);
+      showRecord(url, $.parseJSON(stuff));
     },
     error: function (jqXHR, textStatus, errorThrown) {
       console.log("Didn't make it: " + url);
