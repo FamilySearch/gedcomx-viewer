@@ -1,22 +1,16 @@
-function readGedcomX(url, callback) {
+function readGedcomX(url) {
   $.ajax({type: "GET",
-    dataType: "json",
-    accepts: {json: "application/x-gedcomx-v1+json"},
+    dataType: "text",
+    accepts: {text: "application/x-gedcomx-v1+json"},
     url: url,
     success: function (stuff, textStatus, jqKHR) {
-      callback(url, stuff);
+      $("#record-json").val(stuff);
+      showRecord(url, $.parseJSON(stuff));
     },
     error: function (jqXHR, textStatus, errorThrown) {
       console.log("Didn't make it: " + url);
     }
   });
-}
-
-// Having read a GedcomX record, see if the sourceDescription has a recordDescriptor.
-// If so, read the collection object that has it, and call back to showRecord.
-// If not, just go straight to showRecord.
-function readRecordDescriptor(doc) {
-
 }
 
 function encode(s) {
@@ -27,144 +21,221 @@ function empty(s) {
   return s === undefined || s === null || s.length === 0;
 }
 
-function makeGenderHtml(gender) {
-  var genderString;
-  if (gender) {
-    if (gender.type === 'http://gedcomx.org/Male') {
-      genderString = '<span class="male">M</span>';
-    }
-    else if (gender.type === 'http://gedcomx.org/Female') {
-      genderString = '<span class="female">F</span>';
-    }
-    else {
-      genderString = '<span class="unknown">?</span>';
-    }
-  }
-  else {
-    genderString = '<span class="unknown">?</span>';
-  }
-  return genderString;
+function parseType(typeUri) {
+  return typeUri === null || typeUri === undefined ? "(No type)" :
+    typeUri.
+    // Remove everything up to the last "/"
+    replace(/.*\//gi, "").
+    // Insert spaces before capitals, e.g., "SomeType" -> "Some Type"
+    replace(/([A-Z])/g, ' $1');
+  // Get iterpreted value, if any, or else the original value.
 }
 
-function makeNameHtml(name) {
-  var j, k, nameForm, namePart;
-  var s = "<span class=\'name\'>";
-  if (!empty(name.type) && name.type !== "http://gedcomx.org/BirthName") {
-    s += "[" + name.type.replace("http://gedcomx.org/", "") + "]";
-  }
-  if (name.hasOwnProperty('nameForms')) {
-    for (j = 0; j < name.nameForms.length; j++) {
-      nameForm = name.nameForms[j];
-      if (j > 0) {
-        s += "</span><br/><span>[Form" + (empty(nameForm.lang) ? "" : " (" + nameForm.lang + ")") + ": ";
-      }
-      s += (empty(nameForm.fullText) ? encode("<Empty>") : encode(nameForm.fullText));
-      if (j > 0) {
-        s += "]";
-      }
-      if (nameForm.parts) {
-        for (k = 0; k < nameForm.parts.length; k++) {
-          namePart = nameForm.parts[k];
-
-        }
-      }
-      //todo: name parts, fields...
-    }
-  }
-  s += "</span>";
-  return s;
+function card(sectionName, sectionContent, level) {
+  level = level || 2;
+  return div({class: "card m-1 p-0"})
+    .append(div({class:"card-body p-0"})
+      .append($("<h" + level + "/>", {class: "card-title card-header"}).text(sectionName))
+      .append(div({class: "card-text p-3"}).append(sectionContent)));
 }
 
-/**
- * Make HTML for a person in a GedcomX document.
- * @param doc - GedcomX document that contains the person
- * @param person - Person object (from within that GedcomX document) to use.
- * @param idMap - Map of local person ID (p_1234567) to 1-based index (1, 2, 3...)
- * @returns {string}
- */
-function makePersonHtml(doc, person, idMap) {
-  var s = "<div class='person' " + (person.id ? " id='" + encode(person.id) + "'" : "") + ">";
-  s += makeGenderHtml(person.hasOwnProperty('gender') ? person.gender : null) + " P" + idMap[person.id] + ". ";
+function accordionSection(parentId, sectionName, sectionContent) {
+  var sectionHeaderId = parentId + "_" + sectionName;
+  var sectionContentId = parentId + "_" + sectionName + "_content";
+  var sectionHeader = div({class: "card-header", id: sectionHeaderId});
+  $("<h4/>").append($("<button/>", {
+    "class" : "btn btn-link",
+    "data-toggle": "collapse",
+    "data-target": "#" + sectionContentId,
+    "aria-expanded": "false",
+    "aria-controls": sectionContentId
+  }).text(sectionName)).appendTo(sectionHeader);
+
+  var sectionBody = div({
+                          "id": sectionContentId,
+                          "class": "collapse",
+                          "aria-labelledby": sectionHeaderId,
+                          "data-parent": "#" + parentId
+                        });
+  sectionBody.append(div({class: "card-body"}).append(sectionContent))
+
+  return div({class: "card"}).append(sectionHeader).append(sectionBody);
+}
+
+function dl(items, attrs) {
+  var list = $("<dl/>", attrs);
+  for (var key in items) {
+    if (items.hasOwnProperty(key)) {
+      list.append($("<dt/>").text(key)).append($("<dd/>").text(items[key]));
+    }
+  }
+  return list
+}
+
+function div(attrs) {
+  return $("<div/>", attrs);
+}
+
+function span(attrs) {
+  return $("<span/>", attrs);
+}
+
+function buildRecordUI(url, doc) {
+  var record = div({ id: "record"});
+  var title = $("<h1/>").append(span().text("Record "));
+  if (url) {
+    $("<small/>", {class: "text-muted"}).text(url).appendTo(title);
+  }
+  record.append(title);
 
   var i;
+  // Map of local person id (p_1234567) to index (1, 2, 3...)
+  var idMap = {};
 
-  if (person.hasOwnProperty('names')) {
-    for (i = 0; i < person.names.length; i++) {
-      s += makeNameHtml(person.names[i]);
+  if (doc.hasOwnProperty('persons')) {
+    // Create a short 1-based person index for viewing.
+    for (i = 0; i < doc.persons.length; i++) {
+      idMap[doc.persons[i].id] = i + 1;
     }
+
+    record.append(card("Persons", buildPersonsUI(doc, idMap)));
   }
-
-  if (person.hasOwnProperty('facts')) {
-    s += getFactsHtml(person.facts);
+  if (doc.hasOwnProperty('fields')) {
+    record.append(card("Fields", buildFieldsUI(doc.fields)));
   }
-
-  if (person.hasOwnProperty('fields')) {
-    s += getFieldsHtml(person.fields);
+  if (doc.hasOwnProperty('relationships')) {
+    //todo: Show relationship graph.
   }
+  return record;
+}
 
-  s += getRelativesHtml(doc, person, idMap);
+function buildPersonsUI(doc, idMap) {
+  var i;
+  var persons = div({id: "persons"});
+  for (i = 0; i < doc.persons.length; i++) {
+    persons.append(buildPersonUI(doc, doc.persons[i], idMap));
+  }
+  return persons;
+}
 
+function buildPersonUI(doc, person, idMap) {
+  var personCard = div({ class: "person card m-3", id: encode(person.id)} );
+  var personCardBody = div({class: "card-body p-0"}).appendTo(personCard);
+  var personCardTitle =  $("<h3/>", {class: "card-title card-header"}).appendTo(personCardBody);
+  personBadge(idMap[person.id], GedxPersonaPOJO.getGenderString(person)).appendTo(personCardTitle);
+  span().text(GedxPersonaPOJO.getBestNameValue(person)).appendTo(personCardTitle);
   if (person.principal) {
-    s += "<p class='principal'>Principal: true</p>";
+    span({ class: "principal badge badge-pill badge-primary"}).append(span({class: "oi oi-star"})).append(span().text("Principal")).appendTo(personCardTitle);
   }
 
   var identifier = getIdentifier(person);
-  s += "  <p class='ark'><a href='" + identifier +"'>" + identifier + "</a> (" + person.id + ")</p>\n";
-  s += "</div>\n"; // person div.
-  return s;
-}
-
-function getFieldHtml(field) {
-  var s = "";
-  var fieldType = parseType(field.type);
-  // Get iterpreted value, if any, or else the original value.
-  var bestValue = GedxPersonaPOJO.getBestValue(field);
-  s += "<p class='field'>" + encode(fieldType) + ": " + encode(bestValue) + "</p>";
-  //todo: Add field values.
-  return s;
-}
-
-function parseType(typeUri) {
-  return typeUri === null || typeUri === undefined ? "(No type)" :
-      typeUri.
-        // Remove everything up to the last "/"
-        replace(/.*\//gi, "").
-        // Insert spaces before capitals, e.g., "SomeType" -> "Some Type"
-        replace(/([A-Z])/g, ' $1');
-        // Get iterpreted value, if any, or else the original value.
-}
-
-function getFieldsHtml(fields) {
-  var i;
-  var s = "";
-  for (i = 0; i < fields.length; i++) {
-    s += getFieldHtml(fields[i]);
+  if (identifier) {
+    div({class: "card-text m-2"}).append(dl({"Identifier": identifier})).appendTo(personCardBody);
   }
-  return s;
+
+  var personCardBodyContent = div({class:"row"});
+  div({class: "container"}).append(personCardBodyContent).appendTo(personCardBody);
+
+  if (person.hasOwnProperty('names')) {
+    var names = buildNamesUI(person);
+    personCardBodyContent.append(div({class: "col"}).append(card("Names", names, 5)));
+    //accordionSection(contentId, "Names", names).appendTo(personCardBodyContent);
+  }
+
+  if (person.hasOwnProperty('facts')) {
+    var facts = buildFactsUI(person.facts);
+    personCardBodyContent.append(div({class: "col"}).append(card("Facts", facts, 5)));
+    //accordionSection(contentId, "Facts", facts).appendTo(personCardBodyContent);
+  }
+
+  if (person.hasOwnProperty('fields')) {
+    var fields = buildFieldsUI(person.fields);
+    personCardBodyContent.append(div({class: "col"}).append(card("Fields", fields, 5)));
+    //accordionSection(contentId, "Fields", fields).appendTo(personCardBodyContent);
+  }
+
+  var relatives = buildRelativesUI(doc, person, idMap);
+  personCardBodyContent.append(div({class: "col"}).append(card("Relatives", relatives, 5)));
+  //accordionSection(contentId, "Relatives", relatives).appendTo(personCardBodyContent);
+
+  return personCard;
 }
 
-function relationshipFactsHtml(person1Id, person2Id, relationshipType, relationships) {
-  var i;
-  var rel;
-  var s = "";
-  for (i = 0; i < relationships.length; i++) {
-    rel = relationships[i];
-    if (relationshipType === rel.type && rel.hasOwnProperty("facts")) {
-      if ("#" + person1Id === rel.person1.resource && "#" + person2Id === rel.person2.resource) {
-        s += getFactsHtml(rel.facts, true);
+function personBadge(localId, gender) {
+  var genderClass = gender ? gender.charAt(0) === 'M' ? "gender-male" : gender.charAt(0) === 'F' ? "gender-female" : "gender-unknown" : "gender-unknown";
+  return span({class: "local-pid badge badge-pill badge-secondary " + genderClass}).append(span({class: "oi oi-person", title: "person", "aria-hidden": "true"})).append($("<small/>").text(localId));
+}
+
+function buildNamesUI(person) {
+  var n = div({class: "names"});
+  for (var i = 0; i < person.names.length; i++) {
+    n.append(buildNameUI(person.names[i]));
+  }
+  return n;
+}
+
+function buildNameUI(name) {
+  var n = div({ class: "name text-nowrap"});
+
+  var j, nameForm, namePart;
+  if (!empty(name.type) && name.type !== "http://gedcomx.org/BirthName") {
+    n.append(span({class: "name-type badge badge-dark"}).text(name.type.replace("http://gedcomx.org/", "")));
+  }
+
+  if (name.hasOwnProperty('nameForms')) {
+    for (var i = 0; i < name.nameForms.length; i++) {
+      nameForm = name.nameForms[i];
+      if (!empty(nameForm.lang)) {
+        n.append(span({class: "lang badge badge-dark"}).text(nameForm.lang));
       }
-      else if (relationshipType === "http://gedcomx.org/Couple" && "#" + person2Id === rel.person1.resource && "#" + person1Id === rel.person2.resource) {
-        // For couples, display the marriage under both the husband and the wife.
-        s += getFactsHtml(rel.facts, true);
-      }
+      n.append(span({class: "name-form"}).text(empty(nameForm.fullText) ? "(Empty)" : nameForm.fullText));
+
+      // todo: name parts, fields...
+      // if (nameForm.parts) {
+      //   for (j = 0; j < nameForm.parts.length; j++) {
+      //     namePart = nameForm.parts[j];
+      //
+      //   }
+      // }
     }
   }
-  return s;
+
+  return n;
+}
+
+function buildFactsUI(facts) {
+  var i, fact;
+  var fs = $("<table/>", {class: "facts table table-sm"});
+  $("<thead/>").append($("<tr/>").append($("<th>Type</th>")).append($("<th>Date</th>")).append($("<th>Place</th>")).append($("<th>Value</th>"))).appendTo(fs);
+  var body = $("<tbody/>").appendTo(fs);
+  for (i = 0; i < facts.length; i++) {
+    fact = facts[i];
+    var f = $("<tr/>").appendTo(body);
+    f.append($("<td/>", {class: "fact-type text-nowrap"}).text(parseType(fact.type)));
+    f.append($("<td/>", {class: "fact-date text-nowrap"}).text(fact.date ? fact.date.original : ""));
+    f.append($("<td/>", {class: "fact-place text-nowrap"}).text(fact.place ? fact.place.original : ""));
+    f.append($("<td/>", {class: "fact-value text-nowrap"}).text(fact.value ? fact.value : ""));
+  }
+  return fs;
+}
+
+function buildFieldsUI(fields) {
+  var i, field;
+  var fs = $("<table/>", {class: "fields table table-sm"});
+  $("<thead/>").append($("<tr/>").append($("<th>Type</th>")).append($("<th>Value</th>"))).appendTo(fs);
+  var body = $("<tbody/>").appendTo(fs);
+  for (i = 0; i < fields.length; i++) {
+    field = fields[i];
+    var f = $("<tr/>").appendTo(body);
+    f.append($("<td/>", {class: "field-type text-nowrap"}).text(parseType(field.type)));
+    f.append($("<td/>", {class: "field-value text-nowrap"}).text(GedxPersonaPOJO.getBestValue(field)));
+  }
+  return fs;
 }
 
 // Get the HTML for the list of a person's relatives.
-function getRelativesHtml(doc, person, idMap) {
-  var s = "";
+function buildRelativesUI(doc, person, idMap) {
+  var r = div({class: "relatives"});
   var parentsAndSiblings = GedxPersonaPOJO.getParentsAndSiblings(doc, person);
   var parentFamily, parent, parentLabel;
   var spouseAndChildren, spouseFamily, spouseLabel;
@@ -176,7 +247,7 @@ function getRelativesHtml(doc, person, idMap) {
       for (j = 0; j < parentFamily.parents.length; j++) {
         parent = parentFamily.parents[j];
         parentLabel = relativeLabel(parent.gender, "Father", "Mother", "Parent");
-        s += relativeHtml(parentLabel, idMap[parent.id], parent.name);
+        r.append(relativeUI(parentLabel, idMap[parent.id], parent.name, parent.gender));
       }
     }
   }
@@ -186,74 +257,55 @@ function getRelativesHtml(doc, person, idMap) {
     var spouse = spouseFamily.spouse;
     if (!empty(spouse)) {
       spouseLabel = relativeLabel(spouse.gender, "Husband", "Wife", "Spouse");
-      s += relativeHtml(spouseLabel, idMap[spouse.id], spouse.name);
-      s += relationshipFactsHtml(person.id, spouse.id, "http://gedcomx.org/Couple", doc.relationships);
+      r.append(relativeUI(spouseLabel, idMap[spouse.id], spouse.name, spouse.gender));
+      r.append(buildRelationshipFactsUI(person.id, spouse.id, "http://gedcomx.org/Couple", doc.relationships));
     }
     if (!empty(spouseFamily.children)) {
       for (j = 0; j < spouseFamily.children.length; j++) {
         child = spouseFamily.children[j];
         childLabel = relativeLabel(child.gender, "Son", "Daughter", "Child");
-        s += relativeHtml(childLabel, idMap[child.id], child.name, spouseFamily.hasOwnProperty("spouse"));
+        r.append(relativeUI(childLabel, idMap[child.id], child.name, child.gender));
       }
     }
   }
-  return s;
-
-  /**
-   * Create HTML for information about a relative. (e.g., "Father: P2. Fred Jones")
-   * @param relativeType - Type of relative (e.g., "Father")
-   * @param relativeIndex - Index of the relative (e.g., 2)
-   * @param relativeName - Name of the relative (e.g., "Fred Jones")
-   * @param shouldIndent - Flag for whether to indent (i.e., indent children under the spouse they go with, if any).
-   * @returns {string}
-   */
-  function relativeHtml(relativeType, relativeIndex, relativeName, shouldIndent) {
-    if (empty(relativeType)) {
-      relativeType = '(Unknown relative type)';
-    }
-    return "<p class='" + (shouldIndent ? "child" : "relative") + "'>" + relativeType + ": P" + relativeIndex + ". " + relativeName + "</p>";
-  }
-
-  function relativeLabel(gender, maleType, femaleType, neutralType) {
-    if (gender === "M") {
-      return maleType;
-    }
-    if (gender === "F") {
-      return femaleType;
-    }
-    return neutralType;
-  }
+  return r;
 }
 
-function getFactsHtml(facts, shouldIndent) {
-  var i, fact, hadStuff;
-  var s = "";
-  for (i = 0; i < facts.length; i++) {
-    s += "<p class='fact" + (shouldIndent ? " indented" : "") + "'>";
-    fact = facts[i];
-    s += encode(parseType(fact.type));
-    s += ": ";
-    hadStuff = false;
-    if (fact.hasOwnProperty('date') && !empty(fact.date.original)) {
-      s += encode(fact.date.original);
-      hadStuff = true;
-    }
-    if (fact.hasOwnProperty('place') && !empty(fact.place.original)) {
-      if (hadStuff) {
-        s += encode("; ");
+function buildRelationshipFactsUI(person1Id, person2Id, relationshipType, relationships) {
+  var i, j, rel;
+  var facts = {};
+  for (i = 0; i < relationships.length; i++) {
+    rel = relationships[i];
+    if (relationshipType === rel.type && rel.hasOwnProperty("facts")) {
+      if (("#" + person1Id === rel.person1.resource && "#" + person2Id === rel.person2.resource) || (relationshipType === "http://gedcomx.org/Couple" && "#" + person2Id === rel.person1.resource && "#" + person1Id === rel.person2.resource)) {
+        for (j = 0; j < rel.facts.length; j++) {
+          var fact = rel.facts[j];
+          facts[parseType(fact.type)] = (fact.date ? fact.date.original + " " : "") + (fact.place ? fact.place.original + " " : "") + (fact.value ? "(" + fact.value + ")" : "");
+        }
       }
-      s += encode(fact.place.original);
-      hadStuff = true;
     }
-    if (fact.hasOwnProperty('value') && !empty(fact.value)) {
-      if (hadStuff) {
-        s += encode("; ");
-      }
-      s += encode(fact.value);
-    }
-    s += "</p>\n";
   }
-  return s;
+  return dl(facts, {class: "relationship-facts px-3"});
+}
+
+function relativeUI(relativeType, relativeIndex, relativeName, relativeGender) {
+  var r = $("<h5/>", {class: "relative text-nowrap"});
+  personBadge(relativeIndex, relativeGender).appendTo(r);
+  span().text(relativeName).appendTo(r);
+  if (!empty(relativeType)) {
+    r.append($("<small/>", {class: "relative-type text-muted"}).text(relativeType));
+  }
+  return r;
+}
+
+function relativeLabel(gender, maleType, femaleType, neutralType) {
+  if (gender === "M") {
+    return maleType;
+  }
+  if (gender === "F") {
+    return femaleType;
+  }
+  return neutralType;
 }
 
 function getIdentifier(object) {
@@ -284,35 +336,6 @@ function getFirst(array) {
   return null;
 }
 
-/**
- * Fetch the GedcomX historical record from the given URL, generate HTML for it, and put that HTML into the div with local id "gx".
- * @param url - URL of a GedcomX historical record.
- * @param doc - GedcomX document read from there.
- */
 function showRecord(url, doc) {
-  var gxDiv = $("#gx");
-  gxDiv.text("Processing record...");
-  //buildDocMaps(doc);
-  var s = "<p>GedcomX URL: " + url + "</p>\n";
-  var i;
-  // Map of local person id (p_1234567) to index (1, 2, 3...)
-  var idMap = {};
-
-  if (doc.hasOwnProperty('persons')) {
-    // Create a short 1-based person index for viewing.
-    for (i = 0; i < doc.persons.length; i++) {
-      idMap[doc.persons[i].id] = i + 1;
-    }
-    for (i = 0; i < doc.persons.length; i++) {
-      s += makePersonHtml(doc, doc.persons[i], idMap);
-    }
-  }
-  if (doc.hasOwnProperty('fields')) {
-    s += getFieldsHtml(doc.fields);
-  }
-  if (doc.hasOwnProperty('relationships')) {
-    //todo: Show relationship graph.
-  }
-  gxDiv.html(s);
-  $("#p_15024659740");
+  $("#record").append(buildRecordUI(url, doc));
 }
