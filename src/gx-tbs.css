@@ -1,0 +1,15 @@
+.local-pid {
+    margin-right: 1ex;
+}
+
+.principal, .relative-type {
+    margin-left: 1ex;
+}
+
+.gender-female {
+    background-color: hotpink;
+}
+
+.gender-male {
+    background-color: cornflowerblue;
+}
