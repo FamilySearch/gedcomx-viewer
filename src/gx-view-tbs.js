@@ -12,13 +12,6 @@ function readGedcomX(url, callback) {
   });
 }
 
-// Having read a GedcomX record, see if the sourceDescription has a recordDescriptor.
-// If so, read the collection object that has it, and call back to showRecord.
-// If not, just go straight to showRecord.
-function readRecordDescriptor(doc) {
-
-}
-
 function encode(s) {
   return $('<div/>').text(s).html();
 }
@@ -88,7 +81,11 @@ function span(attrs) {
 
 function buildRecordUI(url, doc) {
   var record = div({ id: "record"});
-  record.append($("<h1/>").append(span().text("Record ")).append($("<small/>", {class: "text-muted"}).text(url)));
+  var title = $("<h1/>").append(span().text("Record "));
+  if (url) {
+    $("<small/>", {class: "text-muted"}).text(url).appendTo(title);
+  }
+  record.append(title);
 
   var i;
   // Map of local person id (p_1234567) to index (1, 2, 3...)
@@ -100,11 +97,7 @@ function buildRecordUI(url, doc) {
       idMap[doc.persons[i].id] = i + 1;
     }
 
-    var persons = div({id: "persons"});
-    for (i = 0; i < doc.persons.length; i++) {
-      persons.append(buildPersonUI(doc, doc.persons[i], idMap));
-    }
-    record.append(card("Persons", persons));
+    record.append(card("Persons", buildPersonsUI(doc, idMap)));
   }
   if (doc.hasOwnProperty('fields')) {
     record.append(card("Fields", buildFieldsUI(doc.fields)));
@@ -115,6 +108,15 @@ function buildRecordUI(url, doc) {
   return record;
 }
 
+function buildPersonsUI(doc, idMap) {
+  var i;
+  var persons = div({id: "persons"});
+  for (i = 0; i < doc.persons.length; i++) {
+    persons.append(buildPersonUI(doc, doc.persons[i], idMap));
+  }
+  return persons;
+}
+
 function buildPersonUI(doc, person, idMap) {
   var personCard = div({ class: "person card m-3", id: encode(person.id)} );
   var personCardBody = div({class: "card-body p-0"}).appendTo(personCard);
@@ -122,7 +124,7 @@ function buildPersonUI(doc, person, idMap) {
   personBadge(idMap[person.id], GedxPersonaPOJO.getGenderString(person)).appendTo(personCardTitle);
   span().text(GedxPersonaPOJO.getBestNameValue(person)).appendTo(personCardTitle);
   if (person.principal) {
-    span({ class: "principal badge badge-pill badge-primary"}).append(span({class: "oi oi-star"})).appendTo(personCardTitle);
+    span({ class: "principal badge badge-pill badge-primary"}).append(span({class: "oi oi-star"})).append(span().text("Principal")).appendTo(personCardTitle);
   }
 
   var identifier = getIdentifier(person);
@@ -333,11 +335,6 @@ function getFirst(array) {
   return null;
 }
 
-/**
- * Fetch the GedcomX historical record from the given URL, generate HTML for it, and put that HTML into the div with local id "gx".
- * @param url - URL of a GedcomX historical record.
- * @param doc - GedcomX document read from there.
- */
 function showRecord(url, doc) {
-  $("body").append(buildRecordUI(url, doc));
+  $("#record").append(buildRecordUI(url, doc));
 }

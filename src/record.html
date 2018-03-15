@@ -18,13 +18,13 @@
     $(document).ready(function () {
 //      var personaUrl = "https://familysearch.org/ark:/61903/1:1:XF48-HFC";
 //      var recordUrl = "https://familysearch.org/ark:/61903/1:2:99FJ-7LXP";
-//      var gedcomxUrl = "https://www.familysearch.org/ark:/61903/1:1:XTWB-H9T"; // marriage record
-      var gedcomxUrl = "https://www.familysearch.org/ark:/61903/1:1:QK2M-H538"; // obituary
+      var gedcomxUrl = "https://www.familysearch.org/ark:/61903/1:1:XTWB-H9T"; // marriage record
+//      var gedcomxUrl = "https://www.familysearch.org/ark:/61903/1:1:QK2M-H538"; // obituary
       $("#gx").text("Reading record from " + gedcomxUrl + "...");
       readGedcomX(gedcomxUrl, showRecord);
     });
   </script>
 </head>
-<body>
+<body id="record">
 </body>
 </html>
