@@ -12,6 +12,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/5.14.0/jsoneditor.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script>
 
   <!--<script src="gx-utils.js"></script>-->
   <script src="cache/SearchUtilsPOJO.js"></script>
@@ -35,7 +36,7 @@
         }
       });
 
-      $("#submit-url").click(function () {
+      $("#load-json").click(function () {
         var gedcomxUrl = $("#record-url").val();
         $.ajax({
            type: "GET",
@@ -52,6 +53,26 @@
            }
          });
       });
+
+      $("#do-paste-json").click(function() {
+        $("#paste-json-form").modal("hide");
+        var doc = JSON.parse($("#pasted-json").val());
+        editor.set(doc);
+        showRecord(null, doc);
+      });
+
+      $("#download-json").click(function() {
+        var json = JSON.stringify(editor.get(), null, 2);
+        this.href = "data:text/plain;charset=UTF-8," + encodeURIComponent(json);
+      });
+      
+      $("#copy-json").click(function () {
+        new ClipboardJS("#copy-json", {
+          text: function(trigger) {
+            return JSON.stringify(editor.get(), null, 2);
+          }
+        })
+      })
     });
   </script>
 </head>
@@ -64,11 +85,34 @@
         <input id="record-url" type="text" class="form-control" aria-describedby="url-description"
                value="https://www.familysearch.org/ark:/61903/1:1:QK2M-H538"/>
       </div>
-      <button id="submit-url" class="btn btn-primary">Load</button>
+      <a id="load-json" href="#" class="btn btn-primary">Fetch JSON</a>
+      <a id="paste-json" href="#" class="btn btn-primary" data-toggle="modal" data-target="#paste-json-form">Paste JSON</a>
+      <a id="download-json" href="#" download="json.txt" class="btn btn-primary">Download JSON</a>
+      <a id="copy-json" href="#" class="btn btn-primary">Copy JSON to Clipboard</a>
 
       <div id="json-editor" class="mt-4"></div>
     </div>
     <div class="col" id="record"></div>
+  </div>
+</div>
+<!-- Modal for Pasting JSON-->
+<div class="modal fade" id="paste-json-form" tabindex="-1" role="dialog" aria-labelledby="paste-label" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="paste-label">Paste JSON</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <textarea id="pasted-json" class="form-control" rows="10"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button id="do-paste-json" type="button" class="btn btn-primary" >Paste</button>
+      </div>
+    </div>
   </div>
 </div>
 </body>
