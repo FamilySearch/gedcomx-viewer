@@ -2,13 +2,16 @@
 <html>
 <head lang="en">
   <meta charset="UTF-8">
-  <title>GedcomX Test Record</title>
+  <title>GEDCOM X Viewer</title>
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/open-iconic/1.1.1/font/css/open-iconic-bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/5.14.0/jsoneditor.min.css">
   <link rel="stylesheet" href="gx-view.css">
+
   <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/5.14.0/jsoneditor.min.js"></script>
 
   <!--<script src="gx-utils.js"></script>-->
   <script src="cache/SearchUtilsPOJO.js"></script>
@@ -21,47 +24,50 @@
 //      var gedcomxUrl = "https://www.familysearch.org/ark:/61903/1:1:XTWB-H9T"; // marriage record
 //      var gedcomxUrl = "https://www.familysearch.org/ark:/61903/1:1:QK2M-H538"; // obituary
 
-      $("#submit-url").click(function() {
-        var gedcomxUrl = $("#record-url").val();
-        readGedcomX(gedcomxUrl);
+      var editor = new JSONEditor(document.getElementById("json-editor"), {
+        modes: ["tree", "code"],
+        onChange: function() {
+          var doc = editor.get();
+          showRecord(null, doc);
+        },
+        onError: function(error) {
+          alert(error);
+        }
       });
 
-      $("#submit-json").click(function () {
-        var doc = $.parseJSON($("#record-json").val());
-        showRecord(null, doc);
+      $("#submit-url").click(function () {
+        var gedcomxUrl = $("#record-url").val();
+        $.ajax({
+           type: "GET",
+           dataType: "json",
+           accepts: { json: "application/x-gedcomx-v1+json" },
+           url: gedcomxUrl,
+           success: function (doc, textStatus, jqKHR) {
+             editor.set(doc);
+             showRecord(gedcomxUrl, doc);
+           },
+
+           error: function (jqXHR, textStatus, errorThrown) {
+             console.log("Request failed to: " + gedcomxUrl + ": " + textStatus);
+           }
+         });
       });
     });
   </script>
 </head>
 <body>
-<div class="container">
-  <div class="row my-5 p-2 border">
+<div class="container-fluid">
+  <div class="row m-2 p-2 border">
     <div class="col">
-      <div class="nav nav-tabs" id="input-tab" role="tablist">
-        <a class="nav-link active" id="input-url-tab" data-toggle="pill" href="#input-url" role="tab" aria-controls="input-url" aria-selected="true">URL</a>
-        <a class="nav-link" id="input-json-tab" data-toggle="pill" href="#input-json" role="tab" aria-controls="input-json" aria-selected="false">JSON</a>
+      <div class="form-group">
+        <label for="record-url">Record URL</label>
+        <input id="record-url" type="text" class="form-control" aria-describedby="url-description"
+               value="https://www.familysearch.org/ark:/61903/1:1:QK2M-H538"/>
       </div>
-      <div class="tab-content" id="input-tab-content">
-        <div class="tab-pane fade show active" id="input-url" role="tabpanel" aria-labelledby="input-url-tab">
-          <div class="form-group">
-            <label for="record-url">Record URL</label>
-            <input id="record-url" type="text" class="form-control" aria-describedby="url-description" value="https://www.familysearch.org/ark:/61903/1:1:QK2M-H538"/>
-            <small id="url-description" class="form-text text-muted">URL to GEDCOM X JSON describing a record.</small>
-          </div>
-          <button id="submit-url" class="btn btn-primary">Submit</button>
-        </div>
-        <div class="tab-pane fade" id="input-json" role="tabpanel" aria-labelledby="input-json-tab">
-          <div class="form-group">
-            <label for="record-json">Record JSON</label>
-            <textarea id="record-json" class="form-control" aria-describedby="json-description"></textarea>
-            <small id="json-description" class="form-text text-muted">GEDCOM X JSON record.</small>
-          </div>
-          <button id="submit-json" class="btn btn-primary">Submit</button>
-        </div>
-      </div>
+      <button id="submit-url" class="btn btn-primary">Load</button>
+
+      <div id="json-editor" class="mt-4"></div>
     </div>
-  </div>
-  <div class="row">
     <div class="col" id="record"></div>
   </div>
 </div>

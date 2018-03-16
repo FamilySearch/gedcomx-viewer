@@ -1,18 +1,3 @@
-function readGedcomX(url) {
-  $.ajax({type: "GET",
-    dataType: "text",
-    accepts: {text: "application/x-gedcomx-v1+json"},
-    url: url,
-    success: function (stuff, textStatus, jqKHR) {
-      $("#record-json").val(stuff);
-      showRecord(url, $.parseJSON(stuff));
-    },
-    error: function (jqXHR, textStatus, errorThrown) {
-      console.log("Didn't make it: " + url);
-    }
-  });
-}
-
 function encode(s) {
   return $('<div/>').text(s).html();
 }
@@ -337,5 +322,7 @@ function getFirst(array) {
 }
 
 function showRecord(url, doc) {
-  $("#record").append(buildRecordUI(url, doc));
+  var el = $("#record");
+  el.empty();
+  el.append(buildRecordUI(url, doc));
 }
