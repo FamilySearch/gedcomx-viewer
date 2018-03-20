@@ -69,6 +69,7 @@
         editor.setMode("tree");
       }
 
+      editor.collapseAll();
       editorSelection = editor.node.findNode(path);
       if (editorSelection) {
         editorSelection.scrollTo();
@@ -169,7 +170,7 @@
       <a id="download-json" href="#" download="json.txt" class="btn btn-primary">Download JSON</a>
       <a id="copy-json" href="#" class="btn btn-primary">Copy JSON to Clipboard</a>
 
-      <div id="json-editor" class="mt-4"></div>
+      <div id="json-editor" class="pt-4 sticky-top"></div>
     </div>
     <div class="col" id="record"></div>
   </div>
