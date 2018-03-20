@@ -65,7 +65,7 @@ function span(attrs) {
   return $("<span/>", attrs);
 }
 
-function buildRecordUI(doc, select, url) {
+function buildRecordUI(doc, url) {
   var record = div({ id: "record"});
   var title = $("<h1/>").append(span().text("Record "));
   if (url) {
@@ -76,6 +76,7 @@ function buildRecordUI(doc, select, url) {
   var i;
   // Map of local person id (p_1234567) to index (1, 2, 3...)
   var idMap = {};
+  var path = "";
 
   if (doc.hasOwnProperty('persons')) {
     // Create a short 1-based person index for viewing.
@@ -83,10 +84,10 @@ function buildRecordUI(doc, select, url) {
       idMap[doc.persons[i].id] = i + 1;
     }
 
-    record.append(card("Persons", buildPersonsUI(doc, idMap, select)));
+    record.append(card("Persons", buildPersonsUI(doc, idMap, path)));
   }
   if (doc.hasOwnProperty('fields')) {
-    record.append(card("Fields", buildFieldsUI(doc.fields, select)));
+    record.append(card("Fields", buildFieldsUI(doc.fields, path + ".fields")));
   }
   if (doc.hasOwnProperty('relationships')) {
     //todo: Show relationship graph.
@@ -94,47 +95,48 @@ function buildRecordUI(doc, select, url) {
   return record;
 }
 
-function buildPersonsUI(doc, idMap, doSearch) {
+function buildPersonsUI(doc, idMap, path) {
   var i;
   var persons = div({id: "persons"});
+  path = path + ".persons";
   for (i = 0; i < doc.persons.length; i++) {
-    persons.append(buildPersonUI(doc, doc.persons[i], idMap, doSearch));
+    persons.append(buildPersonUI(doc, doc.persons[i], idMap, path + '[' + i + "]"));
   }
   return persons;
 }
 
-function buildPersonUI(doc, person, idMap, doSearch) {
+function buildPersonUI(doc, person, idMap, path) {
   var personCard = div({ class: "person card m-3", id: encode(person.id)} );
   var personCardBody = div({class: "card-body p-0"}).appendTo(personCard);
   var personCardTitle =  $("<h3/>", {class: "card-title card-header"}).appendTo(personCardBody);
   personBadge(idMap[person.id], GedxPersonaPOJO.getGenderString(person)).appendTo(personCardTitle);
-  span().text(GedxPersonaPOJO.getBestNameValue(person)).appendTo(personCardTitle);
+  span({"json-node-path" : path}).text(GedxPersonaPOJO.getBestNameValue(person)).appendTo(personCardTitle);
   if (person.principal) {
-    span({ class: "principal badge badge-pill badge-primary"}).append(span({class: "oi oi-star"})).append(span().text("Principal")).appendTo(personCardTitle);
+    span({ class: "principal badge badge-pill badge-primary", "json-node-path" : path + ".principal"}).append(span({class: "oi oi-star"})).append(span().text("Principal")).appendTo(personCardTitle);
   }
 
   var identifier = getIdentifier(person);
   if (identifier) {
-    div({class: "card-text m-2"}).append(dl({"Identifier": identifier})).appendTo(personCardBody);
+    div({class: "card-text m-2", "json-node-path" : path + ".identifiers"}).append(dl({"Identifier": identifier})).appendTo(personCardBody);
   }
 
   var personCardBodyContent = div({class:"row"});
   div({class: "container"}).append(personCardBodyContent).appendTo(personCardBody);
 
   if (person.hasOwnProperty('names')) {
-    var names = buildNamesUI(person);
+    var names = buildNamesUI(person, path);
     personCardBodyContent.append(div({class: "col"}).append(card("Names", names, 5)));
     //accordionSection(contentId, "Names", names).appendTo(personCardBodyContent);
   }
 
   if (person.hasOwnProperty('facts')) {
-    var facts = buildFactsUI(person.facts);
+    var facts = buildFactsUI(person.facts, path + ".facts");
     personCardBodyContent.append(div({class: "col"}).append(card("Facts", facts, 5)));
     //accordionSection(contentId, "Facts", facts).appendTo(personCardBodyContent);
   }
 
   if (person.hasOwnProperty('fields')) {
-    var fields = buildFieldsUI(person.fields, doSearch);
+    var fields = buildFieldsUI(person.fields, path + ".fields");
     personCardBodyContent.append(div({class: "col"}).append(card("Fields", fields, 5)));
     //accordionSection(contentId, "Fields", fields).appendTo(personCardBodyContent);
   }
@@ -151,15 +153,16 @@ function personBadge(localId, gender) {
   return span({class: "local-pid badge badge-pill badge-secondary " + genderClass}).append(span({class: "oi oi-person", title: "person", "aria-hidden": "true"})).append($("<small/>").text(localId));
 }
 
-function buildNamesUI(person) {
+function buildNamesUI(person, path) {
   var n = div({class: "names"});
+  path = path + ".names";
   for (var i = 0; i < person.names.length; i++) {
-    n.append(buildNameUI(person.names[i]));
+    n.append(buildNameUI(person.names[i], path + "[" + i + "]"));
   }
   return n;
 }
 
-function buildNameUI(name) {
+function buildNameUI(name, path) {
   var n = div({ class: "name text-nowrap"});
 
   var j, nameForm, namePart;
@@ -168,12 +171,14 @@ function buildNameUI(name) {
   }
 
   if (name.hasOwnProperty('nameForms')) {
+    path = path + ".nameForms";
     for (var i = 0; i < name.nameForms.length; i++) {
       nameForm = name.nameForms[i];
+      var nameFormPath = path + '[' + i + ']';
       if (!empty(nameForm.lang)) {
-        n.append(span({class: "lang badge badge-dark"}).text(nameForm.lang));
+        n.append(span({class: "lang badge badge-dark", "json-node-path" : nameFormPath + ".lang"}).text(nameForm.lang));
       }
-      n.append(span({class: "name-form"}).text(empty(nameForm.fullText) ? "(Empty)" : nameForm.fullText));
+      n.append(span({class: "name-form", "json-node-path" : nameFormPath + ".fullText"}).text(empty(nameForm.fullText) ? "(Empty)" : nameForm.fullText));
 
       // todo: name parts, fields...
       // if (nameForm.parts) {
@@ -188,30 +193,32 @@ function buildNameUI(name) {
   return n;
 }
 
-function buildFactsUI(facts) {
+function buildFactsUI(facts, path) {
   var i, fact;
   var fs = $("<table/>", {class: "facts table table-sm"});
   $("<thead/>").append($("<tr/>").append($("<th>Type</th>")).append($("<th>Date</th>")).append($("<th>Place</th>")).append($("<th>Value</th>"))).appendTo(fs);
   var body = $("<tbody/>").appendTo(fs);
   for (i = 0; i < facts.length; i++) {
+    var factPath = path + '[' + i + ']';
     fact = facts[i];
     var f = $("<tr/>").appendTo(body);
-    f.append($("<td/>", {class: "fact-type text-nowrap"}).text(parseType(fact.type)));
-    f.append($("<td/>", {class: "fact-date text-nowrap"}).text(fact.date ? fact.date.original : ""));
-    f.append($("<td/>", {class: "fact-place text-nowrap"}).text(fact.place ? fact.place.original : ""));
-    f.append($("<td/>", {class: "fact-value text-nowrap"}).text(fact.value ? fact.value : ""));
+    f.append($("<td/>", {class: "fact-type text-nowrap", "json-node-path" : factPath + ".type"}).text(parseType(fact.type)));
+    f.append($("<td/>", {class: "fact-date text-nowrap", "json-node-path" : factPath + ".date"}).text(fact.date ? fact.date.original : ""));
+    f.append($("<td/>", {class: "fact-place text-nowrap", "json-node-path" : factPath + ".place"}).text(fact.place ? fact.place.original : ""));
+    f.append($("<td/>", {class: "fact-value text-nowrap", "json-node-path" : factPath + ".value"}).text(fact.value ? fact.value : ""));
   }
   return fs;
 }
 
-function buildFieldsUI(fields, doSearch) {
+function buildFieldsUI(fields, path) {
   var i, field;
   var fs = $("<table/>", {class: "fields table table-sm"});
   $("<thead/>").append($("<tr/>").append($("<th>Type</th>")).append($("<th>Value</th>"))).appendTo(fs);
   var body = $("<tbody/>").appendTo(fs);
   for (i = 0; i < fields.length; i++) {
+    var fieldPath = path + '[' + i + ']';
     field = fields[i];
-    var f = $("<tr/>").appendTo(body);
+    var f = $("<tr/>", {"json-node-path" : fieldPath}).appendTo(body);
     f.append($("<td/>", {class: "field-type text-nowrap"}).text(parseType(field.type)));
     f.append($("<td/>", {class: "field-value text-nowrap"}).text(GedxPersonaPOJO.getBestValue(field)));
   }

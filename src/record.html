@@ -47,7 +47,12 @@
     function showRecord(doc, url) {
       var el = $("#record");
       el.empty();
-      el.append(buildRecordUI(doc, findRecordNode, url));
+      el.append(buildRecordUI(doc, url));
+
+      //add all the node-path selection logic
+      $("*[json-node-path]").addClass("json-node-select").click(function() {
+        findRecordNode($(this).attr("json-node-path"));
+      })
     }
 
     /**
@@ -67,6 +72,7 @@
       editorSelection = editor.node.findNode(path);
       if (editorSelection) {
         editorSelection.scrollTo();
+        editorSelection.expand(false);
         editorSelection.setSelected(true);
       }
       else {

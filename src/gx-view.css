@@ -13,3 +13,7 @@
 .gender-male {
     background-color: cornflowerblue;
 }
+
+.json-node-select {
+    cursor: default;
+}
