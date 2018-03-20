@@ -86,11 +86,11 @@ function buildRecordUI(doc, url) {
 
     record.append(card("Persons", buildPersonsUI(doc, idMap, path)));
   }
+  if (doc.hasOwnProperty('relationships')) {
+    record.append(card("Relationships", buildRelationshipsUI(doc, idMap, path)));
+  }
   if (doc.hasOwnProperty('fields')) {
     record.append(card("Fields", buildFieldsUI(doc.fields, path + ".fields")));
-  }
-  if (doc.hasOwnProperty('relationships')) {
-    //todo: Show relationship graph.
   }
   return record;
 }
@@ -298,6 +298,53 @@ function relativeLabel(gender, maleType, femaleType, neutralType) {
     return femaleType;
   }
   return neutralType;
+}
+
+function buildRelationshipsUI(doc, idMap, path) {
+  var i, relationship;
+  var rs = $("<table/>", {class: "relationships table table-sm"});
+  $("<thead/>").append($("<tr/>").append($("<th>Type</th>")).append($("<th>Person 1</th>")).append($("<th>Person 2</th>"))).appendTo(rs);
+  var body = $("<tbody/>").appendTo(rs);
+  path = path + ".relationships";
+  for (i = 0; i < doc.relationships.length; i++) {
+    var relationshipPath = path + '[' + i + ']';
+    relationship = doc.relationships[i];
+    var r = $("<tr/>").appendTo(body);
+    r.append($("<td/>", {class: "relationship-type text-nowrap", "json-node-path" : relationshipPath + ".type"}).text(parseType(relationship.type)));
+    var person1 = relationship.person1 ? findPersonByRef(doc, relationship.person1.resource) : null;
+    if (person1) {
+      r.append($("<td/>", {class: "relationship-person1 text-nowrap"}).append(personBadge(idMap[person1.id], GedxPersonaPOJO.getGenderString(person1))).append(span({"json-node-path": relationshipPath + ".person1"}).text(GedxPersonaPOJO.getBestNameValue(person1))));
+    }
+    else {
+      r.append($("<td/>").text("(Unknown)"));
+    }
+    var person2 = relationship.person2 ? findPersonByRef(doc, relationship.person2.resource) : null;
+    if (person2) {
+      r.append($("<td/>", {class: "relationship-person2 text-nowrap"}).append(personBadge(idMap[person2.id], GedxPersonaPOJO.getGenderString(person2))).append(span({"json-node-path": relationshipPath + ".person2"}).text(GedxPersonaPOJO.getBestNameValue(person2))));
+    }
+    else {
+      r.append($("<td/>").text("(Unknown)"));
+    }
+  }
+  return rs;
+}
+
+function findPersonByRef(doc, id) {
+  if (id) {
+    if (id.charAt(0) === '#') {
+      id = id.substr(1);
+    }
+
+    if (doc.persons) {
+      for (var i = 0; i < doc.persons.length; i++) {
+        var person = doc.persons[i];
+        if (person.id === id) {
+          return person;
+        }
+      }
+    }
+  }
+  return null;
 }
 
 function getIdentifier(object) {
