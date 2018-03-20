@@ -109,6 +109,9 @@
            type: "GET",
            dataType: "json",
            accepts: { json: "application/x-gedcomx-v1+json" },
+           xhrFields: {
+             withCredentials: "true"
+           },
            url: gedcomxUrl,
            success: function (doc, textStatus, jqKHR) {
              editor.set(doc);
