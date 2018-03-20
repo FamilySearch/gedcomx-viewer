@@ -239,7 +239,7 @@ function buildRelativesUI(doc, person, idMap) {
       for (j = 0; j < parentFamily.parents.length; j++) {
         parent = parentFamily.parents[j];
         parentLabel = relativeLabel(parent.gender, "Father", "Mother", "Parent");
-        r.append(relativeUI(parentLabel, idMap[parent.id], parent.name, parent.gender));
+        r.append(relativeUI(parent.id, parentLabel, idMap[parent.id], parent.name, parent.gender));
       }
     }
   }
@@ -249,14 +249,14 @@ function buildRelativesUI(doc, person, idMap) {
     var spouse = spouseFamily.spouse;
     if (!empty(spouse)) {
       spouseLabel = relativeLabel(spouse.gender, "Husband", "Wife", "Spouse");
-      r.append(relativeUI(spouseLabel, idMap[spouse.id], spouse.name, spouse.gender));
+      r.append(relativeUI(spouse.id, spouseLabel, idMap[spouse.id], spouse.name, spouse.gender));
       r.append(buildRelationshipFactsUI(person.id, spouse.id, "http://gedcomx.org/Couple", doc.relationships));
     }
     if (!empty(spouseFamily.children)) {
       for (j = 0; j < spouseFamily.children.length; j++) {
         child = spouseFamily.children[j];
         childLabel = relativeLabel(child.gender, "Son", "Daughter", "Child");
-        r.append(relativeUI(childLabel, idMap[child.id], child.name, child.gender));
+        r.append(relativeUI(child.id, childLabel, idMap[child.id], child.name, child.gender));
       }
     }
   }
@@ -280,10 +280,10 @@ function buildRelationshipFactsUI(person1Id, person2Id, relationshipType, relati
   return dl(facts, {class: "relationship-facts px-3"});
 }
 
-function relativeUI(relativeType, relativeIndex, relativeName, relativeGender) {
+function relativeUI(relativeId, relativeType, relativeIndex, relativeName, relativeGender) {
   var r = $("<h5/>", {class: "relative text-nowrap"});
   personBadge(relativeIndex, relativeGender).appendTo(r);
-  span().text(relativeName).appendTo(r);
+  $("<a/>", { "class" : "link-unstyled", "href" : '#' + relativeId}).text(relativeName).appendTo(r);
   if (!empty(relativeType)) {
     r.append($("<small/>", {class: "relative-type text-muted"}).text(relativeType));
   }

@@ -15,5 +15,10 @@
 }
 
 .json-node-select {
-    cursor: default;
+    cursor: crosshair;
+}
+
+.link-unstyled {
+    color: inherit;
+    text-decoration: inherit;
 }
