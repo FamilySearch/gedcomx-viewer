@@ -65,7 +65,7 @@ function span(attrs) {
   return $("<span/>", attrs);
 }
 
-function buildRecordUI(url, doc) {
+function buildRecordUI(doc, select, url) {
   var record = div({ id: "record"});
   var title = $("<h1/>").append(span().text("Record "));
   if (url) {
@@ -83,10 +83,10 @@ function buildRecordUI(url, doc) {
       idMap[doc.persons[i].id] = i + 1;
     }
 
-    record.append(card("Persons", buildPersonsUI(doc, idMap)));
+    record.append(card("Persons", buildPersonsUI(doc, idMap, select)));
   }
   if (doc.hasOwnProperty('fields')) {
-    record.append(card("Fields", buildFieldsUI(doc.fields)));
+    record.append(card("Fields", buildFieldsUI(doc.fields, select)));
   }
   if (doc.hasOwnProperty('relationships')) {
     //todo: Show relationship graph.
@@ -94,16 +94,16 @@ function buildRecordUI(url, doc) {
   return record;
 }
 
-function buildPersonsUI(doc, idMap) {
+function buildPersonsUI(doc, idMap, doSearch) {
   var i;
   var persons = div({id: "persons"});
   for (i = 0; i < doc.persons.length; i++) {
-    persons.append(buildPersonUI(doc, doc.persons[i], idMap));
+    persons.append(buildPersonUI(doc, doc.persons[i], idMap, doSearch));
   }
   return persons;
 }
 
-function buildPersonUI(doc, person, idMap) {
+function buildPersonUI(doc, person, idMap, doSearch) {
   var personCard = div({ class: "person card m-3", id: encode(person.id)} );
   var personCardBody = div({class: "card-body p-0"}).appendTo(personCard);
   var personCardTitle =  $("<h3/>", {class: "card-title card-header"}).appendTo(personCardBody);
@@ -134,7 +134,7 @@ function buildPersonUI(doc, person, idMap) {
   }
 
   if (person.hasOwnProperty('fields')) {
-    var fields = buildFieldsUI(person.fields);
+    var fields = buildFieldsUI(person.fields, doSearch);
     personCardBodyContent.append(div({class: "col"}).append(card("Fields", fields, 5)));
     //accordionSection(contentId, "Fields", fields).appendTo(personCardBodyContent);
   }
@@ -204,7 +204,7 @@ function buildFactsUI(facts) {
   return fs;
 }
 
-function buildFieldsUI(fields) {
+function buildFieldsUI(fields, doSearch) {
   var i, field;
   var fs = $("<table/>", {class: "fields table table-sm"});
   $("<thead/>").append($("<tr/>").append($("<th>Type</th>")).append($("<th>Value</th>"))).appendTo(fs);
@@ -319,10 +319,4 @@ function getFirst(array) {
     return array[0];
   }
   return null;
-}
-
-function showRecord(url, doc) {
-  var el = $("#record");
-  el.empty();
-  el.append(buildRecordUI(url, doc));
 }

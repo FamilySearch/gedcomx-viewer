@@ -19,17 +19,76 @@
   <script src="cache/GedxPersonaPOJO.js"></script>
   <script src="gx-view.js"></script>
   <script>
-    $(function () {
-//      var personaUrl = "https://familysearch.org/ark:/61903/1:1:XF48-HFC";
-//      var recordUrl = "https://familysearch.org/ark:/61903/1:2:99FJ-7LXP";
-//      var gedcomxUrl = "https://www.familysearch.org/ark:/61903/1:1:XTWB-H9T"; // marriage record
-//      var gedcomxUrl = "https://www.familysearch.org/ark:/61903/1:1:QK2M-H538"; // obituary
+    //      var personaUrl = "https://familysearch.org/ark:/61903/1:1:XF48-HFC";
+    //      var recordUrl = "https://familysearch.org/ark:/61903/1:2:99FJ-7LXP";
+    //      var gedcomxUrl = "https://www.familysearch.org/ark:/61903/1:1:XTWB-H9T"; // marriage record
+    //      var gedcomxUrl = "https://www.familysearch.org/ark:/61903/1:1:QK2M-H538"; // obituary
 
-      var editor = new JSONEditor(document.getElementById("json-editor"), {
+    /**
+     * The JSON editor
+     *
+     * @type JSONEditor
+     */
+    var editor = null;
+
+    /**
+     * The current selection of the JSON editor.
+     *
+     * @type Node
+     */
+    var editorSelection = null;
+
+    /**
+     * Show a record.
+     *
+     * @param doc The doc to show.
+     * @param url The URL of the record, if applicable.
+     */
+    function showRecord(doc, url) {
+      var el = $("#record");
+      el.empty();
+      el.append(buildRecordUI(doc, findRecordNode, url));
+    }
+
+    /**
+     * Find a record node in the editor.
+     *
+     * @param path The path to the record node.
+     */
+    function findRecordNode(path) {
+      if (editorSelection) {
+        editorSelection.setSelected(false);
+      }
+
+      if (editor.getMode() === "code") {
+        editor.setMode("tree");
+      }
+
+      editorSelection = editor.node.findNode(path);
+      if (editorSelection) {
+        editorSelection.scrollTo();
+        editorSelection.setSelected(true);
+      }
+      else {
+        showError("JSON path '" + path + "' does not exist.")
+      }
+    }
+
+    /**
+     * Show a warning.
+     *
+     * @param text The warning.
+     */
+    function showError(text) {
+      $("#alert-container").empty().append($("<div/>", {"class": "alert alert-danger alert-dismissible fade show mt-2", "role":"alert"}).append(text).append($("<button/>", {"type": "button", "class" : "close", "data-dismiss" : "alert", "aria-label":"Close"}).append($("<span/>", {"aria-hidden":"true"}).html("&times;"))));
+    }
+
+    $(function () {
+      editor = new JSONEditor(document.getElementById("json-editor"), {
         modes: ["tree", "code"],
         onChange: function() {
           var doc = editor.get();
-          showRecord(null, doc);
+          showRecord(doc);
         },
         onError: function(error) {
           alert(error);
@@ -45,20 +104,20 @@
            url: gedcomxUrl,
            success: function (doc, textStatus, jqKHR) {
              editor.set(doc);
-             showRecord(gedcomxUrl, doc);
+             showRecord(doc, gedcomxUrl);
            },
 
            error: function (jqXHR, textStatus, errorThrown) {
-             console.log("Request failed to: " + gedcomxUrl + ": " + textStatus);
+             showError("Request failed to: " + gedcomxUrl + ": " + textStatus);
            }
          });
       });
 
-      $("#do-paste-json").click(function() {
+      $("#paste-json").click(function() {
         $("#paste-json-form").modal("hide");
         var doc = JSON.parse($("#pasted-json").val());
         editor.set(doc);
-        showRecord(null, doc);
+        showRecord(doc);
       });
 
       $("#download-json").click(function() {
@@ -72,12 +131,21 @@
             return JSON.stringify(editor.get(), null, 2);
           }
         })
-      })
+      });
+
+      $("#test-search").click(function () {
+        findRecordNode($("#search-text").val());
+      });
+
     });
   </script>
 </head>
 <body>
 <div class="container-fluid">
+  <div class="row">
+    <div class="col" id="alert-container">
+    </div>
+  </div>
   <div class="row m-2 p-2 border">
     <div class="col">
       <div class="form-group">
@@ -86,7 +154,7 @@
                value="https://www.familysearch.org/ark:/61903/1:1:QK2M-H538"/>
       </div>
       <a id="load-json" href="#" class="btn btn-primary">Fetch JSON</a>
-      <a id="paste-json" href="#" class="btn btn-primary" data-toggle="modal" data-target="#paste-json-form">Paste JSON</a>
+      <a id="paste-json-modal" href="#" class="btn btn-primary" data-toggle="modal" data-target="#paste-json-form">Paste JSON</a>
       <a id="download-json" href="#" download="json.txt" class="btn btn-primary">Download JSON</a>
       <a id="copy-json" href="#" class="btn btn-primary">Copy JSON to Clipboard</a>
 
@@ -95,6 +163,7 @@
     <div class="col" id="record"></div>
   </div>
 </div>
+
 <!-- Modal for Pasting JSON-->
 <div class="modal fade" id="paste-json-form" tabindex="-1" role="dialog" aria-labelledby="paste-label" aria-hidden="true">
   <div class="modal-dialog" role="document">
@@ -110,7 +179,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-        <button id="do-paste-json" type="button" class="btn btn-primary" >Paste</button>
+        <button id="paste-json" type="button" class="btn btn-primary" >Paste</button>
       </div>
     </div>
   </div>
