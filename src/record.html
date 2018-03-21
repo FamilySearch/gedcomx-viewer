@@ -13,6 +13,7 @@
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/5.14.0/jsoneditor.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-filestyle/2.1.0/bootstrap-filestyle.min.js"></script>
 
   <!--<script src="gx-utils.js"></script>-->
   <script src="cache/SearchUtilsPOJO.js"></script>
@@ -60,9 +61,12 @@
      *
      * @param text The text to show.
      */
-    function showSource(text) {
+    function showSource(text, name) {
       var el = $("#source-file");
       el.empty();
+      if (name) {
+        el.append($("<h1/>").append($("<small/>", {"class": "text-muted"}).text(name)));
+      }
       el.append($("<pre/>", {"class": "border"}).text(text));
     }
 
@@ -191,6 +195,46 @@
           }
         })
       });
+
+      $("#gxfile").filestyle({
+        text: "Choose GEDCOM X File",
+        input: false,
+        'onChange' : function(files) {
+          for (var i = 0, f; f = files[i]; i++) {
+            var reader = new FileReader();
+            reader.onload = (function(file) {
+              return function(e) {
+                var doc = JSON.parse(e.target.result);
+                if (doc.records && doc.records.length > 0) {
+                  doc = doc.records[0];
+                }
+                editor.set(doc);
+                showRecord(doc, file.name);
+              }
+            })(f);
+
+            reader.readAsText(f);
+          }
+        }
+      });
+
+      $("#srcfile").filestyle({
+        text: "Choose Source File",
+        input: false,
+        'onChange' : function(files) {
+          for (var i = 0, f; f = files[i]; i++) {
+            var reader = new FileReader();
+            reader.onload = (function(file) {
+              return function(e) {
+                showSource(e.target.result, file.name);
+              }
+            })(f);
+
+            reader.readAsText(f);
+          }
+        }
+      });
+
     });
   </script>
 </head>
@@ -245,7 +289,7 @@
                         <textarea id="pasted-gx" class="form-control" rows="10"></textarea>
                       </div>
                       <div class="col">
-                        <label for="pasted-gx">Source Content</label>
+                        <label for="pasted-source">Source Content</label>
                         <textarea id="pasted-source" class="form-control" rows="10"></textarea>
                       </div>
                     </div>
@@ -254,7 +298,18 @@
                 <a id="paste-gx" href="#" class="btn btn-primary">Paste</a>
               </div>
               <div class="tab-pane fade" id="upload" role="tabpanel" aria-labelledby="upload-tab">
-                Etc.
+                <div class="form-group">
+                  <div class="container-fluid p-0">
+                    <div class="row">
+                      <div class="col">
+                        <input type="file" id="gxfile" name="gx" data-text="Choose GEDCOM X File"/>
+                      </div>
+                      <div class="col">
+                        <input type="file" id="srcfile" name="src" data-text="Choose Source File"/>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
