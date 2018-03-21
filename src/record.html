@@ -115,6 +115,9 @@
            },
            url: gedcomxUrl,
            success: function (doc, textStatus, jqKHR) {
+             if (doc.records && doc.records.length > 0) {
+               doc = doc.records[0];
+             }
              editor.set(doc);
              showRecord(doc, gedcomxUrl);
            },
@@ -128,6 +131,9 @@
       $("#paste-json").click(function() {
         $("#paste-json-form").modal("hide");
         var doc = JSON.parse($("#pasted-json").val());
+        if (doc.records && doc.records.length > 0) {
+          doc = doc.records[0];
+        }
         editor.set(doc);
         showRecord(doc);
       });
@@ -144,11 +150,6 @@
           }
         })
       });
-
-      $("#test-search").click(function () {
-        findRecordNode($("#search-text").val());
-      });
-
     });
   </script>
 </head>
