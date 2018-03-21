@@ -14,11 +14,18 @@
     background-color: cornflowerblue;
 }
 
-.json-node-select {
+.gx-node-select {
     cursor: crosshair;
 }
 
 .link-unstyled {
     color: inherit;
     text-decoration: inherit;
+}
+
+pre {
+    white-space: pre-wrap;
+    max-width: inherit;
+    max-height: 30em;
+    overflow-y: auto;
 }

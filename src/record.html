@@ -25,14 +25,14 @@
     //      var gedcomxUrl = "https://www.familysearch.org/ark:/61903/1:1:QK2M-H538"; // obituary
 
     /**
-     * The JSON editor
+     * The GEDCOM X editor
      *
      * @type JSONEditor
      */
     var editor = null;
 
     /**
-     * The current selection of the JSON editor.
+     * The current selection of the GEDCOM X editor.
      *
      * @type Node
      */
@@ -50,9 +50,20 @@
       el.append(buildRecordUI(doc, url));
 
       //add all the node-path selection logic
-      $("*[json-node-path]").addClass("json-node-select").click(function() {
+      $("*[json-node-path]").addClass("gx-node-select").click(function() {
         findRecordNode($(this).attr("json-node-path"));
       })
+    }
+
+    /**
+     * Show the source of a record.
+     *
+     * @param text The text to show.
+     */
+    function showSource(text) {
+      var el = $("#source-file");
+      el.empty();
+      el.append($("<pre/>", {"class": "border"}).text(text));
     }
 
     /**
@@ -77,7 +88,7 @@
         editorSelection.setSelected(true);
       }
       else {
-        showError("JSON path '" + path + "' does not exist.")
+        showError("GX JSON path '" + path + "' does not exist.")
       }
 
       window.scrollTo(0, 0);
@@ -93,7 +104,7 @@
     }
 
     $(function () {
-      editor = new JSONEditor(document.getElementById("json-editor"), {
+      editor = new JSONEditor(document.getElementById("gx-editor"), {
         modes: ["tree", "code"],
         onChange: function() {
           var doc = editor.get();
@@ -104,7 +115,7 @@
         }
       });
 
-      $("#load-json").click(function () {
+      $("#fetch-gx").click(function () {
         var gedcomxUrl = $("#record-url").val();
         $.ajax({
            type: "GET",
@@ -126,25 +137,55 @@
              showError("Request failed to: " + gedcomxUrl + ": " + textStatus);
            }
          });
+
+        var sourceUrl = $("#source-url").val();
+        if (sourceUrl) {
+          $.ajax({
+             type: "GET",
+             dataType: "text",
+             accepts: {text: "*/*"},
+             xhrFields: {
+               withCredentials: "true"
+             },
+             url: sourceUrl,
+             success: function (text, textStatus, jqKHR) {
+               showSource(text);
+             },
+
+             error: function (jqXHR, textStatus, errorThrown) {
+               showSource("Request failed to: " + sourceUrl + ": " + textStatus);
+             }
+           });
+        }
+        else {
+          $("#source-file").empty();
+        }
       });
 
-      $("#paste-json").click(function() {
-        $("#paste-json-form").modal("hide");
-        var doc = JSON.parse($("#pasted-json").val());
+      $("#paste-gx").click(function() {
+        var doc = JSON.parse($("#pasted-gx").val());
         if (doc.records && doc.records.length > 0) {
           doc = doc.records[0];
         }
         editor.set(doc);
         showRecord(doc);
+
+        var src = $("#pasted-source").val();
+        if (src) {
+          showSource(src);
+        }
+        else {
+          $("#source-file").empty();
+        }
       });
 
-      $("#download-json").click(function() {
-        var json = JSON.stringify(editor.get(), null, 2);
-        this.href = "data:text/plain;charset=UTF-8," + encodeURIComponent(json);
+      $("#download-gx").click(function() {
+        var gx = JSON.stringify(editor.get(), null, 2);
+        this.href = "data:text/plain;charset=UTF-8," + encodeURIComponent(gx);
       });
       
-      $("#copy-json").click(function () {
-        new ClipboardJS("#copy-json", {
+      $("#copy-gx").click(function () {
+        new ClipboardJS("#copy-gx", {
           text: function(trigger) {
             return JSON.stringify(editor.get(), null, 2);
           }
@@ -154,6 +195,7 @@
   </script>
 </head>
 <body>
+<h1 class="m-2">View and Edit GEDCOM X</h1>
 <div class="container-fluid">
   <div class="row">
     <div class="col" id="alert-container">
@@ -161,39 +203,80 @@
   </div>
   <div class="row m-2 p-2 border">
     <div class="col">
-      <div class="form-group">
-        <label for="record-url">Record URL</label>
-        <input id="record-url" type="text" class="form-control" aria-describedby="url-description"
-               value="https://www.familysearch.org/ark:/61903/1:1:QK2M-H538"/>
-      </div>
-      <a id="load-json" href="#" class="btn btn-primary">Fetch JSON</a>
-      <a id="paste-json-modal" href="#" class="btn btn-primary" data-toggle="modal" data-target="#paste-json-form">Paste JSON</a>
-      <a id="download-json" href="#" download="json.txt" class="btn btn-primary">Download JSON</a>
-      <a id="copy-json" href="#" class="btn btn-primary">Copy JSON to Clipboard</a>
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col">
+            <ul class="nav nav-tabs" id="input-tab" role="tablist">
+              <li class="nav-item">
+                <a class="nav-link active" id="fetch-tab" data-toggle="tab" href="#fetch" role="tab" aria-controls="fetch" aria-selected="true">Fetch</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" id="paste-tab" data-toggle="tab" href="#paste" role="tab" aria-controls="paste" aria-selected="false">Paste</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" id="upload-tab" data-toggle="tab" href="#upload" role="tab" aria-controls="upload" aria-selected="false">Upload</a>
+              </li>
+            </ul>
+            <div class="tab-content border border-top-0 p-4" id="input-tab-content">
+              <div class="tab-pane fade show active" id="fetch" role="tabpanel" aria-labelledby="fetch-tab">
+                <div class="form-group">
+                  <div class="container-fluid p-0">
+                    <div class="row">
+                      <div class="col">
+                        <label for="record-url">GEDCOM X URL</label>
+                        <input id="record-url" type="text" class="form-control" aria-describedby="record-url"
+                               value="https://www.familysearch.org/ark:/61903/1:1:QK2M-H538"/>
+                      </div>
+                      <div class="col">
+                        <label for="source-url">Source URL</label>
+                        <input id="source-url" type="text" class="form-control" aria-describedby="source-url"/>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <a id="fetch-gx" href="#" class="btn btn-primary">Fetch GEDCOM X</a>
+              </div>
+              <div class="tab-pane fade" id="paste" role="tabpanel" aria-labelledby="paste-tab">
+                <div class="form-group">
+                  <div class="container-fluid p-0">
+                    <div class="row">
+                      <div class="col">
+                        <label for="pasted-gx">GEDCOM X Content</label>
+                        <textarea id="pasted-gx" class="form-control" rows="10"></textarea>
+                      </div>
+                      <div class="col">
+                        <label for="pasted-gx">Source Content</label>
+                        <textarea id="pasted-source" class="form-control" rows="10"></textarea>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <a id="paste-gx" href="#" class="btn btn-primary">Paste</a>
+              </div>
+              <div class="tab-pane fade" id="upload" role="tabpanel" aria-labelledby="upload-tab">
+                Etc.
+              </div>
+            </div>
 
-      <div id="json-editor" class="pt-4 sticky-top"></div>
-    </div>
-    <div class="col" id="record"></div>
-  </div>
-</div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-6">
+            <div class="sticky-top">
+              <div id="source-file" class="pt-4"></div>
+              <div id="gx-editor" class="pt-4"></div>
+              <div class="pt-4">
+                <a id="download-gx" href="#" download="gx.txt" class="btn btn-primary">Download GEDCOM X</a>
+                <a id="copy-gx" href="#" class="btn btn-primary">Copy GEDCOM X to Clipboard</a>
+              </div>
+            </div>
+          </div>
+          <div class="col-6 pt-4">
+            <div id="record"></div>
+          </div>
+        </div>
+      </div>
 
-<!-- Modal for Pasting JSON-->
-<div class="modal fade" id="paste-json-form" tabindex="-1" role="dialog" aria-labelledby="paste-label" aria-hidden="true">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="paste-label">Paste JSON</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        <textarea id="pasted-json" class="form-control" rows="10"></textarea>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-        <button id="paste-json" type="button" class="btn btn-primary" >Paste</button>
-      </div>
     </div>
   </div>
 </div>
