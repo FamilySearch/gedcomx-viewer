@@ -94,8 +94,6 @@
       else {
         showError("GX JSON path '" + path + "' does not exist.")
       }
-
-      window.scrollTo(0, 0);
     }
 
     /**
@@ -253,17 +251,25 @@
           <div class="col">
             <ul class="nav nav-tabs" id="input-tab" role="tablist">
               <li class="nav-item">
-                <a class="nav-link active" id="fetch-tab" data-toggle="tab" href="#fetch" role="tab" aria-controls="fetch" aria-selected="true">Fetch</a>
+                <a class="nav-link active" id="upload-tab" data-toggle="tab" href="#upload" role="tab" aria-controls="upload" aria-selected="true">Upload</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" id="fetch-tab" data-toggle="tab" href="#fetch" role="tab" aria-controls="fetch" aria-selected="false">Fetch</a>
               </li>
               <li class="nav-item">
                 <a class="nav-link" id="paste-tab" data-toggle="tab" href="#paste" role="tab" aria-controls="paste" aria-selected="false">Paste</a>
               </li>
-              <li class="nav-item">
-                <a class="nav-link" id="upload-tab" data-toggle="tab" href="#upload" role="tab" aria-controls="upload" aria-selected="false">Upload</a>
-              </li>
             </ul>
             <div class="tab-content border border-top-0 p-4" id="input-tab-content">
-              <div class="tab-pane fade show active" id="fetch" role="tabpanel" aria-labelledby="fetch-tab">
+              <div class="tab-pane fade show active" id="upload" role="tabpanel" aria-labelledby="upload-tab">
+                <div class="form-group">
+                  <input type="file" id="gxfile" name="gx" data-text="Choose GEDCOM X File"/>
+                  <div class="pt-4">
+                    <input type="file" class="pt-4" id="srcfile" name="src" data-text="Choose Source File"/>
+                  </div>
+                </div>
+              </div>
+              <div class="tab-pane fade" id="fetch" role="tabpanel" aria-labelledby="fetch-tab">
                 <div class="form-group">
                   <div class="container-fluid p-0">
                     <div class="row">
@@ -298,21 +304,12 @@
                 </div>
                 <a id="paste-gx" href="#" class="btn btn-primary">Paste</a>
               </div>
-              <div class="tab-pane fade" id="upload" role="tabpanel" aria-labelledby="upload-tab">
-                <div class="form-group">
-                  <input type="file" id="gxfile" name="gx" data-text="Choose GEDCOM X File"/>
-                  <div class="pt-4">
-                    <input type="file" class="pt-4" id="srcfile" name="src" data-text="Choose Source File"/>
-                  </div>
-                </div>
-              </div>
             </div>
-
           </div>
         </div>
         <div class="row">
           <div class="col-6">
-            <div class="sticky-top">
+            <div class="sticky-top" style="max-height: 100vh">
               <div id="source-file" class="pt-4"></div>
               <div id="gx-editor" class="pt-4"></div>
               <div class="pt-4">

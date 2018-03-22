@@ -26,6 +26,11 @@
 pre {
     white-space: pre-wrap;
     max-width: inherit;
-    max-height: 30em;
+    max-height: 40vh;
+    overflow-y: auto;
+}
+
+#gx-editor {
+    max-height: 40vh;
     overflow-y: auto;
 }
