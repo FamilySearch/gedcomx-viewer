@@ -178,19 +178,30 @@ function buildNameUI(name, path) {
       if (!empty(nameForm.lang)) {
         n.append(span({class: "lang badge badge-dark", "json-node-path" : nameFormPath + ".lang"}).text(nameForm.lang));
       }
-      n.append(span({class: "name-form", "json-node-path" : nameFormPath + ".fullText"}).text(empty(nameForm.fullText) ? "(Empty)" : nameForm.fullText));
+      n.append($("<h5/>", {class: "name-form", "json-node-path" : nameFormPath + ".fullText"}).text(empty(nameForm.fullText) ? "(Empty)" : nameForm.fullText));
 
-      // todo: name parts, fields...
-      // if (nameForm.parts) {
-      //   for (j = 0; j < nameForm.parts.length; j++) {
-      //     namePart = nameForm.parts[j];
-      //
-      //   }
-      // }
+      if (nameForm.parts) {
+        n.append(buildNamePartsUI(nameForm.parts, nameFormPath + ".parts"));
+      }
     }
   }
 
   return n;
+}
+
+function buildNamePartsUI(parts, path) {
+  var i, part;
+  var fs = $("<table/>", {class: "name-parts table table-sm"});
+  $("<thead/>").append($("<tr/>").append($("<th>Part Type</th>")).append($("<th>Part Value</th>"))).appendTo(fs);
+  var body = $("<tbody/>").appendTo(fs);
+  for (i = 0; i < parts.length; i++) {
+    var partPath = path + '[' + i + ']';
+    part = parts[i];
+    var f = $("<tr/>").appendTo(body);
+    f.append($("<td/>", {class: "fact-type text-nowrap", "json-node-path" : partPath + ".type"}).text(parseType(part.type)));
+    f.append($("<td/>", {class: "fact-value text-nowrap", "json-node-path" : partPath + ".value"}).text(part.value ? part.value : ""));
+  }
+  return fs;
 }
 
 function buildFactsUI(facts, path) {
