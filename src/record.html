@@ -224,7 +224,34 @@
         },
         onError: function(error) {
           alert(error);
-        }
+        },
+        templates: [
+          {
+            text: 'Age',
+            title: 'Add an age qualifier',
+            field: 'qualifiers',
+            value: [
+              {
+                name: "http://gedcomx.org/Age",
+                value: "80"
+              }
+            ]
+          },
+          {
+            text: 'Fact',
+            title: 'Add a fact.',
+            field: 'facts',
+            value: {
+              type: 'http://gedcomx.org/Birth',
+              date: {
+                original: '01 Jan 1950'
+              },
+              place: {
+                original: 'United States'
+              }
+            }
+          }
+        ]
       });
 
       $("#fetch-gx").click(function () {
