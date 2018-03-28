@@ -359,7 +359,7 @@
         if (!doc.persons) {
           doc.persons = [];
         }
-        doc.persons.unshift(person);
+        doc.persons.push(person);
         updateRecord(doc);
         $("#new-person").modal("hide");
         $("#new-person-form").children().find("input[type=text]").each(function() {
@@ -381,7 +381,7 @@
         if (!doc.relationships) {
           doc.relationships = [];
         }
-        doc.relationships.unshift(relationship);
+        doc.relationships.push(relationship);
         updateRecord(doc);
         $("#new-relationship").modal("hide");
       });
