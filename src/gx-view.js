@@ -67,11 +67,34 @@ function span(attrs) {
 
 function buildRecordUI(doc, url) {
   var record = div({ id: "record"});
-  var title = $("<h1/>").append(span().text("Record "));
+  record.append($("<h1/>").append(span().text("Record ")));
+
+  var recordMetadata = {};
+
   if (url) {
-    $("<small/>", {class: "text-muted"}).text(url).appendTo(title);
+    recordMetadata.URL = url;
   }
-  record.append(title);
+
+  if (doc.hasOwnProperty('description')) {
+    var sd = GedxPersonaPOJO.getSourceDescription(doc, doc.description);
+    if (sd) {
+      if (sd.hasOwnProperty("titles")) {
+        recordMetadata.Title = sd.titles[0].value;
+      }
+
+      if (sd.hasOwnProperty("coverage")) {
+        var coverage = sd.coverage[0];
+        recordMetadata.Type = parseType(coverage.recordType);
+        if (coverage.hasOwnProperty("temporal")) {
+          recordMetadata.Date = coverage.temporal.original;
+        }
+        if (coverage.hasOwnProperty("spatial")) {
+          recordMetadata.Place = coverage.spatial.original;
+        }
+      }
+    }
+  }
+  record.append(dl(recordMetadata));
 
   var i;
   // Map of local person id (p_1234567) to index (1, 2, 3...)
@@ -90,7 +113,8 @@ function buildRecordUI(doc, url) {
     record.append(card("Relationships", buildRelationshipsUI(doc, idMap, path)));
   }
   if (doc.hasOwnProperty('fields')) {
-    record.append(card("Fields", buildFieldsUI(doc.fields, path + ".fields")));
+    //hide fields for now
+    //record.append(card("Fields", buildFieldsUI(doc.fields, path + ".fields")));
   }
   return record;
 }
@@ -136,8 +160,9 @@ function buildPersonUI(doc, person, idMap, path) {
   }
 
   if (person.hasOwnProperty('fields')) {
-    var fields = buildFieldsUI(person.fields, path + ".fields");
-    personCardBodyContent.append(div({class: "col"}).append(card("Fields", fields, 5)));
+    //hide fields for now
+    //var fields = buildFieldsUI(person.fields, path + ".fields");
+    //personCardBodyContent.append(div({class: "col"}).append(card("Fields", fields, 5)));
     //accordionSection(contentId, "Fields", fields).appendTo(personCardBodyContent);
   }
 
@@ -205,18 +230,61 @@ function buildNamePartsUI(parts, path) {
 }
 
 function buildFactsUI(facts, path) {
-  var i, fact;
+  var i, j, fact;
   var fs = $("<table/>", {class: "facts table table-sm"});
-  $("<thead/>").append($("<tr/>").append($("<th>Type</th>")).append($("<th>Date</th>")).append($("<th>Place</th>")).append($("<th>Value</th>"))).appendTo(fs);
+  var valueNeeded = false;
+  var ageNeeded = false;
+  for (i = 0; i < facts.length; i++) {
+    if (facts[i].value) {
+      valueNeeded = true;
+    }
+
+    if (facts[i].qualifiers) {
+      for (j = 0; j < facts[i].qualifiers.length; j++) {
+        if (facts[i].qualifiers[j].name === "http://gedcomx.org/Age") {
+          ageNeeded = true;
+        }
+      }
+    }
+  }
+
+  var row = $("<tr/>").append($("<th>Type</th>")).append($("<th>Date</th>")).append($("<th>Place</th>"));
+  if (valueNeeded) {
+    row.append($("<th>Value</th>"));
+  }
+  if (ageNeeded) {
+    row.append($("<th>Age</th>"));
+  }
+  $("<thead/>").append(row).appendTo(fs);
+
   var body = $("<tbody/>").appendTo(fs);
   for (i = 0; i < facts.length; i++) {
     var factPath = path + '[' + i + ']';
     fact = facts[i];
     var f = $("<tr/>").appendTo(body);
-    f.append($("<td/>", {class: "fact-type text-nowrap", "json-node-path" : factPath + ".type"}).text(parseType(fact.type)));
+    if (fact.primary) {
+      f.append($("<td/>", {class: "fact-type text-nowrap", "json-node-path" : factPath + ".type"}).append(span({class: "oi oi-star"})).append(span().text(parseType(fact.type))));
+    }
+    else {
+      f.append($("<td/>", {class: "fact-type text-nowrap", "json-node-path" : factPath + ".type"}).text(parseType(fact.type)));
+    }
     f.append($("<td/>", {class: "fact-date text-nowrap", "json-node-path" : factPath + ".date"}).text(fact.date ? fact.date.original : ""));
     f.append($("<td/>", {class: "fact-place text-nowrap", "json-node-path" : factPath + ".place"}).text(fact.place ? fact.place.original : ""));
-    f.append($("<td/>", {class: "fact-value text-nowrap", "json-node-path" : factPath + ".value"}).text(fact.value ? fact.value : ""));
+    if (valueNeeded) {
+      f.append($("<td/>", {class: "fact-value text-nowrap", "json-node-path": factPath + ".value"}).text(fact.value ? fact.value : ""));
+    }
+    if (ageNeeded) {
+      if (fact.qualifiers) {
+        for (j = 0; j < fact.qualifiers.length; j++) {
+          if (fact.qualifiers[j].name === "http://gedcomx.org/Age") {
+            f.append($("<td/>", {class: "fact-age text-nowrap", "json-node-path": factPath + ".qualifiers[" + j + "]"}).text(fact.qualifiers[j].value));
+          }
+        }
+      }
+      else {
+        f.append($("<td/>", {class: "fact-age text-nowrap"}).text(""));
+      }
+    }
   }
   return fs;
 }

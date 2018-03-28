@@ -67,10 +67,67 @@
         doc = doc.records[0];
       }
 
+      fixAge(doc);
+
       editor.set(doc);
       showRecord(doc, url);
+
       updateSelectablePersons(doc, $("#new-relationship-person-1"));
       updateSelectablePersons(doc, $("#new-relationship-person-2"));
+    }
+
+    /**
+     *  Fix the age at an event.
+     *
+     *  @param doc The record to update.
+     */
+    function fixAge(doc) {
+      var i, j, k;
+      if (doc.persons) {
+        for (i = 0; i < doc.persons.length; i++) {
+          var person = doc.persons[i];
+          var age = null;
+          if (person.fields) {
+            for (j = 0; j < person.fields.length; j++) {
+              if (person.fields[j].type === "http://gedcomx.org/Age") {
+                var ageField = person.fields[j];
+                if (ageField.values) {
+                  for (k = 0; k < ageField.values.length; k++) {
+                    if (ageField.values[k].type === "http://gedcomx.org/Original") {
+                      age = ageField.values[k].text;
+                      break;
+                    }
+                  }
+                }
+                break;
+              }
+            }
+          }
+
+          if (age && person.facts) {
+            for (j = 0; j < person.facts.length; j++) {
+              if (person.facts[j].primary) {
+                var fact = person.facts[j];
+                if (!fact.qualifiers) {
+                  fact.qualifiers = [];
+                }
+
+                var addAge = true;
+                for (k = 0; k < fact.qualifiers.length; k++) {
+                  if (fact.qualifiers[k].name === "http://gedcomx.org/Age") {
+                    addAge = false;
+                    break;
+                  }
+                }
+
+                if (addAge) {
+                  fact.qualifiers.push({name: "http://gedcomx.org/Age", value: age});
+                }
+              }
+            }
+          }
+        }
+      }
     }
 
     /**
@@ -419,26 +476,24 @@
           </div>
         </div>
         <div class="row">
-          <div class="col-6">
+          <div class="col-4">
             <div class="sticky-top" style="max-height: 100vh">
               <div id="source-file" class="pt-4"></div>
               <div id="gx-editor" class="pt-4"></div>
               <div class="pt-4">
-                <a id="download-gx" href="#" download="gx.txt" class="btn btn-primary">Download GEDCOM X</a>
-                <a id="copy-gx" href="#" class="btn btn-primary">Copy GEDCOM X to Clipboard</a>
+                <a id="download-gx" href="#" download="gx.txt" class="btn btn-primary p-2">Download GEDCOM X</a>
+                <a id="copy-gx" href="#" class="btn btn-primary p-2">Copy GEDCOM X to Clipboard</a>
               </div>
             </div>
           </div>
-          <div class="col-6 pt-4">
+          <div class="col-8 pt-4">
             <div class="container-fluid">
               <div class="row">
                 <div class="col">
-                  <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#new-person">
+                  <button type="button" class="btn btn-primary p-2" data-toggle="modal" data-target="#new-person">
                     Add Person
                   </button>
-                </div>
-                <div class="col">
-                  <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#new-relationship">
+                  <button type="button" class="btn btn-primary p-2" data-toggle="modal" data-target="#new-relationship">
                     Add Relationship
                   </button>
                 </div>
