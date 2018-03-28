@@ -1416,7 +1416,7 @@
     else {
       var person = this.getPerson(personaOrRecord, personOrId);
     }
-    if (person) {
+    if (person && person.identifiers) {
       url = getFirst(person.identifiers["http://gedcomx.org/Persistent"]);
     }
     return url;
@@ -3222,7 +3222,7 @@
     };
     function getPersonLink() {
       if (focusPerson.id !== person.id) {
-        return GedxPersonaPOJO.prototype.getPersonUrl(personaOrRecord, person);
+        return GedxPersonaPOJO.prototype.getPersonUrl(personaOrRecord, person.id);
       }
     }
   }

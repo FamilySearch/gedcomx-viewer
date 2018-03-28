@@ -57,6 +57,39 @@
     }
 
     /**
+     *  Update a record.
+     *
+     *  @param doc The record to update.
+     *  @param url The url of the record, if applicable.
+     */
+    function updateRecord(doc, url) {
+      if (doc.records && doc.records.length > 0) {
+        doc = doc.records[0];
+      }
+
+      editor.set(doc);
+      showRecord(doc, url);
+      updateSelectablePersons(doc, $("#new-relationship-person-1"));
+      updateSelectablePersons(doc, $("#new-relationship-person-2"));
+    }
+
+    /**
+     *  Update the selectable persons of a record.
+     *
+     *  @param doc The record.'
+     *  @param select The selection.
+     */
+    function updateSelectablePersons(doc, select) {
+      select.empty();
+      $.each(doc.persons, function(i, person) {
+        select.append($("<option/>", {
+          value: person.id,
+          text: GedxPersonaPOJO.getBestNameValue(person)
+        }));
+      });
+    }
+
+    /**
      * Show the source of a record.
      *
      * @param text The text to show.
@@ -128,11 +161,7 @@
            },
            url: gedcomxUrl,
            success: function (doc, textStatus, jqKHR) {
-             if (doc.records && doc.records.length > 0) {
-               doc = doc.records[0];
-             }
-             editor.set(doc);
-             showRecord(doc, gedcomxUrl);
+             updateRecord(doc, gedcomxUrl);
            },
 
            error: function (jqXHR, textStatus, errorThrown) {
@@ -166,11 +195,7 @@
 
       $("#paste-gx").click(function() {
         var doc = JSON.parse($("#pasted-gx").val());
-        if (doc.records && doc.records.length > 0) {
-          doc = doc.records[0];
-        }
-        editor.set(doc);
-        showRecord(doc);
+        updateRecord(doc);
 
         var src = $("#pasted-source").val();
         if (src) {
@@ -203,11 +228,7 @@
             reader.onload = (function(file) {
               return function(e) {
                 var doc = JSON.parse(e.target.result);
-                if (doc.records && doc.records.length > 0) {
-                  doc = doc.records[0];
-                }
-                editor.set(doc);
-                showRecord(doc, file.name);
+                updateRecord(doc, file.name);
                 $("#download-gx").attr("download", file.name);
               }
             })(f);
@@ -231,6 +252,86 @@
 
             reader.readAsText(f);
           }
+        }
+      });
+
+      $("#add-new-person").click(function() {
+        var person = {};
+        person.id = "p_999" + Math.floor(Math.random() * Math.floor(1000000000));
+        person.extracted = true;
+        person.principal = $("#new-person-principal").checked;
+        person.gender = {};
+        person.gender.type = $("input[name=new-person-gender]:checked").val();
+        person.names = [];
+        person.facts = [];
+        person.fields = [];
+
+        var name = {};
+        name.type = "http://gedcomx.org/BirthName";
+        name.nameForms = [];
+
+        var nameForm = {};
+        var givenNames = $("#new-person-given-names").val();
+        var surnames = $("#new-person-surnames").val();
+        nameForm.fullText = givenNames + " " + surnames;
+        nameForm.parts = [];
+
+        var givenNamePart = {};
+        givenNamePart.type = "http://gedcomx.org/Given";
+        givenNamePart.value = givenNames;
+
+        var surnamePart = {};
+        surnamePart.type = "http://gedcomx.org/Surname";
+        surnamePart.value = surnames;
+        nameForm.parts.push(givenNamePart);
+        nameForm.parts.push(surnamePart);
+        name.nameForms.push(nameForm);
+        person.names.push(name);
+
+        var doc = editor.get();
+        if (!doc.persons) {
+          doc.persons = [];
+        }
+        doc.persons.unshift(person);
+        updateRecord(doc);
+        $("#new-person").modal("hide");
+        $("#new-person-form").children().find("input[type=text]").each(function() {
+          $(this).val("");
+        });
+      });
+
+      $("#add-new-relationship").click(function() {
+        var relationship = {};
+        relationship.type = $("#new-relationship-type").val();
+        relationship.person1 = {};
+        relationship.person1.resourceId = $("#new-relationship-person-1").val();
+        relationship.person1.resource = "#" + relationship.person1.resourceId;
+        relationship.person2 = {};
+        relationship.person2.resourceId = $("#new-relationship-person-2").val();
+        relationship.person2.resource = "#" + relationship.person2.resourceId;
+
+        var doc = editor.get();
+        if (!doc.relationships) {
+          doc.relationships = [];
+        }
+        doc.relationships.unshift(relationship);
+        updateRecord(doc);
+        $("#new-relationship").modal("hide");
+      });
+
+      $("#new-relationship-type").change(function() {
+        var type = this.val();
+        if ("http://gedcomx.org/Couple" === type) {
+          $("#new-relationship-person-1-label").text("Spouse 1");
+          $("#new-relationship-person-2-label").text("Spouse 2");
+        }
+        else if ("http://gedcomx.org/ParentChild" === type) {
+          $("#new-relationship-person-1-label").text("Parent");
+          $("#new-relationship-person-2-label").text("Child");
+        }
+        else {
+          $("#new-relationship-person-1-label").text("Person 1");
+          $("#new-relationship-person-2-label").text("Person 2");
         }
       });
 
@@ -319,11 +420,108 @@
             </div>
           </div>
           <div class="col-6 pt-4">
-            <div id="record"></div>
+            <div class="container-fluid">
+              <div class="row">
+                <div class="col">
+                  <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#new-person">
+                    Add Person
+                  </button>
+                </div>
+                <div class="col">
+                  <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#new-relationship">
+                    Add Relationship
+                  </button>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col">
+                  <div id="record"></div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
+    </div>
+  </div>
+</div>
 
+<div class="modal fade" id="new-person" tabindex="-1" role="dialog" aria-labelledby="new-person-label" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="new-person-label">Add Person</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" id="new-person-form">
+        <div class="form-group">
+          <label for="new-person-given-names">Given Name(s)</label>
+          <input id="new-person-given-names" type="text" class="form-control"/>
+        </div>
+        <div class="form-group">
+          <label for="new-person-surnames">Surname(s)</label>
+          <input id="new-person-surnames" type="text" class="form-control"/>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" id="new-person-principal" type="checkbox" value=""/>
+          <label class="form-check-label" for="new-person-principal">Principal</label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" id="new-person-male" type="radio" name="new-person-gender" value="http://gedcomx.org/Male"/>
+          <label class="form-check-label" for="new-person-male">Male</label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" id="new-person-female" type="radio" name="new-person-gender" value="http://gedcomx.org/Female"/>
+          <label class="form-check-label" for="new-person-female">Female</label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" id="new-person-unknown" type="radio" name="new-person-gender" value="http://gedcomx.org/Unknown" checked/>
+          <label class="form-check-label" for="new-person-unknown">Unknown Gender</label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button id="add-new-person" type="button" class="btn btn-primary">Add Person</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="new-relationship" tabindex="-1" role="dialog" aria-labelledby="new-relationship-label" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="new-relationship-label">Add Relationship</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" id="new-relationship-form">
+        <div class="form-group">
+          <label for="new-relationship-type">Relationship Type</label>
+          <select class="form-control" id="new-relationship-type">
+            <option value="http://gedcomx.org/Couple">Couple</option>
+            <option value="http://gedcomx.org/ParentChild">Parent-Child</option>
+            <option value="http://familysearch.org/types/relationships/Unknown">Unknown</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="new-relationship-person-1" id="new-relationship-person-1-label">Person 1</label>
+          <select class="form-control" id="new-relationship-person-1">
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="new-relationship-person-2" id="new-relationship-person-2-label">Person 2</label>
+          <select class="form-control" id="new-relationship-person-2">
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button id="add-new-relationship" type="button" class="btn btn-primary">Add Relationship</button>
+      </div>
     </div>
   </div>
 </div>
