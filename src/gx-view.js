@@ -248,7 +248,7 @@ function buildFactsUI(facts, path) {
     }
   }
 
-  var row = $("<tr/>").append($("<th>Type</th>")).append($("<th>Date</th>")).append($("<th>Place</th>"));
+  var row = $("<tr/>").append($("<th> </th>")).append($("<th>Type</th>")).append($("<th>Date</th>")).append($("<th>Place</th>"));
   if (valueNeeded) {
     row.append($("<th>Value</th>"));
   }
@@ -263,7 +263,7 @@ function buildFactsUI(facts, path) {
     fact = facts[i];
     var f = $("<tr/>").appendTo(body);
     if (fact.primary) {
-      f.append($("<td/>", {class: "fact-type text-nowrap", "json-node-path" : factPath + ".type"}).append(span({class: "oi oi-star"})).append(span().text(parseType(fact.type))));
+      f.append($("<td/>", {class: "fact-type text-nowrap", "json-node-path" : factPath + ".type"}).append(span().text(parseType(fact.type) + " ")).append(span({class: "oi oi-star"})));
     }
     else {
       f.append($("<td/>", {class: "fact-type text-nowrap", "json-node-path" : factPath + ".type"}).text(parseType(fact.type)));
