@@ -129,6 +129,16 @@
       }
     }
 
+    function exportGedcomx() {
+      return JSON.stringify(editor.get(), function (key, value) {
+        if (key === "fields") {
+          //strip out any fields
+          return undefined;
+        }
+        return value;
+      }, 2);
+    }
+
     /**
      * Show a warning.
      *
@@ -207,14 +217,14 @@
       });
 
       $("#download-gx").click(function() {
-        var gx = JSON.stringify(editor.get(), null, 2);
+        var gx = exportGedcomx();
         this.href = "data:text/plain;charset=UTF-8," + encodeURIComponent(gx);
       });
       
       $("#copy-gx").click(function () {
         new ClipboardJS("#copy-gx", {
           text: function(trigger) {
-            return JSON.stringify(editor.get(), null, 2);
+            return exportGedcomx();
           }
         })
       });
