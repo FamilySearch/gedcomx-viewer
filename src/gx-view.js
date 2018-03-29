@@ -307,53 +307,65 @@ function buildFieldsUI(fields, path) {
 // Get the HTML for the list of a person's relatives.
 function buildRelativesUI(doc, person, idMap) {
   var r = div({class: "relatives"});
-  var parentsAndSiblings = GedxPersonaPOJO.getParentsAndSiblings(doc, person);
-  var parentFamily, parent, parentLabel;
-  var spouseAndChildren, spouseFamily, spouseLabel;
-  var child, childLabel;
-  var i, j;
-  for (i = 0; i < parentsAndSiblings.length; i++) {
-    parentFamily = parentsAndSiblings[i];
-    if (parentFamily.parents) {
-      for (j = 0; j < parentFamily.parents.length; j++) {
-        parent = parentFamily.parents[j];
-        parentLabel = relativeLabel(parent.gender, "Father", "Mother", "Parent");
-        r.append(relativeUI(parent.id, parentLabel, idMap[parent.id], parent.name, parent.gender));
+  var i;
+
+  for (i = 0; i < doc.relationships.length; i++) {
+    var relationship = doc.relationships[i];
+    var ref1 = relationship.person1 ? relationship.person1.resource ? relationship.person1.resource : "" : "";
+    var ref2 = relationship.person2 ? relationship.person2.resource ? relationship.person2.resource : "" : "";
+    var isP1 = ref1.endsWith(person.id);
+    var isP2 = ref2.endsWith(person.id);
+    if (isP1 || isP2) {
+      if (relationship.type === "http://gedcomx.org/Couple") {
+        var spouseRef = isP1 ? ref2 : ref1;
+        var spouse = findPersonByRef(doc, spouseRef);
+        if (spouse) {
+          var spouseLabel = relativeLabel(spouse.gender ? spouse.gender.type : null, "Husband", "Wife", "Spouse");
+          r.append(relativeUI(spouse.id, spouseLabel, idMap[spouse.id], GedxPersonaPOJO.getBestNameValue(spouse), GedxPersonaPOJO.getGenderString(spouse)));
+          r.append(buildRelationshipFactsUI(relationship));
+        }
+      }
+      else if (relationship.type === "http://gedcomx.org/ParentChild") {
+        if (isP1) {
+          var childRef = isP1 ? ref2 : ref1;
+          var child = findPersonByRef(doc, childRef);
+          if (child) {
+            var childLabel = relativeLabel(child.gender ? child.gender.type : null, "Son", "Daughter", "Child");
+            r.append(relativeUI(child.id, childLabel, idMap[child.id], GedxPersonaPOJO.getBestNameValue(child), GedxPersonaPOJO.getGenderString(child)));
+            r.append(buildRelationshipFactsUI(relationship));
+          }
+        }
+        else {
+          var parentRef = isP1 ? ref2 : ref1;
+          var parent = findPersonByRef(doc, parentRef);
+          if (parent) {
+            var parentLabel = relativeLabel(parent.gender ? parent.gender.type : null, "Father", "Mother", "Parent");
+            r.append(relativeUI(parent.id, parentLabel, idMap[parent.id], GedxPersonaPOJO.getBestNameValue(parent), GedxPersonaPOJO.getGenderString(parent)));
+            r.append(buildRelationshipFactsUI(relationship));
+          }
+        }
+      }
+      else {
+        var relativeRef = isP1 ? ref2 : ref1;
+        var relative = findPersonByRef(doc, relativeRef);
+        if (relative) {
+          r.append(relativeUI(relative.id, parseType(relationship.type), idMap[relative.id], GedxPersonaPOJO.getBestNameValue(relative), GedxPersonaPOJO.getGenderString(relative)));
+          r.append(buildRelationshipFactsUI(relationship));
+        }
       }
     }
   }
-  spouseAndChildren = GedxPersonaPOJO.getSpousesAndChildren(doc, person);
-  for (i = 0; i < spouseAndChildren.length; i++) {
-    spouseFamily = spouseAndChildren[i];
-    var spouse = spouseFamily.spouse;
-    if (!empty(spouse)) {
-      spouseLabel = relativeLabel(spouse.gender, "Husband", "Wife", "Spouse");
-      r.append(relativeUI(spouse.id, spouseLabel, idMap[spouse.id], spouse.name, spouse.gender));
-      r.append(buildRelationshipFactsUI(person.id, spouse.id, "http://gedcomx.org/Couple", doc.relationships));
-    }
-    if (!empty(spouseFamily.children)) {
-      for (j = 0; j < spouseFamily.children.length; j++) {
-        child = spouseFamily.children[j];
-        childLabel = relativeLabel(child.gender, "Son", "Daughter", "Child");
-        r.append(relativeUI(child.id, childLabel, idMap[child.id], child.name, child.gender));
-      }
-    }
-  }
+
   return r;
 }
 
-function buildRelationshipFactsUI(person1Id, person2Id, relationshipType, relationships) {
-  var i, j, rel;
+function buildRelationshipFactsUI(rel) {
+  var i;
   var facts = {};
-  for (i = 0; i < relationships.length; i++) {
-    rel = relationships[i];
-    if (relationshipType === rel.type && rel.hasOwnProperty("facts")) {
-      if (("#" + person1Id === rel.person1.resource && "#" + person2Id === rel.person2.resource) || (relationshipType === "http://gedcomx.org/Couple" && "#" + person2Id === rel.person1.resource && "#" + person1Id === rel.person2.resource)) {
-        for (j = 0; j < rel.facts.length; j++) {
-          var fact = rel.facts[j];
-          facts[parseType(fact.type)] = (fact.date ? fact.date.original + " " : "") + (fact.place ? fact.place.original + " " : "") + (fact.value ? "(" + fact.value + ")" : "");
-        }
-      }
+  if (rel && rel.facts) {
+    for (i = 0; i < rel.facts.length; i++) {
+      var fact = rel.facts[i];
+      facts[parseType(fact.type)] = (fact.date ? fact.date.original + " " : "") + (fact.place ? fact.place.original + " " : "") + (fact.value ? "(" + fact.value + ")" : "");
     }
   }
   return dl(facts, {class: "relationship-facts px-3"});
@@ -370,10 +382,10 @@ function relativeUI(relativeId, relativeType, relativeIndex, relativeName, relat
 }
 
 function relativeLabel(gender, maleType, femaleType, neutralType) {
-  if (gender === "M") {
+  if (gender === "http://gedcomx.org/Male") {
     return maleType;
   }
-  if (gender === "F") {
+  if (gender === "http://gedcomx.org/Female") {
     return femaleType;
   }
   return neutralType;
