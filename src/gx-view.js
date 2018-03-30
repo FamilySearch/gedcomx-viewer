@@ -309,48 +309,50 @@ function buildRelativesUI(doc, person, idMap) {
   var r = div({class: "relatives"});
   var i;
 
-  for (i = 0; i < doc.relationships.length; i++) {
-    var relationship = doc.relationships[i];
-    var ref1 = relationship.person1 ? relationship.person1.resource ? relationship.person1.resource : "" : "";
-    var ref2 = relationship.person2 ? relationship.person2.resource ? relationship.person2.resource : "" : "";
-    var isP1 = ref1.endsWith(person.id);
-    var isP2 = ref2.endsWith(person.id);
-    if (isP1 || isP2) {
-      if (relationship.type === "http://gedcomx.org/Couple") {
-        var spouseRef = isP1 ? ref2 : ref1;
-        var spouse = findPersonByRef(doc, spouseRef);
-        if (spouse) {
-          var spouseLabel = relativeLabel(spouse.gender ? spouse.gender.type : null, "Husband", "Wife", "Spouse");
-          r.append(relativeUI(spouse.id, spouseLabel, idMap[spouse.id], GedxPersonaPOJO.getBestNameValue(spouse), GedxPersonaPOJO.getGenderString(spouse)));
-          r.append(buildRelationshipFactsUI(relationship));
-        }
-      }
-      else if (relationship.type === "http://gedcomx.org/ParentChild") {
-        if (isP1) {
-          var childRef = isP1 ? ref2 : ref1;
-          var child = findPersonByRef(doc, childRef);
-          if (child) {
-            var childLabel = relativeLabel(child.gender ? child.gender.type : null, "Son", "Daughter", "Child");
-            r.append(relativeUI(child.id, childLabel, idMap[child.id], GedxPersonaPOJO.getBestNameValue(child), GedxPersonaPOJO.getGenderString(child)));
+  if (doc.relationships) {
+    for (i = 0; i < doc.relationships.length; i++) {
+      var relationship = doc.relationships[i];
+      var ref1 = relationship.person1 ? relationship.person1.resource ? relationship.person1.resource : "" : "";
+      var ref2 = relationship.person2 ? relationship.person2.resource ? relationship.person2.resource : "" : "";
+      var isP1 = ref1.endsWith(person.id);
+      var isP2 = ref2.endsWith(person.id);
+      if (isP1 || isP2) {
+        if (relationship.type === "http://gedcomx.org/Couple") {
+          var spouseRef = isP1 ? ref2 : ref1;
+          var spouse = findPersonByRef(doc, spouseRef);
+          if (spouse) {
+            var spouseLabel = relativeLabel(spouse.gender ? spouse.gender.type : null, "Husband", "Wife", "Spouse");
+            r.append(relativeUI(spouse.id, spouseLabel, idMap[spouse.id], GedxPersonaPOJO.getBestNameValue(spouse), GedxPersonaPOJO.getGenderString(spouse)));
             r.append(buildRelationshipFactsUI(relationship));
+          }
+        }
+        else if (relationship.type === "http://gedcomx.org/ParentChild") {
+          if (isP1) {
+            var childRef = isP1 ? ref2 : ref1;
+            var child = findPersonByRef(doc, childRef);
+            if (child) {
+              var childLabel = relativeLabel(child.gender ? child.gender.type : null, "Son", "Daughter", "Child");
+              r.append(relativeUI(child.id, childLabel, idMap[child.id], GedxPersonaPOJO.getBestNameValue(child), GedxPersonaPOJO.getGenderString(child)));
+              r.append(buildRelationshipFactsUI(relationship));
+            }
+          }
+          else {
+            var parentRef = isP1 ? ref2 : ref1;
+            var parent = findPersonByRef(doc, parentRef);
+            if (parent) {
+              var parentLabel = relativeLabel(parent.gender ? parent.gender.type : null, "Father", "Mother", "Parent");
+              r.append(relativeUI(parent.id, parentLabel, idMap[parent.id], GedxPersonaPOJO.getBestNameValue(parent), GedxPersonaPOJO.getGenderString(parent)));
+              r.append(buildRelationshipFactsUI(relationship));
+            }
           }
         }
         else {
-          var parentRef = isP1 ? ref2 : ref1;
-          var parent = findPersonByRef(doc, parentRef);
-          if (parent) {
-            var parentLabel = relativeLabel(parent.gender ? parent.gender.type : null, "Father", "Mother", "Parent");
-            r.append(relativeUI(parent.id, parentLabel, idMap[parent.id], GedxPersonaPOJO.getBestNameValue(parent), GedxPersonaPOJO.getGenderString(parent)));
+          var relativeRef = isP1 ? ref2 : ref1;
+          var relative = findPersonByRef(doc, relativeRef);
+          if (relative) {
+            r.append(relativeUI(relative.id, parseType(relationship.type), idMap[relative.id], GedxPersonaPOJO.getBestNameValue(relative), GedxPersonaPOJO.getGenderString(relative)));
             r.append(buildRelationshipFactsUI(relationship));
           }
-        }
-      }
-      else {
-        var relativeRef = isP1 ? ref2 : ref1;
-        var relative = findPersonByRef(doc, relativeRef);
-        if (relative) {
-          r.append(relativeUI(relative.id, parseType(relationship.type), idMap[relative.id], GedxPersonaPOJO.getBestNameValue(relative), GedxPersonaPOJO.getGenderString(relative)));
-          r.append(buildRelationshipFactsUI(relationship));
         }
       }
     }
