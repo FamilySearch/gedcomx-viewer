@@ -10,4 +10,11 @@ UI for viewing/editing/saving GEDCOM X data.
 * Assume married spouse also has parent-child relationships to children.
 * Calculate implicit dates (i.e. convert things like Thursday to an actual date if possible)
 * Remove estimated birthdate if explicit date is specified
-
+* Add military service if mentioned
+* Add military award if mentioned
+* Add "move from" if mentioned
+* Add "religion" if mentioned
+* Add "education" if mentioned
+* Add or move nickname if mentioned
+* Add cause of death if mentioned
+* Add inferred birth if age mentioned
