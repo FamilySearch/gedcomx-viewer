@@ -455,9 +455,29 @@
 
     });
   </script>
+  <style type="text/css">
+    #gx-editor {
+      max-height: 40vh;
+      overflow-y: auto;
+    }
+
+    body {
+      padding-top: 4em;
+    }
+  </style>
 </head>
 <body>
-<h1 class="m-2">View and Edit GEDCOM X</h1>
+<nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
+  <span class="navbar-brand">View and Edit GEDCOM X</span>
+  <button type="button" class="btn btn-primary m-1" data-toggle="modal" data-target="#new-person">
+    Add Person
+  </button>
+  <button type="button" class="btn btn-primary m-1" data-toggle="modal" data-target="#new-relationship">
+    Add Relationship
+  </button>
+  <a id="download-gx" href="#" download="gx.txt" class="btn btn-primary m-1">Download GEDCOM X</a>
+  <a id="copy-gx" href="#" class="btn btn-primary m-1">Copy GEDCOM X to Clipboard</a>
+</nav>
 <div class="container-fluid">
   <div class="row">
     <div class="col" id="alert-container">
@@ -529,32 +549,13 @@
         <div class="row">
           <div class="col-4">
             <div class="sticky-top" style="max-height: 100vh">
+              <div class="pt-4">&nbsp;</div>
               <div id="source-file" class="pt-4"></div>
-              <div id="gx-editor" class="pt-4"></div>
-              <div class="pt-4">
-                <a id="download-gx" href="#" download="gx.txt" class="btn btn-primary m-2">Download GEDCOM X</a>
-                <a id="copy-gx" href="#" class="btn btn-primary m-2">Copy GEDCOM X to Clipboard</a>
-              </div>
+              <div id="gx-editor" class="pt-2"></div>
             </div>
           </div>
           <div class="col-8 pt-4">
-            <div class="container-fluid">
-              <div class="row">
-                <div class="col">
-                  <button type="button" class="btn btn-primary p-2" data-toggle="modal" data-target="#new-person">
-                    Add Person
-                  </button>
-                  <button type="button" class="btn btn-primary p-2" data-toggle="modal" data-target="#new-relationship">
-                    Add Relationship
-                  </button>
-                </div>
-              </div>
-              <div class="row">
-                <div class="col">
-                  <div id="record"></div>
-                </div>
-              </div>
-            </div>
+            <div id="record"></div>
           </div>
         </div>
       </div>
