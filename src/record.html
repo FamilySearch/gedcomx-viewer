@@ -16,6 +16,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-filestyle/2.1.0/bootstrap-filestyle.min.js"></script>
 
   <!--<script src="gx-utils.js"></script>-->
+  <script src="gx-fix.js"></script>
   <script src="gx-view.js"></script>
   <script>
     //      var personaUrl = "https://familysearch.org/ark:/61903/1:1:XF48-HFC";
@@ -59,7 +60,7 @@
       //add all the node-path selection logic
       $("*[json-node-path]").addClass("gx-node-select").click(function() {
         findRecordNode($(this).attr("json-node-path"));
-      })
+      });
     }
 
     /**
@@ -75,83 +76,15 @@
         doc = doc.records[0];
       }
 
-      fixAge(doc);
+      fix(doc);
 
       editor.set(doc);
+      $("#source-viewer").show();
+
       showRecord(doc, url);
 
       updateSelectablePersons(doc, $("#new-relationship-person-1"));
       updateSelectablePersons(doc, $("#new-relationship-person-2"));
-    }
-
-    /**
-     *  Fix the age at an event.
-     *
-     *  @param doc The record to update.
-     */
-    function fixAge(doc) {
-      var i, j, k;
-      var sd = getSourceDescription(doc, doc.description);
-      var isObituary = sd && sd.coverage && sd.coverage.length > 0 && sd.coverage[0].recordType === "http://gedcomx.org/Obituary";
-
-      if (doc.persons) {
-        for (i = 0; i < doc.persons.length; i++) {
-          var person = doc.persons[i];
-          var age = null;
-          if (person.fields) {
-            for (j = 0; j < person.fields.length; j++) {
-              if (person.fields[j].type === "http://gedcomx.org/Age") {
-                var ageField = person.fields[j];
-                if (ageField.values) {
-                  for (k = 0; k < ageField.values.length; k++) {
-                    if (ageField.values[k].type === "http://gedcomx.org/Original") {
-                      age = ageField.values[k].text;
-                      break;
-                    }
-                  }
-                }
-                break;
-              }
-            }
-          }
-
-          if (age && person.facts) {
-            var ageAdded = false;
-            var fact;
-            for (j = 0; j < person.facts.length; j++) {
-              if ((isObituary && person.facts[j].type === "http://gedcomx.org/Death") || (!isObituary && person.facts[j].primary)) {
-                fact = person.facts[j];
-                if (!fact.qualifiers) {
-                  fact.qualifiers = [];
-                }
-
-                var addAge = true;
-                for (k = 0; k < fact.qualifiers.length; k++) {
-                  if (fact.qualifiers[k].name === "http://gedcomx.org/Age") {
-                    ageAdded = true;
-                    addAge = false;
-                    break;
-                  }
-                }
-
-                if (addAge) {
-                  fact.qualifiers.push({name: "http://gedcomx.org/Age", value: age});
-                  ageAdded = true;
-                  break;
-                }
-              }
-            }
-
-            if (!ageAdded && isObituary) {
-              fact = {
-                type: "http://gedcomx.org/Death",
-                qualifiers: [ { name: "http://gedcomx.org/Age", value: age } ]
-              };
-              person.facts.push(fact);
-            }
-          }
-        }
-      }
     }
 
     /**
@@ -230,6 +163,8 @@
     }
 
     $(function () {
+      $("#source-viewer").hide();
+
       editor = new JSONEditor(document.getElementById("gx-editor"), {
         modes: ["tree", "code"],
         onChange: function() {
@@ -462,11 +397,14 @@
     }
 
     body {
+      /*extra body padding to provide for the fixed top nav*/
       padding-top: 4em;
     }
   </style>
 </head>
 <body>
+
+<!--Top navigation-->
 <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
   <span class="navbar-brand">View and Edit GEDCOM X</span>
   <button type="button" class="btn btn-primary m-1" data-toggle="modal" data-target="#new-person">
@@ -478,6 +416,7 @@
   <a id="download-gx" href="#" download="gx.txt" class="btn btn-primary m-1">Download GEDCOM X</a>
   <a id="copy-gx" href="#" class="btn btn-primary m-1">Copy GEDCOM X to Clipboard</a>
 </nav>
+
 <div class="container-fluid">
   <div class="row">
     <div class="col" id="alert-container">
@@ -548,7 +487,7 @@
         </div>
         <div class="row">
           <div class="col-4">
-            <div class="sticky-top" style="max-height: 100vh">
+            <div id="source-viewer" class="sticky-top" style="max-height: 100vh">
               <div class="pt-4">&nbsp;</div>
               <div id="source-file" class="pt-4"></div>
               <div id="gx-editor" class="pt-2"></div>
@@ -573,14 +512,10 @@
         </button>
       </div>
       <div class="modal-body" id="new-person-form">
-        <div class="form-group">
-          <label for="new-person-given-names">Given Name(s)</label>
-          <input id="new-person-given-names" type="text" class="form-control"/>
-        </div>
-        <div class="form-group">
-          <label for="new-person-surnames">Surname(s)</label>
-          <input id="new-person-surnames" type="text" class="form-control"/>
-        </div>
+        <label for="new-person-given-names">Given Name(s)</label>
+        <input id="new-person-given-names" type="text" class="form-control"/>
+        <label for="new-person-surnames">Surname(s)</label>
+        <input id="new-person-surnames" type="text" class="form-control"/>
         <div class="form-check">
           <input class="form-check-input" id="new-person-principal" type="checkbox" value=""/>
           <label class="form-check-label" for="new-person-principal">Principal</label>
@@ -616,26 +551,20 @@
         </button>
       </div>
       <div class="modal-body" id="new-relationship-form">
-        <div class="form-group">
-          <label for="new-relationship-type">Relationship Type</label>
-          <select class="form-control" id="new-relationship-type">
-            <option value="http://gedcomx.org/Couple">Couple</option>
-            <option value="http://gedcomx.org/ParentChild">Parent-Child</option>
-            <option value="http://familysearch.org/types/relationships/Sibling">Sibling</option>
-            <option value="http://familysearch.org/types/relationships/AuntOrUncle">Aunt/Uncle</option>
-            <option value="http://familysearch.org/types/relationships/Unknown">Unknown</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="new-relationship-person-1" id="new-relationship-person-1-label">Person 1</label>
-          <select class="form-control" id="new-relationship-person-1">
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="new-relationship-person-2" id="new-relationship-person-2-label">Person 2</label>
-          <select class="form-control" id="new-relationship-person-2">
-          </select>
-        </div>
+        <label for="new-relationship-type">Relationship Type</label>
+        <select class="form-control" id="new-relationship-type">
+          <option value="http://gedcomx.org/Couple">Couple</option>
+          <option value="http://gedcomx.org/ParentChild">Parent-Child</option>
+          <option value="http://familysearch.org/types/relationships/Sibling">Sibling</option>
+          <option value="http://familysearch.org/types/relationships/AuntOrUncle">Aunt/Uncle</option>
+          <option value="http://familysearch.org/types/relationships/Unknown">Unknown</option>
+        </select>
+        <label for="new-relationship-person-1" id="new-relationship-person-1-label">Person 1</label>
+        <select class="form-control" id="new-relationship-person-1">
+        </select>
+        <label for="new-relationship-person-2" id="new-relationship-person-2-label">Person 2</label>
+        <select class="form-control" id="new-relationship-person-2">
+        </select>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -644,5 +573,30 @@
     </div>
   </div>
 </div>
+
+<div class="modal fade" id="new-name" tabindex="-1" role="dialog" aria-labelledby="new-name-label" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="new-name-label">Add Name</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" id="new-person-name-form">
+        <input type="hidden" id="new-person-name-person-id"/>
+        <label for="new-person-name-given-names">Given Name(s)</label>
+        <input id="new-person-name-given-names" type="text" class="form-control"/>
+        <label for="new-person-name-surnames">Surname(s)</label>
+        <input id="new-person-name-surnames" type="text" class="form-control"/>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button id="add-new-person-name" type="button" class="btn btn-primary">Add Name</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
