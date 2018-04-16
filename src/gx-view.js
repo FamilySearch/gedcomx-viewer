@@ -1,3 +1,7 @@
+//////////////
+//UI Utilities
+//////////////
+
 function encode(s) {
   return $('<div/>').text(s).html();
 }
@@ -24,29 +28,6 @@ function card(sectionName, sectionContent, level) {
       .append(div({class: "card-text p-3"}).append(sectionContent)));
 }
 
-function accordionSection(parentId, sectionName, sectionContent) {
-  var sectionHeaderId = parentId + "_" + sectionName;
-  var sectionContentId = parentId + "_" + sectionName + "_content";
-  var sectionHeader = div({class: "card-header", id: sectionHeaderId});
-  $("<h4/>").append($("<button/>", {
-    "class" : "btn btn-link",
-    "data-toggle": "collapse",
-    "data-target": "#" + sectionContentId,
-    "aria-expanded": "false",
-    "aria-controls": sectionContentId
-  }).text(sectionName)).appendTo(sectionHeader);
-
-  var sectionBody = div({
-                          "id": sectionContentId,
-                          "class": "collapse",
-                          "aria-labelledby": sectionHeaderId,
-                          "data-parent": "#" + parentId
-                        });
-  sectionBody.append(div({class: "card-body"}).append(sectionContent))
-
-  return div({class: "card"}).append(sectionHeader).append(sectionBody);
-}
-
 function dl(items, attrs) {
   var list = $("<dl/>", attrs);
   for (var key in items) {
@@ -65,6 +46,101 @@ function span(attrs) {
   return $("<span/>", attrs);
 }
 
+////////////////////
+//GEDCOM X Utilities
+////////////////////
+
+function getSourceDescription(personaOrRecord, sourceIdOrUrl) {
+  var source = null;
+
+  if (personaOrRecord && sourceIdOrUrl) {
+    if (sourceIdOrUrl.charAt(0) === '#') {
+      sourceIdOrUrl = sourceIdOrUrl.substring(1);
+    }
+
+    if (personaOrRecord.sourceDescriptions) {
+      parseSourceDesc();
+    }
+  }
+  return source;
+
+  function parseSourceDesc() {
+    for (var i = 0; i < personaOrRecord.sourceDescriptions.length; i++) {
+      var srcDesc = personaOrRecord.sourceDescriptions[i];
+      if (srcDesc.about === sourceIdOrUrl || srcDesc.id === sourceIdOrUrl) {
+        source = srcDesc;
+        break;
+      }
+    }
+  }
+}
+
+function getGenderString(person) {
+  var gender = "Unknown";
+
+  if (person && person.gender && person.gender.type) {
+    switch (person.gender.type) {
+      case "http://gedcomx.org/Male":
+        gender = "Male";
+        break;
+      case "http://gedcomx.org/Female":
+        gender = "Female";
+        break;
+      default:
+        break;
+    }
+  }
+  return gender;
+}
+
+function getBestNameValue(person) {
+  if (!person.names || !person.names.length) {
+    return null;
+  }
+
+  var name = person.names[0];
+  if (!name.nameForms || !name.nameForms.length) {
+    return null;
+  }
+  var nameForm = name.nameForms[0];
+  return formName(nameForm.fullText);
+
+  function formName(nameString) {
+    if (!nameString && nameForm.parts && nameForm.parts.length > 0) {
+      var i;
+      nameString = "";
+      for (i = 0; i < nameForm.parts.length; i++) {
+        if (i > 0) {
+          nameString += " ";
+        }
+        nameString += nameForm.parts[i].value;
+      }
+    }
+    return nameString;
+  }
+}
+
+function getBestValue(field) {
+  var value = "";
+  if (field && field.values) {
+    for (var i = 0; i < field.values.length; i++) {
+      if (field.values[i].type === "http://gedcomx.org/Original" && value.length === 0) {
+        value = field.values[i].text;
+      }
+      else if (field.values[i].type === "http://gedcomx.org/Interpreted") {
+        value = field.values[i].text;
+        break;  // Interpreted values win so there's no need to continue
+      }
+    }
+  }
+  return value;
+}
+
+
+/////////////
+//UI Builders
+/////////////
+
 function buildRecordUI(doc, url) {
   var record = div({ id: "record"});
   record.append($("<h1/>").append(span().text("Record ")));
@@ -76,7 +152,7 @@ function buildRecordUI(doc, url) {
   }
 
   if (doc.hasOwnProperty('description')) {
-    var sd = GedxPersonaPOJO.getSourceDescription(doc, doc.description);
+    var sd = getSourceDescription(doc, doc.description);
     if (sd) {
       if (sd.hasOwnProperty("titles")) {
         recordMetadata.Title = sd.titles[0].value;
@@ -133,8 +209,8 @@ function buildPersonUI(doc, person, idMap, path) {
   var personCard = div({ class: "person card m-3", id: encode(person.id)} );
   var personCardBody = div({class: "card-body p-0"}).appendTo(personCard);
   var personCardTitle =  $("<h3/>", {class: "card-title card-header"}).appendTo(personCardBody);
-  personBadge(idMap[person.id], GedxPersonaPOJO.getGenderString(person)).appendTo(personCardTitle);
-  span({"json-node-path" : path}).text(GedxPersonaPOJO.getBestNameValue(person)).appendTo(personCardTitle);
+  personBadge(idMap[person.id], getGenderString(person)).appendTo(personCardTitle);
+  span({"json-node-path" : path}).text(getBestNameValue(person)).appendTo(personCardTitle);
   if (person.principal) {
     span({ class: "principal badge badge-pill badge-primary", "json-node-path" : path + ".principal"}).append(span({class: "oi oi-star"})).append(span().text("Principal")).appendTo(personCardTitle);
   }
@@ -150,25 +226,21 @@ function buildPersonUI(doc, person, idMap, path) {
   if (person.hasOwnProperty('names')) {
     var names = buildNamesUI(person, path);
     personCardBodyContent.append(div({class: "col"}).append(card("Names", names, 5)));
-    //accordionSection(contentId, "Names", names).appendTo(personCardBodyContent);
   }
 
   if (person.hasOwnProperty('facts')) {
     var facts = buildFactsUI(person.facts, path + ".facts");
     personCardBodyContent.append(div({class: "col"}).append(card("Facts", facts, 5)));
-    //accordionSection(contentId, "Facts", facts).appendTo(personCardBodyContent);
   }
 
   if (person.hasOwnProperty('fields')) {
     //hide fields for now
     //var fields = buildFieldsUI(person.fields, path + ".fields");
     //personCardBodyContent.append(div({class: "col"}).append(card("Fields", fields, 5)));
-    //accordionSection(contentId, "Fields", fields).appendTo(personCardBodyContent);
   }
 
   var relatives = buildRelativesUI(doc, person, idMap);
   personCardBodyContent.append(div({class: "col"}).append(card("Relatives", relatives, 5)));
-  //accordionSection(contentId, "Relatives", relatives).appendTo(personCardBodyContent);
 
   return personCard;
 }
@@ -299,7 +371,7 @@ function buildFieldsUI(fields, path) {
     field = fields[i];
     var f = $("<tr/>", {"json-node-path" : fieldPath}).appendTo(body);
     f.append($("<td/>", {class: "field-type text-nowrap"}).text(parseType(field.type)));
-    f.append($("<td/>", {class: "field-value text-nowrap"}).text(GedxPersonaPOJO.getBestValue(field)));
+    f.append($("<td/>", {class: "field-value text-nowrap"}).text(getBestValue(field)));
   }
   return fs;
 }
@@ -322,7 +394,7 @@ function buildRelativesUI(doc, person, idMap) {
           var spouse = findPersonByRef(doc, spouseRef);
           if (spouse) {
             var spouseLabel = relativeLabel(spouse.gender ? spouse.gender.type : null, "Husband", "Wife", "Spouse");
-            r.append(relativeUI(spouse.id, spouseLabel, idMap[spouse.id], GedxPersonaPOJO.getBestNameValue(spouse), GedxPersonaPOJO.getGenderString(spouse)));
+            r.append(relativeUI(spouse.id, spouseLabel, idMap[spouse.id], getBestNameValue(spouse), getGenderString(spouse)));
             r.append(buildRelationshipFactsUI(relationship));
           }
         }
@@ -332,7 +404,7 @@ function buildRelativesUI(doc, person, idMap) {
             var child = findPersonByRef(doc, childRef);
             if (child) {
               var childLabel = relativeLabel(child.gender ? child.gender.type : null, "Son", "Daughter", "Child");
-              r.append(relativeUI(child.id, childLabel, idMap[child.id], GedxPersonaPOJO.getBestNameValue(child), GedxPersonaPOJO.getGenderString(child)));
+              r.append(relativeUI(child.id, childLabel, idMap[child.id], getBestNameValue(child), getGenderString(child)));
               r.append(buildRelationshipFactsUI(relationship));
             }
           }
@@ -341,7 +413,7 @@ function buildRelativesUI(doc, person, idMap) {
             var parent = findPersonByRef(doc, parentRef);
             if (parent) {
               var parentLabel = relativeLabel(parent.gender ? parent.gender.type : null, "Father", "Mother", "Parent");
-              r.append(relativeUI(parent.id, parentLabel, idMap[parent.id], GedxPersonaPOJO.getBestNameValue(parent), GedxPersonaPOJO.getGenderString(parent)));
+              r.append(relativeUI(parent.id, parentLabel, idMap[parent.id], getBestNameValue(parent), getGenderString(parent)));
               r.append(buildRelationshipFactsUI(relationship));
             }
           }
@@ -350,7 +422,7 @@ function buildRelativesUI(doc, person, idMap) {
           var relativeRef = isP1 ? ref2 : ref1;
           var relative = findPersonByRef(doc, relativeRef);
           if (relative) {
-            r.append(relativeUI(relative.id, parseType(relationship.type), idMap[relative.id], GedxPersonaPOJO.getBestNameValue(relative), GedxPersonaPOJO.getGenderString(relative)));
+            r.append(relativeUI(relative.id, parseType(relationship.type), idMap[relative.id], getBestNameValue(relative), getGenderString(relative)));
             r.append(buildRelationshipFactsUI(relationship));
           }
         }
@@ -406,14 +478,14 @@ function buildRelationshipsUI(doc, idMap, path) {
     r.append($("<td/>", {class: "relationship-type text-nowrap", "json-node-path" : relationshipPath + ".type"}).text(parseType(relationship.type)));
     var person1 = relationship.person1 ? findPersonByRef(doc, relationship.person1.resource) : null;
     if (person1) {
-      r.append($("<td/>", {class: "relationship-person1 text-nowrap"}).append(personBadge(idMap[person1.id], GedxPersonaPOJO.getGenderString(person1))).append(span({"json-node-path": relationshipPath + ".person1"}).text(GedxPersonaPOJO.getBestNameValue(person1))));
+      r.append($("<td/>", {class: "relationship-person1 text-nowrap"}).append(personBadge(idMap[person1.id], getGenderString(person1))).append(span({"json-node-path": relationshipPath + ".person1"}).text(getBestNameValue(person1))));
     }
     else {
       r.append($("<td/>").text("(Unknown)"));
     }
     var person2 = relationship.person2 ? findPersonByRef(doc, relationship.person2.resource) : null;
     if (person2) {
-      r.append($("<td/>", {class: "relationship-person2 text-nowrap"}).append(personBadge(idMap[person2.id], GedxPersonaPOJO.getGenderString(person2))).append(span({"json-node-path": relationshipPath + ".person2"}).text(GedxPersonaPOJO.getBestNameValue(person2))));
+      r.append($("<td/>", {class: "relationship-person2 text-nowrap"}).append(personBadge(idMap[person2.id], getGenderString(person2))).append(span({"json-node-path": relationshipPath + ".person2"}).text(getBestNameValue(person2))));
     }
     else {
       r.append($("<td/>").text("(Unknown)"));

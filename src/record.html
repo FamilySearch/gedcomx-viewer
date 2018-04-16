@@ -16,8 +16,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-filestyle/2.1.0/bootstrap-filestyle.min.js"></script>
 
   <!--<script src="gx-utils.js"></script>-->
-  <script src="cache/SearchUtilsPOJO.js"></script>
-  <script src="cache/GedxPersonaPOJO.js"></script>
   <script src="gx-view.js"></script>
   <script>
     //      var personaUrl = "https://familysearch.org/ark:/61903/1:1:XF48-HFC";
@@ -93,7 +91,7 @@
      */
     function fixAge(doc) {
       var i, j, k;
-      var sd = GedxPersonaPOJO.getSourceDescription(doc, doc.description);
+      var sd = getSourceDescription(doc, doc.description);
       var isObituary = sd && sd.coverage && sd.coverage.length > 0 && sd.coverage[0].recordType === "http://gedcomx.org/Obituary";
 
       if (doc.persons) {
@@ -167,7 +165,7 @@
       $.each(doc.persons, function(i, person) {
         select.append($("<option/>", {
           value: person.id,
-          text: GedxPersonaPOJO.getBestNameValue(person)
+          text: getBestNameValue(person)
         }));
       });
     }
