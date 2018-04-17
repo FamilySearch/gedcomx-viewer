@@ -20,12 +20,16 @@ function parseType(typeUri) {
   // Get iterpreted value, if any, or else the original value.
 }
 
-function card(sectionName, sectionContent, level) {
+function card(sectionName, sectionContent, level, addHook) {
   level = level || 2;
+  var title = $("<h" + level + "/>", {class: "card-title card-header"}).append(span().text(sectionName));
+  if (addHook) {
+    title = title.append(addButton(addHook));
+  }
   return div({class: "card m-1 p-0"})
     .append(div({class:"card-body p-0"})
-      .append($("<h" + level + "/>", {class: "card-title card-header"}).text(sectionName))
-      .append(div({class: "card-text p-3"}).append(sectionContent)));
+    .append(title)
+    .append(div({class: "card-text p-3"}).append(sectionContent)));
 }
 
 function dl(items, attrs) {
@@ -44,6 +48,10 @@ function div(attrs) {
 
 function span(attrs) {
   return $("<span/>", attrs);
+}
+
+function addButton(hook) {
+  return $("<a/>", {href: "#", class: "badge badge-pill badge-secondary mx-2"}).append(span({class: "oi oi-plus", title: "add", "aria-hidden": "true"})).click(hook);
 }
 
 ////////////////////
@@ -141,7 +149,7 @@ function getBestValue(field) {
 //UI Builders
 /////////////
 
-function buildRecordUI(doc, url) {
+function buildRecordUI(doc, url, editHooks) {
   var record = div({ id: "record"});
   record.append($("<h1/>").append(span().text("Record ")));
 
@@ -183,7 +191,7 @@ function buildRecordUI(doc, url) {
       idMap[doc.persons[i].id] = i + 1;
     }
 
-    record.append(card("Persons", buildPersonsUI(doc, idMap, path)));
+    record.append(card("Persons", buildPersonsUI(doc, idMap, path, editHooks)));
   }
   if (doc.hasOwnProperty('relationships')) {
     record.append(card("Relationships", buildRelationshipsUI(doc, idMap, path)));
@@ -195,17 +203,17 @@ function buildRecordUI(doc, url) {
   return record;
 }
 
-function buildPersonsUI(doc, idMap, path) {
+function buildPersonsUI(doc, idMap, path, editHooks) {
   var i;
   var persons = div({id: "persons"});
   path = path + ".persons";
   for (i = 0; i < doc.persons.length; i++) {
-    persons.append(buildPersonUI(doc, doc.persons[i], idMap, path + '[' + i + "]"));
+    persons.append(buildPersonUI(doc, doc.persons[i], idMap, path + '[' + i + "]", editHooks));
   }
   return persons;
 }
 
-function buildPersonUI(doc, person, idMap, path) {
+function buildPersonUI(doc, person, idMap, path, editHooks) {
   var personCard = div({ class: "person card m-3", id: encode(person.id)} );
   var personCardBody = div({class: "card-body p-0"}).appendTo(personCard);
   var personCardTitle =  $("<h3/>", {class: "card-title card-header"}).appendTo(personCardBody);
@@ -224,8 +232,9 @@ function buildPersonUI(doc, person, idMap, path) {
   div({class: "container"}).append(personCardBodyContent).appendTo(personCardBody);
 
   if (person.hasOwnProperty('names')) {
-    var names = buildNamesUI(person, path);
-    personCardBodyContent.append(div({class: "col"}).append(card("Names", names, 5)));
+    var names = buildNamesUI(person, path, editHooks);
+    var addHook = function () { editHooks.addName(person.id); };
+    personCardBodyContent.append(div({class: "col"}).append(card("Names", names, 5, addHook)));
   }
 
   if (person.hasOwnProperty('facts')) {

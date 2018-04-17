@@ -1,7 +1,68 @@
 // Common fixup operations for a GEDCOM X document.
 
 function fix(gx) {
+  addLocalIds(gx);
   fixAge(gx);
+}
+
+function generateLocalId() {
+  return Math.random().toString(36).substr(2, 9);
+}
+
+/**
+ *  Fix the age at an event.
+ *
+ *  @param doc The record to update.
+ */
+function addLocalIds(doc) {
+  var i, j, k;
+  var fact;
+
+  if (doc.persons) {
+    for (i = 0; i < doc.persons.length; i++) {
+      var person = doc.persons[i];
+      if (!person.id) {
+        person.id = generateLocalId();
+      }
+
+      if (person.facts) {
+        for (j = 0; j < person.facts.length; j++) {
+          fact = person.facts[j];
+          if (!fact.id) {
+            fact.id = generateLocalId();
+          }
+        }
+      }
+
+      if (person.names) {
+        for (j = 0; j < person.names.length; j++) {
+          name = person.names[j];
+          if (!name.id) {
+            name.id = generateLocalId();
+          }
+        }
+      }
+    }
+  }
+
+  if (doc.relationships) {
+    for (i = 0; i < doc.relationships.length; i++) {
+      var relationship = doc.relationships[i];
+      if (!relationship.id) {
+        relationship.id = generateLocalId();
+      }
+
+      if (relationship.facts) {
+        for (j = 0; j < relationship.facts.length; j++) {
+          fact = relationship.facts[j];
+          if (!fact.id) {
+            fact.id = generateLocalId();
+          }
+        }
+      }
+    }
+  }
+
 }
 
 /**

@@ -45,6 +45,8 @@
      */
     var currentUrl = null;
 
+    var editHooks = {};
+
     /**
      * Show a record.
      *
@@ -54,7 +56,7 @@
     function showRecord(doc, url) {
       var el = $("#record");
       el.empty();
-      el.append(buildRecordUI(doc, url));
+      el.append(buildRecordUI(doc, url, editHooks));
       currentUrl = url;
 
       //add all the node-path selection logic
@@ -152,6 +154,158 @@
         return value;
       }, 2);
     }
+
+    function addPerson() {
+      var person = {};
+      person.id = "p_999" + Math.floor(Math.random() * Math.floor(1000000000));
+      person.extracted = true;
+      person.principal = $("#new-person-principal").checked;
+      person.gender = {};
+      person.gender.type = $("input[name=new-person-gender]:checked").val();
+      person.names = [];
+      person.facts = [];
+      person.fields = [];
+
+      var name = {};
+      name.type = "http://gedcomx.org/BirthName";
+      name.nameForms = [];
+
+      var nameForm = {};
+      var givenNames = $("#new-person-given-names").val();
+      var surnames = $("#new-person-surnames").val();
+      nameForm.fullText = givenNames + " " + surnames;
+      nameForm.parts = [];
+
+      var givenNamePart = {};
+      givenNamePart.type = "http://gedcomx.org/Given";
+      givenNamePart.value = givenNames;
+
+      var surnamePart = {};
+      surnamePart.type = "http://gedcomx.org/Surname";
+      surnamePart.value = surnames;
+      nameForm.parts.push(givenNamePart);
+      nameForm.parts.push(surnamePart);
+      name.nameForms.push(nameForm);
+      person.names.push(name);
+
+      var doc = editor.get();
+      if (!doc.persons) {
+        doc.persons = [];
+      }
+      doc.persons.push(person);
+      updateRecord(doc);
+      $("#new-person").modal("hide");
+      $("#new-person-form").children().find("input[type=text]").each(function() {
+        $(this).val("");
+      });
+    }
+
+    function addRelationship() {
+      var relationship = {};
+      relationship.id = generateLocalId();
+      relationship.type = $("#new-relationship-type").val();
+      relationship.person1 = {};
+      relationship.person1.resourceId = $("#new-relationship-person-1").val();
+      relationship.person1.resource = "#" + relationship.person1.resourceId;
+      relationship.person2 = {};
+      relationship.person2.resourceId = $("#new-relationship-person-2").val();
+      relationship.person2.resource = "#" + relationship.person2.resourceId;
+
+      var doc = editor.get();
+      if (!doc.relationships) {
+        doc.relationships = [];
+      }
+      doc.relationships.push(relationship);
+      updateRecord(doc);
+      $("#new-relationship").modal("hide");
+    }
+
+    function addPersonName() {
+      var doc = editor.get();
+
+      var pid = $("#new-person-name-person-id").val();
+      if (!pid) {
+        showError("Cannot add name: no person id provided in the form.");
+        return;
+      }
+
+      var person;
+      if (doc.persons) {
+        for (var i = 0; i < doc.persons.length; i++) {
+          if (doc.persons[i].id === pid) {
+            person = doc.persons[i];
+            break;
+          }
+        }
+      }
+
+      if (!person) {
+        showError("Cannot add name: invalid person id: " + pid);
+        return;
+      }
+
+      if (!person.names) {
+        person.names = [];
+      }
+
+      var name = {};
+      name.type = $("#new-person-name-type").val();
+      name.nameForms = [];
+      var nameForm = {};
+      nameForm.parts = [];
+      var namePart;
+      var fullText;
+
+      var prefix = $("#new-person-name-prefix").val();
+      if (prefix) {
+        fullText = prefix;
+        namePart = {};
+        namePart.type = "http://gedcomx.org/Prefix";
+        namePart.value = prefix;
+        nameForm.parts.push(namePart);
+      }
+
+      var given = $("#new-person-name-given-names").val();
+      if (given) {
+        fullText = fullText ? fullText + " " + given : given;
+        namePart = {};
+        namePart.type = "http://gedcomx.org/Given";
+        namePart.value = given;
+        nameForm.parts.push(namePart);
+      }
+
+      var surname = $("#new-person-name-surnames").val();
+      if (surname) {
+        fullText = fullText ? fullText + " " + surname : surname;
+        namePart = {};
+        namePart.type = "http://gedcomx.org/Surname";
+        namePart.value = surname;
+        nameForm.parts.push(namePart);
+      }
+
+      var suffix = $("#new-person-name-suffix").val();
+      if (suffix) {
+        fullText = fullText ? fullText + " " + suffix : suffix;
+        namePart = {};
+        namePart.type = "http://gedcomx.org/Suffix";
+        namePart.value = suffix;
+        nameForm.parts.push(namePart);
+      }
+
+      if (fullText) {
+        nameForm.fullText = fullText;
+      }
+
+      name.nameForms.push(nameForm);
+      person.names.push(name);
+      updateRecord(doc);
+      $("#new-name").modal("hide");
+    }
+
+    editHooks.addName =  function(pid) {
+      $("#new-person-name-person-id").val(pid);
+      $("#new-name").modal("show");
+    };
 
     /**
      * Show a warning.
@@ -308,85 +462,11 @@
         }
       });
 
-      $("#add-new-person").click(function() {
-        var person = {};
-        person.id = "p_999" + Math.floor(Math.random() * Math.floor(1000000000));
-        person.extracted = true;
-        person.principal = $("#new-person-principal").checked;
-        person.gender = {};
-        person.gender.type = $("input[name=new-person-gender]:checked").val();
-        person.names = [];
-        person.facts = [];
-        person.fields = [];
+      $("#add-new-person").click(addPerson);
 
-        var name = {};
-        name.type = "http://gedcomx.org/BirthName";
-        name.nameForms = [];
+      $("#add-new-relationship").click(addRelationship);
 
-        var nameForm = {};
-        var givenNames = $("#new-person-given-names").val();
-        var surnames = $("#new-person-surnames").val();
-        nameForm.fullText = givenNames + " " + surnames;
-        nameForm.parts = [];
-
-        var givenNamePart = {};
-        givenNamePart.type = "http://gedcomx.org/Given";
-        givenNamePart.value = givenNames;
-
-        var surnamePart = {};
-        surnamePart.type = "http://gedcomx.org/Surname";
-        surnamePart.value = surnames;
-        nameForm.parts.push(givenNamePart);
-        nameForm.parts.push(surnamePart);
-        name.nameForms.push(nameForm);
-        person.names.push(name);
-
-        var doc = editor.get();
-        if (!doc.persons) {
-          doc.persons = [];
-        }
-        doc.persons.push(person);
-        updateRecord(doc);
-        $("#new-person").modal("hide");
-        $("#new-person-form").children().find("input[type=text]").each(function() {
-          $(this).val("");
-        });
-      });
-
-      $("#add-new-relationship").click(function() {
-        var relationship = {};
-        relationship.type = $("#new-relationship-type").val();
-        relationship.person1 = {};
-        relationship.person1.resourceId = $("#new-relationship-person-1").val();
-        relationship.person1.resource = "#" + relationship.person1.resourceId;
-        relationship.person2 = {};
-        relationship.person2.resourceId = $("#new-relationship-person-2").val();
-        relationship.person2.resource = "#" + relationship.person2.resourceId;
-
-        var doc = editor.get();
-        if (!doc.relationships) {
-          doc.relationships = [];
-        }
-        doc.relationships.push(relationship);
-        updateRecord(doc);
-        $("#new-relationship").modal("hide");
-      });
-
-      $("#new-relationship-type").change(function() {
-        var type = this.val();
-        if ("http://gedcomx.org/Couple" === type) {
-          $("#new-relationship-person-1-label").text("Spouse 1");
-          $("#new-relationship-person-2-label").text("Spouse 2");
-        }
-        else if ("http://gedcomx.org/ParentChild" === type) {
-          $("#new-relationship-person-1-label").text("Parent");
-          $("#new-relationship-person-2-label").text("Child");
-        }
-        else {
-          $("#new-relationship-person-1-label").text("Person 1");
-          $("#new-relationship-person-2-label").text("Person 2");
-        }
-      });
+      $("#add-new-person-name").click(addPersonName);
 
     });
   </script>
@@ -585,10 +665,23 @@
       </div>
       <div class="modal-body" id="new-person-name-form">
         <input type="hidden" id="new-person-name-person-id"/>
+        <label for="new-person-name-type">Name Type</label>
+        <select class="form-control" id="new-person-name-type">
+          <option value="http://gedcomx.org/BirthName">Birth Name</option>
+          <option value="http://gedcomx.org/MarriedName">Married Name</option>
+          <option value="http://gedcomx.org/AlsoKnownAs">Also Known As</option>
+          <option value="http://gedcomx.org/Nickname">Nickname</option>
+          <option value="http://gedcomx.org/FormalName">Formal Name</option>
+          <option value="http://gedcomx.org/ReligiousName">Religious Name</option>
+        </select>
+        <label for="new-person-name-prefix">Prefix(es)</label>
+        <input id="new-person-name-prefix" type="text" class="form-control"/>
         <label for="new-person-name-given-names">Given Name(s)</label>
         <input id="new-person-name-given-names" type="text" class="form-control"/>
         <label for="new-person-name-surnames">Surname(s)</label>
         <input id="new-person-name-surnames" type="text" class="form-control"/>
+        <label for="new-person-name-suffix">Suffix(es)</label>
+        <input id="new-person-name-suffix" type="text" class="form-control"/>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
