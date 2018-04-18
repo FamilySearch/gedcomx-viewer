@@ -225,9 +225,7 @@ function buildPersonUI(doc, person, idMap, path, editHooks) {
   var genderBadge = span({class: "gender badge badge-pill badge-secondary " + genderClass, "json-node-path" : path + ".gender"}).append(span().text(genderString));
   genderBadge.appendTo(personCardTitle);
 
-  if (person.principal) {
-    span({ class: "principal badge badge-pill badge-primary", "json-node-path" : path + ".principal"}).append(span({class: "oi oi-star"})).append(span().text("Principal")).appendTo(personCardTitle);
-  }
+  buildPersonPrincipalUI(person, path, editHooks).appendTo(personCardTitle);
 
   var identifier = getIdentifier(person);
   if (identifier) {
@@ -265,6 +263,33 @@ function buildPersonUI(doc, person, idMap, path, editHooks) {
   personCardBodyContent.append(div({class: "col"}).append(card("Relatives", relatives, 5)));
 
   return personCard;
+}
+
+function buildPersonPrincipalUI(person, path, editHooks) {
+  var principalUI;
+  var principalIcon;
+  var iconClass = person.principal ? "oi-star" : "oi-ban";
+  if (person.principal) {
+    principalIcon = span({class: "oi oi-star"});
+    principalUI = span({class: "principal badge badge-pill badge-primary"}).append(principalIcon).append(span({"json-node-path": path + ".principal"}).text("Principal"));
+  }
+  else {
+    principalIcon = span({class: "oi oi-ban"});
+    principalUI = span({class: "principal badge badge-pill badge-secondary"}).append(principalIcon).append(span({class: "not"}).text("Principal"));
+  }
+
+  if (editHooks.editPrincipal) {
+    principalIcon.addClass("toggleable")
+      .click(function () {
+        editHooks.editPrincipal(person.id);
+      })
+      .hover(function () {
+        principalIcon.toggleClass(iconClass);
+        principalIcon.toggleClass("oi-loop")
+      });
+  }
+
+  return principalUI;
 }
 
 function buildPersonBadge(person, idMap) {

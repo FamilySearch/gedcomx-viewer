@@ -155,6 +155,19 @@
       }, 2);
     }
 
+    function getPerson(doc, pid) {
+      var person;
+      if (doc.persons) {
+        for (var i = 0; i < doc.persons.length; i++) {
+          if (doc.persons[i].id === pid) {
+            person = doc.persons[i];
+            break;
+          }
+        }
+      }
+      return person;
+    }
+
     function addPerson() {
       var person = {};
       person.id = "p_999" + Math.floor(Math.random() * Math.floor(1000000000));
@@ -220,6 +233,18 @@
       $("#new-relationship").modal("hide");
     }
 
+    editHooks.editPrincipal = function(pid) {
+      var doc = editor.get();
+      var person = getPerson(doc, pid);
+      if (!person) {
+        showError("Cannot edit principal: invalid person id: " + pid);
+        return;
+      }
+
+      person.principal = !person.principal;
+      updateRecord(doc);
+    };
+
     function addPersonName() {
       var doc = editor.get();
 
@@ -229,16 +254,7 @@
         return;
       }
 
-      var person;
-      if (doc.persons) {
-        for (var i = 0; i < doc.persons.length; i++) {
-          if (doc.persons[i].id === pid) {
-            person = doc.persons[i];
-            break;
-          }
-        }
-      }
-
+      var person = getPerson(doc, pid);
       if (!person) {
         showError("Cannot add name: invalid person id: " + pid);
         return;
@@ -316,16 +332,7 @@
         return;
       }
 
-      var person;
-      if (doc.persons) {
-        for (var i = 0; i < doc.persons.length; i++) {
-          if (doc.persons[i].id === pid) {
-            person = doc.persons[i];
-            break;
-          }
-        }
-      }
-
+      var person = getPerson(doc, pid);
       if (!person) {
         showError("Cannot add fact: invalid person id: " + pid);
         return;

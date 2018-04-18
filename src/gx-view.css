@@ -23,6 +23,14 @@
     text-decoration: inherit;
 }
 
+.toggleable {
+    cursor: pointer;
+}
+
+.not {
+    text-decoration: line-through;
+}
+
 pre {
     white-space: pre-wrap;
     max-width: inherit;
