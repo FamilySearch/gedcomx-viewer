@@ -310,7 +310,7 @@ function buildPrincipalBadge(person, path, editHooks) {
 
 function buildPersonIdBadge(person, idMap) {
   var localId = idMap[person.id];
-  return span({class: "local-pid badge badge-pill badge-secondary"}).append(span({class: "oi oi-person", title: "person", "aria-hidden": "true"})).append($("<small/>").text(localId));
+  return span({class: "local-pid badge badge-pill badge-info"}).append(span({class: "oi oi-person", title: "person", "aria-hidden": "true"})).append($("<small/>").text(localId));
 }
 
 function buildNamesUI(person, path) {
