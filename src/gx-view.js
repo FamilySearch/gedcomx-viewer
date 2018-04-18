@@ -233,13 +233,20 @@ function buildPersonUI(doc, person, idMap, path, editHooks) {
 
   if (person.hasOwnProperty('names')) {
     var names = buildNamesUI(person, path, editHooks);
-    var addHook = function () { editHooks.addName(person.id); };
-    personCardBodyContent.append(div({class: "col"}).append(card("Names", names, 5, addHook)));
+    var addNameHook = null;
+    if (editHooks.addName) {
+      addNameHook = function () { editHooks.addName(person.id); };
+    }
+    personCardBodyContent.append(div({class: "col"}).append(card("Names", names, 5, addNameHook)));
   }
 
   if (person.hasOwnProperty('facts')) {
     var facts = buildFactsUI(person.facts, path + ".facts");
-    personCardBodyContent.append(div({class: "col"}).append(card("Facts", facts, 5)));
+    var addFactHook = null;
+    if (editHooks.addFact) {
+      addFactHook = function () { editHooks.addFact(person.id); };
+    }
+    personCardBodyContent.append(div({class: "col"}).append(card("Facts", facts, 5, addFactHook)));
   }
 
   if (person.hasOwnProperty('fields')) {
@@ -315,6 +322,7 @@ function buildFactsUI(facts, path) {
   var fs = $("<table/>", {class: "facts table table-sm"});
   var valueNeeded = false;
   var ageNeeded = false;
+  var causeNeeded = false;
   for (i = 0; i < facts.length; i++) {
     if (facts[i].value) {
       valueNeeded = true;
@@ -324,6 +332,9 @@ function buildFactsUI(facts, path) {
       for (j = 0; j < facts[i].qualifiers.length; j++) {
         if (facts[i].qualifiers[j].name === "http://gedcomx.org/Age") {
           ageNeeded = true;
+        }
+        if (facts[i].qualifiers[j].name === "http://gedcomx.org/Cause") {
+          causeNeeded = true;
         }
       }
     }
@@ -335,6 +346,9 @@ function buildFactsUI(facts, path) {
   }
   if (ageNeeded) {
     row.append($("<th>Age</th>"));
+  }
+  if (causeNeeded) {
+    row.append($("<th>Cause</th>"));
   }
   $("<thead/>").append(row).appendTo(fs);
 
@@ -364,6 +378,18 @@ function buildFactsUI(facts, path) {
       }
       else {
         f.append($("<td/>", {class: "fact-age text-nowrap"}).text(""));
+      }
+    }
+    if (causeNeeded) {
+      if (fact.qualifiers) {
+        for (j = 0; j < fact.qualifiers.length; j++) {
+          if (fact.qualifiers[j].name === "http://gedcomx.org/Cause") {
+            f.append($("<td/>", {class: "fact-cause text-nowrap", "json-node-path": factPath + ".qualifiers[" + j + "]"}).text(fact.qualifiers[j].value));
+          }
+        }
+      }
+      else {
+        f.append($("<td/>", {class: "fact-cause text-nowrap"}).text(""));
       }
     }
   }
