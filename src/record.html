@@ -245,6 +245,35 @@
       updateRecord(doc);
     };
 
+    editHooks.editGender = function(pid) {
+      var doc = editor.get();
+      var person = getPerson(doc, pid);
+      if (!person) {
+        showError("Cannot edit gender: invalid person id: " + pid);
+        return;
+      }
+
+      if (!person.gender) {
+        person.gender = {};
+      }
+
+      var type;
+      switch (person.gender.type) {
+        case "http://gedcomx.org/Male":
+          type = "http://gedcomx.org/Female";
+          break;
+        case "http://gedcomx.org/Female":
+          type = "http://gedcomx.org/Unknown";
+          break;
+        default:
+          type = "http://gedcomx.org/Male";
+          break;
+      }
+
+      person.gender.type = type;
+      updateRecord(doc);
+    };
+
     function addPersonName() {
       var doc = editor.get();
 
