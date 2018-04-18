@@ -84,7 +84,7 @@ function getSourceDescription(personaOrRecord, sourceIdOrUrl) {
 }
 
 function getGenderString(person) {
-  var gender = "Unknown";
+  var gender = "Gender?";
 
   if (person && person.gender && person.gender.type) {
     switch (person.gender.type) {
@@ -217,8 +217,14 @@ function buildPersonUI(doc, person, idMap, path, editHooks) {
   var personCard = div({ class: "person card m-3", id: encode(person.id)} );
   var personCardBody = div({class: "card-body p-0"}).appendTo(personCard);
   var personCardTitle =  $("<h3/>", {class: "card-title card-header"}).appendTo(personCardBody);
-  personBadge(idMap[person.id], getGenderString(person)).appendTo(personCardTitle);
+  buildPersonBadge(person, idMap).appendTo(personCardTitle);
   span({"json-node-path" : path}).text(getBestNameValue(person)).appendTo(personCardTitle);
+
+  var genderString = getGenderString(person);
+  var genderClass = genderString ? genderString.charAt(0) === 'M' ? "gender-male" : genderString.charAt(0) === 'F' ? "gender-female" : "gender-unknown" : "gender-unknown";
+  var genderBadge = span({class: "gender badge badge-pill badge-secondary " + genderClass, "json-node-path" : path + ".gender"}).append(span().text(genderString));
+  genderBadge.appendTo(personCardTitle);
+
   if (person.principal) {
     span({ class: "principal badge badge-pill badge-primary", "json-node-path" : path + ".principal"}).append(span({class: "oi oi-star"})).append(span().text("Principal")).appendTo(personCardTitle);
   }
@@ -261,9 +267,9 @@ function buildPersonUI(doc, person, idMap, path, editHooks) {
   return personCard;
 }
 
-function personBadge(localId, gender) {
-  var genderClass = gender ? gender.charAt(0) === 'M' ? "gender-male" : gender.charAt(0) === 'F' ? "gender-female" : "gender-unknown" : "gender-unknown";
-  return span({class: "local-pid badge badge-pill badge-secondary " + genderClass}).append(span({class: "oi oi-person", title: "person", "aria-hidden": "true"})).append($("<small/>").text(localId));
+function buildPersonBadge(person, idMap) {
+  var localId = idMap[person.id];
+  return span({class: "local-pid badge badge-pill badge-secondary"}).append(span({class: "oi oi-person", title: "person", "aria-hidden": "true"})).append($("<small/>").text(localId));
 }
 
 function buildNamesUI(person, path) {
@@ -429,7 +435,7 @@ function buildRelativesUI(doc, person, idMap) {
           var spouse = findPersonByRef(doc, spouseRef);
           if (spouse) {
             var spouseLabel = relativeLabel(spouse.gender ? spouse.gender.type : null, "Husband", "Wife", "Spouse");
-            r.append(relativeUI(spouse.id, spouseLabel, idMap[spouse.id], getBestNameValue(spouse), getGenderString(spouse)));
+            r.append(buildRelativeUI(spouse, spouseLabel, idMap));
             r.append(buildRelationshipFactsUI(relationship));
           }
         }
@@ -439,7 +445,7 @@ function buildRelativesUI(doc, person, idMap) {
             var child = findPersonByRef(doc, childRef);
             if (child) {
               var childLabel = relativeLabel(child.gender ? child.gender.type : null, "Son", "Daughter", "Child");
-              r.append(relativeUI(child.id, childLabel, idMap[child.id], getBestNameValue(child), getGenderString(child)));
+              r.append(buildRelativeUI(child, childLabel, idMap));
               r.append(buildRelationshipFactsUI(relationship));
             }
           }
@@ -448,7 +454,7 @@ function buildRelativesUI(doc, person, idMap) {
             var parent = findPersonByRef(doc, parentRef);
             if (parent) {
               var parentLabel = relativeLabel(parent.gender ? parent.gender.type : null, "Father", "Mother", "Parent");
-              r.append(relativeUI(parent.id, parentLabel, idMap[parent.id], getBestNameValue(parent), getGenderString(parent)));
+              r.append(buildRelativeUI(parent, parentLabel, idMap));
               r.append(buildRelationshipFactsUI(relationship));
             }
           }
@@ -457,7 +463,7 @@ function buildRelativesUI(doc, person, idMap) {
           var relativeRef = isP1 ? ref2 : ref1;
           var relative = findPersonByRef(doc, relativeRef);
           if (relative) {
-            r.append(relativeUI(relative.id, parseType(relationship.type), idMap[relative.id], getBestNameValue(relative), getGenderString(relative)));
+            r.append(buildRelativeUI(relative, parseType(relationship.type), idMap));
             r.append(buildRelationshipFactsUI(relationship));
           }
         }
@@ -480,12 +486,14 @@ function buildRelationshipFactsUI(rel) {
   return dl(facts, {class: "relationship-facts px-3"});
 }
 
-function relativeUI(relativeId, relativeType, relativeIndex, relativeName, relativeGender) {
+function buildRelativeUI(relative, relativeLabel, idMap) {
+  var relativeId = relative.id;
+  var relativeName = getBestNameValue(relative);
   var r = $("<h5/>", {class: "relative text-nowrap"});
-  personBadge(relativeIndex, relativeGender).appendTo(r);
+  buildPersonBadge(relative, idMap).appendTo(r);
   $("<a/>", { "class" : "link-unstyled", "href" : '#' + relativeId}).text(relativeName).appendTo(r);
-  if (!empty(relativeType)) {
-    r.append($("<small/>", {class: "relative-type text-muted"}).text(relativeType));
+  if (!empty(relativeLabel)) {
+    r.append($("<small/>", {class: "relative-type text-muted"}).text(relativeLabel));
   }
   return r;
 }
@@ -513,14 +521,14 @@ function buildRelationshipsUI(doc, idMap, path) {
     r.append($("<td/>", {class: "relationship-type text-nowrap", "json-node-path" : relationshipPath + ".type"}).text(parseType(relationship.type)));
     var person1 = relationship.person1 ? findPersonByRef(doc, relationship.person1.resource) : null;
     if (person1) {
-      r.append($("<td/>", {class: "relationship-person1 text-nowrap"}).append(personBadge(idMap[person1.id], getGenderString(person1))).append(span({"json-node-path": relationshipPath + ".person1"}).text(getBestNameValue(person1))));
+      r.append($("<td/>", {class: "relationship-person1 text-nowrap"}).append(buildPersonBadge(person1, idMap)).append(span({"json-node-path": relationshipPath + ".person1"}).text(getBestNameValue(person1))));
     }
     else {
       r.append($("<td/>").text("(Unknown)"));
     }
     var person2 = relationship.person2 ? findPersonByRef(doc, relationship.person2.resource) : null;
     if (person2) {
-      r.append($("<td/>", {class: "relationship-person2 text-nowrap"}).append(personBadge(idMap[person2.id], getGenderString(person2))).append(span({"json-node-path": relationshipPath + ".person2"}).text(getBestNameValue(person2))));
+      r.append($("<td/>", {class: "relationship-person2 text-nowrap"}).append(buildPersonBadge(person2, idMap)).append(span({"json-node-path": relationshipPath + ".person2"}).text(getBestNameValue(person2))));
     }
     else {
       r.append($("<td/>").text("(Unknown)"));
