@@ -252,7 +252,7 @@ function buildPersonUI(doc, person, idMap, path, editHooks) {
   }
 
   if (person.hasOwnProperty('facts')) {
-    var facts = buildFactsUI(person.facts, path + ".facts");
+    var facts = buildFactsUI(person, person.facts, path + ".facts", editHooks);
     var addFactHook = null;
     if (editHooks.addFact) {
       addFactHook = function () { editHooks.addFact(person.id); };
@@ -382,8 +382,8 @@ function buildNamePartsUI(parts, path) {
   return fs;
 }
 
-function buildFactsUI(facts, path) {
-  var i, j, fact;
+function buildFactsUI(person, facts, path, editHooks) {
+  var i, j;
   var fs = $("<table/>", {class: "facts table table-sm"});
   var valueNeeded = false;
   var ageNeeded = false;
@@ -415,13 +415,17 @@ function buildFactsUI(facts, path) {
   if (causeNeeded) {
     row.append($("<th>Cause</th>"));
   }
+  if (editHooks.removeFact || editHooks.editFact) {
+    row.append($("<th/>"))
+  }
   $("<thead/>").append(row).appendTo(fs);
 
   var body = $("<tbody/>").appendTo(fs);
   for (i = 0; i < facts.length; i++) {
     var factPath = path + '[' + i + ']';
-    fact = facts[i];
-    var f = $("<tr/>").appendTo(body);
+    var fact = facts[i];
+    var f = $("<tr/>");
+
     if (fact.primary) {
       f.append($("<td/>", {class: "fact-type text-nowrap", "json-node-path" : factPath + ".type"}).append(span().text(parseType(fact.type) + " ")).append(span({class: "oi oi-star"})));
     }
@@ -438,6 +442,7 @@ function buildFactsUI(facts, path) {
         for (j = 0; j < fact.qualifiers.length; j++) {
           if (fact.qualifiers[j].name === "http://gedcomx.org/Age") {
             f.append($("<td/>", {class: "fact-age text-nowrap", "json-node-path": factPath + ".qualifiers[" + j + "]"}).text(fact.qualifiers[j].value));
+            break;
           }
         }
       }
@@ -450,6 +455,7 @@ function buildFactsUI(facts, path) {
         for (j = 0; j < fact.qualifiers.length; j++) {
           if (fact.qualifiers[j].name === "http://gedcomx.org/Cause") {
             f.append($("<td/>", {class: "fact-cause text-nowrap", "json-node-path": factPath + ".qualifiers[" + j + "]"}).text(fact.qualifiers[j].value));
+            break;
           }
         }
       }
@@ -457,8 +463,36 @@ function buildFactsUI(facts, path) {
         f.append($("<td/>", {class: "fact-cause text-nowrap"}).text(""));
       }
     }
+
+    if (editHooks.removeFact || editHooks.editFact) {
+      var editCell = $("<td/>", {class: "text-nowrap"});
+
+      if (editHooks.editFact) {
+        editCell.append(editFactButton(person, fact, editHooks));
+      }
+
+      if (editHooks.removeFact) {
+        editCell.append(removeFactButton(person, fact, editHooks));
+      }
+
+      f.append(editCell);
+    }
+
+    f.appendTo(body);
   }
   return fs;
+}
+
+function editFactButton(person, fact, editHooks) {
+  return editButton(function () {
+    editHooks.editFact(person.id, fact)
+  });
+}
+
+function removeFactButton(person, fact, editHooks) {
+  return removeButton(function () {
+    editHooks.removeFact(person.id, fact.id)
+  });
 }
 
 function buildFieldsUI(fields, path) {
