@@ -51,11 +51,15 @@ function span(attrs) {
 }
 
 function addButton(hook) {
-  return span({class: "trigger badge badge-pill badge-secondary mx-2"}).append(span({class: "oi oi-plus", title: "add", "aria-hidden": "true"})).click(hook);
+  return span({class: "trigger badge badge-pill badge-secondary ml-2"}).append(span({class: "oi oi-plus", title: "add", "aria-hidden": "true"})).click(hook);
+}
+
+function editButton(hook) {
+  return span({class: "trigger badge badge-pill badge-secondary ml-2"}).append(span({class: "oi oi-wrench", title: "add", "aria-hidden": "true"})).click(hook);
 }
 
 function removeButton(hook) {
-  return span({class: "trigger badge badge-pill badge-secondary mx-2"}).append(span({class: "oi oi-x", title: "add", "aria-hidden": "true"})).click(hook);
+  return span({class: "trigger badge badge-pill badge-secondary ml-2"}).append(span({class: "oi oi-x", title: "add", "aria-hidden": "true"})).click(hook);
 }
 
 ////////////////////
@@ -342,6 +346,10 @@ function buildNameUI(person, name, path, editHooks) {
 
       if (name.type && name.type !== "http://gedcomx.org/BirthName") {
         fullText.append(span({class: "name-type badge badge-dark"}).text(parseType(name.type)));
+      }
+
+      if (editHooks.editName) {
+        fullText.append(editButton(function() { editHooks.editName(person.id, name)}));
       }
 
       if (editHooks.removeName) {

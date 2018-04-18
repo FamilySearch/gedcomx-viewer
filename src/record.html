@@ -347,9 +347,143 @@
       $("#new-name").modal("hide");
     }
 
+    function editPersonName() {
+      var doc = editor.get();
+
+      var pid = $("#edit-person-name-person-id").val();
+      if (!pid) {
+        showError("Cannot edit name: no person id provided in the form.");
+        return;
+      }
+
+      var person = getPerson(doc, pid);
+      if (!person) {
+        showError("Cannot edit name: invalid person id: " + pid);
+        return;
+      }
+
+      var nid = $("#edit-person-name-name-id").val();
+      if (!nid) {
+        showError("Cannot edit name: no name id provided in the form.");
+        return;
+      }
+
+      var name;
+      if (person.names) {
+        for (var i = 0; i < person.names.length; i++) {
+          if (person.names[i].id === nid) {
+            name = person.names[i];
+            break;
+          }
+        }
+      }
+      if (!name) {
+        showError("Cannot edit name: invalid name id: " + nid);
+        return;
+      }
+
+      name.type = $("#edit-person-name-type").val();
+      name.nameForms = [];
+      var nameForm = {};
+      nameForm.parts = [];
+      var namePart;
+      var fullText;
+
+      var prefix = $("#edit-person-name-prefix").val();
+      if (prefix) {
+        fullText = prefix;
+        namePart = {};
+        namePart.type = "http://gedcomx.org/Prefix";
+        namePart.value = prefix;
+        nameForm.parts.push(namePart);
+      }
+
+      var given = $("#edit-person-name-given-names").val();
+      if (given) {
+        fullText = fullText ? fullText + " " + given : given;
+        namePart = {};
+        namePart.type = "http://gedcomx.org/Given";
+        namePart.value = given;
+        nameForm.parts.push(namePart);
+      }
+
+      var surname = $("#edit-person-name-surnames").val();
+      if (surname) {
+        fullText = fullText ? fullText + " " + surname : surname;
+        namePart = {};
+        namePart.type = "http://gedcomx.org/Surname";
+        namePart.value = surname;
+        nameForm.parts.push(namePart);
+      }
+
+      var suffix = $("#edit-person-name-suffix").val();
+      if (suffix) {
+        fullText = fullText ? fullText + " " + suffix : suffix;
+        namePart = {};
+        namePart.type = "http://gedcomx.org/Suffix";
+        namePart.value = suffix;
+        nameForm.parts.push(namePart);
+      }
+
+      if (fullText) {
+        nameForm.fullText = fullText;
+      }
+
+      name.nameForms.push(nameForm);
+      updateRecord(doc);
+      $("#edit-name").modal("hide");
+    }
+
     editHooks.addName =  function(pid) {
       $("#new-person-name-person-id").val(pid);
       $("#new-name").modal("show");
+    };
+
+    editHooks.editName = function(pid, name) {
+      $("#edit-person-name-person-id").val(pid);
+
+      if (name.id) {
+        $("#edit-person-name-name-id").val(name.id);
+      }
+      else {
+        showError("Invalid name to edit: no id.");
+      }
+
+      if (name.type) {
+        $("#edit-person-name-type").val(name.type);
+      }
+      else {
+        $("#edit-person-name-type").val("http://gedcomx.org/BirthName");
+      }
+
+      var prefixInput = $("#edit-person-name-prefix").val("");
+      var givenInput = $("#edit-person-name-given-names").val("");
+      var surnameInput = $("#edit-person-name-surnames").val("");
+      var suffixInput = $("#edit-person-name-suffix").val("");
+      if (name.nameForms && name.nameForms.length > 0) {
+        var nameForm = name.nameForms[0];
+        if (nameForm.parts) {
+          for (var i = 0; i < nameForm.parts.length; i++) {
+            var part = nameForm.parts[i];
+            switch (part.type) {
+              case "http://gedcomx.org/Prefix":
+                prefixInput.val(part.value);
+                break;
+              case "http://gedcomx.org/Given":
+                givenInput.val(part.value);
+                break;
+              case "http://gedcomx.org/Surname":
+                surnameInput.val(part.value);
+                break;
+              case "http://gedcomx.org/Suffix":
+                suffixInput.val(part.value);
+                break;
+            }
+          }
+        }
+      }
+
+      $("#edit-name").modal("show");
     };
 
     editHooks.removeName = function(pid, nid) {
@@ -601,6 +735,8 @@
 
       $("#add-new-person-name").click(addPersonName);
 
+      $("#edit-person-name").click(editPersonName);
+
       $("#add-new-person-fact").click(addPersonFact);
 
     });
@@ -825,6 +961,45 @@
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
         <button id="add-new-person-name" type="button" class="btn btn-primary">Add Name</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!--edit name form modal-->
+<div class="modal fade" id="edit-name" tabindex="-1" role="dialog" aria-labelledby="edit-name-label" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="edit-name-label">Edit Name</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" id="edit-person-name-form">
+        <input type="hidden" id="edit-person-name-person-id"/>
+        <input type="hidden" id="edit-person-name-name-id"/>
+        <label for="edit-person-name-type">Name Type</label>
+        <select class="form-control" id="edit-person-name-type">
+          <option value="http://gedcomx.org/BirthName">Birth Name</option>
+          <option value="http://gedcomx.org/MarriedName">Married Name</option>
+          <option value="http://gedcomx.org/AlsoKnownAs">Also Known As</option>
+          <option value="http://gedcomx.org/Nickname">Nickname</option>
+          <option value="http://gedcomx.org/FormalName">Formal Name</option>
+          <option value="http://gedcomx.org/ReligiousName">Religious Name</option>
+        </select>
+        <label for="edit-person-name-prefix">Prefix(es)</label>
+        <input id="edit-person-name-prefix" type="text" class="form-control"/>
+        <label for="edit-person-name-given-names">Given Name(s)</label>
+        <input id="edit-person-name-given-names" type="text" class="form-control"/>
+        <label for="edit-person-name-surnames">Surname(s)</label>
+        <input id="edit-person-name-surnames" type="text" class="form-control"/>
+        <label for="edit-person-name-suffix">Suffix(es)</label>
+        <input id="edit-person-name-suffix" type="text" class="form-control"/>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button id="edit-person-name" type="button" class="btn btn-primary">Edit Name</button>
       </div>
     </div>
   </div>
