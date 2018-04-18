@@ -172,7 +172,7 @@
       var person = {};
       person.id = "p_999" + Math.floor(Math.random() * Math.floor(1000000000));
       person.extracted = true;
-      person.principal = $("#new-person-principal").checked;
+      person.principal = $("#new-person-principal").attr("checked");
       person.gender = {};
       person.gender.type = $("input[name=new-person-gender]:checked").val();
       person.names = [];
@@ -534,6 +534,7 @@
 
       var fact = {};
       fact.type = $("#new-person-fact-type").val();
+      fact.primary = $("#new-person-fact-primary").attr("checked");
 
       var date = $("#new-person-fact-date").val();
       if (date) {
@@ -606,6 +607,7 @@
       }
 
       fact.type = $("#edit-person-fact-type").val();
+      fact.primary = $("#edit-person-fact-primary").attr("checked");
 
       var date = $("#edit-person-fact-date").val();
       if (date) {
@@ -686,6 +688,10 @@
 
       if (fact.type) {
         $("#edit-person-fact-type").val(fact.type);
+      }
+
+      if (fact.primary) {
+        $("#edit-person-fact-primary").attr("checked", true);
       }
 
       if (fact.date && fact.date.original) {
@@ -1272,6 +1278,10 @@
           <option value="http://gedcomx.org/Visit">Visit</option>
           <option value="http://gedcomx.org/Yahrzeit">Yahrzeit</option>
         </select>
+        <div class="form-check">
+          <input class="form-check-input" id="new-person-fact-primary" type="checkbox" value=""/>
+          <label class="form-check-label" for="new-person-fact-primary">Primary</label>
+        </div>
         <label for="new-person-fact-date">Date</label>
         <input id="new-person-fact-date" type="text" class="form-control"/>
         <label for="new-person-fact-place">Place</label>
@@ -1389,6 +1399,10 @@
           <option value="http://gedcomx.org/Visit">Visit</option>
           <option value="http://gedcomx.org/Yahrzeit">Yahrzeit</option>
         </select>
+        <div class="form-check">
+          <input class="form-check-input" id="edit-person-fact-primary" type="checkbox" value=""/>
+          <label class="form-check-label" for="edit-person-fact-primary">Primary</label>
+        </div>
         <label for="edit-person-fact-date">Date</label>
         <input id="edit-person-fact-date" type="text" class="form-control"/>
         <label for="edit-person-fact-place">Place</label>
