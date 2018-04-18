@@ -36,7 +36,7 @@ function addLocalIds(doc) {
 
       if (person.names) {
         for (j = 0; j < person.names.length; j++) {
-          name = person.names[j];
+          var name = person.names[j];
           if (!name.id) {
             name.id = generateLocalId();
           }

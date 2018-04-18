@@ -51,7 +51,11 @@ function span(attrs) {
 }
 
 function addButton(hook) {
-  return $("<a/>", {href: "#", class: "badge badge-pill badge-secondary mx-2"}).append(span({class: "oi oi-plus", title: "add", "aria-hidden": "true"})).click(hook);
+  return span({class: "trigger badge badge-pill badge-secondary mx-2"}).append(span({class: "oi oi-plus", title: "add", "aria-hidden": "true"})).click(hook);
+}
+
+function removeButton(hook) {
+  return span({class: "trigger badge badge-pill badge-secondary mx-2"}).append(span({class: "oi oi-x", title: "add", "aria-hidden": "true"})).click(hook);
 }
 
 ////////////////////
@@ -270,7 +274,7 @@ function buildGenderBadge(person, path, editHooks) {
   var genderIcon = span({class: "oi oi-target"});
   var genderBadge = span({ class: "gender badge badge-pill badge-secondary " + genderClass }).append(genderIcon).append(span({ "json-node-path": path + ".gender" }).text(genderString));
   if (editHooks.editGender) {
-    genderIcon.addClass("toggleable")
+    genderIcon.addClass("trigger")
       .click(function() {
         editHooks.editGender(person.id);
       })
@@ -295,7 +299,7 @@ function buildPrincipalBadge(person, path, editHooks) {
   }
 
   if (editHooks.editPrincipal) {
-    principalIcon.addClass("toggleable")
+    principalIcon.addClass("trigger")
       .click(function () {
         editHooks.editPrincipal(person.id);
       })
@@ -313,32 +317,38 @@ function buildPersonIdBadge(person, idMap) {
   return span({class: "local-pid badge badge-pill badge-info"}).append(span({class: "oi oi-person", title: "person", "aria-hidden": "true"})).append($("<small/>").text(localId));
 }
 
-function buildNamesUI(person, path) {
+function buildNamesUI(person, path, editHooks) {
   var n = div({class: "names"});
   path = path + ".names";
   for (var i = 0; i < person.names.length; i++) {
-    n.append(buildNameUI(person.names[i], path + "[" + i + "]"));
+    n.append(buildNameUI(person, person.names[i], path + "[" + i + "]", editHooks));
   }
   return n;
 }
 
-function buildNameUI(name, path) {
+function buildNameUI(person, name, path, editHooks) {
   var n = div({ class: "name text-nowrap"});
-
-  var j, nameForm, namePart;
-  if (!empty(name.type) && name.type !== "http://gedcomx.org/BirthName") {
-    n.append(span({class: "name-type badge badge-dark"}).text(name.type.replace("http://gedcomx.org/", "")));
-  }
 
   if (name.hasOwnProperty('nameForms')) {
     path = path + ".nameForms";
     for (var i = 0; i < name.nameForms.length; i++) {
-      nameForm = name.nameForms[i];
+      var nameForm = name.nameForms[i];
       var nameFormPath = path + '[' + i + ']';
-      if (!empty(nameForm.lang)) {
-        n.append(span({class: "lang badge badge-dark", "json-node-path" : nameFormPath + ".lang"}).text(nameForm.lang));
+      var fullText = $("<h5/>", {class: "name-form", "json-node-path" : nameFormPath + ".fullText"}).append(span().text(empty(nameForm.fullText) ? "(Empty)" : nameForm.fullText));
+
+      if (nameForm.lang) {
+        fullText.append(span({class: "lang badge badge-dark", "json-node-path" : nameFormPath + ".lang"}).text(nameForm.lang));
       }
-      n.append($("<h5/>", {class: "name-form", "json-node-path" : nameFormPath + ".fullText"}).text(empty(nameForm.fullText) ? "(Empty)" : nameForm.fullText));
+
+      if (name.type && name.type !== "http://gedcomx.org/BirthName") {
+        fullText.append(span({class: "name-type badge badge-dark"}).text(parseType(name.type)));
+      }
+
+      if (editHooks.removeName) {
+        fullText.append(removeButton(function() { editHooks.removeName(person.id, name.id)}));
+      }
+
+      n.append(fullText);
 
       if (nameForm.parts) {
         n.append(buildNamePartsUI(nameForm.parts, nameFormPath + ".parts"));

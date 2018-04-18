@@ -352,6 +352,33 @@
       $("#new-name").modal("show");
     };
 
+    editHooks.removeName = function(pid, nid) {
+      if (!nid) {
+        showError("Cannot remove name: no name id provided.");
+        return;
+      }
+
+      var doc = editor.get();
+      var person = getPerson(doc, pid);
+      if (!person) {
+        showError("Cannot remove name: invalid person id: " + pid);
+        return;
+      }
+
+      if (person.names) {
+        for (var i = 0; i < person.names.length; i++) {
+          var name = person.names[i];
+          if (name.id === nid) {
+            person.names.splice(i, 1);
+            updateRecord(doc);
+            return;
+          }
+        }
+      }
+
+      showError("Cannot remove name from person " + pid + ": invalid name id: " + nid);
+    };
+
     function addPersonFact() {
       var doc = editor.get();
 
