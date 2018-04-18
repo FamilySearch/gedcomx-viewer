@@ -1,6 +1,6 @@
 // Common fixup operations for a GEDCOM X document.
 
-function fix(gx) {
+function fixGedcomx(gx) {
   addLocalIds(gx);
   fixAge(gx);
 }
