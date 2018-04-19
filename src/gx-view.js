@@ -520,6 +520,24 @@ function buildRelativesUI(doc, person, idMap, editHooks) {
             }
           }
         }
+        else if (relationship.type === "http://familysearch.org/types/relationships/AuntOrUncle") {
+          if (isP1) {
+            var nieceOrNephewRef = isP1 ? ref2 : ref1;
+            var nieceOrNephew = findPersonByRef(doc, nieceOrNephewRef);
+            if (nieceOrNephew) {
+              var nieceOrNephewLabel = relativeLabel(nieceOrNephew.gender ? nieceOrNephew.gender.type : null, "Nephew", "Niece", "Niece Or Nephew");
+              r.append(buildRelativeUI(relationship, nieceOrNephew, nieceOrNephewLabel, idMap, ".relationships[" + i + "]", editHooks));
+            }
+          }
+          else {
+            var auntOrUncleRef = isP1 ? ref2 : ref1;
+            var auntOrUncle = findPersonByRef(doc, auntOrUncleRef);
+            if (auntOrUncle) {
+              var auntOrUncleLabel = relativeLabel(auntOrUncle.gender ? auntOrUncle.gender.type : null, "Uncle", "Aunt", "Aunt Or Uncle");
+              r.append(buildRelativeUI(relationship, auntOrUncle, auntOrUncleLabel, idMap, ".relationships[" + i + "]", editHooks));
+            }
+          }
+        }
         else {
           var relativeRef = isP1 ? ref2 : ref1;
           var relative = findPersonByRef(doc, relativeRef);
