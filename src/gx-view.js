@@ -158,6 +158,7 @@ function getBestValue(field) {
 /////////////
 
 function buildRecordUI(doc, url, editHooks) {
+  editHooks = editHooks || {};
   var record = div({ id: "record"});
   record.append($("<h1/>").append(span().text("Record ")));
 
