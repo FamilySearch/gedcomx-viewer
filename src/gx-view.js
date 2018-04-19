@@ -55,11 +55,11 @@ function addButton(hook) {
 }
 
 function editButton(hook) {
-  return span({class: "trigger badge badge-pill badge-secondary ml-2"}).append(span({class: "oi oi-wrench", title: "add", "aria-hidden": "true"})).click(hook);
+  return span({class: "trigger badge badge-pill badge-secondary ml-2"}).append(span({class: "oi oi-wrench", title: "edit", "aria-hidden": "true"})).click(hook);
 }
 
 function removeButton(hook) {
-  return span({class: "trigger badge badge-pill badge-secondary ml-2"}).append(span({class: "oi oi-x", title: "add", "aria-hidden": "true"})).click(hook);
+  return span({class: "trigger badge badge-pill badge-secondary ml-2"}).append(span({class: "oi oi-trash", title: "remove", "aria-hidden": "true"})).click(hook);
 }
 
 ////////////////////
@@ -234,6 +234,10 @@ function buildPersonUI(doc, person, idMap, path, editHooks) {
   buildGenderBadge(person, path, editHooks).appendTo(personCardTitle);
 
   buildPrincipalBadge(person, path, editHooks).appendTo(personCardTitle);
+
+  if (editHooks.removePerson) {
+    removeButton(function() { editHooks.removePerson(person.id) }).appendTo(personCardTitle);
+  }
 
   var identifier = getIdentifier(person);
   if (identifier) {

@@ -213,6 +213,35 @@
       });
     }
 
+    editHooks.removePerson = function (pid) {
+      var doc = editor.get();
+      var i;
+      var pidref = "#" + pid;
+      var relationships = [];
+      if (doc.relationships) {
+        for (i = 0; i < doc.relationships.length; i++) {
+          var relationship = doc.relationships[i];
+          if (!((relationship.person1 && relationship.person1.resource === pidref) || (relationship.person2 && relationship.person2.resource === pidref))) {
+            relationships.push(relationship);
+          }
+        }
+      }
+      doc.relationships = relationships;
+
+      if (doc.persons) {
+        for (i = 0; i < doc.persons.length; i++) {
+          var person = doc.persons[i];
+          if (person.id === pid) {
+            doc.persons.splice(i, 1);
+            updateRecord(doc);
+            return;
+          }
+        }
+      }
+
+      showError("Unable to delete person: invalid person id: " + pid);
+    };
+
     function addRelationship() {
       var relationship = {};
       relationship.id = generateLocalId();
@@ -232,6 +261,21 @@
       updateRecord(doc);
       $("#new-relationship").modal("hide");
     }
+
+    editHooks.removeRelationship = function (rid) {
+      var doc = editor.get();
+      if (doc.relationships) {
+        for (var i = 0; i < doc.relationships.length; i++) {
+          var relationship = doc.relationships[i];
+          if (relationship.id === rid) {
+            doc.relationships.splice(i, 1);
+            return;
+          }
+        }
+      }
+
+      showError("Unable to delete relationship: invalid relationship id: " + rid);
+    };
 
     editHooks.editPrincipal = function(pid) {
       var doc = editor.get();
