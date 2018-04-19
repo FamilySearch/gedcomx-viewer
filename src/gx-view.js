@@ -184,10 +184,10 @@ function buildRecordUI(doc, url, editHooks) {
       idMap[doc.persons[i].id] = i + 1;
     }
 
-    record.append(card("Persons", buildPersonsUI(doc, idMap, path, editHooks)));
+    record.append(card("Persons", buildPersonsUI(doc, idMap, path, editHooks), 2, editHooks.addPerson));
   }
   if (doc.hasOwnProperty('relationships')) {
-    record.append(card("Relationships", buildRelationshipsUI(doc, idMap, path, editHooks)));
+    record.append(card("Relationships", buildRelationshipsUI(doc, idMap, path, editHooks), 2, editHooks.addRelationship));
   }
   if (doc.hasOwnProperty('fields')) {
     //hide fields for now
@@ -262,7 +262,11 @@ function buildPersonUI(doc, person, idMap, path, editHooks) {
   }
 
   var relatives = buildRelativesUI(doc, person, idMap, editHooks);
-  personCardBodyContent.append(div({class: "col"}).append(card("Relatives", relatives, 5)));
+  var addRelativeHook = null;
+  if (editHooks.addRelationship) {
+    addRelativeHook = function() { editHooks.addRelationship(person.id) }
+  }
+  personCardBodyContent.append(div({class: "col"}).append(card("Relatives", relatives, 5, addRelativeHook)));
 
   return personCard;
 }
@@ -553,6 +557,9 @@ function buildRelativeUI(relationship, relative, relativeLabel, idMap, path, edi
   if (relativeLabel) {
     relativeTitle.append($("<small/>", {class: "relative-type text-muted"}).text(relativeLabel));
   }
+  if (editHooks.editRelationship) {
+    relativeTitle.append(editButton(function() {editHooks.editRelationship(relationship)}));
+  }
   if (editHooks.removeRelationship) {
     relativeTitle.append(removeButton(function() {editHooks.removeRelationship(relationship.id)}));
   }
@@ -608,6 +615,10 @@ function buildRelationshipUI(doc, relationship, idMap, path, editHooks) {
   }
   else {
     span({"json-node-path" : path + ".person2"}).text("(Unknown)").appendTo(relationshipCardTitle);
+  }
+
+  if (editHooks.editRelationship) {
+    editButton(function() {editHooks.editRelationship(relationship)}).appendTo(relationshipCardTitle);
   }
 
   if (editHooks.removeRelationship) {

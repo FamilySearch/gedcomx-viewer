@@ -87,6 +87,8 @@
 
       updateSelectablePersons(doc, $("#new-relationship-person-1"));
       updateSelectablePersons(doc, $("#new-relationship-person-2"));
+      updateSelectablePersons(doc, $("#edit-relationship-person-1"));
+      updateSelectablePersons(doc, $("#edit-relationship-person-2"));
     }
 
     /**
@@ -168,11 +170,11 @@
       return person;
     }
 
-    function getRelationship(doc, pid) {
+    function getRelationship(doc, rid) {
       var relationship;
       if (doc.relationships) {
         for (var i = 0; i < doc.relationships.length; i++) {
-          if (doc.relationships[i].id === pid) {
+          if (doc.relationships[i].id === rid) {
             relationship = doc.relationships[i];
             break;
           }
@@ -226,6 +228,10 @@
       });
     }
 
+    editHooks.addPerson = function() {
+      $("#new-person").modal("show");
+    };
+
     editHooks.removePerson = function (pid) {
       var doc = editor.get();
       var i;
@@ -274,6 +280,54 @@
       updateRecord(doc);
       $("#new-relationship").modal("hide");
     }
+
+    function editRelationship() {
+      var rid = $("#edit-relationship-id").val();
+      var doc = editor.get();
+      var relationship = getRelationship(doc, rid);
+      if (!relationship) {
+        showError("Cannot edit relationship: invalid relationship id: " + pid);
+        return;
+      }
+
+      relationship.type = $("#edit-relationship-type").val();
+      relationship.person1 = {};
+      relationship.person1.resourceId = $("#edit-relationship-person-1").val();
+      relationship.person1.resource = "#" + relationship.person1.resourceId;
+      relationship.person2 = {};
+      relationship.person2.resourceId = $("#edit-relationship-person-2").val();
+      relationship.person2.resource = "#" + relationship.person2.resourceId;
+
+      updateRecord(doc);
+      $("#edit-relationship").modal("hide");
+    }
+
+    editHooks.addRelationship = function(pid) {
+      if (pid) {
+        $("#new-relationship-person-1").val(pid);
+        $("#new-relationship-person-2").val(pid);
+      }
+
+      $("#new-relationship").modal("show");
+    };
+
+    editHooks.editRelationship = function(relationship) {
+      $("#edit-relationship-id").val(relationship.id);
+
+      if (relationship.type) {
+        $("#edit-relationship-type").val(relationship.type);
+      }
+
+      if (relationship.person1 && relationship.person1.resource) {
+        $("#edit-relationship-person-1").val(relationship.person1.resource.substr(1));
+      }
+
+      if (relationship.person2 && relationship.person2.resource) {
+        $("#edit-relationship-person-2").val(relationship.person2.resource.substr(1));
+      }
+
+      $("#edit-relationship").modal("show");
+    };
 
     editHooks.removeRelationship = function (rid) {
       var doc = editor.get();
@@ -1200,6 +1254,8 @@
 
       $("#add-new-relationship").click(addRelationship);
 
+      $("#edit-edit-relationship").click(editRelationship);
+
       $("#add-new-person-name").click(addPersonName);
 
       $("#edit-person-name").click(editPersonName);
@@ -1396,6 +1452,41 @@
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
         <button id="add-new-relationship" type="button" class="btn btn-primary">Add Relationship</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!--edit relationship form modal-->
+<div class="modal fade" id="edit-relationship" tabindex="-1" role="dialog" aria-labelledby="edit-relationship-label" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="edit-relationship-label">Edit Relationship</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" id="edit-relationship-form">
+        <input id="edit-relationship-id" type="hidden">
+        <label for="edit-relationship-type">Relationship Type</label>
+        <select class="form-control" id="edit-relationship-type">
+          <option value="http://gedcomx.org/Couple">Couple</option>
+          <option value="http://gedcomx.org/ParentChild">Parent-Child</option>
+          <option value="http://familysearch.org/types/relationships/Sibling">Sibling</option>
+          <option value="http://familysearch.org/types/relationships/AuntOrUncle">Aunt/Uncle</option>
+          <option value="http://familysearch.org/types/relationships/Unknown">Unknown</option>
+        </select>
+        <label for="edit-relationship-person-1" id="edit-relationship-person-1-label">Person 1</label>
+        <select class="form-control" id="edit-relationship-person-1">
+        </select>
+        <label for="edit-relationship-person-2" id="edit-relationship-person-2-label">Person 2</label>
+        <select class="form-control" id="edit-relationship-person-2">
+        </select>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button id="edit-edit-relationship" type="button" class="btn btn-primary">Edit Relationship</button>
       </div>
     </div>
   </div>
