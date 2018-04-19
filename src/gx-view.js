@@ -136,22 +136,6 @@ function getBestNameValue(person) {
   }
 }
 
-function getBestValue(field) {
-  var value = "";
-  if (field && field.values) {
-    for (var i = 0; i < field.values.length; i++) {
-      if (field.values[i].type === "http://gedcomx.org/Original" && value.length === 0) {
-        value = field.values[i].text;
-      }
-      else if (field.values[i].type === "http://gedcomx.org/Interpreted") {
-        value = field.values[i].text;
-        break;  // Interpreted values win so there's no need to continue
-      }
-    }
-  }
-  return value;
-}
-
 
 /////////////
 //UI Builders
@@ -280,42 +264,24 @@ function buildPersonUI(doc, person, idMap, path, editHooks) {
 function buildGenderBadge(person, path, editHooks) {
   var genderString = getGenderString(person);
   var genderClass = genderString ? genderString.charAt(0) === 'M' ? "gender-male" : genderString.charAt(0) === 'F' ? "gender-female" : "gender-unknown" : "gender-unknown";
-  var genderIcon = span({class: "oi oi-target"});
-  var genderBadge = span({ class: "gender badge badge-pill badge-secondary " + genderClass }).append(genderIcon).append(span({ "json-node-path": path + ".gender" }).text(genderString));
+  var genderBadge = span({ class: "gender badge badge-pill badge-secondary " + genderClass }).append(span({ "json-node-path": path + ".gender" }).text(genderString));
   if (editHooks.editGender) {
-    genderIcon.addClass("trigger")
-      .click(function() {
-        editHooks.editGender(person.id);
-      })
-      .hover(function() {
-        genderIcon.toggleClass("oi-target oi-loop-circular");
-      });
+    span({class: "trigger oi oi-loop-circular ml-1"}).click(function() { editHooks.editGender(person.id); }).appendTo(genderBadge);
   }
   return genderBadge;
 }
 
 function buildPrincipalBadge(person, path, editHooks) {
   var principalUI;
-  var principalIcon;
-  var iconClass = person.principal ? "oi-star" : "oi-ban";
   if (person.principal) {
-    principalIcon = span({class: "oi oi-star"});
-    principalUI = span({class: "principal badge badge-pill badge-primary"}).append(principalIcon).append(span({"json-node-path": path + ".principal"}).text("Principal"));
+    principalUI = span({class: "principal badge badge-pill badge-primary"}).append(span({"json-node-path": path + ".principal"}).text("Principal"));
   }
   else {
-    principalIcon = span({class: "oi oi-ban"});
-    principalUI = span({class: "principal badge badge-pill badge-secondary"}).append(principalIcon).append(span({class: "not"}).text("Principal"));
+    principalUI = span({class: "principal badge badge-pill badge-secondary"}).append(span({class: "not"}).text("Principal"));
   }
 
   if (editHooks.editPrincipal) {
-    principalIcon.addClass("trigger")
-      .click(function () {
-        editHooks.editPrincipal(person.id);
-      })
-      .hover(function () {
-        principalIcon.toggleClass(iconClass);
-        principalIcon.toggleClass("oi-loop-circular")
-      });
+    span({class: "trigger oi oi-loop-circular ml-1"}).click(function () { editHooks.editPrincipal(person.id); }).appendTo(principalUI);
   }
 
   return principalUI;
@@ -498,21 +464,6 @@ function removeFactButton(person, fact, editHooks) {
   return removeButton(function () {
     editHooks.removeFact(person.id, fact.id)
   });
-}
-
-function buildFieldsUI(fields, path) {
-  var i, field;
-  var fs = $("<table/>", {class: "fields table table-sm"});
-  $("<thead/>").append($("<tr/>").append($("<th>Type</th>")).append($("<th>Value</th>"))).appendTo(fs);
-  var body = $("<tbody/>").appendTo(fs);
-  for (i = 0; i < fields.length; i++) {
-    var fieldPath = path + '[' + i + ']';
-    field = fields[i];
-    var f = $("<tr/>", {"json-node-path" : fieldPath}).appendTo(body);
-    f.append($("<td/>", {class: "field-type text-nowrap"}).text(parseType(field.type)));
-    f.append($("<td/>", {class: "field-value text-nowrap"}).text(getBestValue(field)));
-  }
-  return fs;
 }
 
 // Get the HTML for the list of a person's relatives.
