@@ -213,7 +213,7 @@ function buildPersonUI(doc, person, idMap, path, editHooks) {
 
   buildPersonIdBadge(person, idMap).appendTo(personCardTitle);
 
-  span({"json-node-path" : path}).text(getBestNameValue(person)).appendTo(personCardTitle);
+  span({"json-node-path" : path}).html(getBestNameValue(person)).appendTo(personCardTitle);
 
   buildGenderBadge(person, path, editHooks).appendTo(personCardTitle);
 
@@ -319,7 +319,7 @@ function buildNameUI(person, name, path, editHooks) {
     for (var i = 0; i < name.nameForms.length; i++) {
       var nameForm = name.nameForms[i];
       var nameFormPath = path + '[' + i + ']';
-      var fullText = $("<h5/>", {class: "name-form", "json-node-path" : nameFormPath + ".fullText"}).append(span().text(empty(nameForm.fullText) ? "(Empty)" : nameForm.fullText));
+      var fullText = $("<h5/>", {class: "name-form", "json-node-path" : nameFormPath + ".fullText"}).append(span().html(empty(nameForm.fullText) ? "(Empty)" : nameForm.fullText));
 
       if (nameForm.lang) {
         fullText.append(span({class: "lang badge badge-dark", "json-node-path" : nameFormPath + ".lang"}).text(nameForm.lang));
@@ -568,10 +568,9 @@ function relativeLabel(gender, maleType, femaleType, neutralType) {
 
 function buildRelativeUI(relationship, relative, relativeLabel, idMap, path, editHooks) {
   var relativeId = relative.id;
-  var relativeName = getBestNameValue(relative);
   var relativeTitle = $("<h5/>", {class: "relative text-nowrap"});
   buildPersonIdBadge(relative, idMap).appendTo(relativeTitle);
-  $("<a/>", { "class" : "link-unstyled", "href" : '#' + relativeId}).text(relativeName).appendTo(relativeTitle);
+  $("<a/>", { "class" : "link-unstyled", "href" : '#' + relativeId}).html(getBestNameValue(relative)).appendTo(relativeTitle);
   if (relativeLabel) {
     relativeTitle.append($("<small/>", {class: "relative-type text-muted"}).text(relativeLabel));
   }
@@ -618,7 +617,7 @@ function buildRelationshipUI(doc, relationship, idMap, path, editHooks) {
   var person1 = relationship.person1 ? findPersonByRef(doc, relationship.person1.resource) : null;
   if (person1) {
     buildPersonIdBadge(person1, idMap).appendTo(relationshipCardTitle);
-    span({class: "relationship-person1 text-nowrap", "json-node-path" : path + ".person1"}).text(getBestNameValue(person1) + " ←").appendTo(relationshipCardTitle);
+    span({class: "relationship-person1 text-nowrap", "json-node-path" : path + ".person1"}).html(getBestNameValue(person1) + " &larr;").appendTo(relationshipCardTitle);
   }
   else {
     span({"json-node-path" : path + ".person1"}).text("(Unknown)").appendTo(relationshipCardTitle);
@@ -628,7 +627,7 @@ function buildRelationshipUI(doc, relationship, idMap, path, editHooks) {
 
   var person2 = relationship.person2 ? findPersonByRef(doc, relationship.person2.resource) : null;
   if (person2) {
-    span({class: "relationship-person2 text-nowrap mr-1", "json-node-path" : path + ".person2"}).text("→ " + getBestNameValue(person2)).appendTo(relationshipCardTitle);
+    span({class: "relationship-person2 text-nowrap mr-1", "json-node-path" : path + ".person2"}).html("&rarr; " + getBestNameValue(person2)).appendTo(relationshipCardTitle);
     buildPersonIdBadge(person2, idMap).appendTo(relationshipCardTitle);
   }
   else {
