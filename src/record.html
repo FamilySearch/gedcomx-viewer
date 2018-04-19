@@ -45,6 +45,9 @@
      */
     var currentUrl = null;
 
+    var sourceDocumentText = null;
+    var sourceDocumentName = null;
+
     var editHooks = {};
 
     /**
@@ -111,14 +114,47 @@
      * Show the source of a record.
      *
      * @param text The text to show.
+     * @param name Name/title for the text.
      */
-    function showSource(text, name) {
+    function setRecordSourceDocument(text, name) {
+      sourceDocumentText = text;
+      sourceDocumentName = name;
       var el = $("#source-file");
       el.empty();
       if (name) {
         el.append($("<h1/>").append($("<small/>", {"class": "text-muted"}).text(name)));
       }
-      el.append($("<pre/>", {"class": "border"}).text(text));
+      if (text) {
+        el.append($("<pre/>", {"class": "border"}).text(text));
+      }
+    }
+
+    function loadSourceOfSource(doc) {
+      var source = getSourceDescription(doc, doc.description);
+
+      var sourceOfSource;
+      if (source && source.sources && source.sources.length > 0) {
+        sourceOfSource = getSourceDescription(doc, source.sources[0].description);
+      }
+
+      var sourceDocument;
+      if (sourceOfSource && sourceOfSource.about) {
+        var sourceDocumentId = sourceOfSource.about.substr(1);
+        if (doc.documents) {
+          for (var i = 0; i < doc.documents.length; i++) {
+            var candidate = doc.documents[i];
+            if (sourceDocumentId === candidate.id) {
+              sourceDocument = candidate;
+              break;
+            }
+          }
+        }
+      }
+
+      if (sourceDocument) {
+        var title = sourceDocument.titles && sourceDocument.titles.length > 0 ? sourceDocument.titles[0].value : null;
+        setRecordSourceDocument(sourceDocument.text, title);
+      }
     }
 
     /**
@@ -148,7 +184,13 @@
     }
 
     function exportGedcomx() {
-      return JSON.stringify(editor.get(), function (key, value) {
+      var doc = editor.get();
+
+      if (sourceDocumentText) {
+        fixTextOfSourceOfSource(doc, sourceDocumentText, sourceDocumentName);
+      }
+
+      return JSON.stringify(doc, function (key, value) {
         if (key === "fields") {
           //strip out any fields
           return undefined;
@@ -1147,6 +1189,8 @@
       });
 
       $("#fetch-gx").click(function () {
+        setRecordSourceDocument(null);
+
         var gedcomxUrl = $("#record-url").val();
         $.ajax({
            type: "GET",
@@ -1158,6 +1202,7 @@
            url: gedcomxUrl,
            success: function (doc, textStatus, jqKHR) {
              updateRecord(doc, gedcomxUrl);
+             loadSourceOfSource(doc);
            },
 
            error: function (jqXHR, textStatus, errorThrown) {
@@ -1176,29 +1221,26 @@
              },
              url: sourceUrl,
              success: function (text, textStatus, jqKHR) {
-               showSource(text);
+               setRecordSourceDocument(text);
              },
 
              error: function (jqXHR, textStatus, errorThrown) {
-               showSource("Request failed to: " + sourceUrl + ": " + textStatus);
+               setRecordSourceDocument("Request failed to: " + sourceUrl + ": " + textStatus);
              }
            });
-        }
-        else {
-          $("#source-file").empty();
         }
       });
 
       $("#paste-gx").click(function() {
+        setRecordSourceDocument(null);
+
         var doc = JSON.parse($("#pasted-gx").val());
         updateRecord(doc);
+        loadSourceOfSource(doc);
 
         var src = $("#pasted-source").val();
         if (src) {
-          showSource(src);
-        }
-        else {
-          $("#source-file").empty();
+          setRecordSourceDocument(src);
         }
       });
 
@@ -1219,12 +1261,15 @@
         text: "Choose GEDCOM X File",
         input: false,
         'onChange' : function(files) {
+          setRecordSourceDocument(null);
+
           for (var i = 0, f; f = files[i]; i++) {
             var reader = new FileReader();
             reader.onload = (function(file) {
               return function(e) {
                 var doc = JSON.parse(e.target.result);
                 updateRecord(doc, file.name);
+                loadSourceOfSource(doc);
                 $("#download-gx").attr("download", file.name);
               }
             })(f);
@@ -1242,7 +1287,7 @@
             var reader = new FileReader();
             reader.onload = (function(file) {
               return function(e) {
-                showSource(e.target.result, file.name);
+                setRecordSourceDocument(e.target.result, file.name);
               }
             })(f);
 

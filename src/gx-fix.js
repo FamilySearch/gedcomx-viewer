@@ -169,3 +169,60 @@ function fixMultipleOccupationsInFields(doc) {
     }
   }
 }
+
+function fixTextOfSourceOfSource(doc, sourceDocumentText, sourceDocumentName) {
+  var source = getSourceDescription(doc, doc.description);
+
+  var sourceOfSource;
+  if (source && source.sources && source.sources.length > 0) {
+    sourceOfSource = getSourceDescription(doc, source.sources[0].description);
+  }
+
+  var sourceDocument;
+  if (sourceOfSource && sourceOfSource.about) {
+    var sourceDocumentId = sourceOfSource.about.substr(1);
+    if (doc.documents) {
+      for (var i = 0; i < doc.documents.length; i++) {
+        var candidate = doc.documents[i];
+        if (sourceDocumentId === candidate.id) {
+          sourceDocument = candidate;
+          break;
+        }
+      }
+    }
+  }
+
+  if (!sourceDocument) {
+    sourceDocument = {};
+    sourceDocument.id = generateLocalId();
+    doc.documents = doc.documents || [];
+    doc.documents.push(sourceDocument);
+  }
+
+  sourceDocument.text = sourceDocumentText;
+  if (sourceDocumentName) {
+    sourceDocument.titles = [];
+    sourceDocument.titles.push({value: sourceDocumentName})
+  }
+
+  if (!sourceOfSource) {
+    sourceOfSource = {};
+    sourceOfSource.id = generateLocalId();
+    sourceOfSource.about = "#" + sourceDocument.id;
+    doc.sourceDescriptions = doc.sourceDescriptions || [];
+    doc.sourceDescriptions.push(sourceOfSource);
+  }
+
+  if (!source) {
+    source = {};
+    source.id = generateLocalId();
+    doc.sourceDescriptions = doc.sourceDescriptions || [];
+    doc.sourceDescriptions.push(source);
+    doc.description = "#" + source.id;
+  }
+
+  source.sources = [];
+  source.sources.push({description: "#" + sourceOfSource.id, descriptionId: sourceOfSource.id});
+}
+
+
