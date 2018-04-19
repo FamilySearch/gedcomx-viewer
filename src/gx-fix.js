@@ -3,6 +3,7 @@
 function fixGedcomx(gx) {
   addLocalIds(gx);
   fixAge(gx);
+  fixMultipleOccupationsInFields(gx);
 }
 
 function generateLocalId() {
@@ -15,7 +16,7 @@ function generateLocalId() {
  *  @param doc The record to update.
  */
 function addLocalIds(doc) {
-  var i, j, k;
+  var i, j;
   var fact;
 
   if (doc.persons) {
@@ -62,7 +63,6 @@ function addLocalIds(doc) {
       }
     }
   }
-
 }
 
 /**
@@ -131,6 +131,41 @@ function fixAge(doc) {
           person.facts.push(fact);
         }
       }
+    }
+  }
+}
+
+function fixMultipleOccupationsInFields(doc) {
+  var i, j, k, l;
+
+  if (doc.persons) {
+    for (i = 0; i < doc.persons.length; i++) {
+      var person = doc.persons[i];
+      var newFacts = [];
+      if (person.facts) {
+        for (j = 0; j < person.facts.length; j++) {
+          var fact = person.facts[j];
+          if (fact.fields) {
+            for (k = 0; k < fact.fields.length; k++) {
+              if (fact.fields[k].type === "http://gedcomx.org/Occupation") {
+                var occField = person.fields[k];
+                if (occField.values) {
+                  for (l = 0; l < occField.values.length; l++) {
+                    if (occField.values[l].labelId === "PR_OCCUPATION") {
+                      var occupation = occField.values[l].text;
+                      if (occupation !== fact.value) {
+                        //different occupation; add it as a separate fact.
+                        newFacts.push({type: "http://gedcomx.org/Occupation", value:occupation});
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      person.facts = person.facts.concat(newFacts);
     }
   }
 }
