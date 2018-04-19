@@ -168,6 +168,19 @@
       return person;
     }
 
+    function getRelationship(doc, pid) {
+      var relationship;
+      if (doc.relationships) {
+        for (var i = 0; i < doc.relationships.length; i++) {
+          if (doc.relationships[i].id === pid) {
+            relationship = doc.relationships[i];
+            break;
+          }
+        }
+      }
+      return relationship;
+    }
+
     function addPerson() {
       var person = {};
       person.id = "p_999" + Math.floor(Math.random() * Math.floor(1000000000));
@@ -269,6 +282,7 @@
           var relationship = doc.relationships[i];
           if (relationship.id === rid) {
             doc.relationships.splice(i, 1);
+            updateRecord(doc);
             return;
           }
         }
@@ -687,12 +701,12 @@
       $("#edit-person-fact").modal("hide");
     }
 
-    editHooks.addFact =  function(pid) {
+    editHooks.addPersonFact =  function(pid) {
       $("#new-person-fact-person-id").val(pid);
       $("#new-person-fact").modal("show");
     };
 
-    editHooks.removeFact = function(pid, fid) {
+    editHooks.removePersonFact = function(pid, fid) {
       if (!fid) {
         showError("Cannot remove fact: no fact id provided.");
         return;
@@ -719,7 +733,7 @@
       showError("Cannot remove fact from person " + pid + ": invalid fact id: " + fid);
     };
 
-    editHooks.editFact =  function(pid, fact) {
+    editHooks.editPersonFact =  function(pid, fact) {
       $("#edit-person-fact-person-id").val(pid);
 
       if (fact.id) {
@@ -790,6 +804,241 @@
       }
 
       $("#edit-person-fact").modal("show");
+    };
+
+    function addRelationshipFact() {
+      var doc = editor.get();
+
+      var pid = $("#new-relationship-fact-relationship-id").val();
+      if (!pid) {
+        showError("Cannot add fact: no relationship id provided in the form.");
+        return;
+      }
+
+      var relationship = getRelationship(doc, pid);
+      if (!relationship) {
+        showError("Cannot add fact: invalid relationship id: " + pid);
+        return;
+      }
+
+      if (!relationship.facts) {
+        relationship.facts = [];
+      }
+
+      var fact = {};
+      fact.type = $("#new-relationship-fact-type").val();
+      fact.primary = $("#new-relationship-fact-primary").attr("checked");
+
+      var date = $("#new-relationship-fact-date").val();
+      if (date) {
+        fact.date = {};
+        fact.date.original = date;
+      }
+
+      var place = $("#new-relationship-fact-place").val();
+      if (place) {
+        fact.place = {};
+        fact.place.original = place;
+      }
+
+      var value = $("#new-relationship-fact-value").val();
+      if (value) {
+        fact.value = value;
+      }
+
+      var age = $("#new-relationship-fact-age").val();
+      if (age) {
+        fact.qualifiers = fact.qualifiers || [];
+        fact.qualifiers.push({name: "http://gedcomx.org/Age", value: age});
+      }
+
+      var cause = $("#new-relationship-fact-cause").val();
+      if (cause) {
+        fact.qualifiers = fact.qualifiers || [];
+        fact.qualifiers.push({name: "http://gedcomx.org/Cause", value: cause});
+      }
+
+      relationship.facts.push(fact);
+      updateRecord(doc);
+      $("#new-relationship-fact").modal("hide");
+    }
+
+    function editRelationshipFact() {
+      var doc = editor.get();
+
+      var pid = $("#edit-relationship-fact-relationship-id").val();
+      if (!pid) {
+        showError("Cannot edit fact: no relationship id provided in the form.");
+        return;
+      }
+
+      var relationship = getRelationship(doc, pid);
+      if (!relationship) {
+        showError("Cannot edit fact: invalid relationship id: " + pid);
+        return;
+      }
+
+      var fid = $("#edit-relationship-fact-fact-id").val();
+      if (!fid) {
+        showError("Cannot edit fact: no fact id provided in the form.");
+        return;
+      }
+
+      var fact;
+      if (relationship.facts) {
+        for (var i = 0; i < relationship.facts.length; i++) {
+          if (relationship.facts[i].id === fid) {
+            fact = relationship.facts[i];
+            break;
+          }
+        }
+      }
+
+      if (!fact) {
+        showError("Cannot edit fact: invalid fact id: " + fid);
+        return;
+      }
+
+      fact.type = $("#edit-relationship-fact-type").val();
+      fact.primary = $("#edit-relationship-fact-primary").attr("checked");
+
+      var date = $("#edit-relationship-fact-date").val();
+      if (date) {
+        fact.date = {};
+        fact.date.original = date;
+      }
+
+      var place = $("#edit-relationship-fact-place").val();
+      if (place) {
+        fact.place = {};
+        fact.place.original = place;
+      }
+
+      var value = $("#edit-relationship-fact-value").val();
+      if (value) {
+        fact.value = value;
+      }
+
+      fact.qualifiers = null;
+      var age = $("#edit-relationship-fact-age").val();
+      if (age) {
+        fact.qualifiers = fact.qualifiers || [];
+        fact.qualifiers.push({name: "http://gedcomx.org/Age", value: age});
+      }
+
+      var cause = $("#edit-relationship-fact-cause").val();
+      if (cause) {
+        fact.qualifiers = fact.qualifiers || [];
+        fact.qualifiers.push({name: "http://gedcomx.org/Cause", value: cause});
+      }
+
+      updateRecord(doc);
+      $("#edit-relationship-fact").modal("hide");
+    }
+
+    editHooks.addRelationshipFact =  function(rid) {
+      $("#new-relationship-fact-relationship-id").val(rid);
+      $("#new-relationship-fact").modal("show");
+    };
+
+    editHooks.removeRelationshipFact = function(rid, fid) {
+      if (!fid) {
+        showError("Cannot remove fact: no fact id provided.");
+        return;
+      }
+
+      var doc = editor.get();
+      var relationship = getRelationship(doc, rid);
+      if (!relationship) {
+        showError("Cannot remove fact: invalid relationship id: " + rid);
+        return;
+      }
+
+      if (relationship.facts) {
+        for (var i = 0; i < relationship.facts.length; i++) {
+          var fact = relationship.facts[i];
+          if (fact.id === fid) {
+            relationship.facts.splice(i, 1);
+            updateRecord(doc);
+            return;
+          }
+        }
+      }
+
+      showError("Cannot remove fact from relationship " + rid + ": invalid fact id: " + fid);
+    };
+
+    editHooks.editRelationshipFact =  function(pid, fact) {
+      $("#edit-relationship-fact-relationship-id").val(pid);
+
+      if (fact.id) {
+        $("#edit-relationship-fact-fact-id").val(fact.id);
+      }
+      else {
+        showError("Cannot edit fact: no id.");
+        return;
+      }
+
+      if (fact.type) {
+        $("#edit-relationship-fact-type").val(fact.type);
+      }
+
+      if (fact.primary) {
+        $("#edit-relationship-fact-primary").attr("checked", true);
+      }
+
+      if (fact.date && fact.date.original) {
+        $("#edit-relationship-fact-date").val(fact.date.original);
+      }
+      else {
+        $("#edit-relationship-fact-date").val("");
+      }
+
+      if (fact.place && fact.place.original) {
+        $("#edit-relationship-fact-place").val(fact.place.original);
+      }
+      else {
+        $("#edit-relationship-fact-place").val("");
+      }
+
+      if (fact.value) {
+        $("#edit-relationship-fact-value").val(fact.value);
+      }
+      else {
+        $("#edit-relationship-fact-value").val("");
+      }
+      
+      var age;
+      var cause;
+      if (fact.qualifiers) {
+        for (var i = 0; i < fact.qualifiers.length; i++) {
+          var qualifier = fact.qualifiers[i];
+          switch (qualifier.name) {
+            case "http://gedcomx.org/Age":
+              age = qualifier.value;
+              break;
+            case "http://gedcomx.org/Cause":
+              cause = qualifier.value;
+              break;
+          }
+        }
+      }
+      
+      if (age) {
+        $("#edit-relationship-fact-age").val(age);
+      }
+      else {
+        $("#edit-relationship-fact-age").val("");
+      }
+      
+      if (cause) {
+        $("#edit-relationship-fact-cause").val(cause);
+      }
+      else {
+        $("#edit-relationship-fact-cause").val("");
+      }
+
+      $("#edit-relationship-fact").modal("show");
     };
 
     /**
@@ -958,6 +1207,10 @@
       $("#add-new-person-fact").click(addPersonFact);
 
       $("#edit-edit-person-fact").click(editPersonFact);
+
+      $("#add-new-relationship-fact").click(addRelationshipFact);
+
+      $("#edit-edit-relationship-fact").click(editRelationshipFact);
 
     });
   </script>
@@ -1225,7 +1478,7 @@
   </div>
 </div>
 
-<!--new fact form modal-->
+<!--new person fact form modal-->
 <div class="modal fade" id="new-person-fact" tabindex="-1" role="dialog" aria-labelledby="new-fact-label" aria-hidden="true">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
@@ -1345,7 +1598,7 @@
   </div>
 </div>
 
-<!--edit fact form modal-->
+<!--edit person fact form modal-->
 <div class="modal fade" id="edit-person-fact" tabindex="-1" role="dialog" aria-labelledby="edit-fact-label" aria-hidden="true">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
@@ -1461,6 +1714,143 @@
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
         <button id="edit-edit-person-fact" type="button" class="btn btn-primary">Edit Fact</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!--new relationship fact form modal-->
+<div class="modal fade" id="new-relationship-fact" tabindex="-1" role="dialog" aria-labelledby="new-relationship-fact-label" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="new-relationship-fact-label">Add Fact</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" id="new-relationship-fact-form">
+        <input type="hidden" id="new-relationship-fact-relationship-id"/>
+        <label for="new-relationship-fact-type">Fact Type</label>
+        <select class="form-control" id="new-relationship-fact-type">
+          <option disabled>──Couple Types──</option>
+          <option value="http://gedcomx.org/Annulment">Annulment</option>
+          <option value="http://gedcomx.org/CommonLawMarriage">CommonLawMarriage</option>
+          <option value="http://gedcomx.org/CivilUnion">CivilUnion</option>
+          <option value="http://gedcomx.org/DomesticPartnership">DomesticPartnership</option>
+          <option value="http://gedcomx.org/Divorce">Divorce</option>
+          <option value="http://gedcomx.org/DivorceFiling">DivorceFiling</option>
+          <option value="http://gedcomx.org/Engagement">Engagement</option>
+          <option value="http://gedcomx.org/Marriage" selected="selected">Marriage</option>
+          <option value="http://gedcomx.org/MarriageBanns">MarriageBanns</option>
+          <option value="http://gedcomx.org/MarriageContract">MarriageContract</option>
+          <option value="http://gedcomx.org/MarriageLicense">MarriageLicense</option>
+          <option value="http://gedcomx.org/MarriageNotice">MarriageNotice</option>
+          <option value="http://gedcomx.org/NumberOfChildren">NumberOfChildren</option>
+          <option value="http://gedcomx.org/Separation">Separation</option>
+          <option disabled>──Parent-Child Types──</option>
+          <option value="http://gedcomx.org/AdoptiveParent">AdoptiveParent</option>
+          <option value="http://gedcomx.org/BiologicalParent">BiologicalParent</option>
+          <option value="http://gedcomx.org/FosterParent">FosterParent</option>
+          <option value="http://gedcomx.org/GuardianParent">GuardianParent</option>
+          <option value="http://gedcomx.org/StepParent">StepParent</option>
+          <option value="http://gedcomx.org/SociologicalParent">SociologicalParent</option>
+          <option value="http://gedcomx.org/SurrogateParent">SurrogateParent</option>
+          <option value="http://gedcomx.org/Marriage">Marriage</option>
+          <option value="http://gedcomx.org/MarriageBanns">MarriageBanns</option>
+          <option value="http://gedcomx.org/MarriageContract">MarriageContract</option>
+          <option value="http://gedcomx.org/MarriageLicense">MarriageLicense</option>
+          <option value="http://gedcomx.org/MarriageNotice">MarriageNotice</option>
+          <option value="http://gedcomx.org/NumberOfChildren">NumberOfChildren</option>
+          <option value="http://gedcomx.org/Separation">Separation</option>
+        </select>
+        <div class="form-check">
+          <input class="form-check-input" id="new-relationship-fact-primary" type="checkbox" value=""/>
+          <label class="form-check-label" for="new-relationship-fact-primary">Primary</label>
+        </div>
+        <label for="new-relationship-fact-date">Date</label>
+        <input id="new-relationship-fact-date" type="text" class="form-control"/>
+        <label for="new-relationship-fact-place">Place</label>
+        <input id="new-relationship-fact-place" type="text" class="form-control"/>
+        <label for="new-relationship-fact-value">Value</label>
+        <input id="new-relationship-fact-value" type="text" class="form-control"/>
+        <label for="new-relationship-fact-age">Age</label>
+        <input id="new-relationship-fact-age" type="text" class="form-control"/>
+        <label for="new-relationship-fact-cause">Cause</label>
+        <input id="new-relationship-fact-cause" type="text" class="form-control"/>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button id="add-new-relationship-fact" type="button" class="btn btn-primary">Add Fact</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!--edit relationship fact form modal-->
+<div class="modal fade" id="edit-relationship-fact" tabindex="-1" role="dialog" aria-labelledby="edit-relationship-fact-label" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="edit-relationship-fact-label">Edit Fact</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" id="edit-relationship-fact-form">
+        <input type="hidden" id="edit-relationship-fact-relationship-id"/>
+        <input type="hidden" id="edit-relationship-fact-fact-id"/>
+        <label for="edit-relationship-fact-type">Fact Type</label>
+        <select class="form-control" id="edit-relationship-fact-type">
+          <option disabled>──Couple Types──</option>
+          <option value="http://gedcomx.org/Annulment">Annulment</option>
+          <option value="http://gedcomx.org/CommonLawMarriage">CommonLawMarriage</option>
+          <option value="http://gedcomx.org/CivilUnion">CivilUnion</option>
+          <option value="http://gedcomx.org/DomesticPartnership">DomesticPartnership</option>
+          <option value="http://gedcomx.org/Divorce">Divorce</option>
+          <option value="http://gedcomx.org/DivorceFiling">DivorceFiling</option>
+          <option value="http://gedcomx.org/Engagement">Engagement</option>
+          <option value="http://gedcomx.org/Marriage" selected="selected">Marriage</option>
+          <option value="http://gedcomx.org/MarriageBanns">MarriageBanns</option>
+          <option value="http://gedcomx.org/MarriageContract">MarriageContract</option>
+          <option value="http://gedcomx.org/MarriageLicense">MarriageLicense</option>
+          <option value="http://gedcomx.org/MarriageNotice">MarriageNotice</option>
+          <option value="http://gedcomx.org/NumberOfChildren">NumberOfChildren</option>
+          <option value="http://gedcomx.org/Separation">Separation</option>
+          <option disabled>──Parent-Child Types──</option>
+          <option value="http://gedcomx.org/AdoptiveParent">AdoptiveParent</option>
+          <option value="http://gedcomx.org/BiologicalParent">BiologicalParent</option>
+          <option value="http://gedcomx.org/FosterParent">FosterParent</option>
+          <option value="http://gedcomx.org/GuardianParent">GuardianParent</option>
+          <option value="http://gedcomx.org/StepParent">StepParent</option>
+          <option value="http://gedcomx.org/SociologicalParent">SociologicalParent</option>
+          <option value="http://gedcomx.org/SurrogateParent">SurrogateParent</option>
+          <option value="http://gedcomx.org/Marriage">Marriage</option>
+          <option value="http://gedcomx.org/MarriageBanns">MarriageBanns</option>
+          <option value="http://gedcomx.org/MarriageContract">MarriageContract</option>
+          <option value="http://gedcomx.org/MarriageLicense">MarriageLicense</option>
+          <option value="http://gedcomx.org/MarriageNotice">MarriageNotice</option>
+          <option value="http://gedcomx.org/NumberOfChildren">NumberOfChildren</option>
+          <option value="http://gedcomx.org/Separation">Separation</option>
+        </select>
+        <div class="form-check">
+          <input class="form-check-input" id="edit-relationship-fact-primary" type="checkbox" value=""/>
+          <label class="form-check-label" for="edit-relationship-fact-primary">Primary</label>
+        </div>
+        <label for="edit-relationship-fact-date">Date</label>
+        <input id="edit-relationship-fact-date" type="text" class="form-control"/>
+        <label for="edit-relationship-fact-place">Place</label>
+        <input id="edit-relationship-fact-place" type="text" class="form-control"/>
+        <label for="edit-relationship-fact-value">Value</label>
+        <input id="edit-relationship-fact-value" type="text" class="form-control"/>
+        <label for="edit-relationship-fact-age">Age</label>
+        <input id="edit-relationship-fact-age" type="text" class="form-control"/>
+        <label for="edit-relationship-fact-cause">Cause</label>
+        <input id="edit-relationship-fact-cause" type="text" class="form-control"/>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button id="edit-edit-relationship-fact" type="button" class="btn btn-primary">Edit Fact</button>
       </div>
     </div>
   </div>
