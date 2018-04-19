@@ -164,8 +164,8 @@ function fixMultipleOccupationsInFields(doc) {
             }
           }
         }
+        person.facts = person.facts.concat(newFacts);
       }
-      person.facts = person.facts.concat(newFacts);
     }
   }
 }

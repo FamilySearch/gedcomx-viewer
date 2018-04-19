@@ -146,6 +146,10 @@ function buildRecordUI(doc, url, editHooks) {
   var record = div({ id: "record"});
   record.append($("<h1/>").append(span().text("Record ")));
 
+  if (isSour(doc)) {
+    record.append($("<h4/>", {class: "alert alert-warning", role:"alert"}).append(span({class: "oi oi-warning mr-2"})).append(span().text("Record is sour!")));
+  }
+
   var recordMetadata = {};
 
   if (url) {
@@ -194,6 +198,20 @@ function buildRecordUI(doc, url, editHooks) {
     //record.append(card("Fields", buildFieldsUI(doc.fields, path + ".fields")));
   }
   return record;
+}
+
+function isSour(doc) {
+  if (doc.fields) {
+    for (var i = 0; i < doc.fields.length; i++) {
+      var field = doc.fields[i];
+      if (field.type === "http://familysearch.org/types/fields/FsVisStatus") {
+        if (field.values && field.values.length > 0 && field.values[0].text === "restricted") {
+          return true;
+        }
+      }
+    }
+  }
+  return false;
 }
 
 function buildPersonsUI(doc, idMap, path, editHooks) {
