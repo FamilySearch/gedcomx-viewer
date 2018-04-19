@@ -1101,7 +1101,8 @@
      * @param text The warning.
      */
     function showError(text) {
-      $("#alert-container").empty().append($("<div/>", {"class": "alert alert-danger alert-dismissible fade show mt-2", "role":"alert"}).append(text).append($("<button/>", {"type": "button", "class" : "close", "data-dismiss" : "alert", "aria-label":"Close"}).append($("<span/>", {"aria-hidden":"true"}).html("&times;"))));
+      $("#alert-container").empty().append(text);
+      $("#alert").modal("show");
     }
 
     $(function () {
@@ -1299,10 +1300,6 @@
 
 <!--main body layout-->
 <div class="container-fluid">
-  <div class="row">
-    <div class="col" id="alert-container">
-    </div>
-  </div>
   <div class="row m-2 p-2 border">
     <div class="col">
       <div class="container-fluid">
@@ -1378,6 +1375,20 @@
             <div id="record"></div>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!--new person form modal -->
+<div class="modal fade" id="alert" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-body" >
+        <div class="alert alert-danger"><span class="oi oi-warning mr-2"></span><span id="alert-container"></span></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
