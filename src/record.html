@@ -1234,7 +1234,15 @@
       $("#paste-gx").click(function() {
         setRecordSourceDocument(null);
 
-        var doc = JSON.parse($("#pasted-gx").val());
+        var doc;
+        try {
+          doc = JSON.parse($("#pasted-gx").val());
+        }
+        catch (e) {
+          showError(e.toString());
+          return;
+        }
+
         updateRecord(doc);
         loadSourceOfSource(doc);
 
@@ -1267,7 +1275,15 @@
             var reader = new FileReader();
             reader.onload = (function(file) {
               return function(e) {
-                var doc = JSON.parse(e.target.result);
+                var doc;
+                try {
+                  doc = JSON.parse(e.target.result);
+                }
+                catch (e) {
+                  showError(e.toString());
+                  return;
+                }
+
                 updateRecord(doc, file.name);
                 loadSourceOfSource(doc);
                 $("#download-gx").attr("download", file.name);
