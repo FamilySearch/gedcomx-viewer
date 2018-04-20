@@ -58,6 +58,10 @@ function editButton(hook) {
   return span({class: "trigger badge badge-pill badge-secondary ml-2"}).append(span({class: "oi oi-wrench", title: "edit", "aria-hidden": "true"})).click(hook);
 }
 
+function copyButton(hook) {
+  return span({class: "trigger badge badge-pill badge-secondary ml-2"}).append(span({class: "oi oi-clipboard", title: "copy", "aria-hidden": "true"})).click(hook);
+}
+
 function removeButton(hook) {
   return span({class: "trigger badge badge-pill badge-secondary ml-2"}).append(span({class: "oi oi-trash", title: "remove", "aria-hidden": "true"})).click(hook);
 }
@@ -389,6 +393,7 @@ function buildFactsUI(subject, facts, path, editHooks, isRelationship) {
   var causeNeeded = false;
   var removeFactFn = isRelationship ? editHooks.removeRelationshipFact : editHooks.removePersonFact;
   var editFactFn = isRelationship ? editHooks.editRelationshipFact : editHooks.editPersonFact;
+  var copyFactFn = isRelationship ? null : editHooks.copyPersonFact;
 
   for (i = 0; i < facts.length; i++) {
     if (facts[i].value) {
@@ -417,7 +422,7 @@ function buildFactsUI(subject, facts, path, editHooks, isRelationship) {
   if (causeNeeded) {
     row.append($("<th>Cause</th>"));
   }
-  if (removeFactFn || editFactFn) {
+  if (removeFactFn || editFactFn || copyFactFn) {
     row.append($("<th/>"))
   }
   $("<thead/>").append(row).appendTo(factsUI);
@@ -466,11 +471,15 @@ function buildFactsUI(subject, facts, path, editHooks, isRelationship) {
       }
     }
 
-    if (removeFactFn || editFactFn) {
+    if (removeFactFn || editFactFn || copyFactFn) {
       var editCell = $("<td/>", {class: "text-nowrap"});
 
       if (editFactFn) {
         editCell.append(editFactButton(subject, fact, editFactFn));
+      }
+      
+      if (copyFactFn) {
+        editCell.append(copyFactButton(subject, fact, copyFactFn));
       }
 
       if (removeFactFn) {
@@ -488,6 +497,12 @@ function buildFactsUI(subject, facts, path, editHooks, isRelationship) {
 function editFactButton(subject, fact, editFactFn) {
   return editButton(function () {
     editFactFn(subject.id, fact);
+  });
+}
+
+function copyFactButton(subject, fact, copyFactFn) {
+  return copyButton(function () {
+    copyFactFn(subject.id, fact.id);
   });
 }
 

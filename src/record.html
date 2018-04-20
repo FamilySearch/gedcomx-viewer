@@ -92,6 +92,7 @@
       updateSelectablePersons(doc, $("#new-relationship-person-2"));
       updateSelectablePersons(doc, $("#edit-relationship-person-1"));
       updateSelectablePersons(doc, $("#edit-relationship-person-2"));
+      updateSelectablePersons(doc, $("#copy-person-fact-target-persons"));
     }
 
     /**
@@ -798,6 +799,61 @@
       $("#edit-person-fact").modal("hide");
     }
 
+    function copyPersonFact() {
+      var i;
+      var doc = editor.get();
+
+      var pid = $("#copy-person-fact-person-id").val();
+      if (!pid) {
+        showError("Cannot copy fact: no person id provided in the form.");
+        return;
+      }
+
+      var person = getPerson(doc, pid);
+      if (!person) {
+        showError("Cannot copy fact: invalid person id: " + pid);
+        return;
+      }
+
+      var fid = $("#copy-person-fact-fact-id").val();
+      if (!fid) {
+        showError("Cannot copy fact: no fact id provided in the form.");
+        return;
+      }
+
+      var fact;
+      if (person.facts) {
+        for (i = 0; i < person.facts.length; i++) {
+          if (person.facts[i].id === fid) {
+            fact = person.facts[i];
+            break;
+          }
+        }
+      }
+
+      if (!fact) {
+        showError("Cannot copy fact: invalid fact id: " + fid);
+        return;
+      }
+
+      var targetIds = $("#copy-person-fact-target-persons").val();
+      for (i = 0; i < targetIds.length; i++) {
+        var targetPerson = getPerson(doc, targetIds[i]);
+        if (!targetPerson) {
+          showError("Cannot copy fact: invalid person id selected: " + targetIds[i]);
+          return;
+        }
+
+        targetPerson.facts = targetPerson.facts || [];
+        var clonedFact = $.extend(true, {}, fact);
+        clonedFact.id = generateLocalId();
+        targetPerson.facts.push(clonedFact);
+      }
+
+      updateRecord(doc);
+      $("#copy-person-fact").modal("hide");
+    }
+
     editHooks.addPersonFact =  function(pid) {
       $("#new-person-fact-person-id").val(pid);
       $("#new-person-fact").modal("show");
@@ -901,6 +957,12 @@
       }
 
       $("#edit-person-fact").modal("show");
+    };
+
+    editHooks.copyPersonFact = function(pid, fid) {
+      $("#copy-person-fact-person-id").val(pid);
+      $("#copy-person-fact-fact-id").val(fid);
+      $("#copy-person-fact").modal("show");
     };
 
     function addRelationshipFact() {
@@ -1331,6 +1393,7 @@
 
       $("#edit-edit-relationship-fact").click(editRelationshipFact);
 
+      $("#copy-copy-person-fact").click(copyPersonFact);
     });
   </script>
   <style type="text/css">
@@ -2015,6 +2078,33 @@
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
         <button id="edit-edit-relationship-fact" type="button" class="btn btn-primary">Edit Fact</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!--copy person fact form modal-->
+<div class="modal fade" id="copy-person-fact" tabindex="-1" role="dialog" aria-labelledby="copy-person-fact-label" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="copy-person-fact-label">Copy Fact</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" id="copy-person-fact-form">
+        <input type="hidden" id="copy-person-fact-person-id"/>
+        <input type="hidden" id="copy-person-fact-fact-id"/>
+        <div class="form-group">
+          <select multiple class="form-control" id="copy-person-fact-target-persons">
+
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button id="copy-copy-person-fact" type="button" class="btn btn-primary">Copy Fact</button>
       </div>
     </div>
   </div>
