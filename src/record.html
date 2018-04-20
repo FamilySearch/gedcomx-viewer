@@ -125,7 +125,8 @@
         el.append($("<h1/>").append($("<small/>", {"class": "text-muted"}).text(name)));
       }
       if (text) {
-        el.append($("<pre/>", {"class": "border"}).text(text));
+        el.append($("<textarea/>", {"class": "form-control border", "rows" : "15", "style": "font-size: 14px"}).val(text));
+        $("#source-viewer").show();
       }
     }
 
