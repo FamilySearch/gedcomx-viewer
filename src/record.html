@@ -1200,14 +1200,48 @@
       $("#edit-relationship-fact").modal("show");
     };
 
-    /**
-     * Show a warning.
-     *
-     * @param text The warning.
-     */
     function showError(text) {
       $("#alert-container").empty().append(text);
       $("#alert").modal("show");
+    }
+
+    function uploadGedcomx(files) {
+      setRecordSourceDocument(null);
+
+      for (var i = 0, f; f = files[i]; i++) {
+        var reader = new FileReader();
+        reader.onload = (function(file) {
+          return function(e) {
+            var doc;
+            try {
+              doc = JSON.parse(e.target.result);
+            }
+            catch (e) {
+              showError(e.toString());
+              return;
+            }
+
+            updateRecord(doc, file.name);
+            loadSourceOfSource(doc);
+            $("#download-gx").attr("download", file.name);
+          }
+        })(f);
+
+        reader.readAsText(f);
+      }
+    }
+
+    function uploadSource(files) {
+      for (var i = 0, f; f = files[i]; i++) {
+        var reader = new FileReader();
+        reader.onload = (function(file) {
+          return function(e) {
+            setRecordSourceDocument(e.target.result, file.name);
+          }
+        })(f);
+
+        reader.readAsText(f);
+      }
     }
 
     $(function () {
@@ -1331,48 +1365,69 @@
       $("#gxfile").filestyle({
         text: "Choose GEDCOM X File",
         input: false,
-        'onChange' : function(files) {
-          setRecordSourceDocument(null);
+        'onChange' : uploadGedcomx
+      });
 
-          for (var i = 0, f; f = files[i]; i++) {
-            var reader = new FileReader();
-            reader.onload = (function(file) {
-              return function(e) {
-                var doc;
-                try {
-                  doc = JSON.parse(e.target.result);
-                }
-                catch (e) {
-                  showError(e.toString());
-                  return;
-                }
-
-                updateRecord(doc, file.name);
-                loadSourceOfSource(doc);
-                $("#download-gx").attr("download", file.name);
-              }
-            })(f);
-
-            reader.readAsText(f);
+      $("#record").on("drop", function(je) {
+        var e = je.originalEvent;
+        e.preventDefault();
+        e.stopPropagation();
+        $(this).removeClass("dragging");
+        var files;
+        if (e.dataTransfer.items) {
+          files = [];
+          for (var i = 0; i < e.dataTransfer.items.length; i++) {
+            files.push(e.dataTransfer.items[i].getAsFile());
           }
         }
+        else {
+          files = e.dataTransfer.files;
+        }
+        uploadGedcomx(files);
+      }).on("dragover", function(je) {
+        var e = je.originalEvent;
+        e.preventDefault();
+        e.stopPropagation();
+        $(this).addClass("dragging");
+      }).on("dragleave", function(je) {
+        var e = je.originalEvent;
+        e.preventDefault();
+        e.stopPropagation();
+        $(this).removeClass("dragging");
       });
 
       $("#srcfile").filestyle({
         text: "Choose Source File",
         input: false,
-        'onChange' : function(files) {
-          for (var i = 0, f; f = files[i]; i++) {
-            var reader = new FileReader();
-            reader.onload = (function(file) {
-              return function(e) {
-                setRecordSourceDocument(e.target.result, file.name);
-              }
-            })(f);
+        'onChange' : uploadSource
+      });
 
-            reader.readAsText(f);
+      $("#source-file").on("drop", function(je) {
+        var e = je.originalEvent;
+        e.preventDefault();
+        e.stopPropagation();
+        $(this).removeClass("dragging");
+        var files;
+        if (e.dataTransfer.items) {
+          files = [];
+          for (var i = 0; i < e.dataTransfer.items.length; i++) {
+            files.push(e.dataTransfer.items[i].getAsFile());
           }
         }
+        else {
+          files = e.dataTransfer.files;
+        }
+        uploadSource(files);
+      }).on("dragover", function(je) {
+        var e = je.originalEvent;
+        e.preventDefault();
+        e.stopPropagation();
+        $(this).addClass("dragging");
+      }).on("dragleave", function(je) {
+        var e = je.originalEvent;
+        e.preventDefault();
+        e.stopPropagation();
+        $(this).removeClass("dragging");
       });
 
       $("#add-new-person").click(addPerson);
@@ -1400,6 +1455,12 @@
     #gx-editor {
       max-height: 40vh;
       overflow-y: auto;
+    }
+
+    .dragging {
+      border-width: 5px;
+      border-style: dashed;
+      border-color: #6c757d;
     }
 
     body {
