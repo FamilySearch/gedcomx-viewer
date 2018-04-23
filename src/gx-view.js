@@ -373,7 +373,7 @@ function buildNameUI(person, name, path, editHooks) {
         fullText.append(span({class: "lang badge badge-dark", "json-node-path" : nameFormPath + ".lang"}).text(nameForm.lang));
       }
 
-      if (name.type && name.type !== "http://gedcomx.org/BirthName") {
+      if (name.type) {
         fullText.append(span({class: "name-type badge badge-dark"}).text(parseType(name.type)));
       }
 

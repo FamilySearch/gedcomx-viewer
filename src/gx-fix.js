@@ -4,6 +4,7 @@ function fixGedcomx(gx) {
   addLocalIds(gx);
   fixAge(gx);
   fixMultipleOccupationsInFields(gx);
+  fixExplicitNameType(gx);
 }
 
 function generateLocalId() {
@@ -223,6 +224,23 @@ function fixTextOfSourceOfSource(doc, sourceDocumentText, sourceDocumentName) {
 
   source.sources = [];
   source.sources.push({description: "#" + sourceOfSource.id, descriptionId: sourceOfSource.id});
+}
+
+function fixExplicitNameType(gx) {
+  if (gx.persons) {
+    for (var i = 0; i < gx.persons.length; i++) {
+      var person = gx.persons[i];
+      if (person.names) {
+        for (var j = 0; j < person.names.length; j++) {
+          var name = person.names[j];
+          if (name.type === "http://gedcomx.org/BirthName") {
+            //assume birth name is implicit, not explicit
+            name.type = null;
+          }
+        }
+      }
+    }
+  }
 }
 
 

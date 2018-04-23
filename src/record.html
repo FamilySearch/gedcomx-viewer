@@ -81,8 +81,6 @@
         doc = doc.records[0];
       }
 
-      fixGedcomx(doc);
-
       editor.set(doc);
       $("#source-viewer").show();
 
@@ -349,7 +347,8 @@
       person.fields = [];
 
       var name = {};
-      name.type = "http://gedcomx.org/BirthName";
+      name.id = generateLocalId();
+      name.type = null;
       name.nameForms = [];
 
       var nameForm = {};
@@ -560,7 +559,11 @@
       }
 
       var name = {};
-      name.type = $("#new-person-name-type").val();
+      name.id = generateLocalId();
+      var nameType = $("#new-person-name-type").val();
+      if (nameType) {
+        name.type = nameType;
+      }
       name.nameForms = [];
       var nameForm = {};
       nameForm.parts = [];
@@ -648,7 +651,14 @@
         return;
       }
 
-      name.type = $("#edit-person-name-type").val();
+      var nameType = $("#edit-person-name-type").val();
+      if (nameType) {
+        name.type = nameType;
+      }
+      else {
+        name.type = null;
+      }
+
       name.nameForms = [];
       var nameForm = {};
       nameForm.parts = [];
@@ -719,7 +729,7 @@
         $("#edit-person-name-type").val(name.type);
       }
       else {
-        $("#edit-person-name-type").val("http://gedcomx.org/BirthName");
+        $("#edit-person-name-type").val("");
       }
 
       var prefixInput = $("#edit-person-name-prefix").val("");
@@ -799,6 +809,7 @@
       }
 
       var fact = {};
+      fact.id = generateLocalId();
       fact.type = $("#new-person-fact-type").val();
       fact.primary = $("#new-person-fact-primary").attr("checked");
 
@@ -1095,6 +1106,7 @@
       }
 
       var fact = {};
+      fact.id = generateLocalId();
       fact.type = $("#new-relationship-fact-type").val();
       fact.primary = $("#new-relationship-fact-primary").attr("checked");
 
@@ -1331,6 +1343,7 @@
               return;
             }
 
+            fixGedcomx(doc);
             updateRecord(doc, file.name);
             loadSourceOfSource(doc);
             $("#download-gx").attr("download", file.name);
@@ -1408,6 +1421,7 @@
            },
            url: gedcomxUrl,
            success: function (doc, textStatus, jqKHR) {
+             fixGedcomx(doc);
              updateRecord(doc, gedcomxUrl);
              loadSourceOfSource(doc);
            },
@@ -1450,6 +1464,7 @@
           return;
         }
 
+        fixGedcomx(doc);
         updateRecord(doc);
         loadSourceOfSource(doc);
 
@@ -1827,6 +1842,7 @@
         <input type="hidden" id="new-person-name-person-id"/>
         <label for="new-person-name-type">Name Type</label>
         <select class="form-control" id="new-person-name-type">
+          <option value="">(None)</option>
           <option value="http://gedcomx.org/BirthName">Birth Name</option>
           <option value="http://gedcomx.org/MarriedName">Married Name</option>
           <option value="http://gedcomx.org/AlsoKnownAs">Also Known As</option>
@@ -1866,6 +1882,7 @@
         <input type="hidden" id="edit-person-name-name-id"/>
         <label for="edit-person-name-type">Name Type</label>
         <select class="form-control" id="edit-person-name-type">
+          <option value="">(None)</option>
           <option value="http://gedcomx.org/BirthName">Birth Name</option>
           <option value="http://gedcomx.org/MarriedName">Married Name</option>
           <option value="http://gedcomx.org/AlsoKnownAs">Also Known As</option>
