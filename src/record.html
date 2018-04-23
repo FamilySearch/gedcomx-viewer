@@ -415,21 +415,33 @@
     };
 
     function addRelationship() {
-      var relationship = {};
-      relationship.id = generateLocalId();
-      relationship.type = $("#new-relationship-type").val();
-      relationship.person1 = {};
-      relationship.person1.resourceId = $("#new-relationship-person-1").val();
-      relationship.person1.resource = "#" + relationship.person1.resourceId;
-      relationship.person2 = {};
-      relationship.person2.resourceId = $("#new-relationship-person-2").val();
-      relationship.person2.resource = "#" + relationship.person2.resourceId;
-
       var doc = editor.get();
       if (!doc.relationships) {
         doc.relationships = [];
       }
-      doc.relationships.push(relationship);
+
+      var pids1 = $("#new-relationship-person-1").val();
+      pids1 = pids1 || [];
+      var pids2 = $("#new-relationship-person-2").val();
+      pids2 = pids2 || [];
+      for (var i = 0; i < pids1.length; i++) {
+        var pid1 = pids1[i];
+        for (var j = 0; j < pids2.length; j++) {
+          var pid2 = pids2[j];
+          var relationship = {};
+          relationship.id = generateLocalId();
+          relationship.type = $("#new-relationship-type").val();
+          relationship.person1 = {};
+          relationship.person1.resourceId = pid1;
+          relationship.person1.resource = "#" + pid1;
+          relationship.person2 = {};
+          relationship.person2.resourceId = pid2;
+          relationship.person2.resource = "#" + pid2;
+          doc.relationships.push(relationship);
+        }
+      }
+
+
       updateRecord(doc);
       $("#new-relationship").modal("hide");
     }
@@ -1793,11 +1805,11 @@
           <option value="http://familysearch.org/types/relationships/NonRelative">NonRelative</option>
           <option value="http://familysearch.org/types/relationships/Unknown">Unknown</option>
         </select>
-        <label for="new-relationship-person-1" id="new-relationship-person-1-label">Person 1</label>
-        <select class="form-control" id="new-relationship-person-1">
+        <label for="new-relationship-person-1" id="new-relationship-person-1-label">Person(s) 1</label>
+        <select multiple class="form-control" id="new-relationship-person-1">
         </select>
-        <label for="new-relationship-person-2" id="new-relationship-person-2-label">Person 2</label>
-        <select class="form-control" id="new-relationship-person-2">
+        <label for="new-relationship-person-2" id="new-relationship-person-2-label">Person(s) 2</label>
+        <select multiple class="form-control" id="new-relationship-person-2">
         </select>
       </div>
       <div class="modal-footer">
