@@ -16,15 +16,18 @@ function parseType(typeUri) {
     // Remove everything up to the last "/"
     replace(/.*\//gi, "").
     // Insert spaces before capitals, e.g., "SomeType" -> "Some Type"
-    replace(/([A-Z])/g, ' $1');
+    replace(/([A-Z])/g, '$1');
   // Get iterpreted value, if any, or else the original value.
 }
 
-function card(sectionName, sectionContent, level, addHook) {
+function card(sectionName, sectionContent, level, addHook, editHook) {
   level = level || 2;
   var title = $("<h" + level + "/>", {class: "card-title card-header"}).append(span().text(sectionName));
   if (addHook) {
     title = title.append(addButton(addHook));
+  }
+  if (editHook) {
+    title = title.append(editButton(editHook));
   }
   return div({class: "card m-1 p-0"})
     .append(div({class:"card-body p-0"})
@@ -33,10 +36,10 @@ function card(sectionName, sectionContent, level, addHook) {
 }
 
 function dl(items, attrs) {
-  var list = $("<dl/>", attrs);
+  var list = $("<dl/>", attrs).addClass("row");
   for (var key in items) {
     if (items.hasOwnProperty(key)) {
-      list.append($("<dt/>").text(key)).append($("<dd/>").text(items[key]));
+      list.append($("<dt/>", {class: "col-2"}).text(key)).append($("<dd/>", {class: "col-10"}).text(items[key]));
     }
   }
   return list
@@ -93,6 +96,22 @@ function getSourceDescription(personaOrRecord, sourceIdOrUrl) {
       }
     }
   }
+}
+
+function getAgent(doc, ref) {
+  if (ref && ref.startsWith("#")) {
+    var id = ref.substr(1);
+    if (doc.agents) {
+      for (var i = 0; i < doc.agents.length; i++) {
+        var agent = doc.agents[i];
+        if (agent.id === id) {
+          return agent;
+        }
+      }
+    }
+  }
+
+  return null;
 }
 
 function getGenderString(person) {
@@ -160,33 +179,40 @@ function buildRecordUI(doc, url, editHooks) {
     recordMetadata.URL = url;
   }
 
-  if (doc.hasOwnProperty('description')) {
+  if (doc.description) {
     var sd = getSourceDescription(doc, doc.description);
     if (sd) {
-      if (sd.hasOwnProperty("titles")) {
+      if (sd.titles) {
         recordMetadata.Title = sd.titles[0].value;
       }
 
-      if (sd.hasOwnProperty("coverage")) {
+      if (sd.coverage && sd.coverage.length > 0) {
         var coverage = sd.coverage[0];
         recordMetadata.Type = parseType(coverage.recordType);
-        if (coverage.hasOwnProperty("temporal")) {
+        if (coverage.temporal) {
           recordMetadata.Date = coverage.temporal.original;
         }
-        if (coverage.hasOwnProperty("spatial")) {
+        if (coverage.spatial) {
           recordMetadata.Place = coverage.spatial.original;
+        }
+      }
+
+      if (sd.publisher) {
+        var publisher = getAgent(doc, sd.publisher.resource);
+        if (publisher && publisher.names && publisher.names.length > 0) {
+          recordMetadata.Publisher = publisher.names[0].value;
         }
       }
     }
   }
-  record.append(dl(recordMetadata));
+  record.append(card("Metadata", dl(recordMetadata), 5, null, function() {editHooks.editRecordMetadata(recordMetadata)}));
 
   var i;
   // Map of local person id (p_1234567) to index (1, 2, 3...)
   var idMap = {};
   var path = "";
 
-  if (doc.hasOwnProperty('persons')) {
+  if (doc.persons) {
     // Create a short 1-based person index for viewing.
     for (i = 0; i < doc.persons.length; i++) {
       idMap[doc.persons[i].id] = i + 1;
@@ -194,10 +220,10 @@ function buildRecordUI(doc, url, editHooks) {
 
     record.append(card("Persons", buildPersonsUI(doc, idMap, path, editHooks), 2, editHooks.addPerson));
   }
-  if (doc.hasOwnProperty('relationships')) {
+  if (doc.relationships) {
     record.append(card("Relationships", buildRelationshipsUI(doc, idMap, path, editHooks), 2, editHooks.addRelationship));
   }
-  if (doc.hasOwnProperty('fields')) {
+  if (doc.fields) {
     //hide fields for now
     //record.append(card("Fields", buildFieldsUI(doc.fields, path + ".fields")));
   }
@@ -277,7 +303,7 @@ function buildPersonUI(doc, person, idMap, path, editHooks) {
     personCardBodyContent.append(div({class: "col"}).append(card("Facts", span().text("(None)"), 5, function () { editHooks.addPersonFact(person.id); })));
   }
 
-  if (person.hasOwnProperty('fields')) {
+  if (person.fields) {
     //hide fields for now
     //var fields = buildFieldsUI(person.fields, path + ".fields");
     //personCardBodyContent.append(div({class: "col"}).append(card("Fields", fields, 5)));
@@ -336,7 +362,7 @@ function buildNamesUI(person, path, editHooks) {
 function buildNameUI(person, name, path, editHooks) {
   var n = div({ class: "name text-nowrap"});
 
-  if (name.hasOwnProperty('nameForms')) {
+  if (name.nameForms) {
     path = path + ".nameForms";
     for (var i = 0; i < name.nameForms.length; i++) {
       var nameForm = name.nameForms[i];
@@ -695,7 +721,7 @@ function buildRelationshipUI(doc, relationship, idMap, path, editHooks) {
     relationshipCardBodyContent.append(div({class: "col"}).append(card("Facts", span().text("(None)"), 5, function () { editHooks.addRelationshipFact(relationship.id); })));
   }
 
-  if (relationship.hasOwnProperty('fields')) {
+  if (relationship.fields) {
     //hide fields for now
     //var fields = buildFieldsUI(relationship.fields, path + ".fields");
     //relationshipCardBodyContent.append(div({class: "col"}).append(card("Fields", fields, 5)));
@@ -724,7 +750,7 @@ function findPersonByRef(doc, id) {
 
 function getIdentifier(object) {
   var id = null;
-  if (object.hasOwnProperty('identifiers')) {
+  if (object.identifiers) {
     id = getFirst(object.identifiers["http://gedcomx.org/Persistent"]);
     if (id === null) {
       id = getFirst(object.identifiers["http://gedcomx.org/Primary"]);

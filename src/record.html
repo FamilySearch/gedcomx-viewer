@@ -227,6 +227,116 @@
       return relationship;
     }
 
+    function editRecordMetadata() {
+      var doc = editor.get();
+      var sd = getSourceDescription(doc, doc.description);
+      if (!sd) {
+        sd = {};
+        sd.id = generateLocalId();
+        doc.description = "#" + sd.id;
+      }
+
+      var title = $("#edit-record-metadata-title").val();
+      if (title) {
+        if (!sd.titles || sd.titles.length == 0) {
+          sd.titles = [];
+          sd.titles.push({});
+        }
+        sd.titles[0].value = title;
+      }
+
+      if (!sd.coverage || sd.coverage.length == 0) {
+        sd.coverage = [];
+        sd.coverage.push({});
+      }
+
+      var type = $("#edit-record-metadata-type").val();
+      if (type) {
+        sd.coverage[0].recordType = "http://gedcomx.org/" + type;
+      }
+
+      var date = $("#edit-record-metadata-date").val();
+      if (date) {
+        if (!sd.coverage[0].temporal) {
+          sd.coverage[0].temporal = {};
+        }
+        sd.coverage[0].temporal.original = date;
+      }
+
+      var place = $("#edit-record-metadata-place").val();
+      if (place) {
+        if (!sd.coverage[0].spatial) {
+          sd.coverage[0].spatial = {};
+        }
+        sd.coverage[0].spatial.original = place;
+      }
+
+      var publisher = $("#edit-record-metadata-publisher").val();
+      if (publisher) {
+        var publisherAgent;
+        if (sd.publisher) {
+          publisherAgent = getAgent(doc, sd.publisher.resource);
+        }
+
+        if (!publisherAgent) {
+          publisherAgent = {};
+          publisherAgent.id = generateLocalId();
+          sd.publisher = {};
+          sd.publisher.resourceId = publisherAgent.id;
+          sd.publisher.resource = "#" + publisherAgent.id;
+        }
+
+        if (!publisherAgent.names || publisherAgent.names.length == 0) {
+          publisherAgent.names = [];
+          publisherAgent.names.push({});
+        }
+
+        publisherAgent.names[0].value = publisher;
+      }
+
+      updateRecord(doc);
+      $("#edit-record-metadata").modal("hide");
+    }
+
+    editHooks.editRecordMetadata =  function(metadata) {
+      if (metadata.Title) {
+        $("#edit-record-metadata-title").val(metadata.Title);
+      }
+      else {
+        $("#edit-record-metadata-title").val("");
+      }
+
+      if (metadata.Type) {
+        $("#edit-record-metadata-type").val(metadata.Type);
+      }
+      else {
+        $("#edit-record-metadata-type").val("");
+      }
+
+      if (metadata.Date) {
+        $("#edit-record-metadata-date").val(metadata.Date);
+      }
+      else {
+        $("#edit-record-metadata-date").val("");
+      }
+
+      if (metadata.Place) {
+        $("#edit-record-metadata-place").val(metadata.Place);
+      }
+      else {
+        $("#edit-record-metadata-place").val("");
+      }
+
+      if (metadata.Publisher) {
+        $("#edit-record-metadata-publisher").val(metadata.Publisher);
+      }
+      else {
+        $("#edit-record-metadata-publisher").val("");
+      }
+
+      $("#edit-record-metadata").modal("show");
+    };
+
     function addPerson() {
       var person = {};
       person.id = "p_999" + Math.floor(Math.random() * Math.floor(1000000000));
@@ -1430,6 +1540,8 @@
         $(this).removeClass("dragging");
       });
 
+      $("#edit-edit-record-metadata").click(editRecordMetadata);
+
       $("#add-new-person").click(addPerson);
 
       $("#add-new-relationship").click(addRelationship);
@@ -2179,6 +2291,119 @@
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
         <button id="copy-copy-person-fact" type="button" class="btn btn-primary">Copy Fact</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!--edit record fact form modal-->
+<div class="modal fade" id="edit-record-metadata" tabindex="-1" role="dialog" aria-labelledby="edit-record-metadata-label" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="edit-record-metadata-label">Edit Record Metadata</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" id="edit-record-metadata-form">
+        <label for="edit-record-metadata-title">Title</label>
+        <input id="edit-record-metadata-title" type="text" class="form-control"/>
+        <label for="edit-record-metadata-type">Record Type</label>
+        <select class="form-control" id="edit-record-metadata-type">
+          <option value="Birth">Birth</option>
+          <option value="Burial">Burial</option>
+          <option value="Christening">Christening</option>
+          <option value="Death">Death</option>
+          <option value="Education">Education</option>
+          <option value="Funeral">Funeral</option>
+          <option value="Medical">Medical</option>
+          <option value="MilitaryService">Military Service</option>
+          <option value="MilitaryAward">Military Award</option>
+          <option value="MoveTo">Move To</option>
+          <option value="MoveFrom">Move From</option>
+          <option value="Obituary">Obituary</option>
+          <option value="Occupation">Occupation</option>
+          <option value="Religion">Religion</option>
+          <option value="Residence">Residence</option>
+          <option value="Retirement">Retirement</option>
+          <option disabled>──────────</option>
+          <option value="Adoption">Adoption</option>
+          <option value="AdultChristening">Adult Christening</option>
+          <option value="Amnesty">Amnesty</option>
+          <option value="Apprenticeship">Apprenticeship</option>
+          <option value="Arrest">Arrest</option>
+          <option value="Baptism">Baptism</option>
+          <option value="BarMitzvah">Bar Mitzvah</option>
+          <option value="BatMitzvah">Bat Mitzvah</option>
+          <option value="Birth">Birth</option>
+          <option value="BirthNotice">Birth Notice</option>
+          <option value="Blessing">Blessing</option>
+          <option value="Burial">Burial</option>
+          <option value="Caste">Caste</option>
+          <option value="Census">Census</option>
+          <option value="Christening">Christening</option>
+          <option value="Circumcision">Circumcision</option>
+          <option value="Clan">Clan</option>
+          <option value="Confirmation">Confirmation</option>
+          <option value="Cremation">Cremation</option>
+          <option value="Death">Death</option>
+          <option value="Education">Education</option>
+          <option value="Emigration">Emigration</option>
+          <option value="Ethnicity">Ethnicity</option>
+          <option value="Excommunication">Excommunication</option>
+          <option value="FirstCommunion">First Communion</option>
+          <option value="Funeral">Funeral</option>
+          <option value="GenderChange">Gender Change</option>
+          <option value="Heimat">Heimat</option>
+          <option value="Immigration">Immigration</option>
+          <option value="Imprisonment">Imprisonment</option>
+          <option value="LandTransaction">Land Transaction</option>
+          <option value="Language">Language</option>
+          <option value="Living">Living</option>
+          <option value="MaritalStatus">Marital Status</option>
+          <option value="Medical">Medical</option>
+          <option value="MilitaryAward">Military Award</option>
+          <option value="MilitaryDischarge">Military Discharge</option>
+          <option value="MilitaryDraftRegistration">Military Draft Registration</option>
+          <option value="MilitaryInduction">Military Induction</option>
+          <option value="MilitaryService">Military Service</option>
+          <option value="Mission">Mission</option>
+          <option value="MoveTo">Move To</option>
+          <option value="MoveFrom">Move From</option>
+          <option value="MultipleBirth">Multiple Birth</option>
+          <option value="NationalId">National Id</option>
+          <option value="Nationality">Nationality</option>
+          <option value="Naturalization">Naturalization</option>
+          <option value="NumberOfChildren">Number Of Children</option>
+          <option value="NumberOfMarriages">Number Of Marriages</option>
+          <option value="Obituary">Obituary</option>
+          <option value="Occupation">Occupation</option>
+          <option value="Ordination">Ordination</option>
+          <option value="Pardon">Pardon</option>
+          <option value="PhysicalDescription">Physical Description</option>
+          <option value="Probate">Probate</option>
+          <option value="Property">Property</option>
+          <option value="Race">Race</option>
+          <option value="Religion">Religion</option>
+          <option value="Residence">Residence</option>
+          <option value="Retirement">Retirement</option>
+          <option value="Stillbirth">Stillbirth</option>
+          <option value="Tribe">Tribe</option>
+          <option value="Will">Will</option>
+          <option value="Visit">Visit</option>
+          <option value="Yahrzeit">Yahrzeit</option>
+        </select>
+        <label for="edit-record-metadata-date">Date</label>
+        <input id="edit-record-metadata-date" type="text" class="form-control"/>
+        <label for="edit-record-metadata-place">Place</label>
+        <input id="edit-record-metadata-place" type="text" class="form-control"/>
+        <label for="edit-record-metadata-publisher">Publisher</label>
+        <input id="edit-record-metadata-publisher" type="text" class="form-control"/>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button id="edit-edit-record-metadata" type="button" class="btn btn-primary">Edit Metadata</button>
       </div>
     </div>
   </div>
