@@ -405,8 +405,8 @@ function buildNamePartsUI(parts, path) {
     var partPath = path + '[' + i + ']';
     part = parts[i];
     var f = $("<tr/>").appendTo(body);
-    f.append($("<td/>", {class: "fact-type text-nowrap", "json-node-path" : partPath + ".type"}).text(parseType(part.type)));
-    f.append($("<td/>", {class: "fact-value text-nowrap", "json-node-path" : partPath + ".value"}).text(part.value ? part.value : ""));
+    f.append($("<td/>", {class: "name-part-type text-nowrap", "json-node-path" : partPath + ".type"}).text(parseType(part.type)));
+    f.append($("<td/>", {class: "name-part-value text-nowrap", "json-node-path" : partPath + ".value"}).text(part.value ? part.value : ""));
   }
   return fs;
 }
@@ -466,9 +466,9 @@ function buildFactsUI(subject, facts, path, editHooks, isRelationship) {
       f.append($("<td/>", {class: "fact-type text-nowrap", "json-node-path" : factPath + ".type"}).text(parseType(fact.type)));
     }
     f.append($("<td/>", {class: "fact-date text-nowrap", "json-node-path" : factPath + ".date"}).text(fact.date ? fact.date.original : ""));
-    f.append($("<td/>", {class: "fact-place text-nowrap", "json-node-path" : factPath + ".place"}).text(fact.place ? fact.place.original : ""));
+    f.append($("<td/>", {class: "fact-place", "json-node-path" : factPath + ".place"}).text(fact.place ? fact.place.original : ""));
     if (valueNeeded) {
-      f.append($("<td/>", {class: "fact-value text-nowrap", "json-node-path": factPath + ".value"}).text(fact.value ? fact.value : ""));
+      f.append($("<td/>", {class: "fact-value", "json-node-path": factPath + ".value"}).text(fact.value ? fact.value : ""));
     }
     if (ageNeeded) {
       if (fact.qualifiers) {
