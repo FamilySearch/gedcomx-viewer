@@ -290,6 +290,8 @@
         }
 
         publisherAgent.names[0].value = publisher;
+        doc.agents = [];
+        doc.agents.push(publisherAgent);
       }
 
       updateRecord(doc);
