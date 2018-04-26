@@ -903,16 +903,25 @@
         fact.date = {};
         fact.date.original = date;
       }
+      else {
+        fact.date = null;
+      }
 
       var place = $("#edit-person-fact-place").val();
       if (place) {
         fact.place = {};
         fact.place.original = place;
       }
+      else {
+        fact.place = null;
+      }
 
       var value = $("#edit-person-fact-value").val();
       if (value) {
         fact.value = value;
+      }
+      else {
+        fact.value = null;
       }
 
       fact.qualifiers = null;
@@ -1200,16 +1209,25 @@
         fact.date = {};
         fact.date.original = date;
       }
+      else {
+        fact.date = null;
+      }
 
       var place = $("#edit-relationship-fact-place").val();
       if (place) {
         fact.place = {};
         fact.place.original = place;
       }
+      else {
+        fact.place = null;
+      }
 
       var value = $("#edit-relationship-fact-value").val();
       if (value) {
         fact.value = value;
+      }
+      else {
+        fact.value = null;
       }
 
       fact.qualifiers = null;
