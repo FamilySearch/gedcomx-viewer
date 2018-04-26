@@ -39,7 +39,7 @@ function dl(items, attrs) {
   var list = $("<dl/>", attrs).addClass("row");
   for (var key in items) {
     if (items.hasOwnProperty(key)) {
-      list.append($("<dt/>", {class: "col-2"}).text(key)).append($("<dd/>", {class: "col-10"}).text(items[key]));
+      list.append($("<dt/>", {class: "col-3 text-nowrap"}).text(key)).append($("<dd/>", {class: "col-9 text-nowrap"}).text(items[key]));
     }
   }
   return list
