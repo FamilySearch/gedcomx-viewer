@@ -1,6 +1,10 @@
 // Common fixup operations for a GEDCOM X document.
 
 function fixGedcomx(gx) {
+  if (gx.records && gx.records.length > 0) {
+    gx = gx.records[0];
+  }
+
   addLocalIds(gx);
   fixAge(gx);
   fixMultipleOccupationsInFields(gx);
