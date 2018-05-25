@@ -87,6 +87,48 @@
         $("#source-viewer").show();
       }
 
+      function getImageLink(doc) {
+        var sd = getSourceDescription(doc, doc.description);
+        var imageArk = null;
+        var coordinates = null;
+        var source = null;
+        while (sd && !imageArk) {
+          if (sd.about && sd.about.includes("ark:/61903/3:1:")) {
+            imageArk = sd.about;
+          }
+          else if (sd.sources && sd.sources.length >= 1) {
+            // (Assume only one source)
+            source = sd.sources[0];
+            if (source.qualifiers && source.qualifiers.length > 0 && source.qualifiers[0].name === "http://gedcomx.org/RectangleRegion") {
+              coordinates = source.qualifiers[0].value.split(",");
+            }
+            else {
+              coordinates = null;
+            }
+            sd = getSourceDescription(doc, source.description);
+          }
+          else {
+            sd = null;
+          }
+        }
+        if (imageArk) {
+          if (!coordinates) {
+            coordinates = "1,1,10,10";
+          }
+          var x = coordinates[0];
+          var y = coordinates[1];
+          var x2 = Number(x) + Number(coordinates[2]); // w
+          var y2 = Number(y) + Number(coordinates[3]); // h
+          return "https://www.familysearch.org/search/search/image/highlight?url=" + imageArk + "/image.xml&bounds=[" +
+              x + "," + y + ":" + x2 + "," + y2 + "]";
+        }
+        return null; // No image link found
+      }
+
+      var imageLink = getImageLink(doc);
+      if (imageLink) {
+        $("#image-link").html(imageLink);
+      }
       showRecord(doc, url);
 
       updateSelectablePersons(doc, $("#new-relationship-person-1"));
