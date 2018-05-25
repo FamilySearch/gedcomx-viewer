@@ -354,20 +354,27 @@
       name.nameForms = [];
 
       var nameForm = {};
+      var prefixes = $("#new-person-prefixes").val();
       var givenNames = $("#new-person-given-names").val();
       var surnames = $("#new-person-surnames").val();
-      nameForm.fullText = givenNames + " " + surnames;
+      var suffixes = $("#new-person-suffixes").val();
+      nameForm.fullText = [prefixes, givenNames, surnames, suffixes].filter(Boolean).join(" ");
       nameForm.parts = [];
 
-      var givenNamePart = {};
-      givenNamePart.type = "http://gedcomx.org/Given";
-      givenNamePart.value = givenNames;
+      addPart(prefixes, "Prefix");
+      addPart(givenNames, "Given");
+      addPart(surnames, "Surname");
+      addPart(suffixes, "Suffix");
 
-      var surnamePart = {};
-      surnamePart.type = "http://gedcomx.org/Surname";
-      surnamePart.value = surnames;
-      nameForm.parts.push(givenNamePart);
-      nameForm.parts.push(surnamePart);
+      function addPart(value, type) {
+        if (value) {
+          var part = {};
+          part.type = "http://gedcomx.org/" + type;
+          part.value = value;
+          nameForm.parts.push(part);
+        }
+      }
+
       name.nameForms.push(nameForm);
       person.names.push(name);
 
@@ -1762,10 +1769,14 @@
         </button>
       </div>
       <div class="modal-body" id="new-person-form">
+        <label for="new-person-prefixes">Prefix(es)</label>
+        <input id="new-person-prefixes" type="text" class="form-control"/>
         <label for="new-person-given-names">Given Name(s)</label>
         <input id="new-person-given-names" type="text" class="form-control"/>
         <label for="new-person-surnames">Surname(s)</label>
         <input id="new-person-surnames" type="text" class="form-control"/>
+        <label for="new-person-suffixes">Suffix(es)</label>
+        <input id="new-person-suffixes" type="text" class="form-control"/>
         <div class="form-check">
           <input class="form-check-input" id="new-person-principal" type="checkbox" value=""/>
           <label class="form-check-label" for="new-person-principal">Principal</label>
