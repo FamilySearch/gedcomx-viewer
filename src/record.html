@@ -72,17 +72,20 @@
      *  Update a record.
      *
      *  @param doc The record to update.
-     *  @param url The url of the record, if applicable.
+     *  @param url The url of the record, if applicable. (Ignored if null)
+     *  @param editorAlreadyUpdated Flag for whether the 'editor' is already updated (avoids closing editor when it is being edited still).
      */
-    function updateRecord(doc, url) {
+    function updateRecord(doc, url, editorAlreadyUpdated) {
       url = url ? url : currentUrl;
       currentUrl = url;
       if (doc.records && doc.records.length > 0) {
         doc = doc.records[0];
       }
 
-      editor.set(doc);
-      $("#source-viewer").show();
+      if (!editorAlreadyUpdated) {
+        editor.set(doc);
+        $("#source-viewer").show();
+      }
 
       showRecord(doc, url);
 
@@ -1413,7 +1416,7 @@
         modes: ["tree", "code"],
         onChange: function() {
           var doc = editor.get();
-          updateRecord(doc);
+          updateRecord(doc, null, true);
         },
         onError: function(error) {
           alert(error);
@@ -1733,6 +1736,7 @@
               <div class="pt-4">&nbsp;</div>
               <div id="source-file" class="pt-4"></div>
               <div id="gx-editor" class="pt-2"></div>
+              <div id="image-link">IMAGE LINK</div>
             </div>
           </div>
           <div class="col-8 pt-4">
