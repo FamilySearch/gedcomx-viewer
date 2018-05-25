@@ -72,18 +72,63 @@
      *  Update a record.
      *
      *  @param doc The record to update.
-     *  @param url The url of the record, if applicable.
+     *  @param url The url of the record, if applicable. (Ignored if null)
+     *  @param editorAlreadyUpdated Flag for whether the 'editor' is already updated (avoids closing editor when it is being edited still).
      */
-    function updateRecord(doc, url) {
+    function updateRecord(doc, url, editorAlreadyUpdated) {
       url = url ? url : currentUrl;
       currentUrl = url;
       if (doc.records && doc.records.length > 0) {
         doc = doc.records[0];
       }
 
-      editor.set(doc);
-      $("#source-viewer").show();
+      if (!editorAlreadyUpdated) {
+        editor.set(doc);
+        $("#source-viewer").show();
+      }
 
+      function getImageLink(doc) {
+        var sd = getSourceDescription(doc, doc.description);
+        var imageArk = null;
+        var coordinates = null;
+        var source = null;
+        while (sd && !imageArk) {
+          if (sd.about && sd.about.includes("ark:/61903/3:1:")) {
+            imageArk = sd.about;
+          }
+          else if (sd.sources && sd.sources.length >= 1) {
+            // (Assume only one source)
+            source = sd.sources[0];
+            if (source.qualifiers && source.qualifiers.length > 0 && source.qualifiers[0].name === "http://gedcomx.org/RectangleRegion") {
+              coordinates = source.qualifiers[0].value.split(",");
+            }
+            else {
+              coordinates = null;
+            }
+            sd = getSourceDescription(doc, source.description);
+          }
+          else {
+            sd = null;
+          }
+        }
+        if (imageArk) {
+          if (!coordinates) {
+            coordinates = "1,1,10,10";
+          }
+          var x = coordinates[0];
+          var y = coordinates[1];
+          var x2 = Number(x) + Number(coordinates[2]); // w
+          var y2 = Number(y) + Number(coordinates[3]); // h
+          return "https://www.familysearch.org/search/search/image/highlight?url=" + imageArk + "/image.xml&bounds=[" +
+              x + "," + y + ":" + x2 + "," + y2 + "]";
+        }
+        return null; // No image link found
+      }
+
+      var imageLink = getImageLink(doc);
+      if (imageLink) {
+        $("#image-link").html(imageLink);
+      }
       showRecord(doc, url);
 
       updateSelectablePersons(doc, $("#new-relationship-person-1"));
@@ -354,20 +399,27 @@
       name.nameForms = [];
 
       var nameForm = {};
+      var prefixes = $("#new-person-prefixes").val();
       var givenNames = $("#new-person-given-names").val();
       var surnames = $("#new-person-surnames").val();
-      nameForm.fullText = givenNames + " " + surnames;
+      var suffixes = $("#new-person-suffixes").val();
+      nameForm.fullText = [prefixes, givenNames, surnames, suffixes].filter(Boolean).join(" ");
       nameForm.parts = [];
 
-      var givenNamePart = {};
-      givenNamePart.type = "http://gedcomx.org/Given";
-      givenNamePart.value = givenNames;
+      addPart(prefixes, "Prefix");
+      addPart(givenNames, "Given");
+      addPart(surnames, "Surname");
+      addPart(suffixes, "Suffix");
 
-      var surnamePart = {};
-      surnamePart.type = "http://gedcomx.org/Surname";
-      surnamePart.value = surnames;
-      nameForm.parts.push(givenNamePart);
-      nameForm.parts.push(surnamePart);
+      function addPart(value, type) {
+        if (value) {
+          var part = {};
+          part.type = "http://gedcomx.org/" + type;
+          part.value = value;
+          nameForm.parts.push(part);
+        }
+      }
+
       name.nameForms.push(nameForm);
       person.names.push(name);
 
@@ -1406,7 +1458,7 @@
         modes: ["tree", "code"],
         onChange: function() {
           var doc = editor.get();
-          updateRecord(doc);
+          updateRecord(doc, null, true);
         },
         onError: function(error) {
           alert(error);
@@ -1726,6 +1778,7 @@
               <div class="pt-4">&nbsp;</div>
               <div id="source-file" class="pt-4"></div>
               <div id="gx-editor" class="pt-2"></div>
+              <div id="image-link">IMAGE LINK</div>
             </div>
           </div>
           <div class="col-8 pt-4">
@@ -1762,10 +1815,14 @@
         </button>
       </div>
       <div class="modal-body" id="new-person-form">
+        <label for="new-person-prefixes">Prefix(es)</label>
+        <input id="new-person-prefixes" type="text" class="form-control"/>
         <label for="new-person-given-names">Given Name(s)</label>
         <input id="new-person-given-names" type="text" class="form-control"/>
         <label for="new-person-surnames">Surname(s)</label>
         <input id="new-person-surnames" type="text" class="form-control"/>
+        <label for="new-person-suffixes">Suffix(es)</label>
+        <input id="new-person-suffixes" type="text" class="form-control"/>
         <div class="form-check">
           <input class="form-check-input" id="new-person-principal" type="checkbox" value=""/>
           <label class="form-check-label" for="new-person-principal">Principal</label>
@@ -1846,7 +1903,7 @@
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="edit-relationship-label">Edit Relationship</h5>
+        <h5 class="modal-title" id="edit-relationship-label">Update Relationship</h5>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
@@ -1886,7 +1943,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-        <button id="edit-edit-relationship" type="button" class="btn btn-primary">Edit Relationship</button>
+        <button id="edit-edit-relationship" type="button" class="btn btn-primary">Update Relationship</button>
       </div>
     </div>
   </div>
@@ -1936,7 +1993,7 @@
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="edit-name-label">Edit Name</h5>
+        <h5 class="modal-title" id="edit-name-label">Update Name</h5>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
@@ -1965,7 +2022,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-        <button id="edit-person-name" type="button" class="btn btn-primary">Edit Name</button>
+        <button id="edit-person-name" type="button" class="btn btn-primary">Update Name</button>
       </div>
     </div>
   </div>
@@ -2096,7 +2153,7 @@
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="edit-fact-label">Edit Fact</h5>
+        <h5 class="modal-title" id="edit-fact-label">Update Fact</h5>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
@@ -2112,6 +2169,7 @@
           <option value="http://gedcomx.org/Death">Death</option>
           <option value="http://gedcomx.org/Education">Education</option>
           <option value="http://gedcomx.org/Funeral">Funeral</option>
+          <option value="http://gedcomx.org/Marriage">Marriage (personal fact: No spouse listed)</option>
           <option value="http://gedcomx.org/Medical">Medical</option>
           <option value="http://gedcomx.org/MilitaryService">Military Service</option>
           <option value="http://gedcomx.org/MilitaryAward">Military Award</option>
@@ -2206,7 +2264,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-        <button id="edit-edit-person-fact" type="button" class="btn btn-primary">Edit Fact</button>
+        <button id="edit-edit-person-fact" type="button" class="btn btn-primary">Update Fact</button>
       </div>
     </div>
   </div>
@@ -2285,7 +2343,7 @@
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="edit-relationship-fact-label">Edit Fact</h5>
+        <h5 class="modal-title" id="edit-relationship-fact-label">Update Fact</h5>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
@@ -2343,7 +2401,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-        <button id="edit-edit-relationship-fact" type="button" class="btn btn-primary">Edit Fact</button>
+        <button id="edit-edit-relationship-fact" type="button" class="btn btn-primary">Update Fact</button>
       </div>
     </div>
   </div>
@@ -2382,7 +2440,7 @@
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="edit-record-metadata-label">Edit Record Metadata</h5>
+        <h5 class="modal-title" id="edit-record-metadata-label">Update Record Metadata</h5>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
@@ -2455,7 +2513,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-        <button id="edit-edit-record-metadata" type="button" class="btn btn-primary">Edit Metadata</button>
+        <button id="edit-edit-record-metadata" type="button" class="btn btn-primary">Update Metadata</button>
       </div>
     </div>
   </div>
