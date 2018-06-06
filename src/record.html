@@ -119,8 +119,9 @@
           var y = coordinates[1];
           var x2 = Number(x) + Number(coordinates[2]); // w
           var y2 = Number(y) + Number(coordinates[3]); // h
-          return "https://www.familysearch.org/search/search/image/highlight?url=" + imageArk + "/image.xml&bounds=[" +
+          var uri = "https://www.familysearch.org/search/search/image/highlight?url=" + imageArk + "/image.xml&bounds=[" +
               x + "," + y + ":" + x2 + "," + y2 + "]";
+          return '<a href="' + uri + '" target="new_reusable_tab">' + uri + '</a>';
         }
         return null; // No image link found
       }
