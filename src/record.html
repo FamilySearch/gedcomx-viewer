@@ -171,7 +171,6 @@
       }
       if (text) {
         el.append($("<textarea/>", {"class": "form-control border", "rows" : "15", "style": "font-size: 14px", "id" : "source-document"}).val(text));
-        //todo: "keypress" : updateDocumentText($(this).val()...??????
         $("#source-document").on("input", function(){
           updateDocumentText($(this).val());
         });
