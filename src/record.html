@@ -170,36 +170,64 @@
         el.append($("<h1/>").append($("<small/>", {"class": "text-muted"}).text(name)));
       }
       if (text) {
-        el.append($("<textarea/>", {"class": "form-control border", "rows" : "15", "style": "font-size: 14px"}).val(text));
+        el.append($("<textarea/>", {"class": "form-control border", "rows" : "15", "style": "font-size: 14px", "id" : "source-document"}).val(text));
+        //todo: "keypress" : updateDocumentText($(this).val()...??????
+        $("#source-document").on("input", function(){
+          updateDocumentText($(this).val());
+        });
         $("#source-viewer").show();
       }
     }
 
-    function loadSourceOfSource(doc) {
-      var source = getSourceDescription(doc, doc.description);
-
-      var sourceOfSource;
-      if (source && source.sources && source.sources.length > 0) {
-        sourceOfSource = getSourceDescription(doc, source.sources[0].description);
+    // Update the document text in the GedcomX, in response to edits happening in the text area.
+    function updateDocumentText(text) {
+      sourceDocumentText = text;
+      var doc = editor.get();
+      var sourceDocument = getSourceDocument(doc);
+      if (sourceDocument) {
+        sourceDocument.text = text;
+        editor.set(doc);
       }
+    }
 
-      var sourceDocument;
-      if (sourceOfSource && sourceOfSource.about) {
-        var sourceDocumentId = sourceOfSource.about.substr(1);
+    // Find the source description of the 'source' for the record, i.e., for the 'document' that contains the original text.
+    function getDocumentSourceDescription(doc) {
+      var recordSourceDescription = getSourceDescription(doc, doc.description);
+
+      var documentSourceDescription;
+      if (recordSourceDescription && recordSourceDescription.sources && recordSourceDescription.sources.length > 0) {
+        documentSourceDescription = getSourceDescription(doc, recordSourceDescription.sources[0].description);
+      }
+      return documentSourceDescription;
+    }
+
+    // Find the source "document" within the given GedcomX document, and return it (or null if not found).
+    function getSourceDocument(doc, documentSourceDescription) {
+      if (!documentSourceDescription) {
+        documentSourceDescription = getDocumentSourceDescription(doc);
+      }
+      var document;
+      if (documentSourceDescription && documentSourceDescription.about) {
+        var sourceDocumentId = documentSourceDescription.about.substr(1);
         if (doc.documents) {
           for (var i = 0; i < doc.documents.length; i++) {
             var candidate = doc.documents[i];
             if (sourceDocumentId === candidate.id) {
-              sourceDocument = candidate;
+              document = candidate;
               break;
             }
           }
         }
       }
+      return document;
+    }
 
+    function loadSourceDocument(doc) {
+      var documentSourceDescription = getDocumentSourceDescription(doc);
+      var sourceDocument = getSourceDocument(doc, documentSourceDescription);
       if (sourceDocument) {
-        var title = sourceOfSource.titles && sourceOfSource.titles.length > 0 ? sourceOfSource.titles[0].value : null;
-        setRecordSourceDocument(sourceDocument.text, title);
+        var title = documentSourceDescription.titles && documentSourceDescription.titles.length > 0 ? documentSourceDescription.titles[0].value : null;
+        setRecordSourceDocument(sourceDocument.text, title, sourceDocument);
       }
     }
 
@@ -1430,7 +1458,7 @@
 
             fixGedcomx(doc);
             updateRecord(doc, file.name);
-            loadSourceOfSource(doc);
+            loadSourceDocument(doc);
             $("#download-gx").attr("download", file.name);
           }
         })(f);
@@ -1508,7 +1536,7 @@
            success: function (doc, textStatus, jqKHR) {
              fixGedcomx(doc);
              updateRecord(doc, gedcomxUrl);
-             loadSourceOfSource(doc);
+             loadSourceDocument(doc);
            },
 
            error: function (jqXHR, textStatus, errorThrown) {
@@ -1551,7 +1579,7 @@
 
         fixGedcomx(doc);
         updateRecord(doc);
-        loadSourceOfSource(doc);
+        loadSourceDocument(doc);
 
         var src = $("#pasted-source").val();
         if (src) {
