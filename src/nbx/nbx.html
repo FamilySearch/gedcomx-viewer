@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>NBX Viewer</title>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="nbx-parse.js"></script>
+  <script src="nbx-view.js"></script>
+</head>
+<link rel="stylesheet" type="text/css" href="nbx-view.css">
+<body>
+<div id="example">
+  
+</div>  <!-- example -->
+
+<div id="nbx-div">
+  <!-- This gets filled in -->
+</div>
+
+<script>
+  $(document).ready(function(){
+    var sample = getSample();
+    var nbx = parseNbx(sample);
+    var nbxHtml = nbxToHtml(nbx);
+    $("#nbx-div").html(nbxHtml);
+  });
+</script>
+</body>
+</html>
