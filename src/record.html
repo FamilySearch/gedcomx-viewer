@@ -112,15 +112,15 @@
           }
         }
         if (imageArk) {
-          var uri = imageArk;
-          if (coordinates) {
-            var x = coordinates[0];
-            var y = coordinates[1];
-            var x2 = Number(x) + Number(coordinates[2]); // w
-            var y2 = Number(y) + Number(coordinates[3]); // h
-            uri = "https://www.familysearch.org/search/search/image/highlight?url=" + imageArk + "/image.xml&bounds=[" +
-                x + "," + y + ":" + x2 + "," + y2 + "]";
+          if (!coordinates) {
+            coordinates = "1,1,10,10".split(",");
           }
+          var x = coordinates[0];
+          var y = coordinates[1];
+          var x2 = Number(x) + Number(coordinates[2]); // w
+          var y2 = Number(y) + Number(coordinates[3]); // h
+          var uri = "https://www.familysearch.org/search/search/image/highlight?url=" + imageArk + "/image.xml&bounds=[" +
+              x + "," + y + ":" + x2 + "," + y2 + "]";
           return '<a href="' + uri + '" target="new_reusable_tab">' + uri + '</a>';
         }
         return null; // No image link found
