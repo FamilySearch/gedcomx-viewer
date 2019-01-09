@@ -2072,27 +2072,14 @@
         <label for="new-person-fact-type">Fact Type</label>
         <select class="form-control" id="new-person-fact-type">
           <option value="http://gedcomx.org/Birth">Birth</option>
-          <option value="http://gedcomx.org/Burial">Burial</option>
-          <option value="http://gedcomx.org/Christening">Christening</option>
           <option value="http://gedcomx.org/Death">Death</option>
-          <option value="http://gedcomx.org/Education">Education</option>
-          <option value="http://gedcomx.org/Funeral">Funeral</option>
-          <option value="http://gedcomx.org/Medical">Medical</option>
-          <option value="http://gedcomx.org/MilitaryService">Military Service</option>
-          <option value="http://gedcomx.org/MilitaryAward">Military Award</option>
-          <option value="http://gedcomx.org/MoveTo">Move To</option>
-          <option value="http://gedcomx.org/MoveFrom">Move From</option>
-          <option value="http://gedcomx.org/Obituary">Obituary</option>
-          <option value="http://gedcomx.org/Occupation">Occupation</option>
-          <option value="http://gedcomx.org/Religion">Religion</option>
-          <option value="http://gedcomx.org/Residence">Residence</option>
-          <option value="http://gedcomx.org/Retirement">Retirement</option>
           <option disabled>──────────</option>
           <option value="http://gedcomx.org/Adoption">Adoption</option>
           <option value="http://gedcomx.org/AdultChristening">Adult Christening</option>
           <option value="http://gedcomx.org/Amnesty">Amnesty</option>
           <option value="http://gedcomx.org/Apprenticeship">Apprenticeship</option>
           <option value="http://gedcomx.org/Arrest">Arrest</option>
+          <option value="http://gedcomx.org/Award">Award</option>
           <option value="http://gedcomx.org/Baptism">Baptism</option>
           <option value="http://gedcomx.org/BarMitzvah">Bar Mitzvah</option>
           <option value="http://gedcomx.org/BatMitzvah">Bat Mitzvah</option>
@@ -2106,18 +2093,22 @@
           <option value="http://gedcomx.org/Circumcision">Circumcision</option>
           <option value="http://gedcomx.org/Clan">Clan</option>
           <option value="http://gedcomx.org/Confirmation">Confirmation</option>
+          <option value="http://gedcomx.org/Court">Court</option>
           <option value="http://gedcomx.org/Cremation">Cremation</option>
           <option value="http://gedcomx.org/Death">Death</option>
           <option value="http://gedcomx.org/Education">Education</option>
+          <option value="http://gedcomx.org/EducationEnrollment">EducationEnrollment</option>
           <option value="http://gedcomx.org/Emigration">Emigration</option>
           <option value="http://gedcomx.org/Ethnicity">Ethnicity</option>
           <option value="http://gedcomx.org/Excommunication">Excommunication</option>
           <option value="http://gedcomx.org/FirstCommunion">First Communion</option>
           <option value="http://gedcomx.org/Funeral">Funeral</option>
           <option value="http://gedcomx.org/GenderChange">Gender Change</option>
+          <option value="http://gedcomx.org/Graduation">Graduation</option>
           <option value="http://gedcomx.org/Heimat">Heimat</option>
           <option value="http://gedcomx.org/Immigration">Immigration</option>
           <option value="http://gedcomx.org/Imprisonment">Imprisonment</option>
+          <option value="http://gedcomx.org/Inquest">Inquest</option>
           <option value="http://gedcomx.org/LandTransaction">Land Transaction</option>
           <option value="http://gedcomx.org/Language">Language</option>
           <option value="http://gedcomx.org/Living">Living</option>
@@ -2129,8 +2120,8 @@
           <option value="http://gedcomx.org/MilitaryInduction">Military Induction</option>
           <option value="http://gedcomx.org/MilitaryService">Military Service</option>
           <option value="http://gedcomx.org/Mission">Mission</option>
-          <option value="http://gedcomx.org/MoveTo">Move To</option>
           <option value="http://gedcomx.org/MoveFrom">Move From</option>
+          <option value="http://gedcomx.org/MoveTo">Move To</option>
           <option value="http://gedcomx.org/MultipleBirth">Multiple Birth</option>
           <option value="http://gedcomx.org/NationalId">National Id</option>
           <option value="http://gedcomx.org/Nationality">Nationality</option>
@@ -2149,6 +2140,7 @@
           <option value="http://gedcomx.org/Residence">Residence</option>
           <option value="http://gedcomx.org/Retirement">Retirement</option>
           <option value="http://gedcomx.org/Stillbirth">Stillbirth</option>
+          <option value="http://gedcomx.org/TaxAssessment">TaxAssessment</option>
           <option value="http://gedcomx.org/Tribe">Tribe</option>
           <option value="http://gedcomx.org/Will">Will</option>
           <option value="http://gedcomx.org/Visit">Visit</option>
@@ -2156,7 +2148,7 @@
         </select>
         <div class="form-check">
           <input class="form-check-input" id="new-person-fact-primary" type="checkbox" value=""/>
-          <label class="form-check-label" for="new-person-fact-primary">Primary</label>
+          <label class="form-check-label" for="new-person-fact-primary">Primary</label>                       
         </div>
         <label for="new-person-fact-date">Date</label>
         <input id="new-person-fact-date" type="text" class="form-control"/>
@@ -2193,28 +2185,14 @@
         <label for="edit-person-fact-type">Fact Type</label>
         <select class="form-control" id="edit-person-fact-type">
           <option value="http://gedcomx.org/Birth">Birth</option>
-          <option value="http://gedcomx.org/Burial">Burial</option>
-          <option value="http://gedcomx.org/Christening">Christening</option>
           <option value="http://gedcomx.org/Death">Death</option>
-          <option value="http://gedcomx.org/Education">Education</option>
-          <option value="http://gedcomx.org/Funeral">Funeral</option>
-          <option value="http://gedcomx.org/Marriage">Marriage (personal fact: No spouse listed)</option>
-          <option value="http://gedcomx.org/Medical">Medical</option>
-          <option value="http://gedcomx.org/MilitaryService">Military Service</option>
-          <option value="http://gedcomx.org/MilitaryAward">Military Award</option>
-          <option value="http://gedcomx.org/MoveTo">Move To</option>
-          <option value="http://gedcomx.org/MoveFrom">Move From</option>
-          <option value="http://gedcomx.org/Obituary">Obituary</option>
-          <option value="http://gedcomx.org/Occupation">Occupation</option>
-          <option value="http://gedcomx.org/Religion">Religion</option>
-          <option value="http://gedcomx.org/Residence">Residence</option>
-          <option value="http://gedcomx.org/Retirement">Retirement</option>
           <option disabled>──────────</option>
           <option value="http://gedcomx.org/Adoption">Adoption</option>
           <option value="http://gedcomx.org/AdultChristening">Adult Christening</option>
           <option value="http://gedcomx.org/Amnesty">Amnesty</option>
           <option value="http://gedcomx.org/Apprenticeship">Apprenticeship</option>
           <option value="http://gedcomx.org/Arrest">Arrest</option>
+          <option value="http://gedcomx.org/Award">Award</option>
           <option value="http://gedcomx.org/Baptism">Baptism</option>
           <option value="http://gedcomx.org/BarMitzvah">Bar Mitzvah</option>
           <option value="http://gedcomx.org/BatMitzvah">Bat Mitzvah</option>
@@ -2228,18 +2206,22 @@
           <option value="http://gedcomx.org/Circumcision">Circumcision</option>
           <option value="http://gedcomx.org/Clan">Clan</option>
           <option value="http://gedcomx.org/Confirmation">Confirmation</option>
+          <option value="http://gedcomx.org/Court">Court</option>
           <option value="http://gedcomx.org/Cremation">Cremation</option>
           <option value="http://gedcomx.org/Death">Death</option>
           <option value="http://gedcomx.org/Education">Education</option>
+          <option value="http://gedcomx.org/EducationEnrollment">EducationEnrollment</option>
           <option value="http://gedcomx.org/Emigration">Emigration</option>
           <option value="http://gedcomx.org/Ethnicity">Ethnicity</option>
           <option value="http://gedcomx.org/Excommunication">Excommunication</option>
           <option value="http://gedcomx.org/FirstCommunion">First Communion</option>
           <option value="http://gedcomx.org/Funeral">Funeral</option>
           <option value="http://gedcomx.org/GenderChange">Gender Change</option>
+          <option value="http://gedcomx.org/Graduation">Graduation</option>
           <option value="http://gedcomx.org/Heimat">Heimat</option>
           <option value="http://gedcomx.org/Immigration">Immigration</option>
           <option value="http://gedcomx.org/Imprisonment">Imprisonment</option>
+          <option value="http://gedcomx.org/Inquest">Inquest</option>
           <option value="http://gedcomx.org/LandTransaction">Land Transaction</option>
           <option value="http://gedcomx.org/Language">Language</option>
           <option value="http://gedcomx.org/Living">Living</option>
@@ -2251,8 +2233,8 @@
           <option value="http://gedcomx.org/MilitaryInduction">Military Induction</option>
           <option value="http://gedcomx.org/MilitaryService">Military Service</option>
           <option value="http://gedcomx.org/Mission">Mission</option>
-          <option value="http://gedcomx.org/MoveTo">Move To</option>
           <option value="http://gedcomx.org/MoveFrom">Move From</option>
+          <option value="http://gedcomx.org/MoveTo">Move To</option>
           <option value="http://gedcomx.org/MultipleBirth">Multiple Birth</option>
           <option value="http://gedcomx.org/NationalId">National Id</option>
           <option value="http://gedcomx.org/Nationality">Nationality</option>
@@ -2271,6 +2253,7 @@
           <option value="http://gedcomx.org/Residence">Residence</option>
           <option value="http://gedcomx.org/Retirement">Retirement</option>
           <option value="http://gedcomx.org/Stillbirth">Stillbirth</option>
+          <option value="http://gedcomx.org/TaxAssessment">TaxAssessment</option>
           <option value="http://gedcomx.org/Tribe">Tribe</option>
           <option value="http://gedcomx.org/Will">Will</option>
           <option value="http://gedcomx.org/Visit">Visit</option>
@@ -2317,9 +2300,9 @@
           <option value="http://gedcomx.org/Annulment">Annulment</option>
           <option value="http://gedcomx.org/CommonLawMarriage">CommonLawMarriage</option>
           <option value="http://gedcomx.org/CivilUnion">CivilUnion</option>
-          <option value="http://gedcomx.org/DomesticPartnership">DomesticPartnership</option>
           <option value="http://gedcomx.org/Divorce">Divorce</option>
           <option value="http://gedcomx.org/DivorceFiling">DivorceFiling</option>
+          <option value="http://gedcomx.org/DomesticPartnership">DomesticPartnership</option>
           <option value="http://gedcomx.org/Engagement">Engagement</option>
           <option value="http://gedcomx.org/Marriage" selected="selected">Marriage</option>
           <option value="http://gedcomx.org/MarriageBanns">MarriageBanns</option>
@@ -2336,13 +2319,6 @@
           <option value="http://gedcomx.org/StepParent">StepParent</option>
           <option value="http://gedcomx.org/SociologicalParent">SociologicalParent</option>
           <option value="http://gedcomx.org/SurrogateParent">SurrogateParent</option>
-          <option value="http://gedcomx.org/Marriage">Marriage</option>
-          <option value="http://gedcomx.org/MarriageBanns">MarriageBanns</option>
-          <option value="http://gedcomx.org/MarriageContract">MarriageContract</option>
-          <option value="http://gedcomx.org/MarriageLicense">MarriageLicense</option>
-          <option value="http://gedcomx.org/MarriageNotice">MarriageNotice</option>
-          <option value="http://gedcomx.org/NumberOfChildren">NumberOfChildren</option>
-          <option value="http://gedcomx.org/Separation">Separation</option>
         </select>
         <div class="form-check">
           <input class="form-check-input" id="new-relationship-fact-primary" type="checkbox" value=""/>
@@ -2386,9 +2362,9 @@
           <option value="http://gedcomx.org/Annulment">Annulment</option>
           <option value="http://gedcomx.org/CommonLawMarriage">CommonLawMarriage</option>
           <option value="http://gedcomx.org/CivilUnion">CivilUnion</option>
-          <option value="http://gedcomx.org/DomesticPartnership">DomesticPartnership</option>
           <option value="http://gedcomx.org/Divorce">Divorce</option>
           <option value="http://gedcomx.org/DivorceFiling">DivorceFiling</option>
+          <option value="http://gedcomx.org/DomesticPartnership">DomesticPartnership</option>
           <option value="http://gedcomx.org/Engagement">Engagement</option>
           <option value="http://gedcomx.org/Marriage" selected="selected">Marriage</option>
           <option value="http://gedcomx.org/MarriageBanns">MarriageBanns</option>
@@ -2405,13 +2381,6 @@
           <option value="http://gedcomx.org/StepParent">StepParent</option>
           <option value="http://gedcomx.org/SociologicalParent">SociologicalParent</option>
           <option value="http://gedcomx.org/SurrogateParent">SurrogateParent</option>
-          <option value="http://gedcomx.org/Marriage">Marriage</option>
-          <option value="http://gedcomx.org/MarriageBanns">MarriageBanns</option>
-          <option value="http://gedcomx.org/MarriageContract">MarriageContract</option>
-          <option value="http://gedcomx.org/MarriageLicense">MarriageLicense</option>
-          <option value="http://gedcomx.org/MarriageNotice">MarriageNotice</option>
-          <option value="http://gedcomx.org/NumberOfChildren">NumberOfChildren</option>
-          <option value="http://gedcomx.org/Separation">Separation</option>
         </select>
         <div class="form-check">
           <input class="form-check-input" id="edit-relationship-fact-primary" type="checkbox" value=""/>
