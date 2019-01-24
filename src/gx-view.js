@@ -205,7 +205,13 @@ function buildRecordUI(doc, url, editHooks) {
       }
     }
   }
-  record.append(card("Metadata", dl(recordMetadata), 5, null, function() {editHooks.editRecordMetadata(recordMetadata)}));
+
+  var hookToEditRecordMetadata = null;
+  if (editHooks.editRecordMetadata) {
+    hookToEditRecordMetadata = function() {editHooks.editRecordMetadata(recordMetadata)};
+  }
+
+  record.append(card("Metadata", dl(recordMetadata), 5, null, hookToEditRecordMetadata));
 
   var i;
   // Map of local person id (p_1234567) to index (1, 2, 3...)
