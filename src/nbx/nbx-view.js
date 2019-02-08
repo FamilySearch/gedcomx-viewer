@@ -95,7 +95,7 @@ function textObjectArrayHtml(content, relexMap) {
 
    Takes an array of text-object and displays them as text with entity tags above, and relation(s) above that.
  */
-function nbxToHtml(nbx) {
+function gxToHtml(nbx) {
   // Take a list of relex objects with a 'startOffset' field, and create a map of startOffset -> array of relex objects with that start offset.
   // Format of relex object is type, startOffset, endOffset, startToken, endToken.
   function makeRelexMap(relex) {
