@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Relationship Graph Demo</title>
+  <link rel="stylesheet" type="text/css" href="graph.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="graph.js"></script>
+</head>
+<body>
+  <div id="graph">
+    <div id="personNodes">
+
+    </div>
+    <div id="familyLines">
+
+    </div>
+  </div>
+
+  <script>
+    $(document).ready(function(){
+      $.getJSON("sample.json", function(sampleGx){
+        var graph = buildGraph(sampleGx);
+        // $("#graph").html(graph.graphDiv);
+      });
+    });
+  </script>
+</body>
+</html>

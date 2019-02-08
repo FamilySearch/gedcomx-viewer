@@ -1,0 +1,48 @@
+#graph {
+    font-family: sans-serif;
+}
+
+.personNode {
+    border: 1px solid;
+    border-radius: 3px;
+    margin: 2px;
+    padding: 2px;
+    width: 250px;
+    position: absolute;
+    box-shadow: 1px 1px 3px #e3eadc;
+}
+
+.gender-M {
+    border-color: #3a76f2;
+    background-color: #f3fdff;
+}
+
+.gender-F {
+    border-color: #da386f;
+    background-color: #fbf1f1;
+}
+
+.gender-U {
+    border-color: #e2edcc;
+    background-color: #fff9fb;
+}
+
+.fullName {
+
+}
+
+/* Indent facts 10px; Use Fact Type: <date>; <place>. Wrap if too long using hanging indent. */
+.fact {
+    padding-left: 20px;
+    text-indent: -10px;
+}
+
+.factType {
+    color: #777777;
+    font-size: 70%;
+}
+
+.factDatePlace {
+    font-size: 70%;
+}
+
