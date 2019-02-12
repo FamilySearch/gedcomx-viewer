@@ -223,6 +223,9 @@
     }
 
     function loadSourceDocument(doc) {
+      if (doc.records && doc.records.length > 0) {
+        doc = doc.records[0];
+      }
       var documentSourceDescription = getDocumentSourceDescription(doc);
       var sourceDocument = getSourceDocument(doc, documentSourceDescription);
       if (sourceDocument) {
