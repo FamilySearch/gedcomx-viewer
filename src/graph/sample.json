@@ -1,0 +1,354 @@
+{
+  "id" : "r_99000000000",
+  "description" : "#src_r_99000000000",
+  "persons" : [ {
+    "id" : "p_99000000000",
+    "extracted" : true,
+    "principal" : true,
+    "gender" : {
+      "type" : "http://gedcomx.org/Female"
+    },
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://familysearch.org/ark:/61903/1:1:QF5S-W2MM" ]
+    },
+    "names" : [ {
+      "type" : "http://gedcomx.org/BirthName",
+      "nameForms" : [ {
+        "fullText" : "Ruth Kawai Frost",
+        "parts" : [ {
+          "type" : "http://gedcomx.org/Given",
+          "value" : "Ruth Kawai"
+        }, {
+          "type" : "http://gedcomx.org/Surname",
+          "value" : "Frost"
+        } ]
+      } ]
+    } ],
+    "facts" : [ {
+      "type" : "http://gedcomx.org/Obituary",
+      "date" : {
+        "original" : "05 Nov 2000"
+      },
+      "place" : {
+        "original" : "California"
+      },
+      "primary" : true
+    }, {
+      "type" : "http://gedcomx.org/Residence",
+      "date" : {
+        "original" : "29 Oct 2000"
+      },
+      "place" : {
+        "original" : "San Diego"
+      }
+    }, {
+      "type" : "http://gedcomx.org/Birth",
+      "date" : {
+        "original" : "23 Jan 1916"
+      },
+      "place" : {
+        "original" : "Kauai, Hawaii"
+      }
+    }, {
+      "type" : "http://gedcomx.org/Death",
+      "date" : {
+        "original" : "29 Oct 2000"
+      },
+      "place" : {
+        "original" : "Honolulu"
+      },
+      "qualifiers" : [ {
+        "value" : "84",
+        "name" : "http://gedcomx.org/Age"
+      } ]
+    }, {
+      "type" : "http://gedcomx.org/Funeral",
+      "date" : {
+        "original" : "01 Nov 2000"
+      },
+      "place" : {
+        "original" : "Honolulu"
+      }
+    } ]
+  }, {
+    "id" : "p_99000000001",
+    "extracted" : true,
+    "gender" : {
+      "type" : "http://gedcomx.org/Male"
+    },
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://familysearch.org/ark:/61903/1:1:QF5S-W2M9" ]
+    },
+    "names" : [ {
+      "type" : "http://gedcomx.org/BirthName",
+      "nameForms" : [ {
+        "fullText" : "Willie Kawai",
+        "parts" : [ {
+          "type" : "http://gedcomx.org/Given",
+          "value" : "Willie"
+        }, {
+          "type" : "http://gedcomx.org/Surname",
+          "value" : "Kawai"
+        } ]
+      } ]
+    } ]
+  }, {
+    "id" : "p_99000000002",
+    "extracted" : true,
+    "gender" : {
+      "type" : "http://gedcomx.org/Female"
+    },
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://familysearch.org/ark:/61903/1:1:QF5S-W2MS" ]
+    },
+    "names" : [ {
+      "type" : "http://gedcomx.org/BirthName",
+      "nameForms" : [ {
+        "fullText" : "Hazel Wong",
+        "parts" : [ {
+          "type" : "http://gedcomx.org/Given",
+          "value" : "Hazel"
+        }, {
+          "type" : "http://gedcomx.org/Surname",
+          "value" : "Wong"
+        } ]
+      } ]
+    } ]
+  }, {
+    "id" : "p_99000000003",
+    "extracted" : true,
+    "gender" : {
+      "type" : "http://gedcomx.org/Male"
+    },
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://familysearch.org/ark:/61903/1:1:QF5S-W2M3" ]
+    },
+    "names" : [ {
+      "type" : "http://gedcomx.org/BirthName",
+      "nameForms" : [ {
+        "fullText" : "Jerry",
+        "parts" : [ {
+          "type" : "http://gedcomx.org/Given",
+          "value" : "Jerry"
+        } ]
+      } ]
+    } ]
+  }, {
+    "id" : "p_99000000004",
+    "extracted" : true,
+    "gender" : {
+      "type" : "http://gedcomx.org/Female"
+    },
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://familysearch.org/ark:/61903/1:1:QF5S-W2MQ" ]
+    },
+    "names" : [ {
+      "type" : "http://gedcomx.org/BirthName",
+      "nameForms" : [ {
+        "fullText" : "Jeanie",
+        "parts" : [ {
+          "type" : "http://gedcomx.org/Given",
+          "value" : "Jeanie"
+        } ]
+      } ]
+    } ]
+  }, {
+    "id" : "p_99000000005",
+    "extracted" : true,
+    "gender" : {
+      "type" : "http://gedcomx.org/Male"
+    },
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://familysearch.org/ark:/61903/1:1:QF5S-W2M7" ]
+    },
+    "names" : [ {
+      "type" : "http://gedcomx.org/BirthName",
+      "nameForms" : [ {
+        "fullText" : "Rocky",
+        "parts" : [ {
+          "type" : "http://gedcomx.org/Given",
+          "value" : "Rocky"
+        } ]
+      } ]
+    } ]
+  }, {
+    "id" : "p_99000000006",
+    "extracted" : true,
+    "gender" : {
+      "type" : "http://gedcomx.org/Male"
+    },
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://familysearch.org/ark:/61903/1:1:QF5S-W2MW" ]
+    },
+    "names" : [ {
+      "type" : "http://gedcomx.org/BirthName",
+      "nameForms" : [ {
+        "fullText" : "C E Or Jack Frost",
+        "parts" : [ {
+          "type" : "http://gedcomx.org/Given",
+          "value" : "C E Or Jack"
+        }, {
+          "type" : "http://gedcomx.org/Surname",
+          "value" : "Frost"
+        } ]
+      } ]
+    } ]
+  } ],
+  "relationships" : [ {
+    "id" : "rel1",
+    "type" : "http://familysearch.org/types/relationships/Sibling",
+    "person1" : {
+      "resource" : "#p_99000000001",
+      "resourceId" : "p_99000000001"
+    },
+    "person2" : {
+      "resource" : "#p_99000000000",
+      "resourceId" : "p_99000000000"
+    }
+  }, {
+    "id" : "rel2",
+    "type" : "http://familysearch.org/types/relationships/Sibling",
+    "person1" : {
+      "resource" : "#p_99000000002",
+      "resourceId" : "p_99000000002"
+    },
+    "person2" : {
+      "resource" : "#p_99000000000",
+      "resourceId" : "p_99000000000"
+    }
+  }, {
+    "id" : "rel3",
+    "type" : "http://gedcomx.org/ParentChild",
+    "person1" : {
+      "resource" : "#p_99000000000",
+      "resourceId" : "p_99000000000"
+    },
+    "person2" : {
+      "resource" : "#p_99000000003",
+      "resourceId" : "p_99000000003"
+    }
+  }, {
+    "id" : "rel4",
+    "type" : "http://gedcomx.org/ParentChild",
+    "person1" : {
+      "resource" : "#p_99000000000",
+      "resourceId" : "p_99000000000"
+    },
+    "person2" : {
+      "resource" : "#p_99000000004",
+      "resourceId" : "p_99000000004"
+    }
+  }, {
+    "id" : "rel5",
+    "type" : "http://gedcomx.org/ParentChild",
+    "person1" : {
+      "resource" : "#p_99000000000",
+      "resourceId" : "p_99000000000"
+    },
+    "person2" : {
+      "resource" : "#p_99000000005",
+      "resourceId" : "p_99000000005"
+    }
+  }, {
+    "id" : "rel6",
+    "type" : "http://gedcomx.org/Couple",
+    "person1" : {
+      "resource" : "#p_99000000006",
+      "resourceId" : "p_99000000006"
+    },
+    "person2" : {
+      "resource" : "#p_99000000000",
+      "resourceId" : "p_99000000000"
+    },
+    "facts" : [ {
+      "type" : "http://gedcomx.org/Marriage"
+    } ]
+  }, {
+    "id" : "rel7",
+    "type" : "http://gedcomx.org/ParentChild",
+    "person1" : {
+      "resource" : "#p_99000000006",
+      "resourceId" : "p_99000000006"
+    },
+    "person2" : {
+      "resource" : "#p_99000000003",
+      "resourceId" : "p_99000000003"
+    }
+  }, {
+    "id" : "rel8",
+    "type" : "http://gedcomx.org/ParentChild",
+    "person1" : {
+      "resource" : "#p_99000000006",
+      "resourceId" : "p_99000000006"
+    },
+    "person2" : {
+      "resource" : "#p_99000000004",
+      "resourceId" : "p_99000000004"
+    }
+  }, {
+    "id" : "rel9",
+    "type" : "http://gedcomx.org/ParentChild",
+    "person1" : {
+      "resource" : "#p_99000000006",
+      "resourceId" : "p_99000000006"
+    },
+    "person2" : {
+      "resource" : "#p_99000000005",
+      "resourceId" : "p_99000000005"
+    }
+  } ],
+  "sourceDescriptions" : [ {
+    "id" : "src_r_99000000000",
+    "about" : "https://familysearch.org/ark:/61903/1:2:QF5S-W2MM",
+    "publisher" : {
+      "resource" : "#1043351526",
+      "resourceId" : "1043351526"
+    },
+    "componentOf" : {
+      "description" : "#src_1"
+    },
+    "resourceType" : "http://gedcomx.org/Record",
+    "coverage" : [ {
+      "spatial" : {
+        "original" : "California"
+      },
+      "temporal" : {
+        "original" : "05 Nov 2000"
+      },
+      "recordType" : "http://gedcomx.org/Obituary"
+    } ],
+    "sources" : [ {
+      "description" : "#110771485",
+      "descriptionId" : "110771485"
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://familysearch.org/ark:/61903/1:2:QF5S-W2MM" ]
+    },
+    "descriptor" : {
+      "resource" : "https://familysearch.org/records/collection/2333694#rd_2333694"
+    }
+  }, {
+    "id" : "src_1",
+    "about" : "https://familysearch.org/platform/records/collections/2333694",
+    "resourceType" : "http://gedcomx.org/Collection",
+    "identifiers" : {
+      "http://gedcomx.org/Primary" : [ "https://familysearch.org/platform/records/collections/2333694" ]
+    }
+  }, {
+    "id" : "110771485",
+    "about" : "#141289226",
+    "titles" : [ {
+      "value" : "101457145_00928.nbx"
+    } ]
+  } ],
+  "agents" : [ {
+    "id" : "1043351526",
+    "names" : [ {
+      "value" : "San Diego Union-Tribune, The (CA)"
+    } ]
+  } ],
+  "documents" : [ {
+    "id" : "141289226",
+    "text" : "<NBX>\n<PDI>R</PDI>\n<DAT>November 5, 2000</DAT>\n<PAP>San Diego Union-Tribune, The (CA)</PAP>\n<UNQ>0FD0DD84194B8AE2</UNQ>\n<ROY>THE SAN DIEGO UNION-TRIBUNE</ROY>\n<DSI>0F2896AF1F011698</DSI>\n<IBD>2451854</IBD><PUNQ>0F909DF658C5587C</PUNQ><DTI>2004-05-26T18:47:54-05:00</DTI><PBI>0C9C35D44532DE80</PBI>\n<YMD>2000-11-05</YMD>\n<COP>Copyright (c) 2000 Union Tribune Publishing Co.</COP>\n<EPP>9</EPP>\n<WCT>2834</WCT>\n<EID>0EB545516BD4738F</EID>\n<SQN>UTS1557133</SQN>\n<PARNT>TRUE</PARNT>\n<CTCD>CA</CTCD>\n<CTNM>California</CTNM>\n<CTNM>Pacific</CTNM>\n<CTID>0F422B80D850C0D9</CTID>\n<CTID>0F67264534A799EB</CTID>\n<HED>Title: DEATH AND FUNERAL NOTICES</HED>\n<TYP>LIST. OBIT.</TYP>\n<EDT>1,3</EDT>\n<COL>DEATH AND FUNERAL NOTICES</COL>\n<SEC>LOCAL</SEC>\n<PAG>B-9</PAG>\n\n<SIZE>1477</SIZE><SART><br/>\n<SWCT>100</SWCT><SUNQ>0FD0DD84194B8AE2</SUNQ><p/>\n<DECE>FROST</DECE><p/>\n<SBODY>FROST, RUTH KAWAI Ruth, a 55-year resident of San Diego, born January 23, 1916 in Kauai, Hawaii, died October 29, 2000 in Honolulu. She is survived by a brother, Willie Kawai, and sister, Hazel Wong; 3 children, Jerry, Jeanie and Rocky; 9 grandchildren and 17 great-grandchildren. Services were held in Honolulu on Wednesday, November 1. Her remains will be brought back to San Diego to be inurned next to those of her husband, C.E.  &#034;Jack&#034; Frost.  Witness will be at Fort Rosecrans National Cemetery at 11:30 a.m. Wednesday, November 8. A memorial will follow at the Hui O&#039;Hawaii Club after the ceremony.</SBODY><p/>\n</SART></NBX>"
+  } ]
+}
