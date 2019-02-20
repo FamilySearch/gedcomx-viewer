@@ -1,7 +1,50 @@
 /*
   PersonBox: Represents a person in a RelChart, with its position, size, and a pointer to the person information in its corresponding PersonNode.
  */
+
+//todo: Create a div to go between the PersonBox and each parent FamilyLine.
+//todo: Decide how to place these lines vertically so they fit within the person, near the center.
+PersonBox.prototype.setPreviousPosition = function() {
+  this.prevTop = this.top;
+  this.prevCenter = this.center;
+  this.prevHeight = this.height;
+};
+
+// Move this PersonBox vertically down by the given delta-Y (which could be negative for up or positive for down).
+PersonBox.prototype.move = function(dy) {
+  this.top += dy;
+  this.center += dy;
+};
+
+PersonBox.prototype.hasMoved = function() {
+  return this.prevTop    !== this.top ||
+         this.prevCenter !== this.center ||
+         this.prevHeight !== this.height;
+};
+
+PersonBox.prototype.setPosition = function() {
+  this.setPreviousPosition();
+  this.$personDiv.animate({top: this.getTop(), left: this.getLeft()}, RelationshipChart.prototype.animationSpeed);
+};
+
+PersonBox.prototype.getLeft = function() {
+  return this.generation.getLeft();
+};
+
+PersonBox.prototype.getRight = function() {
+  return this.getLeft() + this.width;
+};
+
+PersonBox.prototype.getTop = function() {
+  return this.top;
+};
+
+PersonBox.prototype.getBottom = function() {
+  return this.top + this.height;
+};
+
 function PersonBox(personNode, $personsDiv, personAbove, personBelow, generation) {
+
   function addNameSpans(person) {
     var html = "";
     var n, f;
@@ -69,46 +112,60 @@ function PersonBox(personNode, $personsDiv, personAbove, personBelow, generation
     if (person.facts) {
       for (f = 0; f < person.facts.length; f++) {
         fact = person.facts[f];
-        html += "<div class='fact'><span class='factType'>" + encode(getFactName(fact)) +
-                ":</span> <span class='factDatePlace'>" + encode(getFactDatePlace(fact)) + "</span></div>";
+        html += "  <div class='fact'><span class='factType'>" + encode(getFactName(fact)) +
+            ":</span> <span class='factDatePlace'>" + encode(getFactDatePlace(fact)) + "</span></div>\n";
       }
     }
-    html += "</div>";
     return html;
   }
 
   /**
    Generate a JQuery HTML node like this:
    <div class='personNode gender-M' id='XXXX-YYY'>
-     <span class='fullName'>Fred Jones</span></br>
-     <span class='altName'>Frederick Johannes</span></br>
-     <div class='fact'><span class='factType'>Birth:</span> <span class='factDatePlace'>1820; Vermont</span></div>
+   <span class='fullName'>Fred Jones</span></br>
+   <span class='altName'>Frederick Johannes</span></br>
+   <div class='fact'><span class='factType'>Birth:</span> <span class='factDatePlace'>1820; Vermont</span></div>
    </div>
    @param personNode - PersonNode to create PersonBox for
-   @param $personsDiv - JQuery object wrapping the div with the list of persons in it. The new PersonBox is added to this.
    */
   function makePersonDiv(personNode) {
     var html = "<div class='personNode gender-" + personNode.gender + "' id='" + personNode.personId + "'>\n";
     var person = personNode.person;
     html += addNameSpans(person);
     html += addFactDivs(person);
-
+    html += "</div>";
     return $.parseHTML(html);
   }
 
-  this.personNode = personNode;
-  this.top = 0;
-  this.bottom=0;
-  this.center=0;
-  this.height=0;
-  this.generation = generation;
-  this.genAbove = null; // PersonBox of person above in the same generation
-  this.genBelow = null; // PersonBox of person below in the same generation
+  // PersonBox constructor ==========================================
+  this.boxId = "box_" + personNode.personId; // temporary id helpful for debugging. Not used.
+  this.personNode = personNode; // PersonNode that corresponds to this PersonBox
   this.above = personAbove; // PersonBox of the person above in the global list of person boxes (not necessarily the same generation)
   this.below = personBelow; // PersonBox of person below in the global list.
+  this.genAbove = null; // PersonBox of person above in the same generation
+  this.genBelow = null; // PersonBox of person below in the same generation
+  this.generation = generation;
+  this.subtree = null;
+  this.order    = 0; // Global order of this PersonBox in the chart
+  this.genOrder = 0; // Order of this PersonBox within its generation
+
+
+  this.parentLines = [];
+  this.spouseLines = [];
+
+  this.duplicateOf = null; // PersonBox of the first appearance of this same PersonNode in the chart, if any.
 
   var personDiv = makePersonDiv(personNode);
   $personsDiv.append(personDiv);
-  this.$personDiv = $("#" + this.personNode.personId);
-  this.height = this.$personDiv.height();
+  this.$personDiv = $("#" + personNode.personId);
+  this.height = this.$personDiv.outerHeight();
+  this.width = this.$personDiv.outerWidth();
+
+  this.top    = 0; // Pixel-level information
+  this.center = this.height / 2; // Initially just top + height/2.
+  // (the "left" coordinate of all PersonBoxes in a Generation are in Generation.left).
+
+  this.prevHeight = this.height;
+  this.prevTop = this.top;
+  this.prevCenter = this.center;
 }

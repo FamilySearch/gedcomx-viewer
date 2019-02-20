@@ -11,10 +11,15 @@
   <script src="model/FamilyNode.js"></script>
   <script src="model/RelationshipGraph.js"></script>
 
+  <script src="view/view-util.js"></script>
+  <script src="view/Generation.js"></script>
+  <script src="view/LinkedHashSet.js"></script>
+  <script src="view/IntegerByRef.js"></script>
   <script src="view/PersonBox.js"></script>
   <script src="view/FamilyLine.js"></script>
   <script src="view/RelationshipChart.js"></script>
-  <script src="view/view-util.js"></script>
+  <script src="view/ChartCompressor.js"></script>
+  <script src="view/RelChartBuilder.js"></script>
 
   <script src="graph.js"></script>
 </head>
@@ -31,8 +36,7 @@
   <script>
     $(document).ready(function(){
       $.getJSON("sample.json", function(sampleGx){
-        var graph = buildGraph(sampleGx);
-        // $("#graph").html(graph.graphDiv);
+        buildGraph(sampleGx);
       });
     });
   </script>

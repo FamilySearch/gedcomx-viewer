@@ -30,3 +30,20 @@ FamilyNode.prototype.addChild = function(child, fatherRel, motherRel) {
   }
 };
 
+// Get the spouse of personNode in the family, or null if none.
+FamilyNode.prototype.getSpouse = function(personNode) {
+  if (this.father === personNode) {
+    return this.mother;
+  }
+  else if (this.mother === personNode) {
+    return this.father;
+  }
+  return null;
+};
+
+function makeFamilyId(fatherNode, motherNode) {
+  var fatherId = fatherNode ? fatherNode.personId : "?";
+  var motherId = motherNode ? motherNode.personId : "?";
+  return fatherId + "-n-" + motherId;
+}
+

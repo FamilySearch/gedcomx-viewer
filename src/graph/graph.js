@@ -37,6 +37,19 @@ var GX_PARENT_CHILD = "http://gedcomx.org/ParentChild";
 
  */
 function buildGraph(gx) {
-  var graph = new RelationshipGraph(gx);
-  var chart = new RelationshipChart(graph, $("#personNodes"));
+  var graph = new RelationshipGraph(gx);                                   22
+  var chart = new RelChartBuilder(graph, $("#personNodes"), $("#familyLines"), true, true).buildChart();
 }
+
+/*
+Todo:
+_ Person-SpouseFamily line
+_ Person-ParentFamily line
+_ Port compress
+_ Debug compress
+
+_ Add relGraph to record.html
+_ Update when record updated
+
+
+ */

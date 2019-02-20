@@ -5,7 +5,6 @@
 .personNode {
     border: 1px solid;
     border-radius: 3px;
-    margin: 2px;
     padding: 2px;
     width: 250px;
     position: absolute;
@@ -46,3 +45,16 @@
     font-size: 70%;
 }
 
+.personLine,.familyLine {
+    background-color: #8697b3;
+    position: absolute;
+    box-shadow: 1px 1px 3px #e3eadc;
+    z-index: -1;
+}
+
+.familyLine {
+    width: 2px;
+}
+.personLine {
+    height: 2px;
+}

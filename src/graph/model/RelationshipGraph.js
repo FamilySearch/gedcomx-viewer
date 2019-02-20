@@ -18,7 +18,10 @@ function addPersonNodes(graph) {
   for (p = 0; p < graph.gx.persons.length; p++) {
     personNode = new PersonNode(graph.gx.persons[p]);
     graph.personNodes[p] = personNode;
-    graph.personMap[personNode.personId] = personNode;
+    graph.personNodeMap[personNode.personId] = personNode;
+    if (graph.gx.persons[p].principal) {
+      graph.principals.push(personNode);
+    }
   }
 }
 
@@ -43,7 +46,7 @@ function getPersonIdFromReference(ref) {
 function addFamily(graph, familyId, fatherNode, motherNode, coupleRelationship) {
   var familyNode = new FamilyNode(familyId, fatherNode, motherNode, coupleRelationship);
   graph.familyNodes.push(familyNode);
-  graph.familyMap[familyNode.familyId] = familyNode;
+  graph.familyNodeMap[familyNode.familyId] = familyNode;
   return familyNode;
 }
 
@@ -53,12 +56,6 @@ function wrongGender(father, mother) {
   var gal = mother ? mother.gender : GENDER_CODE_UNKNOWN;
   return (guy !== GENDER_CODE_MALE && gal === GENDER_CODE_MALE) ||
       (guy === GENDER_CODE_FEMALE && gal !== GENDER_CODE_FEMALE);
-}
-
-function makeFamilyId(fatherNode, motherNode) {
-  var fatherId = fatherNode ? fatherNode.personId : "?";
-  var motherId = motherNode ? motherNode.personId : "?";
-  return fatherId + "&" + motherId;
 }
 
 /**
@@ -75,8 +72,8 @@ function addCouples(graph) {
       if (rel.type === GX_COUPLE) {
         pid1 = getPersonIdFromReference(rel.person1);
         pid2 = getPersonIdFromReference(rel.person2);
-        fatherNode = graph.personMap[pid1];
-        motherNode = graph.personMap[pid2];
+        fatherNode = graph.personNodeMap[pid1];
+        motherNode = graph.personNodeMap[pid2];
         if (wrongGender(fatherNode, motherNode)) {
           // Swap persons to make p1 the father and p2 the mother, if possible.
           temp = fatherNode;
@@ -187,7 +184,7 @@ function addChildren(graph) {
       }
       // If any parents were not part of a couple, create a single-parent family for them.
       for (parent = 0; parent < unusedParentIdsAndRels.length; parent++) {
-        fatherNode = graph.personMap[unusedParentIdsAndRels[parent].personId];
+        fatherNode = graph.personNodeMap[unusedParentIdsAndRels[parent].personId];
         motherNode = null;
         fatherRel = unusedParentIdsAndRels[parent].parentChildRelationship;
         motherRel = null;
@@ -235,22 +232,24 @@ function addFamilyNodes(graph) {
   addFamiliesToPersonNodes(graph);
 }
 
+RelationshipGraph.prototype.getPerson = function(personId) {
+  return this.personNodeMap[personId];
+};
+
+RelationshipGraph.prototype.getFamily = function(familyId) {
+  return this.familyNodeMap[familyId];
+};
+
 /*** Constructor ***/
 function RelationshipGraph(gx) {
-  this.gx = gx;
-  this.personNodes = [];
-  this.familyNodes = [];
-  this.personMap = {};
-  this.familyMap = {};
+  this.gx = gx; // GedcomX document (record or portion of a tree).
+  this.personNodes = []; // array of PersonNode
+  this.familyNodes = []; // array of FamilyNode
+  this.personNodeMap = {}; // map of personId to PersonNode
+  this.familyNodeMap = {}; // map of familyId to FamilyNode
+  this.principals = []; // array of principal PersonNodes
   addPersonNodes(this);
   addFamilyNodes(this);
 }
 
-RelationshipGraph.prototype.getPerson = function(personId) {
-  return this.personMap[personId];
-};
-
-RelationshipGraph.prototype.getFamily = function(familyId) {
-  return this.familyMap[familyId];
-};
 

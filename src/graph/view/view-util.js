@@ -4,3 +4,7 @@ function encode(s) {
   }
   return $('<div/>').text(s).html();
 }
+
+function isEmpty(a) {
+  return !a || a.length === 0;
+}
