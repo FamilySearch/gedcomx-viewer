@@ -164,12 +164,11 @@ function RelationshipChart(relGraph, $personsDiv, $familyLinesDiv, shouldInclude
 
   // Display options
   this.personBorder = 6; // pixels spread between the top and bottom, around the text (/2 = border space)
-  this.textHeight = 14; // additional pixels needed for another line of text
   this.verticalGap = 4; // min. pixels between two boxes in the same generation
   this.generationGap = 10; // min. pixels between a parent and child
-  this.generationWidth = 280;
-  this.lineGap = 10;
-  this.treeGap = 10; // pixels between someone in one connected tree and another one.
+  this.generationWidth = 280; // Width of a PersonBox (not including additional padding).
+  this.lineGap = 10; // Horizontal pixels between one vertical line and another; and between a PersonBox and the vertical line.
+  this.treeGap = 10; // Additional vertical pixels between someone in one connected tree and another one.
   this.shouldIncludeDetails = shouldIncludeDetails;
   this.shouldCompress = shouldCompress;
   this.shouldDisplayIds = true;

@@ -158,6 +158,7 @@ function PersonBox(personNode, $personsDiv, personAbove, personBelow, generation
   var personDiv = makePersonDiv(personNode);
   $personsDiv.append(personDiv);
   this.$personDiv = $("#" + personNode.personId);
+  this.$personDiv.outerWidth(generation.relChart.generationWidth);
   this.height = this.$personDiv.outerHeight();
   this.width = this.$personDiv.outerWidth();
 

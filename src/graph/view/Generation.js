@@ -3,7 +3,7 @@ function Generation(index, relChart) {
   this.relChart = relChart;
 
   this.genPersons = [];   // list of persons in this generation
-  this.left = 0; // ldeft coordinate of person boxes in this generation
+  this.left = 0; // left coordinate of person boxes in this generation
 
   this.getLeft = function() {
     return this.left;
