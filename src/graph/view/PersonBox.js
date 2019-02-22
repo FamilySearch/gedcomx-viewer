@@ -141,7 +141,7 @@ function PersonBox(personNode, $personsDiv, personAbove, personBelow, generation
     var html = "<div class='personNode gender-" + personNode.gender + "' id='" + personNode.personId + "'>\n";
     var person = personNode.person;
     html += addNameSpans(person);
-    html += addIdDiv(person);
+    //html += addIdDiv(person);
     html += addFactDivs(person);
     html += "</div>";
     return $.parseHTML(html);

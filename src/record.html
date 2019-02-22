@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/open-iconic/1.1.1/font/css/open-iconic-bootstrap.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/5.14.0/jsoneditor.min.css">
   <link rel="stylesheet" href="gx-view.css">
+  <link rel="stylesheet" type="text/css" href="graph/graph.css">
 
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
@@ -15,6 +16,23 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-filestyle/2.1.0/bootstrap-filestyle.min.js"></script>
 
+  <!-- Relationship Graph support -->
+  <script src="graph/model/model-util.js"></script>
+  <script src="graph/model/PersonNode.js"></script>
+  <script src="graph/model/FamilyNode.js"></script>
+  <script src="graph/model/RelationshipGraph.js"></script>
+
+  <script src="graph/view/view-util.js"></script>
+  <script src="graph/view/Generation.js"></script>
+  <script src="graph/view/LinkedHashSet.js"></script>
+  <script src="graph/view/IntegerByRef.js"></script>
+  <script src="graph/view/PersonBox.js"></script>
+  <script src="graph/view/FamilyLine.js"></script>
+  <script src="graph/view/ChartCompressor.js"></script>
+  <script src="graph/view/RelationshipChart.js"></script>
+  <script src="graph/view/RelChartBuilder.js"></script>
+
+  <script src="graph/graph.js"></script>
   <!--<script src="gx-utils.js"></script>-->
   <script src="gx-fix.js"></script>
   <script src="gx-view.js"></script>
@@ -231,6 +249,8 @@
         var title = documentSourceDescription.titles && documentSourceDescription.titles.length > 0 ? documentSourceDescription.titles[0].value : null;
         setRecordSourceDocument(sourceDocument.text, title, sourceDocument);
       }
+      // Build the relationship graph.
+      buildGraph(doc);
     }
 
     /**
@@ -312,14 +332,14 @@
 
       var title = $("#edit-record-metadata-title").val();
       if (title) {
-        if (!sd.titles || sd.titles.length == 0) {
+        if (!sd.titles || sd.titles.length === 0) {
           sd.titles = [];
           sd.titles.push({});
         }
         sd.titles[0].value = title;
       }
 
-      if (!sd.coverage || sd.coverage.length == 0) {
+      if (!sd.coverage || sd.coverage.length === 0) {
         sd.coverage = [];
         sd.coverage.push({});
       }
@@ -360,7 +380,7 @@
           sd.publisher.resource = "#" + publisherAgent.id;
         }
 
-        if (!publisherAgent.names || publisherAgent.names.length == 0) {
+        if (!publisherAgent.names || publisherAgent.names.length === 0) {
           publisherAgent.names = [];
           publisherAgent.names.push({});
         }
@@ -1816,7 +1836,10 @@
             </div>
           </div>
           <div class="col-8 pt-4">
-            <div id="graph"></div>
+            <div id="graph">
+              <div id="personNodes"></div>
+              <div id="familyLines"></div>
+            </div>
             <div id="record"></div>
           </div>
         </div>

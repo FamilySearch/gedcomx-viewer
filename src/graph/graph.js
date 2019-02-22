@@ -48,11 +48,6 @@ function buildGraph(gx) {
 
 /*
 Todo:
-_ Person-SpouseFamily line
-_ Person-ParentFamily line
-_ Port compress
-_ Debug compress
-
 _ Add relGraph to record.html
 _ Update when record updated
 

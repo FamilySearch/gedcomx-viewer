@@ -477,6 +477,8 @@ function RelChartBuilder(relGraph, $personsDiv, $familyLinesDiv, shouldIncludeDe
  * @return RelationshipChart built from the given graph starting with the given person
  */
 RelChartBuilder.prototype.buildChart = function() {
+  this.relChart.$personsDiv.empty();
+  this.relChart.$familyLinesDiv.empty();
   this.addPersons();
   this.relChart.generations = this.createGenerations();
   this.setFamilyLineTopBottoms();

@@ -75,10 +75,14 @@ RelationshipChart.prototype.makeGenerationLinesList = function(familyLines) {
 RelationshipChart.prototype.setPositions = function() {
   var p, personBox;
   var f, familyLine;
+  var bottom = 0;
   for (p = 0; p < this.personBoxes.length; p++) {
     personBox = this.personBoxes[p];
     if (personBox.hasMoved()) {
       personBox.setPosition();
+    }
+    if (personBox.getBottom() > bottom) {
+      bottom = personBox.getBottom();
     }
   }
   for (f = 0; f < this.familyLines.length; f++) {
@@ -87,6 +91,7 @@ RelationshipChart.prototype.setPositions = function() {
       familyLine.setPosition();
     }
   }
+  this.$personsDiv.height(bottom + 4);
 };
 
 RelationshipChart.prototype.calculatePositions = function() {

@@ -1,11 +1,13 @@
 #graph {
     font-family: sans-serif;
+    line-height: 1;
 }
 
 .personNode {
     border: 1px solid;
     border-radius: 3px;
     padding: 2px;
+    margin: 0;
     position: absolute;
     box-shadow: 1px 1px 3px #e3eadc;
 }
