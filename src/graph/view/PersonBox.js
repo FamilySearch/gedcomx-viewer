@@ -43,6 +43,10 @@ PersonBox.prototype.getBottom = function() {
   return this.top + this.height;
 };
 
+PersonBox.prototype.getPersonId = function() {
+  return this.personNode.personId;
+};
+
 function PersonBox(personNode, $personsDiv, personAbove, personBelow, generation) {
 
   function addNameSpans(person) {
@@ -119,6 +123,11 @@ function PersonBox(personNode, $personsDiv, personAbove, personBelow, generation
     return html;
   }
 
+  function addIdDiv(person) {
+    return "  <div class='fact'><span class='factType'>" + encode("Id") +
+            ":</span> <span class='factDatePlace'>" + encode(person.id) + "</span></div>\n";
+  }
+
   /**
    Generate a JQuery HTML node like this:
    <div class='personNode gender-M' id='XXXX-YYY'>
@@ -132,6 +141,7 @@ function PersonBox(personNode, $personsDiv, personAbove, personBelow, generation
     var html = "<div class='personNode gender-" + personNode.gender + "' id='" + personNode.personId + "'>\n";
     var person = personNode.person;
     html += addNameSpans(person);
+    html += addIdDiv(person);
     html += addFactDivs(person);
     html += "</div>";
     return $.parseHTML(html);

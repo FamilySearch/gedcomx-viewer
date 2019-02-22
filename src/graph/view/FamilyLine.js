@@ -147,7 +147,7 @@ FamilyLine.prototype.arrangeLines = function(lines) {
     var overlapIndex;
     for (overlapIndex = 0; overlapIndex < overlapList.length; overlapIndex++) {
       var overlappingLineIndex = overlapList[overlapIndex];
-      if (lines[line].overlaps(lines[overlappingLineIndex])) {
+      if (lines[lineIndex].overlaps(lines[overlappingLineIndex])) {
         closestLineIndex = overlappingLineIndex;
       } else {
         // The line at 'depth' no longer overlaps any more lines from here on down, so remove it from the list.

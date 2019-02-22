@@ -4,7 +4,7 @@ IntegerByRef.prototype.set = function(value) {
   this.value = value;
 };
 IntegerByRef.prototype.get = function() {
-  return value;
+  return this.value;
 };
 
 function IntegerByRef(value) {

@@ -56,7 +56,6 @@ RelationshipChart.prototype.makeGenerationLinesList = function(familyLines) {
   var generationLinesList = []; // FamilyLines in each generation: [generation#][]
   var f, familyLine;
   var generationNumber;
-  var generationLines;
   for (generationNumber = 0; generationNumber < this.generations.length; generationNumber++) {
     generationLinesList[generationNumber] = [];
   }
@@ -112,7 +111,7 @@ RelationshipChart.prototype.calculatePositions = function() {
   // Move persons closer together until they either (a) touch the person above or below them, or (b) come within
   // 1/2 box height of their nearest child or parent.
   if (this.shouldCompress) {
-    //todo: this.compressGraph(personBoxes);
+    this.chartCompressor.compressGraph(this.personBoxes);
   }
 
   // Get the new bottom of the graph
@@ -176,4 +175,5 @@ function RelationshipChart(relGraph, $personsDiv, $familyLinesDiv, shouldInclude
   this.width = 0; // overall size of chart
   this.height = 0;
   this.prevHeight = 0; // height of chart before last update
+  this.chartCompressor = new ChartCompressor(this);
 }

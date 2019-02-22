@@ -22,8 +22,15 @@ LinkedHashSet.prototype.remove = function(value) {
   }
 };
 
+LinkedHashSet.prototype.removeAll = function(other) {
+  var i;
+  for (i = 0; i < other.values.length; i++) {
+    this.remove(other.values[i]);
+  }
+};
+
 LinkedHashSet.prototype.addAll = function(other) {
-  var i, value;
+  var i;
   for (i = 0; i < other.values.length; i++) {
     this.add(other.values[i]);
   }
@@ -44,6 +51,10 @@ LinkedHashSet.prototype.getFirst = function() {
 LinkedHashSet.prototype.clear = function() {
   this.map = {};
   this.values = [];
+};
+
+LinkedHashSet.prototype.getSize = function() {
+  return this.values.length;
 };
 
 function LinkedHashSet() {
