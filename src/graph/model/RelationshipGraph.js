@@ -184,7 +184,7 @@ function addChildren(graph) {
       }
       // If any parents were not part of a couple, create a single-parent family for them.
       for (parent = 0; parent < unusedParentIdsAndRels.length; parent++) {
-        fatherNode = graph.personNodeMap[unusedParentIdsAndRels[parent].personId];
+        fatherNode = graph.personNodeMap[unusedParentIdsAndRels[parent].parentId];
         motherNode = null;
         fatherRel = unusedParentIdsAndRels[parent].parentChildRelationship;
         motherRel = null;

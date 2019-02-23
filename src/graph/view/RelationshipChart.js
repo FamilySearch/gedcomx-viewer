@@ -47,7 +47,7 @@ RelationshipChart.prototype.subtreeGap = function(above, below) {
 };
 
 /**
- * Create a map of Generation to the array of FamilyLines in that generation (sorted by "top" coordinate).
+ * Create a map of Generation to the array of spouse FamilyLines to the left of that generation (sorted by "top" coordinate).
  * @param familyLines - Array of FamilyLines to put into the returned map.
  * @return array (one entry per generation) of arrays of FamilyLines in that generation.
  */

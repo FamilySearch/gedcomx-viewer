@@ -73,7 +73,7 @@ RelChartBuilder.prototype.addSpouses = function(personBox, subtree, needsRelativ
   var childGeneration;
   var c, childBox;
 
-  if (spouseFamilies) {
+  if (!isEmpty(spouseFamilies)) {
     for (f = 0; f < spouseFamilies.length; f++) {
       spouseFamily = spouseFamilies[f];
       if (this.familyHasOnlyOnePerson(spouseFamily)) {
@@ -101,7 +101,7 @@ RelChartBuilder.prototype.addSpouses = function(personBox, subtree, needsRelativ
           if (personNode.gender === GENDER_CODE_MALE) {
             // Insert children below the person (i.e., the father), from last to first
             var childBoxes = [];
-            for (c = children.size() - 1; c >= 0; c--) {
+            for (c = children.length - 1; c >= 0; c--) {
               childBox = this.insert(direction, personBox, children[c], childGeneration, null, spouseFamilyLine, needsRelativesQueue, subtree);
               childBoxes.push(childBox);
             }
@@ -129,7 +129,6 @@ RelChartBuilder.prototype.addSpouses = function(personBox, subtree, needsRelativ
  * @param personBox - PersonBox to add parents for
  * @param subtree - Index of subtree that the involved PersonBoxes are part of.
  * @param needsRelativesQueue - Queue to add new PersonBoxes to (so their relatives can be added).
- * @param personNode - PersonNode to add parents for.
  */
 RelChartBuilder.prototype.addParents = function(personBox, subtree, needsRelativesQueue) {
 
@@ -332,7 +331,7 @@ RelChartBuilder.prototype.createGenerations = function() {
       generationPosition = 0;
       for (p = 0; p < generation.genPersons.length; p++) {
         personBox = generation.genPersons[p];
-        if (aboveInGen != null) {
+        if (aboveInGen) {
           aboveInGen.genBelow = personBox;
           personBox.genAbove = aboveInGen;
         }
@@ -357,7 +356,6 @@ RelChartBuilder.prototype.createGenerations = function() {
 /**
  * Get a list of all the family lines built while adding persons and their relatives.
  * Set the top & bottom person of each family line.
- * @param personBoxes - array of PersonBoxes in the RelationshipChart.
  * @return list of FamilyLines for the whole graph, with top & bottom persons set.
  */
 RelChartBuilder.prototype.setFamilyLineTopBottoms = function() {

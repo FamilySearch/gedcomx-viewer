@@ -119,8 +119,12 @@ FamilyLine.prototype.overlaps = function(otherFamilyLine) {
   var bottom = this.bottomPerson.center;
   var otherTop = otherFamilyLine.topPerson.center;
   var otherBottom = otherFamilyLine.bottomPerson.center;
-  return (top >= otherTop && top <= otherBottom) ||
-      (otherTop >= top && otherTop <= bottom);
+  // The two lines overlap unless one is completely above another, meaning one's bottom is above the other's top.
+  // So overlap = not((bottom above otherTop) or (otherBottom above top))
+  // overlap = !((bottom < otherTop) || (otherBottom < top)). Using !(A || B) = !A && !B...
+  // overlap = !(bottom < otherTop) && !(otherBottom < top). Using !(A < B) = A >= B...
+  // overlap = (bottom >= otherTop) && (otherBottom >= top)
+  return bottom >= otherTop && otherBottom >= top;
 };
 
 /**
@@ -143,7 +147,7 @@ FamilyLine.prototype.arrangeLines = function(lines) {
   for (lineIndex = 0; lineIndex < lines.length; lineIndex++) {
     // Look through the list of overlapping lines, and remove any that do not overlap 'line'.
     // Also keep track of what the rightmost overlapping line was.
-    closestLineIndex = null;
+    closestLineIndex = undefined;
     var overlapIndex;
     for (overlapIndex = 0; overlapIndex < overlapList.length; overlapIndex++) {
       var overlappingLineIndex = overlapList[overlapIndex];
@@ -157,13 +161,13 @@ FamilyLine.prototype.arrangeLines = function(lines) {
     // Add line to the end of the overlap list so it can be considered by the next element.
     overlapList.push(lineIndex);
     // Keep track of what the rightmost overlapping line is for each line (i.e., which one it "pushes" on)
-    if (closestLineIndex) {
+    if (closestLineIndex !== undefined) {
       pushMap[lineIndex] = closestLineIndex;
     }
     // Update the depth for all lines that are pushed on by the current line, if any
     lineDepthMap[lineIndex] = 0;
     var depth = 0;
-    while (closestLineIndex) {
+    while (closestLineIndex !== undefined) {
       depth++;
       var oldDepth = lineDepthMap[closestLineIndex];
       if (depth > oldDepth) {

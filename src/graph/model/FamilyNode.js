@@ -42,8 +42,8 @@ FamilyNode.prototype.getSpouse = function(personNode) {
 };
 
 function makeFamilyId(fatherNode, motherNode) {
-  var fatherId = fatherNode ? fatherNode.personId : "?";
-  var motherId = motherNode ? motherNode.personId : "?";
+  var fatherId = fatherNode ? fatherNode.personId : "none";
+  var motherId = motherNode ? motherNode.personId : "none";
   return fatherId + "-n-" + motherId;
 }
 
