@@ -365,6 +365,8 @@ RelChartBuilder.prototype.setFamilyLineTopBottoms = function() {
     familyLine = this.relChart.familyLines[f];
     familyLine.topPerson = familyLine.father ? familyLine.father : familyLine.children[0];
     familyLine.bottomPerson = familyLine.mother ? familyLine.mother : familyLine.children[familyLine.children.length - 1];
+    var height = Math.max(familyLine.bottomPerson.center - familyLine.topPerson.center, 1);
+    familyLine.$familyLineDiv.css({top: familyLine.topPerson.center, height: height});
   }
 };
 
