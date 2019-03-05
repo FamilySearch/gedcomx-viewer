@@ -12,23 +12,32 @@
     box-shadow: 1px 1px 3px #e3eadc;
 }
 
+.gender-M,.gender-F,.gender-U {
+    background-repeat: no-repeat;
+    background-size: 20px 20px;
+}
+
 .gender-M {
     border-color: #3a76f2;
     background-color: #f3fdff;
+    background-image: url('images/male.png');
 }
 
 .gender-F {
     border-color: #da386f;
     background-color: #fbf1f1;
+    background-image: url('images/female.png');
 }
 
 .gender-U {
     border-color: #353427;
     background-color: #fffee4;
+    background-image: url('images/unknown.png');
 }
 
 .fullName {
-
+    position: absolute;
+    text-indent: 20px;
 }
 
 /* Indent facts 10px; Use Fact Type: <date>; <place>. Wrap if too long using hanging indent. */
