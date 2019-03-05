@@ -38,9 +38,13 @@
     background-image: url('images/unknown.png');
 }
 
-.fullName {
+.fullName,.altName {
     position: absolute;
     text-indent: 20px;
+}
+
+.altName {
+    color: #6d6d6d;
 }
 
 /* Indent facts 10px; Use Fact Type: <date>; <place>. Wrap if too long using hanging indent. */
