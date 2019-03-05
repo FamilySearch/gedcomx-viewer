@@ -32,8 +32,12 @@ RelationshipChart.prototype.hasDifferentSpouse = function(personBox1, personBox2
   return false;
 };
 
+RelationshipChart.prototype.hasRelatives = function(personBox) {
+  return !isEmpty(personBox.parentLines) || !isEmpty(personBox.spouseLines);
+};
+
 RelationshipChart.prototype.subtreeGap = function(above, below) {
-  if (above && below && above.generation === below.generation) {
+  if (above && below && above.generation === below.generation && (this.hasRelatives(above) || this.hasRelatives(below))) {
     // Put a small vertical gap between different subtrees
     if (below.subtree !== above.subtree) {
       return this.treeGap;
