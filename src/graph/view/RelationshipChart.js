@@ -122,7 +122,7 @@ RelationshipChart.prototype.calculatePositions = function() {
   // Get the new bottom of the graph
   y = 0;
   for (p = 0; p < this.personBoxes.length; p++) {
-    bottom = this.personBoxes[p].bottom;
+    bottom = this.personBoxes[p].getBottom();
     if (bottom > y) {
       y = bottom;
     }
@@ -141,8 +141,6 @@ RelationshipChart.prototype.calculatePositions = function() {
     x += this.generationWidth + this.lineGap;
   }
   this.width = x + 4;
-
-  this.setPositions();
 };
 
 RelationshipChart.prototype.buildPersonBoxMap = function(personBoxes) {
@@ -152,6 +150,64 @@ RelationshipChart.prototype.buildPersonBoxMap = function(personBoxes) {
     personBox = personBoxes[p];
   }
   return map;
+};
+
+
+/**
+ * Immediately move person boxes and family lines to where they were in the previous chart (before a record update)
+ *   so that when we animate to the new positions, we avoid any sudden jump.
+ * Uses the prevRelChart to find the position of each person's box and family's line in the previous chart.
+ * Any new person boxes or family lines are placed above, below, or between previous ones so they animate from somewhere nearby.
+ * @param prevRelChart
+ */
+RelationshipChart.prototype.setPreviousPositions = function(prevRelChart) {
+  var p;
+  var newPersons = new LinkedHashSet();
+  for (p = 0; p < this.personBoxes.length; p++) {
+    var personBox = this.personBoxes[p];
+    var prevPersonBox = prevRelChart.personBoxMap[personBox.personNode.personId];
+    if (prevPersonBox) {
+      personBox.$personDiv.css({left: prevPersonBox.getLeft(), top: prevPersonBox.getTop()});
+    }
+    else {
+      newPersons.add(personBox.personNode.personId);
+    }
+  }
+  //todo:
+  // // For new person boxes that weren't in the previous version of the graph, put them in their new generation,
+  // //  halfway between the person above and below them in that generation.
+  // for (p = 0; p < newPersons.values.length; p++) {
+  //   var personId = newPersons.values[p];
+  //   personBox = this.personBoxMap[personId];
+  //   var aboveBottom = personBox.genAbove ? personBox.genAbove.getBottom() : 0;
+  //   var
+  // }
+  var f;
+  for (f = 0; f < this.familyLines.length; f++) {
+    var familyLine = this.familyLines[f];
+    var prevFamilyLine = prevRelChart.familyLineMap[familyLine.familyNode.familyId];
+    if (prevFamilyLine) {
+      var height = 1 + prevFamilyLine.bottomPerson.center - prevFamilyLine.topPerson.center;
+      familyLine.$familyLineDiv.css({left: prevFamilyLine.x + "px", top: prevFamilyLine.topPerson.center + "px", height: height + "px"});
+      var width;
+      if (familyLine.$fatherLineDiv) {
+        width = prevFamilyLine.safeWidth(prevFamilyLine.father.getLeft() - prevFamilyLine.x);
+        familyLine.$fatherLineDiv.css({"left": prevFamilyLine.x, "top": prevFamilyLine.father.center + "px", "width": width + "px"});
+      }
+      if (familyLine.$motherLineDiv) {
+        width = prevFamilyLine.safeWidth(prevFamilyLine.mother.getLeft() - prevFamilyLine.x);
+        familyLine.$motherLineDiv.css({"left": prevFamilyLine.x, "top": prevFamilyLine.mother.center + "px", "width": width + "px"});
+      }
+      var c;
+      for (c = 0;  c < familyLine.children.length; c++) {
+        var personId = familyLine.children[c].personNode.personId;
+        var prevChildBox = prevRelChart.personBoxMap[personId];
+        width = prevFamilyLine.safeWidth(prevFamilyLine.x - prevChildBox.getRight());
+        familyLine.$childrenLineDivs[c].css({"left": prevChildBox.getRight(), "top": prevChildBox.center + "px", "width": width  + "px"});
+      }
+    }
+  }
+  //todo: make sure new family lines start off between the people they should be by.
 };
 
 // Constructor. Creates an empty RelationshipChart. Needs to be built up using RelChartBuilder.buildChart().

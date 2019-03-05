@@ -39,15 +39,19 @@ PersonBox.prototype.getTop = function() {
   return this.top;
 };
 
+PersonBox.prototype.getCenter = function() {
+  return this.center;
+};
+
 PersonBox.prototype.getBottom = function() {
-  return this.top + this.height;
+  return this.top + this.height + this.relChart.personBorder;
 };
 
 PersonBox.prototype.getPersonId = function() {
   return this.personNode.personId;
 };
 
-function PersonBox(personNode, $personsDiv, personAbove, personBelow, generation) {
+function PersonBox(personNode, relChart, personAbove, personBelow, generation) {
 
   function addNameSpans(person) {
     var html = "";
@@ -148,7 +152,8 @@ function PersonBox(personNode, $personsDiv, personAbove, personBelow, generation
   }
 
   // PersonBox constructor ==========================================
-  this.boxId = "box_" + personNode.personId; // temporary id helpful for debugging. Not used.
+  //this.boxId = "box_" + personNode.personId; // temporary id helpful for debugging. Not used.
+  this.relChart = relChart; // for access to settings like personBorder.
   this.personNode = personNode; // PersonNode that corresponds to this PersonBox
   this.above = personAbove; // PersonBox of the person above in the global list of person boxes (not necessarily the same generation)
   this.below = personBelow; // PersonBox of person below in the global list.
@@ -166,7 +171,7 @@ function PersonBox(personNode, $personsDiv, personAbove, personBelow, generation
   this.duplicateOf = null; // PersonBox of the first appearance of this same PersonNode in the chart, if any.
 
   var personDiv = makePersonDiv(personNode);
-  $personsDiv.append(personDiv);
+  relChart.$personsDiv.append(personDiv);
   this.$personDiv = $("#" + personNode.personId);
   this.$personDiv.outerWidth(generation.relChart.generationWidth);
   this.height = this.$personDiv.outerHeight();

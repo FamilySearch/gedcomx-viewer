@@ -68,6 +68,9 @@
 
     var editHooks = {};
 
+    // RelationshipChart
+    var relChart = null;
+
     /**
      * Show a record.
      *
@@ -155,6 +158,9 @@
       updateSelectablePersons(doc, $("#edit-relationship-person-1"));
       updateSelectablePersons(doc, $("#edit-relationship-person-2"));
       updateSelectablePersons(doc, $("#copy-person-fact-target-persons"));
+
+      // Rebuild the relationship graph
+      relChart = buildGraph(doc, relChart);
     }
 
     /**
@@ -249,8 +255,6 @@
         var title = documentSourceDescription.titles && documentSourceDescription.titles.length > 0 ? documentSourceDescription.titles[0].value : null;
         setRecordSourceDocument(sourceDocument.text, title, sourceDocument);
       }
-      // Build the relationship graph.
-      buildGraph(doc);
     }
 
     /**
@@ -1478,6 +1482,7 @@
               return;
             }
 
+            relChart = null; // clear out any previous RelationshipChart
             fixGedcomx(doc);
             updateRecord(doc, file.name);
             loadSourceDocument(doc);

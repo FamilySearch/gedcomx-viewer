@@ -238,7 +238,7 @@ RelChartBuilder.prototype.addPersons = function() {
     if (personId) {
       this.remainingPersonIds.remove(personId);
       personNode = this.getPersonNode(personId);
-      personBox = new PersonBox(personNode, this.relChart.$personsDiv, null, null, this.getGen(0));
+      personBox = new PersonBox(personNode, this.relChart, null, null, this.getGen(0));
       this.relChart.personBoxMap[personNode.personId] = personBox;
       this.addRelatives(personBox, subtree++);
       // Find the first person box in this sub-graph
@@ -423,7 +423,7 @@ RelChartBuilder.prototype.insert = function(isAbove, origPerson, newPersonNode, 
  * @return PersonBox that was created
  */
 RelChartBuilder.prototype.insertAbove = function(origPerson, newPerson, generation) {
-  var newPersonBox = new PersonBox(newPerson, this.relChart.$personsDiv, origPerson.above, origPerson, generation, this.shouldIncludeDetails);
+  var newPersonBox = new PersonBox(newPerson, this.relChart, origPerson.above, origPerson, generation, this.shouldIncludeDetails);
   origPerson.above = newPersonBox;
   if (newPersonBox.above) {
     newPersonBox.above.below = newPersonBox;
@@ -441,7 +441,7 @@ RelChartBuilder.prototype.insertAbove = function(origPerson, newPerson, generati
  * @return PersonBox that was created
  */
 RelChartBuilder.prototype.insertBelow = function(origPerson, newPerson, generation) {
-  var newPersonBox = new PersonBox(newPerson, this.relChart.$personsDiv, origPerson, origPerson.below, generation, this.shouldIncludeDetails);
+  var newPersonBox = new PersonBox(newPerson, this.relChart, origPerson, origPerson.below, generation, this.shouldIncludeDetails);
   origPerson.below = newPersonBox;
   if (newPersonBox.below) {
     newPersonBox.below.above = newPersonBox;
@@ -476,7 +476,7 @@ function RelChartBuilder(relGraph, $personsDiv, $familyLinesDiv, shouldIncludeDe
  * Build a relationship chart (RelChart) from a relationship graph, starting at the given person.
  * @return RelationshipChart built from the given graph starting with the given person
  */
-RelChartBuilder.prototype.buildChart = function() {
+RelChartBuilder.prototype.buildChart = function(prevChart) {
   this.relChart.$personsDiv.empty();
   this.relChart.$familyLinesDiv.empty();
   this.addPersons();
@@ -484,5 +484,9 @@ RelChartBuilder.prototype.buildChart = function() {
   this.setFamilyLineTopBottoms();
   this.relChart.familyLines.sort(FamilyLine.prototype.compare);
   this.relChart.calculatePositions();
+  if (prevChart) {
+    this.relChart.setPreviousPositions(prevChart);
+  }
   this.relChart.setPositions();
+  return this.relChart;
 };

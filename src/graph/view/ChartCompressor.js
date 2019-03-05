@@ -66,12 +66,12 @@ ChartCompressor.prototype.checkBump = function(personBox, otherBox, bumpedSet, m
   var extraSpace;
   if (personBox.generation === otherBox.generation) {
     // Persons are in the same generation, so compare the bottom of one (+ vertical gap) to the top of the other.
-    extraSpace = otherBox.top - personBox.bottom - this.relChart.verticalGap - this.relChart.subtreeGap(personBox, otherBox);
+    extraSpace = otherBox.getTop() - personBox.getBottom() - this.relChart.verticalGap - this.relChart.subtreeGap(personBox, otherBox);
   }
   else {
     // Persons are in different generations (parent/child), so compare the center of one (+ generation gap)
     //  to the center of the other.
-    extraSpace = otherBox.center - personBox.center - this.relChart.generationGap;
+    extraSpace = otherBox.getCenter() - personBox.getCenter() - this.relChart.generationGap;
   }
   if (extraSpace < 0) {
     throw "Violated constraints between " + personBox.toString() + " and " + otherBox.toString();
@@ -167,7 +167,7 @@ ChartCompressor.prototype.moveHusbandsDown = function(personBoxes) {
           isFather = true;
           if (!isEmpty(familyLine.children)) {
             // This person has children, so see where the highest one is.
-            y = familyLine.children[0].center - this.relChart.generationGap;
+            y = familyLine.children[0].getCenter() - this.relChart.generationGap;
             if (!minY || y < minY) {
               minY = y;
             }
@@ -181,7 +181,7 @@ ChartCompressor.prototype.moveHusbandsDown = function(personBoxes) {
           for (f = 0; f < personBox.parentLines.length; f++) {
             familyLine = personBox.parentLines[f];
             if (familyLine.mother) {
-              y = familyLine.mother.center - this.relChart.generationGap;
+              y = familyLine.mother.getCenter() - this.relChart.generationGap;
               if (!minY || y < minY) {
                 minY = y;
               }
@@ -191,14 +191,14 @@ ChartCompressor.prototype.moveHusbandsDown = function(personBoxes) {
 
         // See where next person in the same generation is
         if (personBox.genBelow) {
-          y = personBox.genBelow.top - this.relChart.verticalGap - (personBox.bottom - personBox.center);
+          y = personBox.genBelow.getTop() - this.relChart.verticalGap - (personBox.getBottom() - personBox.getCenter());
           if (!minY || y < minY) {
             minY = y;
           }
         }
 
-        if (!minY && minY > personBox.center) {
-          personBox.move(minY - personBox.center);
+        if (!minY && minY > personBox.getCenter()) {
+          personBox.move(minY - personBox.getCenter());
         }
       }
     }
@@ -210,12 +210,12 @@ ChartCompressor.prototype.checkPersonPosition = function(personBox, otherBox, me
     var extraSpace;
     if (personBox.generation === otherBox.generation) {
       // Persons are in the same generation, so compare the bottom of one (+ vertical gap) to the top of the other.
-      extraSpace = otherBox.top - personBox.bottom - this.relChart.verticalGap;
+      extraSpace = otherBox.getTop() - personBox.getBottom() - this.relChart.verticalGap;
     }
     else {
       // Persons are in different generations (parent/child), so compare the center of one (+ generation gap)
       //  to the center of the other.
-      extraSpace = otherBox.center - personBox.center - this.relChart.generationGap;
+      extraSpace = otherBox.getCenter() - personBox.getCenter() - this.relChart.generationGap;
     }
     if (extraSpace < 0) {
       throw "Error--Violated constraints between " + personBox.getPersonId() + " and " + otherBox.getPersonId() + ": " + message;
@@ -235,13 +235,13 @@ ChartCompressor.prototype.checkFamilyLinePositions = function(familyLine) {
   if (familyLine.children) {
     for (i = 1; i < familyLine.children.length; i++) {
       childBox = familyLine.children[i];
-      if (childBox.center < familyLine.children[i - 1].center) {
+      if (childBox.getCenter() < familyLine.children[i - 1].getCenter()) {
         throw "Error: Children out of order in family line";
       }
-      if (childBox.center < familyLine.topPerson.center) {
+      if (childBox.getCenter() < familyLine.topPerson.getCenter()) {
         throw "Error: Child above top person in family line";
       }
-      if (childBox.center > familyLine.bottomPerson.center) {
+      if (childBox.getCenter() > familyLine.bottomPerson.getCenter()) {
         throw "Error: Child below bottom person in family line";
       }
     }

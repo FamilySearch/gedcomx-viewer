@@ -81,17 +81,17 @@ FamilyLine.prototype.setPosition = function() {
   var width;
 
   if (this.$fatherLineDiv) {
-    width = this.father.getLeft() - this.x;
+    width = this.safeWidth(this.father.getLeft() - this.x);
     this.$fatherLineDiv.animate({"left": this.x, "top": this.father.center + "px", "width": width + "px"}, RelationshipChart.prototype.animationSpeed);
   }
   if (this.$motherLineDiv) {
-    width = this.mother.getLeft() - this.x;
+    width = this.safeWidth(this.mother.getLeft() - this.x);
     this.$motherLineDiv.animate({"left": this.x + "px", "top": this.mother.center + "px", "width": width + "px"}, RelationshipChart.prototype.animationSpeed);
   }
   var c, childBox;
   for (c = 0; c < this.children.length; c++) {
     childBox = this.children[c];
-    width = this.x - childBox.getRight();
+    width = this.safeWidth(this.x - childBox.getRight());
     this.$childrenLineDivs[c].animate({"left": childBox.getRight(), "top": childBox.center + "px", "width": width  + "px"}, RelationshipChart.prototype.animationSpeed);
     this.prevChildCenter[c] = childBox.center;
   }
