@@ -47,6 +47,45 @@
     color: #6d6d6d;
 }
 
+.isPrincipal,.notPrincipal {
+    position: absolute;
+    right: 4px;
+    width: 15px;
+    height: 13px;
+    /*border: 1px solid #f4f6ef;*/
+    text-align: center;
+    font-size: 150%;
+    color: #6d6d6d;
+}
+
+.notPrincipal {
+}
+
+.toolTip .toolTipText {
+    visibility: hidden;
+    background-color: #eee;
+    border: 1px solid darkgray;
+    color: black;
+    border-radius: 6px;
+    text-align: center;
+    padding: 5px 5px;
+    position: absolute;
+    z-index: 1;
+    bottom: 0;
+    left: 50%;
+    margin-left: 10px;
+    font-size: 50%;
+}
+
+.toolTip:hover .toolTipText {
+    visibility: visible;
+    /* Delay 500ms before "Principal" or other tooltip appears */
+    transition-delay: 500ms;
+    transition-property: visibility;
+    -webkit-transition-delay: 500ms; /* Safari */
+    -webkit-transition-property: visibility; /* Safari */
+}
+
 /* Indent facts 10px; Use Fact Type: <date>; <place>. Wrap if too long using hanging indent. */
 .fact {
     padding-left: 20px;

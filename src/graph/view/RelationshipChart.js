@@ -177,15 +177,6 @@ RelationshipChart.prototype.setPreviousPositions = function(prevRelChart) {
       newPersons.add(personBox.personNode.personId);
     }
   }
-  //todo:
-  // // For new person boxes that weren't in the previous version of the graph, put them in their new generation,
-  // //  halfway between the person above and below them in that generation.
-  // for (p = 0; p < newPersons.values.length; p++) {
-  //   var personId = newPersons.values[p];
-  //   personBox = this.personBoxMap[personId];
-  //   var aboveBottom = personBox.genAbove ? personBox.genAbove.getBottom() : 0;
-  //   var
-  // }
   var f;
   for (f = 0; f < this.familyLines.length; f++) {
     var familyLine = this.familyLines[f];

@@ -48,7 +48,6 @@ function buildGraph(gx, prevChart) {
 
 /*
 Todo:
-_ Update when record updated
 _ Optimize horizontal arrangement of FamilyLines toi minimize line-crossings.
 _ Add a "dot" (square; triangle) where a PersonLine meets a FamilyLine.
 

@@ -1,9 +1,7 @@
 /*
-  PersonBox: Represents a person in a RelChart, with its position, size, and a pointer to the person information in its corresponding PersonNode.
+  PersonBox: Represents a person box in a RelChart, with its position, size, and a pointer to the person information in its corresponding PersonNode.
  */
 
-//todo: Create a div to go between the PersonBox and each parent FamilyLine.
-//todo: Decide how to place these lines vertically so they fit within the person, near the center.
 PersonBox.prototype.setPreviousPosition = function() {
   this.prevTop = this.top;
   this.prevCenter = this.center;
@@ -64,7 +62,17 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generation) {
           for (f = 0; f < name.nameForms.length; f++) {
             var form = name.nameForms[f];
             if (form.fullText) {
-              html += "  <span class='" + (isFirstFullName ? "fullName" : "altName") + "'>" + encode(form.fullText) + "</span><br/>\n";
+              html += "  <span class='" + (isFirstFullName ? "fullName" : "altName") + "'>" + encode(form.fullText) + "</span>";
+              if (isFirstFullName) {
+                var isPrincipal = person.principal;
+                html += "<span class='" + (isPrincipal ? "isPrincipal" : "notPrincipal") + " toolTip'>" + (isPrincipal ? "*" : " ") +
+                    "<span class='toolTipText'>" + (isPrincipal ? "Principal" : "Not principal") + "</span></span>";
+              }
+              html += "<br/>\n";
+
+              if (isFirstFullName) {
+                html += ""
+              }
               isFirstFullName = false;
             }
           }
