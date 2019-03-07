@@ -188,11 +188,12 @@ RelationshipChart.prototype.setPreviousPositions = function(prevRelChart) {
         var childPersonBox = familyLine.children[c];
         var prevChildBox = prevRelChart.personBoxMap[childPersonBox.personBoxId];
         width = prevFamilyLine.safeWidth(prevFamilyLine.x - prevChildBox.getRight());
-        familyLine.$childrenLineDivs[c].css({"left": prevChildBox.getRight(), "top": prevChildBox.center + "px", "width": width  + "px"});
+        familyLine.$childrenLineDivs[c].css({"left": prevChildBox.getRight(), "top": prevChildBox.center, "width": width});
+        var $dot = familyLine.$childrenLineDots[c];
+        $dot.css({"left": prevChildBox.getRight() + width - this.dotWidth/2, "top": prevChildBox.center - this.dotHeight/2});
       }
     }
   }
-  //todo: make sure new family lines start off between the people they should be by.
 };
 
 // Constructor. Creates an empty RelationshipChart. Needs to be built up using RelChartBuilder.buildChart().

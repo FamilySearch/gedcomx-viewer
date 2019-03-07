@@ -10,11 +10,28 @@ FamilyLine.prototype.makePersonLineDiv = function(personLineId) {
 };
 
 FamilyLine.prototype.addPersonLine = function(personLineId, left, top, width) {
-  var personLineDiv = this.makePersonLineDiv(personLineId);
+  var html = "<div class='personLine' id='" + personLineId + "'></div>";
+  var personLineDiv = $.parseHTML(html);
   this.$familyLinesDiv.append(personLineDiv);
   var $personLineDiv = $("#" + personLineId);
-  $personLineDiv.css({"top": top, "left": left, "width": width});
+  $personLineDiv.css({"top": top - this.lineThickness / 2, "left": left, "width": width});
   return $personLineDiv;
+};
+
+FamilyLine.prototype.addPersonDot = function(personLineId, left, top, width) {
+  var personDotId = "dot-" + personLineId;
+  var html = "<div class='personDot' id='" + personDotId + "'></div>";
+  var personLineDiv = $.parseHTML(html);
+  this.$familyLinesDiv.append(personLineDiv);
+  var $personLineDot = $("#" + personDotId);
+  // Make sure 'dotHeight' and 'dotWidth' are set if this is the first child.
+  if (!this.dotHeight) {
+    // Get the dot size based on what graph.css said it should be.
+    this.dotHeight = $personLineDot.height();
+    this.dotWidth = $personLineDot.width();
+  }
+  $personLineDot.css({"top": top - this.dotHeight / 2, "left": left + width - this.dotWidth});
+  return $personLineDot;
 };
 
 FamilyLine.prototype.safeWidth = function(width) {
@@ -29,8 +46,8 @@ FamilyLine.prototype.addChild = function(childBox) {
     var childLineId = this.familyNode.familyId + "-c" + this.children.length;
     var left = childBox.getRight();
     var width = this.safeWidth(this.x - left);
-    var $childLineDiv = this.addPersonLine(childLineId, left, childBox.center, width);
-    this.$childrenLineDivs.push($childLineDiv);
+    this.$childrenLineDivs.push(this.addPersonLine(childLineId, left, childBox.center, width));
+    this.$childrenLineDots.push(this.addPersonDot(childLineId, left, childBox.center, width));
   }
 };
 
@@ -39,7 +56,7 @@ FamilyLine.prototype.setFather = function(fatherBox) {
     this.father = fatherBox;
     var fatherLineId = this.familyNode.familyId + "-f";
     var width = this.safeWidth(fatherBox.getLeft() - this.x);
-    this.$fatherLineDiv = this.addPersonLine(fatherLineId, fatherBox.getLeft(), fatherBox.center, width);
+    this.$fatherLineDiv = this.addPersonLine(fatherLineId, fatherBox.getLeft(), fatherBox.center - this.lineThickness/2, width);
   }
 };
 
@@ -48,7 +65,7 @@ FamilyLine.prototype.setMother = function(motherBox) {
     this.mother = motherBox;
     var motherLineId = this.familyNode.familyId + "-m";
     var width = this.safeWidth(motherBox.getLeft() - this.x);
-    this.$motherLineDiv = this.addPersonLine(motherLineId, motherBox.getLeft(), motherBox.center, width);
+    this.$motherLineDiv = this.addPersonLine(motherLineId, motherBox.getLeft(), motherBox.center - this.lineThickness/2, width);
   }
 };
 
@@ -74,7 +91,7 @@ FamilyLine.prototype.setPosition = function() {
   var top = this.topPerson.center;
   var bottom = this.bottomPerson.center;
   var height = 1 + bottom - top;
-  this.$familyLineDiv.animate({"left": this.x + "px", "top": top + "px", "height": height + "px"}, RelationshipChart.prototype.animationSpeed);
+  this.$familyLineDiv.animate({"left": this.x, "top": top, "height": height}, RelationshipChart.prototype.animationSpeed);
   this.prevTop = top;
   this.prevBottom = bottom;
   this.prevX = this.x;
@@ -82,18 +99,19 @@ FamilyLine.prototype.setPosition = function() {
 
   if (this.$fatherLineDiv) {
     width = this.safeWidth(this.father.getLeft() - this.x);
-    this.$fatherLineDiv.animate({"left": this.x, "top": this.father.center + "px", "width": width + "px"}, RelationshipChart.prototype.animationSpeed);
+    this.$fatherLineDiv.animate({"left": this.x, "top": this.father.center, "width": width}, RelationshipChart.prototype.animationSpeed);
   }
   if (this.$motherLineDiv) {
     width = this.safeWidth(this.mother.getLeft() - this.x);
-    this.$motherLineDiv.animate({"left": this.x + "px", "top": this.mother.center + "px", "width": width + "px"}, RelationshipChart.prototype.animationSpeed);
+    this.$motherLineDiv.animate({"left": this.x, "top": this.mother.center, "width": width}, RelationshipChart.prototype.animationSpeed);
   }
   var c, childBox;
   for (c = 0; c < this.children.length; c++) {
     childBox = this.children[c];
-    width = this.safeWidth(this.x - childBox.getRight());
-    this.$childrenLineDivs[c].animate({"left": childBox.getRight(), "top": childBox.center + "px", "width": width  + "px"}, RelationshipChart.prototype.animationSpeed);
+    width = this.safeWidth(this.x - childBox.getRight() + this.lineThickness);
+    this.$childrenLineDivs[c].animate({"left": childBox.getRight(), "top": childBox.center - this.lineThickness/2, "width": width}, RelationshipChart.prototype.animationSpeed);
     this.prevChildCenter[c] = childBox.center;
+    this.$childrenLineDots[c].animate({"left": childBox.getRight() + width - this.dotWidth, "top": childBox.center - this.dotHeight/2}, RelationshipChart.prototype.animationSpeed);
   }
 };
 
@@ -229,7 +247,13 @@ FamilyLine.prototype.setLineX = function(generationLines, x, lineGap) {
   return x;
 };
 
-// FamilyLine constructor ============================================
+/**
+ * FamilyLine constructor ============================================
+ * @param familyNode - FamilyNode to make vertical family line for.
+ * @param parentGeneration - Generation that the parents in the FamilyNode are in.
+ * @param $familyLinesDiv - The JQuery object for the familyLines div in the HTML, which is where the new FamilyLine should be added.
+ * @constructor
+ */
 function FamilyLine(familyNode, parentGeneration, $familyLinesDiv) {
   this.familyNode = familyNode;
   this.parentGeneration = parentGeneration;
@@ -248,8 +272,12 @@ function FamilyLine(familyNode, parentGeneration, $familyLinesDiv) {
   var familyLineDiv = this.makeFamilyLineDiv(familyNode.familyId);
   $familyLinesDiv.append(familyLineDiv);
   this.$familyLineDiv = $("#" + familyNode.familyId);
+  // See how wide the lines are, which is set in graph.css
+  // Use this to make sure "dots" are centered, and there aren't gaps at "single parent" corners.
+  this.lineThickness = this.$familyLineDiv.width();
   this.$fatherLineDiv = null;
   this.$motherLineDiv = null;
   this.$childrenLineDivs = [];
+  this.$childrenLineDots = [];
   this.$familyLinesDiv = $familyLinesDiv;
 }

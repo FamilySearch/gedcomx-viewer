@@ -103,11 +103,10 @@
     font-size: 70%;
 }
 
-.personLine,.familyLine {
+.personLine,.familyLine,.personDot {
     background-color: #8697b3;
     position: absolute;
-    box-shadow: 1px 1px 3px #e3eadc;
-    z-index: -1;
+    z-index: 2;
 }
 
 .familyLine {
@@ -116,4 +115,11 @@
 
 .personLine {
     height: 2px;
+}
+
+.personDot {
+    margin: auto;
+    height: 6px;
+    width: 5px;
+    border-radius: 3px 0 0 3px;
 }
