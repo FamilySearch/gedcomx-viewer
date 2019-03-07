@@ -282,7 +282,6 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generation) {
   }
 
   // PersonBox constructor ==========================================
-  //this.boxId = "box_" + personNode.personId; // temporary id helpful for debugging. Not used.
   this.relChart = relChart; // for access to settings like personBorder.
   this.personNode = personNode; // PersonNode that corresponds to this PersonBox
   this.above = personAbove; // PersonBox of the person above in the global list of person boxes (not necessarily the same generation)
@@ -290,15 +289,19 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generation) {
   this.genAbove = null; // PersonBox of person above in the same generation
   this.genBelow = null; // PersonBox of person below in the same generation
   this.generation = generation;
-  this.subtree = null;
+  this.subtree = null; // 0-based integer indicating which subtree of related persons this PersonBox is part of.
   this.order    = 0; // Global order of this PersonBox in the chart
   this.genOrder = 0; // Order of this PersonBox within its generation
 
-
+  // List of FamilyLine objects for this person's parents (i.e., families in which this person is a child)
   this.parentLines = [];
+  // List of FamilyLine objects for this person's spouses and children (i.e., families in which this person is a spouse or parent)
   this.spouseLines = [];
 
+  // The personBoxId is used to identify each PersonBox. The personId is not used alone because a person can sometimes appear more than once in a chart
+  //   if they are related more than one way.
   this.personBoxId = "box_" + personNode.personId;
+
   // If this PersonBox is not the first appearance of this PersonNode in the chart (e.g., due to being related multiple ways),
   //  then note what PersonBox it is a duplicate of, and modify its personBoxId with "_dup<number>"
   this.duplicateOf = relChart.personBoxMap[this.personBoxId];
