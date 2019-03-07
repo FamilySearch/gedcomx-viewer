@@ -275,7 +275,7 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generation) {
     var html = "<div class='personNode gender-" + personNode.gender + (duplicateOfBox ? " duplicate" : "") + "' id='" + personBoxId + "'>\n";
     var person = personNode.person;
     html += addNameSpans(person);
-    html += addIdDiv(person);
+    // html += addIdDiv(person);
     html += addFactDivs(personNode);
     html += "</div>";
     return $.parseHTML(html);
