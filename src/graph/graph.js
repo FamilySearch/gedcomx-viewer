@@ -48,7 +48,32 @@ function buildGraph(gx, prevChart) {
 
 /*
 Todo:
-_ Optimize horizontal arrangement of FamilyLines toi minimize line-crossings.
-_ Add a "dot" (square; triangle) where a PersonLine meets a FamilyLine.
-
+- Add a "dot" (square; triangle) where a PersonLine meets a FamilyLine.
+- Have line out to that FamilyLine center on the marriage fact for that couple, if any?
+- Optimize horizontal arrangement of FamilyLines toi minimize line-crossings.
+- Able to enter URL to load from there.
+- Edit everything:
+  - Use change history to support undo/redo.
+  - Edit person
+    - Add, edit, delete name and parts [eventually orig/interp fields]
+    - Add, edit, delete fact [eventually, orig/interp fields]
+      - Keyboard shortcuts:
+        - b/c/d/g/r/m => add fact of type birth, christening, death, burial ("grave"), residence, marriage
+        - cursor in date field. Tab to place field.
+    - Cycle gender
+    - Toggle principal
+    - Add, delete person.
+  - Edit relationship:
+    - Add, edit, delete parent-child relationship persons
+      - Click vertical line to select couple relationship with "x" at each spouse
+        or "+" at no-spouse end.
+        - Drag "x" or "+" to person to connect.
+        - Click "x" or "+" to disconnect or create new person.
+      - Click person to select, and "x"
+    - Edit relationship facts (maybe within person?)
+  - Reorder persons
+    - Reorder in global list
+    - Reorder children in family
+    - Reorder spouses for person
+- Sort person events (and their relationship events) chronologically, then by type, then by original order?
  */

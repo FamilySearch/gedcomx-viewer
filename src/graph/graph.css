@@ -5,19 +5,21 @@
 
 .personNode {
     border: 1px solid;
-    border-radius: 3px;
+    border-radius: 4px;
     padding: 2px;
     margin: 0;
     position: absolute;
     box-shadow: 1px 1px 3px #e3eadc;
 }
 
+.duplicate {
+    border: 1px dashed;
+}
+
 .gender-M,.gender-F,.gender-U {
-    background-repeat: no-repeat;
-    background-size: 18px 18px;
     border-color: #8697b3;
-    background-color: #fdfff8;
-    background-position: 1px 1px;
+    background: #fdfff8 no-repeat 1px 1px;
+    background-size: 18px 18px;
 }
 
 .gender-M {

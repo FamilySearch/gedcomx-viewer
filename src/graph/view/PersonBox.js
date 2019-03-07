@@ -49,6 +49,15 @@ PersonBox.prototype.getPersonId = function() {
   return this.personNode.personId;
 };
 
+/**
+ * Constructor for a PersonBox.
+ * @param personNode - PersonNode containing the information shown in this PersonBox.
+ * @param relChart
+ * @param personAbove
+ * @param personBelow
+ * @param generation
+ * @constructor
+ */
 function PersonBox(personNode, relChart, personAbove, personBelow, generation) {
 
   function addNameSpans(person) {
@@ -112,32 +121,143 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generation) {
     return undefined;
   }
 
-  function getFactDatePlace(fact) {
-    var date = getDate(fact);
-    var place = getPlace(fact);
-    if (date && place) {
-      return date + "; " + place;
+  function addIfNotEmpty(value, array) {
+    if (value) {
+      array.push(value);
     }
-    else return date ? date : place;
   }
 
-  function addFactDivs(person) {
+  // Get string containing a semi-colon separated list of the value, date and place, if any. Return 'undefined' if none of those exist
+  // (e.g., for a fact like "AdoptiveParent" with no value, date or place).
+  function getFactInfo(fact) {
+    var parts = [];
+    addIfNotEmpty(fact.value, parts);
+    addIfNotEmpty(getDate(fact), parts);
+    addIfNotEmpty(getPlace(fact), parts);
+    return parts.length === 0 ? undefined : parts.join("; ");
+  }
+
+  /**
+   * Create HTML for a div for the given fact, with the optional given qualifier.
+   * @param fact - Fact to generate HTML for
+   * @param qualifier - Qualifier to include after the fact type (e.g., "spouse 2" for "Marriage (spouse 2): 1820".
+   * @returns HTML string for a div for this fact.
+   */
+  function getFactHtml(fact, qualifier) {
+    var info = getFactInfo(fact);
+    return "  <div class='fact'><span class='factType'>" + encode(getFactName(fact)) +
+        (qualifier ? " (" + encode(qualifier) + ")" : "") + (info ? ":" : "") + "</span>" +
+        (info ? " <span class='factDatePlace'>" + encode(info) + "</span>" : "") +
+        "</div>\n";
+  }
+
+  function getFactsHtml(factsContainer, prefix) {
     var html = "";
-    var f;
-    var fact;
-    if (person.facts) {
-      for (f = 0; f < person.facts.length; f++) {
-        fact = person.facts[f];
-        html += "  <div class='fact'><span class='factType'>" + encode(getFactName(fact)) +
-            ":</span> <span class='factDatePlace'>" + encode(getFactDatePlace(fact)) + "</span></div>\n";
+    if (factsContainer) {
+      var facts = factsContainer.facts;
+      if (facts) {
+        var f;
+        for (f = 0; f < facts.length; f++) {
+          html += getFactHtml(facts[f], prefix);
+        }
+      }
+    }
+    return html;
+  }
+
+  /**
+   * Tell whether the given array of parent FamilyNodes has more than
+   * @param parentFamilies
+   * @param countFathers
+   * @returns {boolean}
+   */
+  function hasMultipleParents(parentFamilies, countFathers) {
+    if (parentFamilies && parentFamilies.length > 1) {
+      var firstParentId = null;
+      var p;
+      for (p = 0; p < parentFamilies.length; p++) {
+        var parentFamilyNode = parentFamilies[p];
+        var parentNode = countFathers ? parentFamilyNode.father : parentFamilyNode.mother;
+        if (parentNode) {
+          if (!firstParentId) {
+            firstParentId = parentNode.personId;
+          }
+          else if (parentNode.personId !== firstParentId) {
+            return true; // found a second parent ID of the same type.
+          }
+        }
+      }
+    }
+    return false;
+  }
+
+  function hasMultipleSpouses(personNode, spouseFamilies) {
+    if (spouseFamilies && spouseFamilies.length > 1) {
+      var f;
+      var firstSpouseId = null;
+      for (f = 0; f < spouseFamilies.length; f++) {
+        var spouseFamily = spouseFamilies[f];
+        var spouseNode = spouseFamily.getSpouse(personNode);
+        if (spouseNode) {
+          if (!firstSpouseId) {
+            firstSpouseId = spouseNode.personId;
+          }
+          else if (spouseNode.personId !== firstSpouseId) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
+
+  function hasMultipleFathers(parentFamilies) {
+    return hasMultipleParents(parentFamilies, true);
+  }
+
+  function hasMultipleMothers(parentFamilies) {
+    return hasMultipleParents(parentFamilies, false);
+  }
+
+  function addFactDivs(personNode) {
+    var html = getFactsHtml(personNode.person);
+
+    // Add marriage and other couple facts for spouse families.
+    var s;
+    if (!isEmpty(personNode.spouseFamilies)) {
+      var multipleSpouses = hasMultipleSpouses(personNode, personNode.spouseFamilies);
+      for (s = 0; s < personNode.spouseFamilies.length; s++) {
+        var spouseFamilyNode = personNode.spouseFamilies[s];
+        //  Only show couple facts on the father, since they would be redundant on the mother.
+        //  A spouse FamilyNode that does not have both a father and a mother will not have a couple relationship with it, and will thus have no facts.
+        if (spouseFamilyNode.father === personNode) {
+          var spouseName = spouseFamilyNode.mother ? spouseFamilyNode.mother.name : null;
+          html += getFactsHtml(spouseFamilyNode.coupleRel, multipleSpouses ? spouseName : null);
+        }
+      }
+    }
+    // Add adoption or other such parent-child facts for parent families. Include (father), (mother) after fact type.
+    var p; // parent family index
+    if (!isEmpty(personNode.parentFamilies)) {
+      var multipleFathers = hasMultipleFathers(personNode.parentFamilies);
+      var multipleMothers = hasMultipleMothers(personNode.parentFamilies);
+      for (p = 0; p < personNode.parentFamilies.length; p++) {
+        var parentFamilyNode = personNode.parentFamilies[p];
+        // Find the index of this person in the list of children.
+        var c = parentFamilyNode.findChildIndex(personNode);
+        var fatherRel = parentFamilyNode.fatherRels[c];
+        var motherRel = parentFamilyNode.motherRels[c];
+        html += getFactsHtml(fatherRel, "father" + (multipleFathers && parentFamilyNode.father ? " - " + parentFamilyNode.father.name : ""));
+        html += getFactsHtml(motherRel, "mother" + (multipleMothers && parentFamilyNode.mother ? " - " + parentFamilyNode.mother.name : ""));
       }
     }
     return html;
   }
 
   function addIdDiv(person) {
+    // Use factType class for both label and id so that they're both subdued.
     return "  <div class='fact'><span class='factType'>" + encode("Id") +
-            ":</span> <span class='factDatePlace'>" + encode(person.id) + "</span></div>\n";
+            ":</span> <span class='factType'>" + encode(person.id) + "</span></div>\n";
   }
 
   /**
@@ -148,13 +268,15 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generation) {
    <div class='fact'><span class='factType'>Birth:</span> <span class='factDatePlace'>1820; Vermont</span></div>
    </div>
    @param personNode - PersonNode to create PersonBox for
+   @param personBoxId - Id for this PersonBox
+   @param duplicateOfBox - PersonBox that this one is a duplicate of (if any)
    */
-  function makePersonDiv(personNode) {
-    var html = "<div class='personNode gender-" + personNode.gender + "' id='" + personNode.personId + "'>\n";
+  function makePersonDiv(personNode, personBoxId, duplicateOfBox) {
+    var html = "<div class='personNode gender-" + personNode.gender + (duplicateOfBox ? " duplicate" : "") + "' id='" + personBoxId + "'>\n";
     var person = personNode.person;
     html += addNameSpans(person);
-    //html += addIdDiv(person);
-    html += addFactDivs(person);
+    html += addIdDiv(person);
+    html += addFactDivs(personNode);
     html += "</div>";
     return $.parseHTML(html);
   }
@@ -176,11 +298,21 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generation) {
   this.parentLines = [];
   this.spouseLines = [];
 
-  this.duplicateOf = null; // PersonBox of the first appearance of this same PersonNode in the chart, if any.
-
-  var personDiv = makePersonDiv(personNode);
+  this.personBoxId = "box_" + personNode.personId;
+  // If this PersonBox is not the first appearance of this PersonNode in the chart (e.g., due to being related multiple ways),
+  //  then note what PersonBox it is a duplicate of, and modify its personBoxId with "_dup<number>"
+  this.duplicateOf = relChart.personBoxMap[this.personBoxId];
+  if (this.duplicateOf) {
+    var dupCount = relChart.personDupCount[personNode.personId];
+    dupCount = (dupCount ? dupCount : 0) + 1;
+    relChart.personDupCount[personNode.personId] = dupCount;
+    this.personBoxId += "_dup" + dupCount;
+  }
+  relChart.personBoxMap[this.personBoxId] = this;
+  
+  var personDiv = makePersonDiv(personNode, this.personBoxId, this.duplicateOf);
   relChart.$personsDiv.append(personDiv);
-  this.$personDiv = $("#" + personNode.personId);
+  this.$personDiv = $("#" + this.personBoxId);
   this.$personDiv.outerWidth(generation.relChart.generationWidth);
   this.height = this.$personDiv.outerHeight();
   this.width = this.$personDiv.outerWidth();

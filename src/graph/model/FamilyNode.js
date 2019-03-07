@@ -20,13 +20,23 @@ function FamilyNode(familyId, fatherNode, motherNode, coupleRelationship) {
   this.motherRels = [];
 }
 
+FamilyNode.prototype.findChildIndex = function(personNode) {
+  var c;
+  for (c = 0; c < this.children.length; c++) {
+    if (this.children[c] === personNode) {
+      return c;
+    }
+  }
+  return null;
+};
+
 FamilyNode.prototype.addChild = function(child, fatherRel, motherRel) {
   var index = addToArrayIfNotThere(child, this.children);
   if (this.father) {
-    fatherRel[index] = fatherRel;
+    this.fatherRels[index] = fatherRel;
   }
   if (this.mother) {
-    motherRel[index] = motherRel;
+    this.motherRels[index] = motherRel;
   }
 };
 

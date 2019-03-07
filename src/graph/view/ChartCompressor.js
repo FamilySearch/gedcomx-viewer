@@ -4,31 +4,31 @@
 
 // === BumpGroup ===============================================
 BumpGroup.prototype.addAll = function(otherGroup) {
-  this.personIds.addAll(otherGroup.personIds);
-  this.frontIds.addAll(otherGroup.frontIds);
+  this.personBoxIds.addAll(otherGroup.personBoxIds);
+  this.frontBoxIds.addAll(otherGroup.frontBoxIds);
 };
 
-BumpGroup.prototype.add = function(personId) {
-  this.personIds.add(personId);
-  this.frontIds.add(personId);
+BumpGroup.prototype.add = function(personBoxId) {
+  this.personBoxIds.add(personBoxId);
+  this.frontBoxIds.add(personBoxId);
 };
 
 // Return true if this BumpGroup contains the given person (in its persons set), or else false/null/undefined otherwise.
 BumpGroup.prototype.contains = function(personId) {
-  return this.personIds.contains(personId);
+  return this.personBoxIds.contains(personId);
 };
 
 BumpGroup.prototype.getSize = function() {
-  return this.personIds.getSize();
+  return this.personBoxIds.getSize();
 };
 
 function BumpGroup() {
-  // set of personIds in the group (map of PersonBox to "true")
-  this.personIds = new LinkedHashSet();
-  // PersonIds at the "front" (as in "storm front"), i.e., persons who could still bump into someone who
-  //   isn't already in the group.  The front is typically much smaller than the full set of persons, once the
+  // set of personBoxIds in the group
+  this.personBoxIds = new LinkedHashSet();
+  // personBoxIds at the "front" (as in "storm front"), i.e., person boxes who could still bump into someone who
+  //   isn't already in the group.  The front is typically much smaller than the full set of person boxes, once the
   //   group gets large.  So having a front helps avoid O(n^2) comparisons.
-  this.frontIds = new LinkedHashSet();
+  this.frontBoxIds = new LinkedHashSet();
 }
 
 ChartCompressor.prototype.clear = function(object) {
@@ -59,7 +59,7 @@ function ChartCompressor(relChart) {
  * @return Boolean: true if the 'other' person is not already part of 'group' (and thus should remain part of group's "front")
  */
 ChartCompressor.prototype.checkBump = function(personBox, otherBox, bumpedSet, minMove, group) {
-  if (!otherBox || group.contains(otherBox.getPersonId())) {
+  if (!otherBox || group.contains(otherBox.personBoxId)) {
     // There is nobody there, or the person is already part of this group, so just return
     return false;
   }
@@ -80,11 +80,11 @@ ChartCompressor.prototype.checkBump = function(personBox, otherBox, bumpedSet, m
     // New "closest" bump, so reset the bumped set and add the bumped person to it
     minMove.value = extraSpace;
     bumpedSet.clear();
-    bumpedSet.add(otherBox.getPersonId());
+    bumpedSet.add(otherBox.personBoxId);
   }
   else if (extraSpace === minMove.value) {
     // Tied for "closest" bump, so add the bumped person to it
-    bumpedSet.add(otherBox.getPersonId());
+    bumpedSet.add(otherBox.personBoxId);
   }
   return true;
 };
@@ -102,8 +102,8 @@ ChartCompressor.prototype.tryBump = function(bumpGroup, bumpedSet) {
   var removeSet = new LinkedHashSet(); // set of person IDs to remove from group.front. (Wait to avoid modifying group while iterating through it).
   var minMove = new IntegerByRef(-1);
 
-  for (g = 0; g < bumpGroup.frontIds.getSize(); g++) {
-    var groupPersonId = bumpGroup.frontIds.values[g];
+  for (g = 0; g < bumpGroup.frontBoxIds.getSize(); g++) {
+    var groupPersonId = bumpGroup.frontBoxIds.values[g];
     groupie = this.relChart.personBoxMap[groupPersonId];
 
     // Look to see how far this person can move down before violating a constraint
@@ -136,12 +136,12 @@ ChartCompressor.prototype.tryBump = function(bumpGroup, bumpedSet) {
     if (!inFront) {
       // The person cannot bump into anyone who is not already in the group, so it does not need to be part of
       //   the "front" that is checked for collisions.
-      removeSet.add(groupie.getPersonId());
+      removeSet.add(groupie.personBoxId);
     }
   }
 
   // Remove any persons from group.front that cannot bump into anyone who is not already in the group.
-  bumpGroup.frontIds.removeAll(removeSet);
+  bumpGroup.frontBoxIds.removeAll(removeSet);
   return minMove.get();
 };
 
@@ -218,7 +218,7 @@ ChartCompressor.prototype.checkPersonPosition = function(personBox, otherBox, me
       extraSpace = otherBox.getCenter() - personBox.getCenter() - this.relChart.generationGap;
     }
     if (extraSpace < 0) {
-      throw "Error--Violated constraints between " + personBox.getPersonId() + " and " + otherBox.getPersonId() + ": " + message;
+      throw "Error--Violated constraints between " + personBox.personBoxId + " and " + otherBox.personBoxId + ": " + message;
     }
   }
 };
@@ -306,7 +306,7 @@ ChartCompressor.prototype.translateVertical = function(personBoxes) {
 };
 
 ChartCompressor.prototype.pushPeopleDown = function(personBoxes) {
-  // Map of personId to the BumpGroup that they have become part of.
+  // Map of personBox.personBoxId to the BumpGroup that that PersonBox become part of.
   var bumpGroupMap = {};
 
   // Go through the list of persons.  Move each person down as far as possible until a constraint is violated,
@@ -320,15 +320,15 @@ ChartCompressor.prototype.pushPeopleDown = function(personBoxes) {
 
   for (p = 0; p < personBoxes.length; p++) {
     personBox = personBoxes[p];
-    if (bumpGroupMap[personBox.getPersonId()]) {
+    if (bumpGroupMap[personBox.personBoxId]) {
       // This person is already part of a group, so skip it.
       continue;
     }
     bumpGroup = new BumpGroup();
-    bumpGroup.add(personBox.getPersonId()); // add the top person
+    bumpGroup.add(personBox.personBoxId); // add the top person
 
     do {
-      // LinkedHashSet of PersonBoxes that are all bumped into at the same distance of 'minMove'
+      // LinkedHashSet of personBoxIds that are all bumped into at the same distance of 'minMove'
       var bumpedSet = new LinkedHashSet();
 
       // Try moving everyone in "bumpGroup" (which is just the current personBox the first time through)
@@ -339,45 +339,46 @@ ChartCompressor.prototype.pushPeopleDown = function(personBoxes) {
 
       if (minMove > 0) {
         // Move all the PersonBoxes in the group up or down by minMove.
-        for (g = 0; g < bumpGroup.personIds.values.length; g++) {
-          groupie = this.relChart.personBoxMap[bumpGroup.personIds.values[g]];
+        for (g = 0; g < bumpGroup.personBoxIds.values.length; g++) {
+          groupie = this.relChart.personBoxMap[bumpGroup.personBoxIds.values[g]];
           groupie.move(minMove);
         }
       }
 
       if (minMove >= 0) {
-        var bumpedPersonId;
+        var bumpedPersonBoxId;
         var b;
         for (b = 0; b < bumpedSet.values.length; b++) {
-          bumpedPersonId = bumpedSet.values[b];
-          var otherBumpGroup = bumpGroupMap[bumpedPersonId];
+          bumpedPersonBoxId = bumpedSet.values[b];
+          var otherBumpGroup = bumpGroupMap[bumpedPersonBoxId];
           if (otherBumpGroup) {
             var i;
-            // The person we bumped into was part of an earlier group, so lump all those into this group now.
-            for (i = 0; i < otherBumpGroup.personIds.length; i++) {
+            // The person box we bumped into was part of an earlier group, so lump all those into this group now.
+            for (i = 0; i < otherBumpGroup.personBoxIds.length; i++) {
               // Remove them from the map, because we will add them all back in when the entire group is added.
-              delete bumpGroupMap[otherBumpGroup.personIds[i]];
+              delete bumpGroupMap[otherBumpGroup.personBoxIds[i]];
             }
             bumpGroup.addAll(otherBumpGroup);
           }
           else {
-            bumpGroup.add(bumpedPersonId);
+            bumpGroup.add(bumpedPersonBoxId);
           }
         }
       }
     } while (!bumpedSet.isEmpty() && bumpGroup.getSize() < personBoxes.length);
 
     // At this point, the 'bumpGroup' has nobody left to push on, so put it into the group map
-    for (g = 0; g < bumpGroup.personIds.values.length; g++) {
-      var pid = bumpGroup.personIds.values[g];
+    for (g = 0; g < bumpGroup.personBoxIds.values.length; g++) {
+      var pid = bumpGroup.personBoxIds.values[g];
       bumpGroupMap[pid] = bumpGroup;
     }
   }
 
   // Make sure everyone ended up in the bumpGroupMap.
   var numHandled = 0;
-  for (g in bumpGroupMap) {
-    if (bumpGroupMap.hasOwnProperty(g)) {
+  var personBoxId;
+  for (personBoxId in bumpGroupMap) {
+    if (bumpGroupMap.hasOwnProperty(personBoxId)) {
       numHandled++;
     }
   }

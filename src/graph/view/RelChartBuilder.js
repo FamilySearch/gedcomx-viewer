@@ -239,7 +239,6 @@ RelChartBuilder.prototype.addPersons = function() {
       this.remainingPersonIds.remove(personId);
       personNode = this.getPersonNode(personId);
       personBox = new PersonBox(personNode, this.relChart, null, null, this.getGen(0));
-      this.relChart.personBoxMap[personNode.personId] = personBox;
       this.addRelatives(personBox, subtree++);
       // Find the first person box in this sub-graph
       topBox = null;
@@ -374,7 +373,7 @@ RelChartBuilder.prototype.setFamilyLineTopBottoms = function() {
 /**
  * Insert a person above or below the given origPerson PersonBox.
  * @param isAbove - whether to insert above (true) or below (false)
- * @param origPerson - PersonBox above or below which to insert.
+ * @param origPersonBox - PersonBox above or below which to insert.
  * @param newPersonNode - PersonNode to insert into a new PersonBox.
  * @param generation - Generation that the new PersonBox will be in.
  * @param spouseFamilyLine -
@@ -383,24 +382,22 @@ RelChartBuilder.prototype.setFamilyLineTopBottoms = function() {
  * @param subtree - Index of subtree that this person is being added to.
  * @return new PersonBox
  */
-RelChartBuilder.prototype.insert = function(isAbove, origPerson, newPersonNode, generation,
+RelChartBuilder.prototype.insert = function(isAbove, origPersonBox, newPersonNode, generation,
                                             spouseFamilyLine, parentFamilyLine, needsRelativesQueue, subtree) {
   if (!newPersonNode) {
     return null;
   }
   var newPersonBox = isAbove ?
-      this.insertAbove(origPerson, newPersonNode, generation) :
-      this.insertBelow(origPerson, newPersonNode, generation);
+      this.insertAbove(origPersonBox, newPersonNode, generation) :
+      this.insertBelow(origPersonBox, newPersonNode, generation);
   newPersonBox.subtree = subtree;
   if (this.remainingPersonIds.contains(newPersonNode.personId)) {
     // This is the first time this person was added to the chart, so add it to the map and make sure we recurse on its relatives.
     this.remainingPersonIds.remove(newPersonNode.personId);
-    this.relChart.personBoxMap[newPersonNode.personId] = newPersonBox;
     needsRelativesQueue.push(newPersonBox);
   }
   else {
     // We've already seen this person
-    newPersonBox.duplicateOf = this.relChart.personBoxMap[newPersonNode.personId];
     this.duplicateBoxes.push(newPersonBox);
   }
   if (spouseFamilyLine) {

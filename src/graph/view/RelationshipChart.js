@@ -147,16 +147,6 @@ RelationshipChart.prototype.calculatePositions = function() {
   this.width = x + 4;
 };
 
-RelationshipChart.prototype.buildPersonBoxMap = function(personBoxes) {
-  var p, personBox;
-  var map = {};
-  for (p = 0; p < personBoxes.length; p++) {
-    personBox = personBoxes[p];
-  }
-  return map;
-};
-
-
 /**
  * Immediately move person boxes and family lines to where they were in the previous chart (before a record update)
  *   so that when we animate to the new positions, we avoid any sudden jump.
@@ -169,7 +159,7 @@ RelationshipChart.prototype.setPreviousPositions = function(prevRelChart) {
   var newPersons = new LinkedHashSet();
   for (p = 0; p < this.personBoxes.length; p++) {
     var personBox = this.personBoxes[p];
-    var prevPersonBox = prevRelChart.personBoxMap[personBox.personNode.personId];
+    var prevPersonBox = prevRelChart.personBoxMap[personBox.personBoxId];
     if (prevPersonBox) {
       personBox.$personDiv.css({left: prevPersonBox.getLeft(), top: prevPersonBox.getTop()});
     }
@@ -195,8 +185,8 @@ RelationshipChart.prototype.setPreviousPositions = function(prevRelChart) {
       }
       var c;
       for (c = 0;  c < familyLine.children.length; c++) {
-        var personId = familyLine.children[c].personNode.personId;
-        var prevChildBox = prevRelChart.personBoxMap[personId];
+        var childPersonBox = familyLine.children[c];
+        var prevChildBox = prevRelChart.personBoxMap[childPersonBox.personBoxId];
         width = prevFamilyLine.safeWidth(prevFamilyLine.x - prevChildBox.getRight());
         familyLine.$childrenLineDivs[c].css({"left": prevChildBox.getRight(), "top": prevChildBox.center + "px", "width": width  + "px"});
       }
@@ -214,8 +204,9 @@ function RelationshipChart(relGraph, $personsDiv, $familyLinesDiv, shouldInclude
   this.generations = []; // array of Generations that the persons are in, left to right
   this.familyLines = []; // array of family lines
 
-  this.personBoxMap = {}; // map of personId to their ("main") corresponding PersonBox
+  this.personBoxMap = {}; // map of personBoxId to their corresponding PersonBox
   this.familyLineMap = {}; // map of familyId to its corresponding FamilyLine
+  this.personDupCount = {}; // map of personId to how many duplicates have been seen so far (null/undefined => 0).
 
   // Display options
   this.personBorder = 6; // pixels spread between the top and bottom, around the text (/2 = border space)
