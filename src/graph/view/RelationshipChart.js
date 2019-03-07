@@ -197,10 +197,13 @@ RelationshipChart.prototype.setPreviousPositions = function(prevRelChart) {
 };
 
 // Constructor. Creates an empty RelationshipChart. Needs to be built up using RelChartBuilder.buildChart().
-function RelationshipChart(relGraph, $personsDiv, $familyLinesDiv, shouldIncludeDetails, shouldCompress) {
+function RelationshipChart(relGraph, $relChartDiv, shouldIncludeDetails, shouldCompress) {
   this.relGraph = relGraph;
-  this.$personsDiv = $personsDiv;
-  this.$familyLinesDiv = $familyLinesDiv;
+  $relChartDiv.empty();
+  $relChartDiv.append($.parseHTML("<div id='personNodes'></div>\n<div id='familyLines'></div>"));
+
+  this.$personsDiv = $("#personNodes");
+  this.$familyLinesDiv = $("#familyLines");
   this.personBoxes = []; // array of all PersonBoxes in the relationship chart, positioned top to bottom
   this.generations = []; // array of Generations that the persons are in, left to right
   this.familyLines = []; // array of family lines

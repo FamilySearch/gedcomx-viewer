@@ -39,7 +39,7 @@ var GX_PARENT_CHILD = "http://gedcomx.org/ParentChild";
 function buildGraph(gx, prevChart) {
   try {
     var graph = new RelationshipGraph(gx);
-    return new RelChartBuilder(graph, $("#personNodes"), $("#familyLines"), true, true).buildChart(prevChart);
+    return new RelChartBuilder(graph, $("#rel-chart"), true, true).buildChart(prevChart);
   }
   catch (err) {
     console.log(err);

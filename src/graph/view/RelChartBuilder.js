@@ -455,11 +455,10 @@ RelChartBuilder.prototype.insertBelow = function(origPerson, newPerson, generati
  * @param shouldIncludeDetails - Whether to include alternate names and facts in the chart initially.
  * @param shouldCompress - Whether to do collapsing initially.
  */
-function RelChartBuilder(relGraph, $personsDiv, $familyLinesDiv, shouldIncludeDetails, shouldCompress) {
+function RelChartBuilder(relGraph, $relChart, shouldIncludeDetails, shouldCompress) {
 
   // Create a chart with PersonBoxes created, but no FamilyLines or Generations yet.
-  this.relChart = new RelationshipChart(relGraph, $personsDiv, $familyLinesDiv, shouldIncludeDetails, shouldCompress);
-
+  this.relChart = new RelationshipChart(relGraph, $relChart, shouldIncludeDetails, shouldCompress);
   this.ABOVE = true;
   this.BELOW = false;
   // Set of personIds remaining to be added to the chart.
