@@ -80,7 +80,7 @@ ChartCompressor.prototype.checkBump = function(personBox, otherBox, bumpedSet, m
   if (extraSpace < 0) {
     throw "Violated constraints between " + personBox.personBoxId + " and " + otherBox.personBoxId + " (extra space < 0)";
   }
-  if (minMove.value === null || extraSpace < minMove.value) {
+  if (minMove.value === -1 || extraSpace < minMove.value) {
     // New "closest" bump, so reset the bumped set and add the bumped person to it
     minMove.value = extraSpace;
     bumpedSet.clear();
@@ -104,7 +104,7 @@ ChartCompressor.prototype.tryBump = function(bumpGroup, bumpedSet) {
   var inFront;
   var f, familyLine;
   var removeSet = new LinkedHashSet(); // set of person IDs to remove from group.front. (Wait to avoid modifying group while iterating through it).
-  var minMove = new IntegerByRef(null);
+  var minMove = new IntegerByRef(-1);
 
   for (g = 0; g < bumpGroup.frontBoxIds.getSize(); g++) {
     var groupPersonId = bumpGroup.frontBoxIds.values[g];
