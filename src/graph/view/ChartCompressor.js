@@ -54,7 +54,7 @@ function ChartCompressor(relChart) {
  * @param otherBox - other PersonBox that 'person' might bump into
  * @param bumpedSet - "LinkedHashSet" of personIDs that all have the same distance to their nearest 'bump', namely, minMove.
  * @param minMove - Object containing "value" element, which is smallest amount that 'group' can move before bumping into someone who isn't in the group.
- *                  -1 => no constraint found yet. "value" may be updated.
+ *                  null => no constraint found yet. "value" may be updated.
  * @param group - "LinkedHashSet" of person IDs that is moving down the chart looking for who it might bump into.
  * @return Boolean: true if the 'other' person is not already part of 'group' (and thus should remain part of group's "front")
  */
@@ -73,10 +73,14 @@ ChartCompressor.prototype.checkBump = function(personBox, otherBox, bumpedSet, m
     //  to the center of the other.
     extraSpace = otherBox.getCenter() - personBox.getCenter() - this.relChart.generationGap;
   }
-  if (extraSpace < 0) {
-    throw "Violated constraints between " + personBox.toString() + " and " + otherBox.toString();
+  // Correct for javascript rounding errors.
+  if (extraSpace > -0.1 && extraSpace < 0.1) {
+    extraSpace = 0;
   }
-  if (minMove.value === -1 || extraSpace < minMove.value) {
+  if (extraSpace < 0) {
+    throw "Violated constraints between " + personBox.personBoxId + " and " + otherBox.personBoxId + " (extra space < 0)";
+  }
+  if (minMove.value === null || extraSpace < minMove.value) {
     // New "closest" bump, so reset the bumped set and add the bumped person to it
     minMove.value = extraSpace;
     bumpedSet.clear();
@@ -100,7 +104,7 @@ ChartCompressor.prototype.tryBump = function(bumpGroup, bumpedSet) {
   var inFront;
   var f, familyLine;
   var removeSet = new LinkedHashSet(); // set of person IDs to remove from group.front. (Wait to avoid modifying group while iterating through it).
-  var minMove = new IntegerByRef(-1);
+  var minMove = new IntegerByRef(null);
 
   for (g = 0; g < bumpGroup.frontBoxIds.getSize(); g++) {
     var groupPersonId = bumpGroup.frontBoxIds.values[g];
