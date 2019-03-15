@@ -13,14 +13,16 @@
  */
 
 function addPersonNodes(graph) {
-  var p;
-  var personNode;
-  for (p = 0; p < graph.gx.persons.length; p++) {
-    personNode = new PersonNode(graph.gx.persons[p]);
-    graph.personNodes[p] = personNode;
-    graph.personNodeMap[personNode.personId] = personNode;
-    if (graph.gx.persons[p].principal) {
-      graph.principals.push(personNode);
+  if (graph.gx.persons) {
+    var p;
+    var personNode;
+    for (p = 0; p < graph.gx.persons.length; p++) {
+      personNode = new PersonNode(graph.gx.persons[p]);
+      graph.personNodes[p] = personNode;
+      graph.personNodeMap[personNode.personId] = personNode;
+      if (graph.gx.persons[p].principal) {
+        graph.principals.push(personNode);
+      }
     }
   }
 }
