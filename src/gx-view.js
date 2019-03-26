@@ -73,47 +73,6 @@ function removeButton(hook) {
 //GEDCOM X Utilities
 ////////////////////
 
-function getSourceDescription(personaOrRecord, sourceIdOrUrl) {
-  var source = null;
-
-  if (personaOrRecord && sourceIdOrUrl) {
-    if (sourceIdOrUrl.charAt(0) === '#') {
-      sourceIdOrUrl = sourceIdOrUrl.substring(1);
-    }
-
-    if (personaOrRecord.sourceDescriptions) {
-      parseSourceDesc();
-    }
-  }
-  return source;
-
-  function parseSourceDesc() {
-    for (var i = 0; i < personaOrRecord.sourceDescriptions.length; i++) {
-      var srcDesc = personaOrRecord.sourceDescriptions[i];
-      if (srcDesc.about === sourceIdOrUrl || srcDesc.id === sourceIdOrUrl) {
-        source = srcDesc;
-        break;
-      }
-    }
-  }
-}
-
-function getAgent(doc, ref) {
-  if (ref && ref.startsWith("#")) {
-    var id = ref.substr(1);
-    if (doc.agents) {
-      for (var i = 0; i < doc.agents.length; i++) {
-        var agent = doc.agents[i];
-        if (agent.id === id) {
-          return agent;
-        }
-      }
-    }
-  }
-
-  return null;
-}
-
 function getGenderString(person) {
   var gender = "Gender?";
 

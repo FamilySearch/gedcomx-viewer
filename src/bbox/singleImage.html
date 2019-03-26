@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Bounding Box Boilerplate</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="singleImage.iife.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+    }
+    body {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+  </style>
+</head>
+<body>
+  <fs-single-image-viewer
+    src="https://www.familysearch.org/dz/v1/apid:TH-1942-21131-31767-14/"
+    style="flex: 1;"
+  ></fs-single-image-viewer>
+  <script type="text/javascript">
+    const viewer = document.querySelector('fs-single-image-viewer');
+    viewer.overlays.setAll([
+      {
+        id: 'test-1',
+        type: 'name',
+        selectable: true,
+        x: 0.25,
+        y: 0.25,
+        width: 0.2,
+        height: 0.1
+      },
+      {
+        id: 'test-2',
+        type: 'date',
+        //selectable: true,
+        x: 0.25,
+        y: 0.75,
+        width: 0.2,
+        height: 0.1
+      }
+    ]);
+  </script>
+</body>
+</html>

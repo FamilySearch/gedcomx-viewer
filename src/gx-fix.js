@@ -8,6 +8,7 @@ function fixGedcomx(gx) {
   addLocalIds(gx);
   fixAge(gx);
   fixExplicitNameType(gx);
+  return gx;
 }
 
 function generateLocalId() {

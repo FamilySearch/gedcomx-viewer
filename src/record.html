@@ -17,12 +17,12 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-filestyle/2.1.0/bootstrap-filestyle.min.js"></script>
 
   <!-- Relationship Graph support -->
+  <script src="gx-util.js"></script>
   <script src="graph/model/model-util.js"></script>
   <script src="graph/model/PersonNode.js"></script>
   <script src="graph/model/FamilyNode.js"></script>
   <script src="graph/model/RelationshipGraph.js"></script>
 
-  <script src="graph/view/view-util.js"></script>
   <script src="graph/view/Generation.js"></script>
   <script src="graph/view/LinkedHashSet.js"></script>
   <script src="graph/view/IntegerByRef.js"></script>
@@ -33,7 +33,6 @@
   <script src="graph/view/RelChartBuilder.js"></script>
 
   <script src="graph/graph.js"></script>
-  <!--<script src="gx-utils.js"></script>-->
   <script src="gx-fix.js"></script>
   <script src="gx-view.js"></script>
   <script>
@@ -109,40 +108,10 @@
       }
 
       function getImageLink(doc) {
-        var sd = getSourceDescription(doc, doc.description);
-        var imageArk = null;
-        var coordinates = null;
-        var source = null;
-        while (sd && !imageArk) {
-          if (sd.about && sd.about.includes("ark:/61903/3:1:")) {
-            imageArk = sd.about;
-          }
-          else if (sd.sources && sd.sources.length >= 1) {
-            // (Assume only one source)
-            source = sd.sources[0];
-            if (source.qualifiers && source.qualifiers.length > 0 && source.qualifiers[0].name === "http://gedcomx.org/RectangleRegion") {
-              coordinates = source.qualifiers[0].value.split(",");
-            }
-            else {
-              coordinates = null;
-            }
-            sd = getSourceDescription(doc, source.description);
-          }
-          else {
-            sd = null;
-          }
-        }
-        if (imageArk) {
-          if (!coordinates) {
-            coordinates = "1,1,10,10".split(",");
-          }
-          var x = coordinates[0];
-          var y = coordinates[1];
-          var x2 = Number(x) + Number(coordinates[2]); // w
-          var y2 = Number(y) + Number(coordinates[3]); // h
-          var uri = "https://www.familysearch.org/search/search/image/highlight?url=" + imageArk + "/image.xml&bounds=[" +
-              x + "," + y + ":" + x2 + "," + y2 + "]";
-          return '<a href="' + uri + '" target="new_reusable_tab">' + uri + '</a>';
+        // todo: Include coordinates and handle multiple images.
+        var imageArksAndRectangles = getImageArks(doc);
+        if (!isEmpty(imageArksAndRectangles)) {
+          return imageArksAndRectangles[0].url;
         }
         return null; // No image link found
       }
@@ -211,38 +180,6 @@
         sourceDocument.text = text;
         editor.set(doc);
       }
-    }
-
-    // Find the source description of the 'source' for the record, i.e., for the 'document' that contains the original text.
-    function getDocumentSourceDescription(doc) {
-      var recordSourceDescription = getSourceDescription(doc, doc.description);
-
-      var documentSourceDescription;
-      if (recordSourceDescription && recordSourceDescription.sources && recordSourceDescription.sources.length > 0) {
-        documentSourceDescription = getSourceDescription(doc, recordSourceDescription.sources[0].description);
-      }
-      return documentSourceDescription;
-    }
-
-    // Find the source "document" within the given GedcomX document, and return it (or null if not found).
-    function getSourceDocument(doc, documentSourceDescription) {
-      if (!documentSourceDescription) {
-        documentSourceDescription = getDocumentSourceDescription(doc);
-      }
-      var document;
-      if (documentSourceDescription && documentSourceDescription.about) {
-        var sourceDocumentId = documentSourceDescription.about.substr(1);
-        if (doc.documents) {
-          for (var i = 0; i < doc.documents.length; i++) {
-            var candidate = doc.documents[i];
-            if (sourceDocumentId === candidate.id) {
-              document = candidate;
-              break;
-            }
-          }
-        }
-      }
-      return document;
     }
 
     function loadSourceDocument(doc) {
@@ -1483,7 +1420,7 @@
             }
 
             relChart = null; // clear out any previous RelationshipChart
-            fixGedcomx(doc);
+            doc = fixGedcomx(doc);
             updateRecord(doc, file.name);
             loadSourceDocument(doc);
             $("#download-gx").attr("download", file.name);
@@ -1743,7 +1680,7 @@
 
 <!--Top navigation-->
 <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
-  <span class="navbar-brand">View and Edit GEDCOM X</span>
+  <span class="navbar-brand">View and edit GEDCOM X</span>
   <ul class="navbar-nav ml-auto">
     <li class="nav-item">
       <button type="button" class="btn btn-primary m-1" data-toggle="modal" data-target="#new-person" title="Add Person">
