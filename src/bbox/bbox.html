@@ -24,7 +24,7 @@
 </head>
 <body>
   <fs-single-image-viewer
-    src="https://www.familysearch.org/dz/v1/apid:TH-1942-32678-5001-67/"
+      src="https://www.familysearch.org/dz/v1/apid:TH-1942-32678-5001-67/"
     style="flex: 1;"
   ></fs-single-image-viewer>
   <script type="text/javascript">
@@ -32,7 +32,6 @@
       $.getJSON("sample.json", function(sampleGx){
         const viewer = document.querySelector('fs-single-image-viewer');
         sampleGx = fixGedcomx(sampleGx);
-
         overlayBoxes(viewer, sampleGx);
       });
     });

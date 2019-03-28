@@ -92,26 +92,26 @@ function getSourceDocument(doc, documentSourceDescription) {
 
 /**
  * Create an object with {x, y, width, height}, either from those four values, or four a comma-seprated string containing those four values.
- * @param xOrRectangle - Either an x coordinate, or a string with "x,y,width,height" all in them.
- * @param y - y-coordinate (if not using rectangle string)
- * @param width - width (if not using rectangle string)
- * @param height height (if not using rectangle string)
+ * @param x1OrRectangle - Either an x coordinate, or a string with "x,y,width,height" all in them.
+ * @param y1 - y-coordinate of upper-left corner (if not using rectangle string)
+ * @param x2 - x-coordinate of lower-right corner (if not using rectangle string)
+ * @param y2 - y-coordinate of lower-right corner (if not using rectangle string)
  * @constructor
  */
-function Rectangle(xOrRectangle, y, width, height) {
-  if (!y) {
-    // Parse a string of the form "x,y,width,height".
-    var parts = xOrRectangle.split(",");
-    this.x = parts[0];
-    this.y = parts[1];
-    this.width = parts[2];
-    this.height = parts[3];
+function Rectangle(x1OrRectangle, y1, x2, y2) {
+  if (!y1) {
+    // Parse a string of the form "x1,y1,x2,y2".
+    var parts = x1OrRectangle.split(",");
+    this.x1 = parts[0];
+    this.y1 = parts[1];
+    this.x2 = parts[2];
+    this.y2 = parts[3];
   }
   else {
-    this.x = xOrRectangle;
-    this.y = y;
-    this.width = width;
-    this.height = height;
+    this.x1 = x1OrRectangle;
+    this.y1 = y1;
+    this.x2 = x2;
+    this.y2 = y2;
   }
 }
 
@@ -121,7 +121,7 @@ function Rectangle(xOrRectangle, y, width, height) {
  *   Then uses the 'sources' list of that record (recursively, following the source change until it finds DigitalArtifact sources).
  *   For each DigitalArtifact source, adds an object to the return array that includes:
  *     image: image Ark.
- *     rectangles: array of rectangle objects, each with {x, y, width, height}, hopefully in fractional (0..1) coordinates.
+ *     rectangles: array of rectangle objects, each with {x1,y1,x2,y2}, hopefully in fractional (0..1) coordinates.
  * @param doc - GedcomX document.
  * @returns {*}
  */
@@ -160,7 +160,7 @@ function getImageArks(doc) {
     }
   }
 
-  // Array of objects, one for each source image found. Each object has {ark: <URL>, coordinates: array of objects with {x, y, width, height})
+  // Array of objects, one for each source image found. Each object has {ark: <URL>, coordinates: array of objects with {x1,y1,x2,y2})
   var imageArks = [];
   // Get the "main" SourceDescription for this GedcomX document (i.e., for this Record).
   var mainSd = getSourceDescription(doc, doc.description);
