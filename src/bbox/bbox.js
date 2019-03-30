@@ -15,7 +15,6 @@ function createOverlay(type, rectangle, id) {
     id = (lastId ? lastId + 1 : 1);
     overlayTypeIdMap[typeName] = id;
   }
-  console.log(typeName + ": " + id);
   return {
     id: typeName + "-" + id,
     type: type,
