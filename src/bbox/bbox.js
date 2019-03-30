@@ -1,15 +1,23 @@
 var overlayTypeIdMap = {};
 
+/**
+ * Create an overlay object suitable for sending to the image viewer.
+ * @param type - Type of overlay. (null => default)
+ * @param rectangle - Rectangle object with {x1,y1,x2,y2} in fractional coordinates.
+ * @param id - (Optional) id string to use.
+ * @returns {{id: *, type: *, selectable: boolean, x: (*|number|SVGAnimatedLength), y: (*|SVGAnimatedLength|number), width: number, height: number}}
+ */
 function createOverlay(type, rectangle, id) {
+  var typeName = type ? type : "?";
   if (!id) {
     // If no ID is specified, use a separate 1-based counter for each type to give each box an id, e.g., "name-1" or "date-13".
-    var lastId = overlayTypeIdMap[type];
-    id = lastId ? lastId + 1 : 1;
-    overlayTypeIdMap[type] = id;
+    var lastId = overlayTypeIdMap[typeName];
+    id = (lastId ? lastId + 1 : 1);
+    overlayTypeIdMap[typeName] = id;
   }
-
+  console.log(typeName + ": " + id);
   return {
-    id: id,
+    id: typeName + "-" + id,
     type: type,
     selectable: true,
     x: rectangle.x1,
@@ -240,6 +248,87 @@ function overlayBoxes(viewer, doc) {
     return null; // unrecognized Image Ark format.
   }
 
+  // NBX bounding box [x,y,w,h] parsing...
+
+  function findNbxDocumentText(doc) {
+    if (doc.documents) {
+      for (var d = 0; d < doc.documents.length; d++) {
+        var document = doc.documents[d];
+        if (document.id === "nbx") {
+          return document.text;
+        }
+      }
+    }
+    return null;
+  }
+
+  // Find the metadata string in the given array of {tag:, content:} with the given tag.
+  function findMetadata(metadata, tag) {
+    for (var m = 0; m < metadata.length; m++) {
+      var meta = metadata[m];
+      if (meta.tag === tag) {
+        return meta.content;
+      }
+    }
+    return null;
+  }
+
+  // Parse "[10,20:30,40] " (using pixel coordinates) into {x1,y1,x2,y2}, using fractional coordinates.
+  function parseRect(rectString, imgWidth, imgHeight) {
+    var parts = rectString.match(/\[(\d+),(\d+):(\d+),(\d+)] */);
+    return {
+      x1: parts[1] / imgWidth,
+      y1: parts[2] / imgHeight,
+      x2: parts[3] / imgWidth,
+      y2: parts[4] / imgHeight
+    };
+  }
+
+  function addNbxBoxes(boxes, nbxText) {
+    if (!nbxText) {
+      return;
+    }
+    /* Get an object that represents the contents of the NBX file with:
+       metadata:
+        array of objects with
+          tag : tag
+          content: array of text-object
+      sbody:
+        array of text-object
+      relex: (doesn't matter here)
+
+      where text-object has:
+         text : <text to display>
+         offset : <offset in original NBX w/o ENAMX>
+         rectangles: Array of rectangles with {x1,y1,x2,y2} (in pixels)
+         timex/enamex :
+           tag: <timex/enamex...>
+           type : <typeOfEntity>
+           text : <text of entity> (may include rectangles "[x1,y1:x2,y2] " followed by text for that rectangle).
+     */
+    var nbx = parseNbx(nbxText);
+
+    var imgSizeArr = findMetadata(nbx.metadata, "IMGSIZE");
+    var imgSize = imgSizeArr[0].text.split(",");
+    var imgWidth = imgSize[0];
+    var imgHeight = imgSize[1];
+
+    for (var t = 0; t < nbx.sbody.length; t++) {
+      var tag = nbx.sbody[t];
+      if (tag.rectangles) {
+        //todo. So far there won't be any here.
+      }
+      if (tag.text) {
+        var rectStrings = tag.text.match(/\[\d+,\d+:\d+,\d+] /g);
+        if (!isEmpty(rectStrings)) {
+          for (var r = 0; r < rectStrings.length; r++) {
+            boxes.push(createOverlay(null, parseRect(rectStrings[r], imgWidth, imgHeight)));
+          }
+        }
+      }
+    }
+  }
+
   // overlayBoxes(doc) ============================
 
   // Get an array of objects with {image: <imageArk>, rectangles: [array of Rectangle object with x1,y1,x2,y2]}
@@ -270,6 +359,8 @@ function overlayBoxes(viewer, doc) {
         addFactBoxes(boxes, relationship.facts);
       }
     }
+
+    addNbxBoxes(boxes, findNbxDocumentText(doc));
 
     viewer.overlays.setAll(boxes);
   }

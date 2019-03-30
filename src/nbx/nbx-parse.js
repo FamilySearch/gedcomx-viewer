@@ -101,6 +101,7 @@ function parseNbx(file) {
     var endTag = "</" + tag + ">";
     var end = file.indexOf(endTag, pos);
     var next;
+
     while (pos < end) {
       next = file.indexOf("<", pos);
       if (next > pos) {
@@ -138,7 +139,8 @@ function parseNbx(file) {
       }
       else {
         end = file.indexOf('>', pos);
-        if (file.indexOf(' ', pos) < end) {
+        var spacePos = file.indexOf(' ', pos);
+        if (spacePos >= 0 && spacePos < end) {
           // Unexpected attribute...???
           console.log("Error: Found unexpected attribute for tag: " + file.slice(pos));
         }
