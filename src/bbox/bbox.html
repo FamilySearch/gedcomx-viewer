@@ -26,16 +26,23 @@
 </head>
 <body>
   <fs-single-image-viewer
-      src="https://www.familysearch.org/dz/v1/apid:TH-1942-32678-5001-67/"
     style="flex: 1;"
   ></fs-single-image-viewer>
   <script type="text/javascript">
     $(document).ready(function(){
-      $.getJSON("sample.json", function(sampleGx){
-        const viewer = document.querySelector('fs-single-image-viewer');
-        sampleGx = fixGedcomx(sampleGx);
-        overlayBoxes(viewer, sampleGx);
-      });
+      const viewer = document.querySelector('fs-single-image-viewer');
+      if (window.opener && window.opener.currentGx) {
+        var doc = window.opener.currentGx;
+        doc = fixGedcomx(doc);
+        overlayBoxes(viewer, doc);
+      }
+      else {
+        // Not opened from a parent window, so use hard-coded sample json.
+        $.getJSON("sample.json", function (sampleGx) {
+          sampleGx = fixGedcomx(sampleGx);
+          overlayBoxes(viewer, sampleGx);
+        });
+      }
     });
   </script>
 </body>

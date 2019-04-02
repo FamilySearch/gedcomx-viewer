@@ -88,6 +88,8 @@
       });
     }
 
+    var currentGx;
+
     /**
      *  Update a record.
      *
@@ -102,6 +104,8 @@
         doc = doc.records[0];
       }
 
+      currentGx = doc;
+
       if (!editorAlreadyUpdated) {
         editor.set(doc);
         $("#source-viewer").show();
@@ -109,16 +113,17 @@
 
       function getImageLink(doc) {
         // todo: Include coordinates and handle multiple images.
-        var imageArksAndRectangles = getImageArks(doc);
-        if (!isEmpty(imageArksAndRectangles)) {
-          return imageArksAndRectangles[0].url;
-        }
-        return null; // No image link found
+        // var imageArksAndRectangles = getImageArks(doc);
+        // if (!isEmpty(imageArksAndRectangles)) {
+        //   return imageArksAndRectangles[0].url;
+        // }
+        // return null; // No image link found
+        return "bbox/bbox.html";
       }
 
       var imageLink = getImageLink(doc);
       if (imageLink) {
-        $("#image-link").html(imageLink);
+        $("#image-link").html('<a href="' + imageLink + '" target="new_reusable_tab">' + imageLink + '</a>');
       }
       showRecord(doc, url);
 
@@ -1498,7 +1503,7 @@
            },
            url: gedcomxUrl,
            success: function (doc, textStatus, jqKHR) {
-             fixGedcomx(doc);
+             doc = fixGedcomx(doc);
              updateRecord(doc, gedcomxUrl);
              loadSourceDocument(doc);
            },
@@ -1541,7 +1546,7 @@
           return;
         }
 
-        fixGedcomx(doc);
+        doc = fixGedcomx(doc);
         updateRecord(doc);
         loadSourceDocument(doc);
 
