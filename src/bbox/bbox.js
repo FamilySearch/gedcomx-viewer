@@ -15,8 +15,10 @@ function createOverlay(type, rectangle, id) {
     id = (lastId ? lastId + 1 : 1);
     overlayTypeIdMap[typeName] = id;
   }
+  id = typeName + "-" + id;
+  
   return {
-    id: typeName + "-" + id,
+    id: id,
     type: type,
     selectable: true,
     x: rectangle.x1,
@@ -34,9 +36,9 @@ function overlayBoxes(viewer, doc) {
    * add it to boxes[].
    * (Note that this assume that all sources with rectangles are referring to the same image.
    *  If this is not the case, then modify boxes[] to be a map of source ID -> boxes[] for that source.)
-   * @param boxes
-   * @param value
-   * @param boxType
+   * @param boxes - Array of boxes to add the overlay box to.
+   * @param value - Thing that may have an array of sources for it.
+   * @param boxType - Class to use as the overlay type ("name", "date", "place" or null/undefined for default).
    */
   function addSourceBoxes(boxes, value, boxType) {
     if (value && !isEmpty(value.sources)) {
