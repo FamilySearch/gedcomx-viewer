@@ -12,22 +12,12 @@
   <script src="../gx-fix.js"></script>
   <script src="../nbx/nbx-parse.js"></script>
   <script src="bbox.js"></script>
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-    }
-    body {
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-  </style>
 </head>
 <body>
   <fs-single-image-viewer
     style="flex: 1;"
   ></fs-single-image-viewer>
+  <div id="markers"></div>
   <script type="text/javascript">
     $(document).ready(function(){
       const viewer = document.querySelector('fs-single-image-viewer');

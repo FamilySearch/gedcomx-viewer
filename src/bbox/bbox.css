@@ -1,3 +1,37 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+}
+body {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
 .fs-image-viewer__overlay {
     background: #fffee4;
+}
+
+.marker-default,.marker-name,.marker-date,.marker-place {
+    font-family: sans-serif;
+    color: #446787;
+    border: 1px solid rgba(148, 148, 166, 0.70);
+}
+
+.marker-default {
+    background: rgba(230, 229, 221, 0.2);
+}
+.marker-name {
+    background: rgba(192, 231, 153, 0.4);
+}
+
+.marker-date {
+    background: rgba(172, 217, 255, 0.4);
+}
+
+.marker-place {
+    background: rgba(240, 211, 170, 0.4);
+}
+.article-highlight {
+    background: rgba(179, 166, 240, 0.21);
 }
