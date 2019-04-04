@@ -19,19 +19,20 @@ body {
 }
 
 .marker-default {
-    background: rgba(230, 229, 221, 0.2);
+    background: rgba(230, 229, 221, 0.6);
 }
 .marker-name {
-    background: rgba(192, 231, 153, 0.4);
+    background: rgba(192, 231, 153, 0.6);
 }
 
 .marker-date {
-    background: rgba(172, 217, 255, 0.4);
+    background: rgba(172, 217, 255, 0.6);
 }
 
 .marker-place {
-    background: rgba(240, 211, 170, 0.4);
+    background: rgba(240, 211, 170, 0.6);
 }
+
 .article-highlight {
     background: rgba(179, 166, 240, 0.21);
 }
