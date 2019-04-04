@@ -2,7 +2,7 @@ var overlayTypeIdMap = {};
 
 /**
  * Create an overlay object suitable for sending to the image viewer.
- * @param type - Type of overlay. (null => default)
+ * @param type - Type of overlay. ("name", "date", "place". null => default)
  * @param rectangle - Rectangle object with {x1,y1,x2,y2} in fractional coordinates.
  * @param id - (Optional) id string to use.
  * @returns {{id: *, type: *, selectable: boolean, x: (*|number|SVGAnimatedLength), y: (*|SVGAnimatedLength|number), width: number, height: number}}
@@ -407,6 +407,16 @@ function overlayBoxes(viewer, doc) {
     }
   }
 
+  function addArticleRectangles(imageArksAndRects, boxes) {
+    // Assume single image for now.
+    var rects = imageArksAndRects[0].rectangles;
+    if (rects) {
+      for (var r = 0; r < rects.length; r++) {
+        var overlay = createOverlay(null, rects[r]);
+        boxes.push(overlay);
+      }
+    }
+  }
   // overlayBoxes(doc) ============================
 
   // Get an array of objects with {image: <imageArk>, rectangles: [array of Rectangle object with x1,y1,x2,y2]}
@@ -419,6 +429,12 @@ function overlayBoxes(viewer, doc) {
 
     var boxes = [];
     var markers = [];
+
+    // Add record/article-level bounding boxes.
+    addArticleRectangles(imageArksAndRects, boxes);
+
+    // Add bounding boxes for all words. (Do this before names, dates and places, so that those will be on top)
+    addNbxBoxes(boxes, markers, findNbxDocumentText(doc));
 
     if (doc.persons) {
       for (var p = 0; p < doc.persons.length; p++) {
@@ -438,8 +454,6 @@ function overlayBoxes(viewer, doc) {
         addFactBoxes(boxes, markers, relationship.facts);
       }
     }
-
-    addNbxBoxes(boxes, markers, findNbxDocumentText(doc));
 
     viewer.overlays.setAll(boxes);
     viewer.markers.setAll(markers);

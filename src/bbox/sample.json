@@ -1424,37 +1424,6 @@
           "original" : "Town of South Bristol",
           "fields" : [ {
             "type" : "http://gedcomx.org/City",
-            "sources" : [ {
-              "description" : "#sd_img",
-              "qualifiers" : [ {
-                "value" : "0.24312174,0.16383308,0.2672181,0.17619784",
-                "name" : "http://gedcomx.org/RectangleRegion"
-              }, {
-                "value" : "0.26703832,0.16383308,0.2769286,0.17619784",
-                "name" : "http://gedcomx.org/RectangleRegion"
-              }, {
-                "value" : "0.27782774,0.16383308,0.3055206,0.17619784",
-                "name" : "http://gedcomx.org/RectangleRegion"
-              }, {
-                "value" : "0.30534077,0.16383308,0.3402266,0.17619784",
-                "name" : "http://gedcomx.org/RectangleRegion"
-              } ]
-            }, {
-              "description" : "#sd_img",
-              "qualifiers" : [ {
-                "value" : "0.24312174,0.16383308,0.2672181,0.17619784",
-                "name" : "http://gedcomx.org/RectangleRegion"
-              }, {
-                "value" : "0.26703832,0.16383308,0.2769286,0.17619784",
-                "name" : "http://gedcomx.org/RectangleRegion"
-              }, {
-                "value" : "0.27782774,0.16383308,0.3055206,0.17619784",
-                "name" : "http://gedcomx.org/RectangleRegion"
-              }, {
-                "value" : "0.30534077,0.16383308,0.3402266,0.17619784",
-                "name" : "http://gedcomx.org/RectangleRegion"
-              } ]
-            } ],
             "values" : [ {
               "type" : "http://gedcomx.org/Original",
               "labelId" : "PR_RES_CITY_ORIG",
@@ -1511,7 +1480,14 @@
       "id" : "sd_nbx",
       "about" : "#nbx",
       "sources" : [ {
-        "description" : "#sd_img"
+        "description" : "#sd_img",
+          "qualifiers" : [ {
+            "value" : "0.105,0.102,0.502,0.945",
+            "name" : "http://gedcomx.org/RectangleRegion"
+          }, {
+            "value" : "0.52,0.095,0.91,0.94",
+            "name" : "http://gedcomx.org/RectangleRegion"
+          }]
       } ],
       "titles" : [ {
         "value" : "Original NBX"
