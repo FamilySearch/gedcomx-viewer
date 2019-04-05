@@ -412,7 +412,7 @@ function overlayBoxes(viewer, doc) {
     var rects = imageArksAndRects[0].rectangles;
     if (rects) {
       for (var r = 0; r < rects.length; r++) {
-        var overlay = createOverlay(null, rects[r]);
+        var overlay = createOverlay("article", rects[r]);
         boxes.push(overlay);
       }
     }
