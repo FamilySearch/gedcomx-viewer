@@ -446,17 +446,19 @@ RelChartBuilder.prototype.insertBelow = function(origPerson, newPerson, generati
   return newPersonBox;
 };
 
+// Global variable so it is available to onClick functions.
+var relChart;
+
 /**
  * Constructor.  Creates a RelChartBuilder object an initializes the various structures.
  *   Adds all of the persons from the relationship graph to 'remaining', beginning with the first person flagged as primary, or else the first person.
  * @param relGraph - relationship graph to build a chart for
- * @param $personsDiv - JQuery object for div with "#persons"
- * @param $familyLinesDiv - JQuery object for the div with "#familyLines"
+ * @param $relChart - JQuery object for the div that the chart goes in.
  * @param shouldIncludeDetails - Whether to include alternate names and facts in the chart initially.
  * @param shouldCompress - Whether to do collapsing initially.
  */
 function RelChartBuilder(relGraph, $relChart, shouldIncludeDetails, shouldCompress) {
-
+  $relChart.click(clearSelections);
   // Create a chart with PersonBoxes created, but no FamilyLines or Generations yet.
   this.relChart = new RelationshipChart(relGraph, $relChart, shouldIncludeDetails, shouldCompress);
   this.ABOVE = true;
@@ -466,6 +468,9 @@ function RelChartBuilder(relGraph, $relChart, shouldIncludeDetails, shouldCompre
   // Set of personIds for PersonBoxes that are 'duplicates' of a box that already appeared elsewhere in the graph
   this.duplicateBoxes = [];
   this.generationMap = {}; // Map of generation index to Generation. (In relChart, it is a simple 0-based array, so no map is needed.)
+
+  // Set global variable relChart so onClick functions can access it.
+  relChart = this.relChart;
 }
 
 /**

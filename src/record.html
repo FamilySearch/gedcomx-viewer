@@ -67,9 +67,6 @@
 
     var editHooks = {};
 
-    // RelationshipChart
-    var relChart = null;
-
     /**
      * Show a record.
      *
@@ -95,8 +92,8 @@
      *  Update a record.
      *
      *  @param doc The record to update.
-     *  @param url The url of the record, if applicable. (Ignored if null)
-     *  @param editorAlreadyUpdated Flag for whether the 'editor' is already updated (avoids closing editor when it is being edited still).
+     *  @param url (optional) The url of the record, if applicable. (Ignored if null)
+     *  @param editorAlreadyUpdated (optional) Flag for whether the 'editor' is already updated (avoids closing editor when it is being edited still).
      */
     function updateRecord(doc, url, editorAlreadyUpdated) {
       url = url ? url : currentUrl;
@@ -134,7 +131,7 @@
       updateSelectablePersons(doc, $("#edit-relationship-person-2"));
       updateSelectablePersons(doc, $("#copy-person-fact-target-persons"));
 
-      // Rebuild the relationship graph
+      // Rebuild the relationship graph. Set global variable (defined in RelChartBuilder.js).
       relChart = buildGraph(doc, relChart);
     }
 

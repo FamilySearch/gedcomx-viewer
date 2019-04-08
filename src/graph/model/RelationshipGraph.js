@@ -242,6 +242,14 @@ RelationshipGraph.prototype.getFamily = function(familyId) {
   return this.familyNodeMap[familyId];
 };
 
+RelationshipGraph.prototype.removeFamilyNode = function(familyNode) {
+  var index = this.familyNodes.indexOf(familyNode);
+  if (index >= 0) {
+    this.familyNodes.splice(index, 1);
+  }
+  delete this.familyNodeMap[familyNode.familyId];
+};
+
 /*** Constructor ***/
 function RelationshipGraph(gx) {
   this.gx = gx; // GedcomX document (record or portion of a tree).

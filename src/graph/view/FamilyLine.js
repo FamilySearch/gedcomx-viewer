@@ -1,6 +1,6 @@
 
 FamilyLine.prototype.makeFamilyLineDiv = function(familyId) {
-  var html = "<div class='familyLine' id='" + familyId + "'></div>";
+  var html = "<div class='familyLine' id='" + familyId + "' onclick='toggleFamilyLine(\"" + familyId + "\", event)'></div>";
   return $.parseHTML(html);
 };
 
@@ -21,8 +21,8 @@ FamilyLine.prototype.addPersonLine = function(personLineId, left, top, width) {
 FamilyLine.prototype.addPersonDot = function(personLineId, left, top, width) {
   var personDotId = "dot-" + personLineId;
   var html = "<div class='personDot' id='" + personDotId + "'></div>";
-  var personLineDiv = $.parseHTML(html);
-  this.$familyLinesDiv.append(personLineDiv);
+  var personDotDiv = $.parseHTML(html);
+  this.$familyLinesDiv.append(personDotDiv);
   var $personLineDot = $("#" + personDotId);
   // Make sure 'dotHeight' and 'dotWidth' are set if this is the first child.
   if (!this.dotHeight) {
@@ -34,11 +34,40 @@ FamilyLine.prototype.addPersonDot = function(personLineId, left, top, width) {
   return $personLineDot;
 };
 
+/**
+ * Add a "delete" ("x") div for the given child line. Clicking that removes the child from the family
+ *   by deleting the parent-child relationships between this child and both parents (unless that child
+ *   has a relationship to another of one of the parents' spouses, too, in which case that parent's
+ *   relationship is kept in order to keep them in that family).
+ * @param childLineId - id used for the person line between the child and this family line.
+ * @param childBox - PersonBox for the child.
+ * @returns {jQuery.fn.init|jQuery|HTMLElement}
+ */
+FamilyLine.prototype.addChildX = function(childLineId, childBox) {
+  var childXId = "childX-" + childLineId;
+  var html = "<div class='relX' id='" + childXId + "'></div>";
+  var childXDiv = $.parseHTML(html);
+  this.$familyLinesDiv.append(childXDiv);
+  var $childX = $("#" + childXId);
+  // $childX.hide();
+  if (!this.xSize) {
+    // Get the image size based on what graph.css said it should be.
+    this.xSize = $childX.height();
+  }
+  $childX.hide();
+  var familyLine = this;
+  $childX.click(function() {
+    familyLine.removeChildBox(childBox);
+  });
+  return $childX;
+};
+
+// Width that is no smaller than 2.
 FamilyLine.prototype.safeWidth = function(width) {
   return Math.max(width, 2);
 };
 
-// Add a PersonBox to the list of children, and create a div for the line connecting that child's PersonBox to the FamilyLine.
+// Add a PersonBox to the list of children for this FamilyLine, and create a div for the line connecting that child's PersonBox to the FamilyLine.
 FamilyLine.prototype.addChild = function(childBox) {
   if (childBox) {
     this.children.push(childBox);
@@ -48,7 +77,55 @@ FamilyLine.prototype.addChild = function(childBox) {
     var width = this.safeWidth(this.x - left);
     this.$childrenLineDivs.push(this.addPersonLine(childLineId, left, childBox.center, width));
     this.$childrenLineDots.push(this.addPersonDot(childLineId, left, childBox.center, width));
+    this.$childrenX.push(this.addChildX(childLineId, childBox))
   }
+};
+
+
+/**
+ * Delete the JQuery object at the given index in the array, and return the array with that element removed.
+ * @param $divs - Array of JQuery objects for divs.
+ * @param index - Index in the array of the div to delete.
+ */
+function removeDiv($divs, index) {
+  $divs[index].remove();
+  $divs.splice(index, 1);
+}
+
+// Remove the given child from the family. Delete the parent-child relationships from the GedcomX. Call updateRecord.
+FamilyLine.prototype.removeChildBox = function(childBox) {
+  var doc = currentRelChart.relGraph.gx;
+  var childIndex = this.children.indexOf(childBox);
+  var familyNode = this.familyNode;
+  var fatherRel = !isEmpty(familyNode.fatherRels) ? familyNode.fatherRels[childIndex] : null;
+  var motherRel = !isEmpty(familyNode.motherRels) ? familyNode.motherRels[childIndex] : null;
+
+  // These updates fix up the relationship graph, which is unnecessary if we're going to rebuild it from scratch.
+  familyNode.children.splice(childIndex, 1);
+  familyNode.fatherRels.splice(childIndex, 1);
+  familyNode.motherRels.splice(childIndex, 1);
+  removeDiv(this.$childrenLineDivs, childIndex);
+  removeDiv(this.$childrenLineDots, childIndex);
+  removeDiv(this.$childrenX, childIndex);
+  childBox.removeParentFamilyLine(this);
+
+  // Remove the relationships from the GedcomX.
+  for (var r = 0; r < doc.relationships.length; r++) {
+    var parentChildRelationship = doc.relationships[r];
+    if (parentChildRelationship === fatherRel || parentChildRelationship === motherRel) {
+      // Remove this relationship from the array.
+      doc.relationships.splice(r, 1);
+      r--; // Make sure the next element gets examined since we just shifted the later ones down one.
+      // Eventually: Add the relationship to an undo/redo log.
+    }
+  }
+
+  if (RelChartBuilder.prototype.familyHasOnlyOnePerson(familyNode)) {
+    // Removed last child, and only one parent, so family line should go away.
+    currentRelChart.removeFamily(this);
+  }
+  // Cause the relationship graph to be redrawn.
+  updateRecord(doc);
 };
 
 FamilyLine.prototype.setFather = function(fatherBox) {
@@ -78,6 +155,14 @@ FamilyLine.prototype.childMoved = function() {
     }
   }
   return false;
+};
+
+FamilyLine.prototype.getBottom = function() {
+  return this.bottomPerson.center;
+};
+
+FamilyLine.prototype.getTop = function() {
+  return this.topPerson.center;
 };
 
 // Tell whether this FamilyLine has moved (i.e., x changed or top/bottom persons moved) since last update.
@@ -112,6 +197,7 @@ FamilyLine.prototype.setPosition = function() {
     this.$childrenLineDivs[c].animate({"left": childBox.getRight(), "top": childBox.center - this.lineThickness/2, "width": width}, RelationshipChart.prototype.animationSpeed);
     this.prevChildCenter[c] = childBox.center;
     this.$childrenLineDots[c].animate({"left": childBox.getRight() + width - this.dotWidth, "top": childBox.center - this.dotHeight/2}, RelationshipChart.prototype.animationSpeed);
+    this.$childrenX[c].animate({"left": this.x - this.xSize, "top": childBox.center - this.xSize/2}, RelationshipChart.prototype.animationSpeed);
   }
 };
 
@@ -275,9 +361,13 @@ function FamilyLine(familyNode, parentGeneration, $familyLinesDiv) {
   // See how wide the lines are, which is set in graph.css
   // Use this to make sure "dots" are centered, and there aren't gaps at "single parent" corners.
   this.lineThickness = this.$familyLineDiv.width();
+
+  // Person lines for the parents and children
   this.$fatherLineDiv = null;
   this.$motherLineDiv = null;
   this.$childrenLineDivs = [];
   this.$childrenLineDots = [];
+  this.$childrenX = [];
+
   this.$familyLinesDiv = $familyLinesDiv;
 }

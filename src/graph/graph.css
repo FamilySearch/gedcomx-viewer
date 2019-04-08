@@ -113,6 +113,16 @@
     width: 2px;
 }
 
+.familyLine:hover {
+    width: 4px;
+}
+
+.familyLine[chosen] {
+    background-color: #23ff21;
+    box-shadow: #6c757d;
+    width: 4px;
+}
+
 .personLine {
     height: 2px;
 }
@@ -122,4 +132,21 @@
     height: 6px;
     width: 5px;
     border-radius: 3px 0 0 3px;
+}
+
+/* Edit controls */
+.relX,.relPlus {
+    position: absolute;
+    background-size: 8px 8px;
+    width: 8px;
+    height: 8px;
+    z-index: 5;
+}
+
+.relX {
+    background-image: url('images/x.png');
+}
+
+.relPlus {
+    background-image: url('images/plus.png');
 }

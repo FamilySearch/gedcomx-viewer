@@ -189,27 +189,133 @@ RelationshipChart.prototype.setPreviousPositions = function(prevRelChart) {
         var prevChildBox = prevRelChart.personBoxMap[childPersonBox.personBoxId];
         width = prevFamilyLine.safeWidth(prevFamilyLine.x - prevChildBox.getRight());
         familyLine.$childrenLineDivs[c].css({"left": prevChildBox.getRight(), "top": prevChildBox.center, "width": width});
-        var $dot = familyLine.$childrenLineDots[c];
-        $dot.css({"left": prevChildBox.getRight() + width - this.dotWidth/2, "top": prevChildBox.center - this.dotHeight/2});
+        familyLine.$childrenX[c].css({"left": prevFamilyLine.x - prevFamilyLine.xSize, "top": prevChildBox.center - prevFamilyLine.xSize/2});
+        familyLine.$childrenLineDots[c].css({"left": prevChildBox.getRight() + width - this.dotWidth/2, "top": prevChildBox.center - this.dotHeight/2});
       }
     }
   }
 };
 
+// Remove a FamilyLine from the chart, along with its corresponding FamilyNode and HTML elements.
+RelationshipChart.prototype.removeFamily = function(familyLine) {
+  familyLine.$familyLineDiv.remove();
+  if (familyLine.$fatherLineDiv) {
+    familyLine.$fatherLineDiv.remove();
+  }
+  if (familyLine.$motherLineDiv) {
+    familyLine.$motherLineDiv.remove();
+  }
+  this.familyLines.splice(this.familyLines.indexOf(familyLine), 1);
+
+  var familyNode = familyLine.familyNode;
+  delete this.familyLineMap[familyNode.familyId];
+  this.relGraph.removeFamilyNode(familyNode);
+};
+
+RelationshipChart.prototype.hideFamilyControls = function() {
+  this.$fatherX.hide();
+  this.$motherX.hide();
+  this.$fatherPlus.hide();
+  this.$motherPlus.hide();
+  if (selectedFamilyLineId) {
+    var selectedFamily = this.familyLineMap[selectedFamilyLineId];
+    if (selectedFamily && !isEmpty(selectedFamily.$childrenX)) {
+      for (var c = 0; c < selectedFamily.$childrenX.length; c++) {
+        selectedFamily.$childrenX[c].hide();
+      }
+    }
+  }
+};
+
+RelationshipChart.prototype.positionFamilyControl = function($control, x, y) {
+  $control.css({left: x, top: y});
+  $control.show();
+};
+
+/**
+ * Create a '+' or 'x' control div for relationships.
+ * @param divId - ID to use for the div.
+ * @param imgClass - class to assign to the div ("relX" or "relPlus").
+ * @returns {jQuery.fn.init|jQuery|HTMLElement}
+ */
+RelationshipChart.prototype.makeControl = function(divId, imgClass) {
+  var html = '<div id="' + divId + '" class="' + imgClass + '"></div>';
+  var controlDiv = $.parseHTML(html);
+  this.$editControlsDiv.append(controlDiv);
+  var $control = $("#" + divId);
+  $control.hide();
+  $control.click(function(event) {
+    handleFamilyClick(event, divId);
+  });
+  return $control;
+};
+
+function handleFamilyClick(event, divId) {
+  console.log("Click!");
+  event.stopPropagation();
+}
+
+// FamilyId of the selected family line
+var selectedFamilyLineId = null;
+
+// Toggle whether the given familyId is selected.
+function toggleFamilyLine(familyId, event) {
+  var familyLine = relChart.familyLineMap[familyId];
+  if (selectedFamilyLineId === familyId) {
+    // Deselect family line.
+    if (familyLine) { // might be undefined if this family line got removed after deleting the last child or spouse.
+      familyLine.$familyLineDiv.removeAttr("chosen");
+    }
+    relChart.hideFamilyControls();
+    selectedFamilyLineId = null;
+  }
+  else {
+    if (selectedFamilyLineId) {
+      // Deselect currently selected family line
+      toggleFamilyLine(selectedFamilyLineId);
+    }
+    familyLine.$familyLineDiv.attr("chosen", "yep");
+    selectedFamilyLineId = familyId;
+    // Set the + or x controls at the top and bottom of the family line.
+    var x = familyLine.x + familyLine.lineThickness;
+    relChart.positionFamilyControl(familyLine.father ? relChart.$fatherX : relChart.$fatherPlus, x, familyLine.getTop() + 1);
+    relChart.positionFamilyControl(familyLine.mother ? relChart.$motherX : relChart.$motherPlus, x, familyLine.getBottom() - 8 + familyLine.lineThickness);
+
+    if (!isEmpty(familyLine.$childrenX)) {
+      for (var c = 0; c < familyLine.$childrenX.length; c++) {
+        familyLine.$childrenX[c].show();
+      }
+    }
+
+  }
+  // Prevent parent divs from getting the event, since that would immediately clear the selection.
+  if (event) {
+    event.stopPropagation();
+  }
+}
+
+function clearSelections() {
+  if (selectedFamilyLineId) {
+    toggleFamilyLine(selectedFamilyLineId);
+  }
+}
+
+
 // Constructor. Creates an empty RelationshipChart. Needs to be built up using RelChartBuilder.buildChart().
 function RelationshipChart(relGraph, $relChartDiv, shouldIncludeDetails, shouldCompress) {
   this.relGraph = relGraph;
   $relChartDiv.empty();
-  $relChartDiv.append($.parseHTML("<div id='personNodes'></div>\n<div id='familyLines'></div>"));
+  $relChartDiv.append($.parseHTML("<div id='personNodes'></div>\n<div id='familyLines'></div>\n<div id='editControls'></div>"));
 
   this.$personsDiv = $("#personNodes");
   this.$familyLinesDiv = $("#familyLines");
+  this.$editControlsDiv = $("#editControls");
   this.personBoxes = []; // array of all PersonBoxes in the relationship chart, positioned top to bottom
   this.generations = []; // array of Generations that the persons are in, left to right
   this.familyLines = []; // array of family lines
 
   this.personBoxMap = {}; // map of personBoxId to their corresponding PersonBox
-  this.familyLineMap = {}; // map of familyId to its corresponding FamilyLine
+  this.familyLineMap = {}; // map of familyId to its corresponding FamilyLine object
   this.personDupCount = {}; // map of personId to how many duplicates have been seen so far (null/undefined => 0).
 
   // Display options
@@ -227,4 +333,10 @@ function RelationshipChart(relGraph, $relChartDiv, shouldIncludeDetails, shouldC
   this.height = 0;
   this.prevHeight = 0; // height of chart before last update
   this.chartCompressor = new ChartCompressor(this);
+
+  // Edit controls
+  this.$fatherX = this.makeControl("fatherX", "relX");
+  this.$motherX = this.makeControl("motherX", "relX");
+  this.$fatherPlus = this.makeControl("fatherPlus", "relPlus");
+  this.$motherPlus = this.makeControl("motherPlus", "relPlus");
 }

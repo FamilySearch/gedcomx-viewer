@@ -27,11 +27,22 @@
   <div id="rel-chart"></div>
 
   <script>
+    var currentRelChart;
+
     $(document).ready(function(){
       $.getJSON("sample.json", function(sampleGx){
-        buildGraph(sampleGx);
+        currentRelChart = buildGraph(sampleGx);
       });
     });
+
+    /**
+     * Redraw the chart with an updated GedcomX document.
+     * Note that record.html has "updateRecord(doc)" as well, so we're using the same function name for both.
+     * @param doc - GedcomX document to rebuild the chart with.
+     */
+    function updateRecord(doc) {
+      currentRelChart = buildGraph(doc, currentRelChart);
+    }
   </script>
 </body>
 </html>

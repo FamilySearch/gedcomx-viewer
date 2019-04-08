@@ -49,6 +49,15 @@ PersonBox.prototype.getPersonId = function() {
   return this.personNode.personId;
 };
 
+// Remove the given parent FamilyLine from the parentLines array.
+PersonBox.prototype.removeParentFamilyLine = function(parentFamilyLine) {
+  var index = this.parentLines.indexOf(parentFamilyLine);
+  if (index < 0) {
+    throw "Failed to find parent family line.";
+  }
+  this.parentLines.splice(index, 1);
+};
+
 /**
  * Constructor for a PersonBox.
  * @param personNode - PersonNode containing the information shown in this PersonBox.
