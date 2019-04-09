@@ -190,7 +190,7 @@ RelationshipChart.prototype.setPreviousPositions = function(prevRelChart) {
         width = prevFamilyLine.safeWidth(prevFamilyLine.x - prevChildBox.getRight());
         familyLine.$childrenLineDivs[c].css({"left": prevChildBox.getRight(), "top": prevChildBox.center, "width": width});
         familyLine.$childrenX[c].css({"left": prevFamilyLine.x - prevFamilyLine.xSize, "top": prevChildBox.center - prevFamilyLine.xSize/2});
-        familyLine.$childrenLineDots[c].css({"left": prevChildBox.getRight() + width - this.dotWidth/2, "top": prevChildBox.center - this.dotHeight/2});
+        familyLine.$childrenLineDots[c].css({"left": prevChildBox.getRight() + width - familyLine.dotWidth/2, "top": prevChildBox.center - familyLine.dotHeight/2});
       }
     }
   }
