@@ -251,8 +251,20 @@ RelationshipChart.prototype.makeControl = function(divId, imgClass) {
 };
 
 function handleFamilyClick(event, divId) {
-  console.log("Click!");
   event.stopPropagation();
+  var familyLine = relChart.familyLineMap[selectedFamilyLineId];
+  if (divId === "fatherX") {
+    familyLine.removeFather();
+    updateRecord(relChart.relGraph.gx);
+  }
+  else if (divId === "motherX") {
+    familyLine.removeMother();
+    updateRecord(relChart.relGraph.gx);
+  }
+  else {
+    console.log("Click!");
+  }
+
 }
 
 // FamilyId of the selected family line

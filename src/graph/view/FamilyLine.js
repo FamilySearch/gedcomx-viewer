@@ -92,6 +92,74 @@ function removeDiv($divs, index) {
   $divs.splice(index, 1);
 }
 
+/**
+ * Remove a parent from this FamilyLine.
+ * @param parentNode - father or mother in the FamilyLine.
+ * @param spouseNode - mother or father in the FamilyLine (or null or undefined if there isn't one).
+ * @param parentRels - fatherRels or motherRels for the family.
+ */
+FamilyLine.prototype.removeParent = function(parentNode, spouseNode, parentRels) {
+  var doc = currentRelChart.relGraph.gx;
+  var familyNode = this.familyNode;
+  if (spouseNode) {
+    // Remove couple relationship between father and mother.
+    var index = doc.relationships.indexOf(familyNode.coupleRel);
+    doc.relationships.splice(index, 1);
+  }
+  // Remove this family from the parentNode's list of spouseFamilies so it won't get in the way when we look for remaining spouseFamilies with the same child.
+  var s;
+  for (s = 0; s < parentNode.spouseFamilies.length; s++) {
+    if (parentNode.spouseFamilies[s] === familyNode) {
+      parentNode.spouseFamilies.splice(s, 1);
+      break;
+    }
+  }
+  // Remove parent-child relationships between this parent and each child in the family,
+  //  UNLESS there's another family with this parent in it (i.e., with another spouse)
+  //  that has this same child, in which case that relationship is kept.
+  if (familyNode.children) {
+    for (var c = 0; c < familyNode.children.length; c++) {
+      var childId = familyNode.children[c].personId;
+      var foundParentWithOtherSpouse = false;
+      for (s = 0; s < parentNode.spouseFamilies.length && !foundParentWithOtherSpouse; s++) {
+        var otherSpouseFamily = parentNode.spouseFamilies[s];
+        if (otherSpouseFamily.children) {
+          for (var c2 = 0; c2 < otherSpouseFamily.children.length; c2++) {
+            if (otherSpouseFamily.children[c2].personId === childId) {
+              foundParentWithOtherSpouse = true;
+              break;
+            }
+          }
+        }
+      }
+      if (!foundParentWithOtherSpouse) {
+        // The only family in which child c is a child of this father is the one in which the father is being removed.
+        // So remove the parent-child relationship from this father to this child.
+        removeFromArray(parentRels[c], doc.relationships);
+      }
+    }
+  }
+  // Unnecessary if rebuilding relationship chart from scratch:
+  // familyNode.father = null;
+  // if (RelChartBuilder.prototype.familyHasOnlyOnePerson(familyNode)) {
+  //   currentRelChart.removeFamily(this);
+  // }
+  // else {
+  //   // Need to see if there's already a single-parent family with this spouse. If so, move these children to it.
+  //   // If not, change the family ID of this family and update the maps.
+  //   //todo: Don't bother until we need to.
+  // }
+};
+
+FamilyLine.prototype.removeFather = function() {
+  this.removeParent(this.father.personNode, this.mother ? this.mother.personNode : null, this.familyNode.fatherRels);
+};
+
+FamilyLine.prototype.removeMother = function() {
+  this.removeParent(this.mother.personNode, this.father ? this.father.personNode : null, this.familyNode.motherRels);
+};
+
+
 // Remove the given child from the family. Delete the parent-child relationships from the GedcomX. Call updateRecord.
 FamilyLine.prototype.removeChildBox = function(childBox) {
   var doc = currentRelChart.relGraph.gx;
