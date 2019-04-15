@@ -36,10 +36,13 @@ var GX_PARENT_CHILD = "http://gedcomx.org/ParentChild";
      personDivs: HTML node for <div id="#personNodes">.
 
  */
-function buildGraph(gx, prevChart) {
+function buildGraph(gx, prevChart, el) {
   try {
     var graph = new RelationshipGraph(gx);
-    return new RelChartBuilder(graph, $("#rel-chart"), true, true).buildChart(prevChart);
+    if (!el) {
+      el = $("#rel-chart");
+    }
+    return new RelChartBuilder(graph, el, true, true).buildChart(prevChart);
   }
   catch (err) {
     console.log(err);
