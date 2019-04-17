@@ -1,6 +1,7 @@
 #rel-chart {
     font-family: sans-serif;
     line-height: 1;
+    position: absolute;
 }
 
 .personNode {
