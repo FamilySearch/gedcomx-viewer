@@ -453,14 +453,13 @@ var relChart;
  * Constructor.  Creates a RelChartBuilder object an initializes the various structures.
  *   Adds all of the persons from the relationship graph to 'remaining', beginning with the first person flagged as primary, or else the first person.
  * @param relGraph - relationship graph to build a chart for
- * @param $relChart - JQuery object for the div that the chart goes in.
+ * @param $relChartDiv - JQuery object for the div that the chart goes in.
  * @param shouldIncludeDetails - Whether to include alternate names and facts in the chart initially.
  * @param shouldCompress - Whether to do collapsing initially.
  */
-function RelChartBuilder(relGraph, $relChart, shouldIncludeDetails, shouldCompress) {
-  $relChart.click(clearSelections);
+function RelChartBuilder(relGraph, $relChartDiv, shouldIncludeDetails, shouldCompress) {
   // Create a chart with PersonBoxes created, but no FamilyLines or Generations yet.
-  this.relChart = new RelationshipChart(relGraph, $relChart, shouldIncludeDetails, shouldCompress);
+  this.relChart = new RelationshipChart(relGraph, $relChartDiv, shouldIncludeDetails, shouldCompress);
   this.ABOVE = true;
   this.BELOW = false;
   // Set of personIds remaining to be added to the chart.

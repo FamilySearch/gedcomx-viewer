@@ -36,13 +36,20 @@ var GX_PARENT_CHILD = "http://gedcomx.org/ParentChild";
      personDivs: HTML node for <div id="#personNodes">.
 
  */
-function buildGraph(gx, prevChart, el) {
+/**
+ *
+ * @param gx - GedcomX document to visualize
+ * @param prevChart - Previous RelationshipChart object to use to get initial positions for corresponding PersonBox and FamilyLine elements.
+ * @param $relChartDiv - JQuery object for the div with id="rel-chart". If null, will look it up.
+ * @returns {RelationshipChart}
+ */
+function buildGraph(gx, prevChart, $relChartDiv) {
   try {
     var graph = new RelationshipGraph(gx);
-    if (!el) {
-      el = $("#rel-chart");
+    if (!$relChartDiv) {
+      $relChartDiv = $("#rel-chart");
     }
-    return new RelChartBuilder(graph, el, true, true).buildChart(prevChart);
+    return new RelChartBuilder(graph, $relChartDiv, true, true).buildChart(prevChart);
   }
   catch (err) {
     console.log(err);

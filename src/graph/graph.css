@@ -1,49 +1,32 @@
 #rel-chart {
     font-family: sans-serif;
     line-height: 1;
-    position: absolute;
+    position: relative;
 }
 
 .personNode {
-    border: 1px solid;
     border-radius: 4px;
     padding: 2px;
     margin: 0;
     position: absolute;
     box-shadow: 1px 1px 3px #e3eadc;
+    border: 1px solid #8697b3;
+    background: #fdfff8;
 }
 
 .duplicate {
     border: 1px dashed;
 }
 
-.gender-M,.gender-F,.gender-U {
-    border-color: #8697b3;
-    background: #fdfff8 no-repeat 1px 1px;
-    background-size: 18px 18px;
+.gender-image {
+    position: absolute;
+    width: 18px;
+    height: 18px;
 }
 
-.personDropHover {
+.personDropHover,.personNode[chosen] {
     background: #f4ffae no-repeat 1px 1px;
     background-size: 18px 18px;
-}
-
-.gender-M {
-    /*border-color: #3a76f2;*/
-    /*background-color: #f3fdff;*/
-    background-image: url('images/male.png');
-}
-
-.gender-F {
-    /*border-color: #da386f;*/
-    /*background-color: #fbf1f1;*/
-    background-image: url('images/female.png');
-}
-
-.gender-U {
-    /*border-color: #353427;*/
-    /*background-color: #fffee4;*/
-    background-image: url('images/unknown.png');
 }
 
 .fullName,.altName {

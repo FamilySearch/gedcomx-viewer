@@ -227,6 +227,12 @@ RelationshipChart.prototype.hideFamilyControls = function() {
   }
 };
 
+RelationshipChart.prototype.hidePersonControls = function() {
+  this.$personParentPlus.hide();
+  this.$personSpousePlus.hide();
+  this.$personChildPlus.hide();
+};
+
 RelationshipChart.prototype.positionFamilyControl = function($control, x, y) {
   $control.css({left: x, top: y});
   $control.show();
@@ -274,9 +280,47 @@ function handleFamilyClick(event, divId) {
 
 // FamilyId of the selected family line
 var selectedFamilyLineId = null;
+// PersonBoxId of the selected person box. (A person can appear in multiple boxes, so we have to use the box id).
+var selectedPersonBoxId = null;
+
+function togglePerson(personBoxId, event) {
+  clearSelectedFamilyLine();
+  var personBox = relChart.personBoxMap[personBoxId];
+  if (selectedPersonBoxId === personBoxId) {
+    if (personBox) {
+      personBox.$personDiv.removeAttr("chosen");
+    }
+    relChart.hidePersonControls();
+    selectedPersonBoxId = null;
+  }
+  else {
+    if (selectedPersonBoxId) {
+      togglePerson(selectedPersonBoxId);
+    }
+    personBox.$personDiv.attr("chosen", "uh-huh");
+    selectedPersonBoxId = personBoxId;
+    // Set the + controls at the top and bottom of the family line.
+
+    // var x = familyLine.x + familyLine.lineThickness;
+    // relChart.positionFamilyControl(familyLine.father ? relChart.$fatherX : relChart.$fatherPlus, x, familyLine.getTop() + 1);
+    // relChart.positionFamilyControl(familyLine.mother ? relChart.$motherX : relChart.$motherPlus, x, familyLine.getBottom() - 8 + familyLine.lineThickness);
+    //
+    // if (!isEmpty(familyLine.$childrenX)) {
+    //   for (var c = 0; c < familyLine.$childrenX.length; c++) {
+    //     familyLine.$childrenX[c].show();
+    //   }
+    // }
+  }
+
+  // Prevent parent divs from getting the event, since that would immediately clear the selection.
+  if (event) {
+    event.stopPropagation();
+  }
+}
 
 // Toggle whether the given familyId is selected.
 function toggleFamilyLine(familyId, event) {
+  clearSelectedPerson();
   var familyLine = relChart.familyLineMap[familyId];
   if (selectedFamilyLineId === familyId) {
     // Deselect family line.
@@ -311,10 +355,21 @@ function toggleFamilyLine(familyId, event) {
   }
 }
 
-function clearSelections() {
+function clearSelectedPerson() {
+  if (selectedPersonBoxId) {
+    togglePerson(selectedPersonBoxId);
+  }
+}
+
+function clearSelectedFamilyLine() {
   if (selectedFamilyLineId) {
     toggleFamilyLine(selectedFamilyLineId);
   }
+}
+
+function clearSelections() {
+  clearSelectedPerson();
+  clearSelectedFamilyLine();
 }
 
 
@@ -323,7 +378,7 @@ function RelationshipChart(relGraph, $relChartDiv, shouldIncludeDetails, shouldC
   this.relGraph = relGraph;
   $relChartDiv.empty();
   $relChartDiv.append($.parseHTML("<div id='personNodes'></div>\n<div id='familyLines'></div>\n<div id='editControls'></div>"));
-
+  $relChartDiv.click(clearSelections);
   this.$personsDiv = $("#personNodes");
   this.$familyLinesDiv = $("#familyLines");
   this.$editControlsDiv = $("#editControls");
@@ -356,4 +411,7 @@ function RelationshipChart(relGraph, $relChartDiv, shouldIncludeDetails, shouldC
   this.$motherX = this.makeControl("motherX", "relX");
   this.$fatherPlus = this.makeControl("fatherPlus", RelationshipChart.prototype.REL_PLUS);
   this.$motherPlus = this.makeControl("motherPlus", RelationshipChart.prototype.REL_PLUS);
+  this.$personParentPlus = this.makeControl("personParentPlus", RelationshipChart.prototype.REL_PLUS);
+  this.$personSpousePlus = this.makeControl("personSpousePlus", RelationshipChart.prototype.REL_PLUS);
+  this.$personChildPlus = this.makeControl("personChildPlus", RelationshipChart.prototype.REL_PLUS);
 }

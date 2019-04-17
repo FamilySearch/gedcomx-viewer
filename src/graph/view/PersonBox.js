@@ -269,6 +269,12 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generation) {
             ":</span> <span class='factType'>" + encode(person.id) + "</span></div>\n";
   }
 
+  PersonBox.prototype.genderImageMap = {
+    "M" : "male.png",
+    "F" : "female.png",
+    "U" : "unknown.png"
+  };
+
   /**
    Generate a JQuery HTML node like this:
    <div class='personNode gender-M' id='XXXX-YYY'>
@@ -282,6 +288,8 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generation) {
    */
   function makePersonDiv(personNode, personBoxId, duplicateOfBox) {
     var html = "<div class='personNode gender-" + personNode.gender + (duplicateOfBox ? " duplicate" : "") + "' id='" + personBoxId + "'>\n";
+    var imageFile = PersonBox.prototype.genderImageMap[personNode.gender];
+    html += "<img src='images/" + imageFile + "' class='gender-image'>";
     var person = personNode.person;
     html += addNameSpans(person);
     html += addIdDiv(person);
@@ -325,6 +333,8 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generation) {
   var personDiv = makePersonDiv(personNode, this.personBoxId, this.duplicateOf);
   relChart.$personsDiv.append(personDiv);
   this.$personDiv = $("#" + this.personBoxId);
+
+  // Allow a person box to be able to receive a drag & drop event.
   this.$personDiv.droppable({hoverClass : "personDropHover", scope : "personDropScope", drop:
         function(e, ui) {
           var personBox = relChart.personBoxMap[e.target.id];
@@ -340,6 +350,11 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generation) {
           }
         }
   });
+  var personBoxId = this.personBoxId;
+  this.$personDiv.click(function(e) {
+    togglePerson(personBoxId, e);
+  });
+  
   this.$personDiv.outerWidth(generation.relChart.generationWidth);
   this.height = this.$personDiv.outerHeight();
   this.width = this.$personDiv.outerWidth();
