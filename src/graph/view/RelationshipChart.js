@@ -232,6 +232,8 @@ RelationshipChart.prototype.positionFamilyControl = function($control, x, y) {
   $control.show();
 };
 
+RelationshipChart.prototype.REL_PLUS = "relPlus";
+
 /**
  * Create a '+' or 'x' control div for relationships.
  * @param divId - ID to use for the div.
@@ -244,6 +246,9 @@ RelationshipChart.prototype.makeControl = function(divId, imgClass) {
   this.$editControlsDiv.append(controlDiv);
   var $control = $("#" + divId);
   $control.hide();
+  if (imgClass === RelationshipChart.prototype.REL_PLUS) {
+    $control.draggable({revert: true, scope : "personDropScope"});
+  }
   $control.click(function(event) {
     handleFamilyClick(event, divId);
   });
@@ -349,6 +354,6 @@ function RelationshipChart(relGraph, $relChartDiv, shouldIncludeDetails, shouldC
   // Edit controls
   this.$fatherX = this.makeControl("fatherX", "relX");
   this.$motherX = this.makeControl("motherX", "relX");
-  this.$fatherPlus = this.makeControl("fatherPlus", "relPlus");
-  this.$motherPlus = this.makeControl("motherPlus", "relPlus");
+  this.$fatherPlus = this.makeControl("fatherPlus", RelationshipChart.prototype.REL_PLUS);
+  this.$motherPlus = this.makeControl("motherPlus", RelationshipChart.prototype.REL_PLUS);
 }

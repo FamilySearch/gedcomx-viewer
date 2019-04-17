@@ -22,6 +22,11 @@
     background-size: 18px 18px;
 }
 
+.personDropHover {
+    background: #f4ffae no-repeat 1px 1px;
+    background-size: 18px 18px;
+}
+
 .gender-M {
     /*border-color: #3a76f2;*/
     /*background-color: #f3fdff;*/

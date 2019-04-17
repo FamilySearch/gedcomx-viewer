@@ -57,7 +57,8 @@ FamilyLine.prototype.addChildX = function(childLineId, childBox) {
   $childX.hide();
   var familyLine = this;
   $childX.click(function() {
-    familyLine.removeChildBox(childBox);
+    familyLine.removeChild(childBox);
+    updateRecord(relChart.relGraph.gx);
   });
   return $childX;
 };
@@ -92,8 +93,10 @@ function removeDiv($divs, index) {
   $divs.splice(index, 1);
 }
 
+// GEDCOMX UPDATES ======================================================
+
 /**
- * Remove a parent from this FamilyLine.
+ * Remove a parent from this FamilyLine, updating the underlying GedcomX.
  * @param parentNode - father or mother in the FamilyLine.
  * @param spouseNode - mother or father in the FamilyLine (or null or undefined if there isn't one).
  * @param parentRels - fatherRels or motherRels for the family.
@@ -139,29 +142,20 @@ FamilyLine.prototype.removeParent = function(parentNode, spouseNode, parentRels)
       }
     }
   }
-  // Unnecessary if rebuilding relationship chart from scratch:
-  // familyNode.father = null;
-  // if (RelChartBuilder.prototype.familyHasOnlyOnePerson(familyNode)) {
-  //   currentRelChart.removeFamily(this);
-  // }
-  // else {
-  //   // Need to see if there's already a single-parent family with this spouse. If so, move these children to it.
-  //   // If not, change the family ID of this family and update the maps.
-  //   //todo: Don't bother until we need to.
-  // }
 };
 
+// Remove the father from this family, updating the underlying GedcomX
 FamilyLine.prototype.removeFather = function() {
   this.removeParent(this.father.personNode, this.mother ? this.mother.personNode : null, this.familyNode.fatherRels);
 };
 
+// Remove the mother from this family, updating the underlying GedcomX
 FamilyLine.prototype.removeMother = function() {
   this.removeParent(this.mother.personNode, this.father ? this.father.personNode : null, this.familyNode.motherRels);
 };
 
-
 // Remove the given child from the family. Delete the parent-child relationships from the GedcomX. Call updateRecord.
-FamilyLine.prototype.removeChildBox = function(childBox) {
+FamilyLine.prototype.removeChild = function(childBox) {
   var doc = currentRelChart.relGraph.gx;
   var childIndex = this.children.indexOf(childBox);
   var familyNode = this.familyNode;
@@ -192,9 +186,122 @@ FamilyLine.prototype.removeChildBox = function(childBox) {
     // Removed last child, and only one parent, so family line should go away.
     currentRelChart.removeFamily(this);
   }
-  // Cause the relationship graph to be redrawn.
-  updateRecord(doc);
 };
+
+FamilyLine.prototype.sameId = function(personRef1, personId2) {
+  if (personRef1 && personId2) {
+    var personId1 = getPersonIdFromReference(personRef1);
+    return personId1 === personId2;
+  }
+};
+
+/**
+ * Add a relationship of the given type between the two given persons to the given GedcomX document.
+ * @param doc - GedcomX document to add the relationship to.
+ * @param relType - Relationship type (GX_PARENT_CHILD or GX_COUPLE)
+ * @param personId1 - JEncoded person ID of the first person.
+ * @param personId2 - JEncoded person ID of the second person.
+ */
+FamilyLine.prototype.addRelationship = function(doc, relType, personId1, personId2) {
+  if (!doc.relationships) {
+    doc.relationships = [];
+  }
+  var relationship = {};
+  var prefix = (relType === GX_PARENT_CHILD ? "r-pc" : (relType === GX_COUPLE ? "r-c" : "r-" + relType));
+  relationship.id = prefix + "-" + personId1 + "-" + personId2;
+  relationship.type = relType;
+  relationship.person1 = {resource :"#" + personId1, resourceId : personId1};
+  relationship.person2 = {resource : "#" + personId2, resourceId : personId2};
+  doc.relationships.push(relationship);
+};
+
+/**
+ * Make sure the given relationship type exists between the two person IDs in the given GedcomX document.
+ * If not, then add it.
+ * @param doc - GedcomX document to check and, if needed, add the relationship to.
+ * @param relType - Relationship type (GX_PARENT_CHILD or GX_COUPLE)
+ * @param personId1 - JEncoded person ID of the first person.
+ * @param personId2 - JEncoded person ID of the second person.
+ */
+FamilyLine.prototype.ensureRelationship = function(doc, relType, personId1, personId2) {
+  if (personId1 && personId2) {
+    if (doc.relationships) {
+      for (var r = 0; r < doc.relationships.length; r++) {
+        var rel = doc.relationships[r];
+        if (rel.type === relType && this.sameId(rel.person1, personId1) && this.sameId(rel.person2, personId2)) {
+          return; // Relationship already exists.
+        }
+      }
+    }
+    this.addRelationship(doc, relType, personId1, personId2);
+  }
+};
+
+/**
+ * Ensure that the given relationship type exists between the first person ID and the person ID of all of the PersonNodes in the person2Nodes array.
+ * @param doc - GedcomX document to check and update if needed.
+ * @param relType - Relationship type (GX_PARENT_CHILD or GX_COUPLE)
+ * @param person1Id - Person ID for person1 in each relationship.
+ * @param person2Nodes - Array of PersonNode from which to get the personId for checking each relationship.
+ */
+FamilyLine.prototype.ensureRelationships = function(doc, relType, person1Id, person2Nodes) {
+  if (person2Nodes) {
+    for (var c = 0; c < person2Nodes.length; c++) {
+      var person2Id = person2Nodes[c].personNode.personId;
+      this.ensureRelationship(doc, relType, person1Id, person2Id);
+    }
+  }
+};
+
+// Set the person in the given motherBox to be the mother of this family, updating the underlying GedcomX as needed. Update record.
+FamilyLine.prototype.changeMother = function(motherBox) {
+  var doc = currentRelChart.relGraph.gx;
+  if (this.mother) {
+    // Remove the existing mother from the family, if any.
+    this.removeMother();
+  }
+  if (!this.father) {
+    throw "Expected there to be a father when adding mother to family.";
+  }
+  var fatherId = this.father ? this.father.personNode.personId : null;
+  var motherId = motherBox.personNode.personId;
+  var familyId = makeFamilyId(this.father.personNode, motherBox.personNode);
+  // See if there's already a family with this couple. If so, merge this family with that one.
+  var existingFamilyLine = currentRelChart.familyLineMap[familyId];
+  if (!existingFamilyLine) {
+    // Create the missing couple relationship between the father and mother.
+    this.ensureRelationship(doc, GX_COUPLE, fatherId, motherId);
+  }
+  // Create any missing parent-child relationships between the mother and each child.
+  this.ensureRelationships(doc, GX_PARENT_CHILD, motherId, this.children);
+};
+
+// Set the person in the given fatherBox to be the father of this family, updating the underlying GedcomX as needed. Update record.
+FamilyLine.prototype.changeFather = function(fatherBox) {
+  var doc = currentRelChart.relGraph.gx;
+  if (this.father) {
+    // Remove the existing mother from the family, if any.
+    this.removeFather();
+  }
+  if (!this.mother) {
+    throw "Expected there to be a mother when adding father to family.";
+  }
+  var motherId = this.mother ? this.mother.personNode.personId : null;
+  var fatherId = fatherBox.personNode.personId;
+  var familyId = makeFamilyId(fatherBox.personNode, this.mother.personNode);
+  // See if there's already a family with this couple. If so, merge this family with that one.
+  var existingFamilyLine = currentRelChart.familyLineMap[familyId];
+  if (!existingFamilyLine) {
+    // Create the missing couple relationship between the father and mother.
+    this.ensureRelationship(doc, GX_COUPLE, fatherId, motherId);
+  }
+  // Create any missing parent-child relationships between the mother and each child.
+  this.ensureRelationships(doc, GX_PARENT_CHILD, fatherId, this.children);
+};
+
+
+// ===== END OF GEDCOMX UPDATES =======
+
 
 FamilyLine.prototype.setFather = function(fatherBox) {
   if (fatherBox) {

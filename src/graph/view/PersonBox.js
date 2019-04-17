@@ -284,7 +284,7 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generation) {
     var html = "<div class='personNode gender-" + personNode.gender + (duplicateOfBox ? " duplicate" : "") + "' id='" + personBoxId + "'>\n";
     var person = personNode.person;
     html += addNameSpans(person);
-    // html += addIdDiv(person);
+    html += addIdDiv(person);
     html += addFactDivs(personNode);
     html += "</div>";
     return $.parseHTML(html);
@@ -325,6 +325,21 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generation) {
   var personDiv = makePersonDiv(personNode, this.personBoxId, this.duplicateOf);
   relChart.$personsDiv.append(personDiv);
   this.$personDiv = $("#" + this.personBoxId);
+  this.$personDiv.droppable({hoverClass : "personDropHover", scope : "personDropScope", drop:
+        function(e, ui) {
+          var personBox = relChart.personBoxMap[e.target.id];
+          var plus = e.originalEvent.target.id;
+          var familyLine = relChart.familyLineMap[selectedFamilyLineId];
+          if (plus === "motherPlus") {
+            familyLine.changeMother(personBox);
+            updateRecord(relChart.relGraph.gx);
+          }
+          else if (plus === "fatherPlus") {
+            familyLine.changeFather(personBox);
+            updateRecord(relChart.relGraph.gx);
+          }
+        }
+  });
   this.$personDiv.outerWidth(generation.relChart.generationWidth);
   this.height = this.$personDiv.outerHeight();
   this.width = this.$personDiv.outerWidth();
