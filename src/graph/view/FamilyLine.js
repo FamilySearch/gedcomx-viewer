@@ -144,14 +144,29 @@ FamilyLine.prototype.removeParent = function(parentNode, spouseNode, parentRels)
   }
 };
 
+FamilyLine.prototype.updateParents = function(fatherBox, motherBox) {
+  this.father = fatherBox;
+  this.mother = motherBox;
+  if (fatherBox || motherBox) {
+    var newFamilyId = makeFamilyId(fatherBox ? fatherBox.personNode : null, motherBox ? motherBox.personNode : null);
+    if (!currentRelChart.familyLineMap[newFamilyId]) {
+      // We're creating a new family line out of this one. So update this one so that the new chart will re-use its position.
+      this.familyId = newFamilyId;
+      currentRelChart.familyLineMap[newFamilyId] = this;
+    }
+  }
+};
+
 // Remove the father from this family, updating the underlying GedcomX
 FamilyLine.prototype.removeFather = function() {
   this.removeParent(this.father.personNode, this.mother ? this.mother.personNode : null, this.familyNode.fatherRels);
+  this.updateParents(null, this.mother);
 };
 
 // Remove the mother from this family, updating the underlying GedcomX
 FamilyLine.prototype.removeMother = function() {
   this.removeParent(this.mother.personNode, this.father ? this.father.personNode : null, this.familyNode.motherRels);
+  this.updateParents(this.father, null);
 };
 
 // Remove the given child from the family. Delete the parent-child relationships from the GedcomX. Call updateRecord.
@@ -271,6 +286,10 @@ FamilyLine.prototype.changeMother = function(motherBox) {
   if (!existingFamilyLine) {
     // Create the missing couple relationship between the father and mother.
     this.ensureRelationship(doc, GX_COUPLE, fatherId, motherId);
+    // Change the family ID of this FamilyLine so that the new chart will use its position.
+    this.familyId = familyId;
+    this.mother = motherBox;
+    currentRelChart.familyLineMap[familyId] = this;
   }
   // Create any missing parent-child relationships between the mother and each child.
   this.ensureRelationships(doc, GX_PARENT_CHILD, motherId, this.children);
@@ -294,6 +313,10 @@ FamilyLine.prototype.changeFather = function(fatherBox) {
   if (!existingFamilyLine) {
     // Create the missing couple relationship between the father and mother.
     this.ensureRelationship(doc, GX_COUPLE, fatherId, motherId);
+    // Change the family ID of this FamilyLine so that the new chart will use its position.
+    this.familyId = familyId;
+    this.father = fatherBox;
+    currentRelChart.familyLineMap[familyId] = this;
   }
   // Create any missing parent-child relationships between the mother and each child.
   this.ensureRelationships(doc, GX_PARENT_CHILD, fatherId, this.children);
