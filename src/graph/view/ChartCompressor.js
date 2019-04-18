@@ -66,7 +66,7 @@ ChartCompressor.prototype.checkBump = function(personBox, otherBox, bumpedSet, m
   var extraSpace;
   if (personBox.generation === otherBox.generation) {
     // Persons are in the same generation, so compare the bottom of one (+ vertical gap) to the top of the other.
-    extraSpace = otherBox.getTop() - personBox.getBottom() - this.relChart.verticalGap - this.relChart.subtreeGap(personBox, otherBox);
+    extraSpace = otherBox.getTop() - personBox.getBelow() - this.relChart.verticalGap - this.relChart.subtreeGap(personBox, otherBox);
   }
   else {
     // Persons are in different generations (parent/child), so compare the center of one (+ generation gap)
@@ -195,7 +195,7 @@ ChartCompressor.prototype.moveHusbandsDown = function(personBoxes) {
 
         // See where next person in the same generation is
         if (personBox.genBelow) {
-          y = personBox.genBelow.getTop() - this.relChart.verticalGap - (personBox.getBottom() - personBox.getCenter());
+          y = personBox.genBelow.getTop() - this.relChart.verticalGap - (personBox.getBelow() - personBox.getCenter());
           if (!minY || y < minY) {
             minY = y;
           }
@@ -214,7 +214,7 @@ ChartCompressor.prototype.checkPersonPosition = function(personBox, otherBox, me
     var extraSpace;
     if (personBox.generation === otherBox.generation) {
       // Persons are in the same generation, so compare the bottom of one (+ vertical gap) to the top of the other.
-      extraSpace = otherBox.getTop() - personBox.getBottom() - this.relChart.verticalGap;
+      extraSpace = otherBox.getTop() - personBox.getBelow() - this.relChart.verticalGap;
     }
     else {
       // Persons are in different generations (parent/child), so compare the center of one (+ generation gap)

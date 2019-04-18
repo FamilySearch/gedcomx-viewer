@@ -42,7 +42,12 @@ PersonBox.prototype.getCenter = function() {
 };
 
 PersonBox.prototype.getBottom = function() {
-  return this.top + this.height + this.relChart.personBorder;
+  return this.top + this.height;
+};
+
+// Get the y-coordinate of where the next box below should go, which is this box's bottom plus the 'personBorder' for spacing.
+PersonBox.prototype.getBelow = function() {
+  return this.getBottom() + this.relChart.personBorder;
 };
 
 PersonBox.prototype.getPersonId = function() {
@@ -337,19 +342,50 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generation) {
   // Allow a person box to be able to receive a drag & drop event.
   this.$personDiv.droppable({hoverClass : "personDropHover", scope : "personDropScope", drop:
         function(e, ui) {
-          var personBox = relChart.personBoxMap[e.target.id];
+          var droppedPersonBox = relChart.personBoxMap[e.target.id];
           var plus = e.originalEvent.target.id;
-          var familyLine = relChart.familyLineMap[selectedFamilyLineId];
-          if (plus === "motherPlus") {
-            familyLine.changeMother(personBox);
-            updateRecord(relChart.relGraph.gx);
+          if (plus === "motherPlus" || plus === "fatherPlus") {
+            var familyLine = relChart.familyLineMap[selectedFamilyLineId];
+            switch (plus) {
+              case "motherPlus":
+                familyLine.changeMother(droppedPersonBox);
+                break;
+              case "fatherPlus":
+                familyLine.changeFather(droppedPersonBox);
+                break;
+            }
           }
-          else if (plus === "fatherPlus") {
-            familyLine.changeFather(personBox);
-            updateRecord(relChart.relGraph.gx);
+          else {
+            var sourcePersonBox = relChart.personBoxMap[selectedPersonBoxId];
+            var sourcePersonId = sourcePersonBox.personNode.personId;
+            var droppedPersonId = droppedPersonBox.personNode.personId;
+            var doc = relChart.relGraph.gx;
+            switch (plus) {
+              case "personParentPlus":
+                relChart.ensureRelationship(doc, GX_PARENT_CHILD, droppedPersonId, sourcePersonId);
+                break;
+              case "personChildPlus":
+                relChart.ensureRelationship(doc, GX_PARENT_CHILD, sourcePersonId, droppedPersonId);
+                break;
+              case "personSpousePlus":
+                var sourcePersonNode = sourcePersonBox.personNode;
+                var droppedPersonNode = droppedPersonBox.personNode;
+                if (wrongGender(sourcePersonNode, droppedPersonNode)) {
+                  relChart.ensureRelationship(doc, GX_COUPLE, droppedPersonId, sourcePersonId);
+                }
+                else {
+                  relChart.ensureRelationship(doc, GX_COUPLE, sourcePersonId, droppedPersonId);
+                }
+                break;
+              default:
+                return; // Don't update the record, because nothing happened.
+            }
           }
+          updateRecord(relChart.relGraph.gx);
         }
+
   });
+  
   var personBoxId = this.personBoxId;
   this.$personDiv.click(function(e) {
     togglePerson(personBoxId, e);

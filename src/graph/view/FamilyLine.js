@@ -203,71 +203,6 @@ FamilyLine.prototype.removeChild = function(childBox) {
   }
 };
 
-FamilyLine.prototype.sameId = function(personRef1, personId2) {
-  if (personRef1 && personId2) {
-    var personId1 = getPersonIdFromReference(personRef1);
-    return personId1 === personId2;
-  }
-};
-
-/**
- * Add a relationship of the given type between the two given persons to the given GedcomX document.
- * @param doc - GedcomX document to add the relationship to.
- * @param relType - Relationship type (GX_PARENT_CHILD or GX_COUPLE)
- * @param personId1 - JEncoded person ID of the first person.
- * @param personId2 - JEncoded person ID of the second person.
- */
-FamilyLine.prototype.addRelationship = function(doc, relType, personId1, personId2) {
-  if (!doc.relationships) {
-    doc.relationships = [];
-  }
-  var relationship = {};
-  var prefix = (relType === GX_PARENT_CHILD ? "r-pc" : (relType === GX_COUPLE ? "r-c" : "r-" + relType));
-  relationship.id = prefix + "-" + personId1 + "-" + personId2;
-  relationship.type = relType;
-  relationship.person1 = {resource :"#" + personId1, resourceId : personId1};
-  relationship.person2 = {resource : "#" + personId2, resourceId : personId2};
-  doc.relationships.push(relationship);
-};
-
-/**
- * Make sure the given relationship type exists between the two person IDs in the given GedcomX document.
- * If not, then add it.
- * @param doc - GedcomX document to check and, if needed, add the relationship to.
- * @param relType - Relationship type (GX_PARENT_CHILD or GX_COUPLE)
- * @param personId1 - JEncoded person ID of the first person.
- * @param personId2 - JEncoded person ID of the second person.
- */
-FamilyLine.prototype.ensureRelationship = function(doc, relType, personId1, personId2) {
-  if (personId1 && personId2) {
-    if (doc.relationships) {
-      for (var r = 0; r < doc.relationships.length; r++) {
-        var rel = doc.relationships[r];
-        if (rel.type === relType && this.sameId(rel.person1, personId1) && this.sameId(rel.person2, personId2)) {
-          return; // Relationship already exists.
-        }
-      }
-    }
-    this.addRelationship(doc, relType, personId1, personId2);
-  }
-};
-
-/**
- * Ensure that the given relationship type exists between the first person ID and the person ID of all of the PersonNodes in the person2Nodes array.
- * @param doc - GedcomX document to check and update if needed.
- * @param relType - Relationship type (GX_PARENT_CHILD or GX_COUPLE)
- * @param person1Id - Person ID for person1 in each relationship.
- * @param person2Nodes - Array of PersonNode from which to get the personId for checking each relationship.
- */
-FamilyLine.prototype.ensureRelationships = function(doc, relType, person1Id, person2Nodes) {
-  if (person2Nodes) {
-    for (var c = 0; c < person2Nodes.length; c++) {
-      var person2Id = person2Nodes[c].personNode.personId;
-      this.ensureRelationship(doc, relType, person1Id, person2Id);
-    }
-  }
-};
-
 // Set the person in the given motherBox to be the mother of this family, updating the underlying GedcomX as needed. Update record.
 FamilyLine.prototype.changeMother = function(motherBox) {
   var doc = currentRelChart.relGraph.gx;
@@ -292,7 +227,7 @@ FamilyLine.prototype.changeMother = function(motherBox) {
     currentRelChart.familyLineMap[familyId] = this;
   }
   // Create any missing parent-child relationships between the mother and each child.
-  this.ensureRelationships(doc, GX_PARENT_CHILD, motherId, this.children);
+  currentRelChart.ensureRelationships(doc, GX_PARENT_CHILD, motherId, this.children);
 };
 
 // Set the person in the given fatherBox to be the father of this family, updating the underlying GedcomX as needed. Update record.
@@ -319,7 +254,7 @@ FamilyLine.prototype.changeFather = function(fatherBox) {
     currentRelChart.familyLineMap[familyId] = this;
   }
   // Create any missing parent-child relationships between the mother and each child.
-  this.ensureRelationships(doc, GX_PARENT_CHILD, fatherId, this.children);
+  currentRelChart.ensureRelationships(doc, GX_PARENT_CHILD, fatherId, this.children);
 };
 
 

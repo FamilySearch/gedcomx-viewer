@@ -261,17 +261,18 @@ RelChartBuilder.prototype.addPersons = function() {
 /**
  * Create a list of Generation objects from generationMap, filled with the list of persons for each generation.
  *   Set the global and generation order on each person box.
+ *   Shift the 'index' in Generation objects so that the leftmost generation is at 0.
  * @return Array of Generation objects that were created, with person lists filled in.
  */
 RelChartBuilder.prototype.createGenerations = function() {
   // Get the minimum value of any key in the given map (object). Assumes that the keys are numeric.
-  function getMinKey(map) {
+  function getMinGenerationNumber(generationMap) {
     var min = null;
-    var key;
-    for (key in map) {
-      if (map.hasOwnProperty(key)) {
-        if (min === null || key < min) {
-          min = key;
+    for (var key in generationMap) {
+      if (generationMap.hasOwnProperty(key)) {
+        var generation = generationMap[key];
+        if (min === null || generation.index < min) {
+          min = generation.index;
         }
       }
     }
@@ -281,9 +282,10 @@ RelChartBuilder.prototype.createGenerations = function() {
   // Get an array of the generations in the given map, with their generation indexes shifted so that the returned array
   //   has generation[index].index = index, and index goes from 0 to generation.length - 1.
   function shiftGenerations(generationMap) {
-    //Todo: do this within each subtree so that each subtree has its leftmost person in generation. Otherwise it's sort of random.
-    // Fix generation index so it starts at 0 (though it really doesn't matter)
-    var minGenerationIndex = getMinKey(generationMap);
+    //Todo: do this within each subtree so that each subtree has its leftmost person in generation 0. Otherwise it's sort of random.
+    // (or, start each subtree in principal's generation, but then make sure to slide it if adds an unnecessary generation somewhere).
+    // Fix generation index so it starts at 0.
+    var minGenerationIndex = getMinGenerationNumber(generationMap);
     var generations = [];
     var generationIndex;
     var generation;
@@ -291,6 +293,9 @@ RelChartBuilder.prototype.createGenerations = function() {
       if (generationMap.hasOwnProperty(generationIndex)) {
         generation = generationMap[generationIndex];
         generation.index = generationIndex - minGenerationIndex;
+        if (generation.index < 0) {
+          throw "Bogus index number";
+        }
         generations[generation.index] = generation;
       }
     }
