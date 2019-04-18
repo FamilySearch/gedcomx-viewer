@@ -102,8 +102,24 @@
     width: 2px;
 }
 
-.familyLine:hover {
-    width: 4px;
+.familyLineDropZone {
+    width: 6px;
+    background-color: transparent;
+    position:relative;
+    left: -2px;
+    top: 0;
+}
+
+.familyLineDropZone:hover,.familyDropHover {
+    background-color: #b8b680;
+}
+
+/*.familyLine:hover {*/
+    /*width: 4px;*/
+/*}*/
+
+.familyDropHover {
+
 }
 
 .familyLine[chosen] {

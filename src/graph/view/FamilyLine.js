@@ -1,6 +1,8 @@
 
 FamilyLine.prototype.makeFamilyLineDiv = function(familyId) {
-  var html = "<div class='familyLine' id='" + familyId + "' onclick='toggleFamilyLine(\"" + familyId + "\", event)'></div>";
+  var html = "<div class='familyLine' id='" + familyId + "' onclick='toggleFamilyLine(\"" + familyId + "\", event)'>" +
+      "  <div class='familyLineDropZone' id='" + familyId + "-drop'></div>" +
+      "</div>";
   return $.parseHTML(html);
 };
 
@@ -310,6 +312,7 @@ FamilyLine.prototype.setPosition = function() {
   var bottom = this.bottomPerson.center;
   var height = 1 + bottom - top;
   this.$familyLineDiv.animate({"left": this.x, "top": top, "height": height}, RelationshipChart.prototype.animationSpeed);
+  this.$familyLineDrop.animate({"height": height}, RelationshipChart.prototype.animationSpeed);
   this.prevTop = top;
   this.prevBottom = bottom;
   this.prevX = this.x;
@@ -491,6 +494,8 @@ function FamilyLine(familyNode, parentGeneration, $familyLinesDiv) {
   var familyLineDiv = this.makeFamilyLineDiv(familyNode.familyId);
   $familyLinesDiv.append(familyLineDiv);
   this.$familyLineDiv = $("#" + familyNode.familyId);
+  this.$familyLineDrop = $("#" + familyNode.familyId + "-drop");
+
   // See how wide the lines are, which is set in graph.css
   // Use this to make sure "dots" are centered, and there aren't gaps at "single parent" corners.
   this.lineThickness = this.$familyLineDiv.width();
@@ -503,4 +508,29 @@ function FamilyLine(familyNode, parentGeneration, $familyLinesDiv) {
   this.$childrenX = [];
 
   this.$familyLinesDiv = $familyLinesDiv;
+
+  // Allow a person box to be able to receive a drag & drop event.
+  this.$familyLineDrop.droppable({
+    hoverClass : "familyDropHover",
+    scope : "personDropScope",
+    accept : "#personParentPlus",
+    drop:
+        function(e) {
+          var plus = e.originalEvent.target.id;
+          if (plus === "personParentPlus") {
+            var familyId = e.target.id.replace("-drop", "");
+            var droppedFamilyLine = relChart.familyLineMap[familyId];
+            var sourcePersonId = relChart.personBoxMap[selectedPersonBoxId].personNode.personId;
+            var doc = relChart.relGraph.gx;
+            if (droppedFamilyLine.father) {
+              relChart.ensureRelationship(doc, GX_PARENT_CHILD, droppedFamilyLine.father.personNode.personId, sourcePersonId);
+            }
+            if (droppedFamilyLine.mother) {
+              relChart.ensureRelationship(doc, GX_PARENT_CHILD, droppedFamilyLine.mother.personNode.personId, sourcePersonId);
+            }
+            updateRecord(doc);
+          }
+        }
+  });
+
 }

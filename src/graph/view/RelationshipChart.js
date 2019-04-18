@@ -176,6 +176,7 @@ RelationshipChart.prototype.setPreviousPositions = function(prevRelChart) {
     if (prevFamilyLine) {
       var height = 1 + prevFamilyLine.bottomPerson.center - prevFamilyLine.topPerson.center;
       familyLine.$familyLineDiv.css({left: prevFamilyLine.x + "px", top: prevFamilyLine.topPerson.center + "px", height: height + "px"});
+      familyLine.$familyLineDrop.css({height: height + "px"});
       var width;
       if (familyLine.$fatherLineDiv) {
         width = prevFamilyLine.safeWidth(prevFamilyLine.father.getLeft() - prevFamilyLine.x);
