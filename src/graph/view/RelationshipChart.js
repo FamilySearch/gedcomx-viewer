@@ -192,11 +192,13 @@ RelationshipChart.prototype.setPreviousPositions = function(prevRelChart) {
       for (c = 0;  c < familyLine.children.length; c++) {
         var childPersonBox = familyLine.children[c];
         var prevChildBox = prevRelChart.personBoxMap[childPersonBox.personBoxId];
-        width = prevFamilyLine.safeWidth(prevFamilyLine.x - prevChildBox.getRight());
-        familyLine.$childrenLineDivs[c].css({"left": prevChildBox.getRight(), "top": prevChildBox.center, "width": width});
-        familyLine.$childrenLineDots[c].css({"left": prevChildBox.getRight() + width - familyLine.dotWidth/2, "top": prevChildBox.center - familyLine.dotHeight/2});
-        if (familyLine.$childrenX) { // => isEditable
-          familyLine.$childrenX[c].css({"left": prevFamilyLine.x - prevFamilyLine.xSize, "top": prevChildBox.center - prevFamilyLine.xSize/2});
+        if (prevChildBox) {
+          width = prevFamilyLine.safeWidth(prevFamilyLine.x - prevChildBox.getRight());
+          familyLine.$childrenLineDivs[c].css({"left": prevChildBox.getRight(), "top": prevChildBox.center, "width": width});
+          familyLine.$childrenLineDots[c].css({"left": prevChildBox.getRight() + width - familyLine.dotWidth / 2, "top": prevChildBox.center - familyLine.dotHeight / 2});
+          if (familyLine.$childrenX) { // => isEditable
+            familyLine.$childrenX[c].css({"left": prevFamilyLine.x - prevFamilyLine.xSize, "top": prevChildBox.center - prevFamilyLine.xSize / 2});
+          }
         }
       }
     }

@@ -73,9 +73,9 @@ FamilyLine.prototype.safeWidth = function(width) {
 // Add a PersonBox to the list of children for this FamilyLine, and create a div for the line connecting that child's PersonBox to the FamilyLine.
 FamilyLine.prototype.addChild = function(childBox, isEditable) {
   if (childBox) {
+    var childLineId = this.familyNode.familyId + "-c" + this.children.length;
     this.children.push(childBox);
     this.prevChildCenter.push(childBox.center);
-    var childLineId = this.familyNode.familyId + "-c" + this.children.length;
     var left = childBox.getRight();
     var width = this.safeWidth(this.x - left);
     this.$childrenLineDivs.push(this.addPersonLine(childLineId, left, childBox.center, width));
@@ -349,34 +349,8 @@ function FamilyLine(relChart, familyNode, parentGeneration, $familyLinesDiv) {
       scope: "personDropScope",
       accept: "#personParentPlus,.childX",
       drop:
-          function (e) {
-            var plus = e.originalEvent.target.id;
-            var familyId = e.target.id.replace("-drop", "");
-            var droppedFamilyLine = relChart.familyLineMap[familyId];
-            var doc = relChart.relGraph.gx;
-            var sourcePersonId;
-            if (plus === "personParentPlus") {
-              sourcePersonId = relChart.selectedPersonBox.personNode.personId;
-            }
-            else {
-              var parts = e.originalEvent.target.id.match(/childX-(.*)-c([0-9]*)/);
-              var oldFamilyId = parts[1];
-              if (oldFamilyId === familyId) {
-                return; // Dropped '+' on same family the child was already in, so do nothing.
-              }
-              var childIndex = parts[2];
-              var oldFamilyLine = relChart.familyLineMap[oldFamilyId];
-              var childBox = oldFamilyLine.children[childIndex];
-              oldFamilyLine.removeChild(childBox);
-              sourcePersonId = childBox.personNode.personId;
-            }
-            if (droppedFamilyLine.father) {
-              relChart.ensureRelationship(GX_PARENT_CHILD, droppedFamilyLine.father.personNode.personId, sourcePersonId);
-            }
-            if (droppedFamilyLine.mother) {
-              relChart.ensureRelationship(GX_PARENT_CHILD, droppedFamilyLine.mother.personNode.personId, sourcePersonId);
-            }
-            updateRecord(doc);
+          function(e) {
+            thisFamilyLine.familyDrop(e);
           }
     });
   }
