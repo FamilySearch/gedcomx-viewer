@@ -371,10 +371,10 @@ function FamilyLine(relChart, familyNode, parentGeneration, $familyLinesDiv) {
               sourcePersonId = childBox.personNode.personId;
             }
             if (droppedFamilyLine.father) {
-              relChart.ensureRelationship(doc, GX_PARENT_CHILD, droppedFamilyLine.father.personNode.personId, sourcePersonId);
+              relChart.ensureRelationship(GX_PARENT_CHILD, droppedFamilyLine.father.personNode.personId, sourcePersonId);
             }
             if (droppedFamilyLine.mother) {
-              relChart.ensureRelationship(doc, GX_PARENT_CHILD, droppedFamilyLine.mother.personNode.personId, sourcePersonId);
+              relChart.ensureRelationship(GX_PARENT_CHILD, droppedFamilyLine.mother.personNode.personId, sourcePersonId);
             }
             updateRecord(doc);
           }
