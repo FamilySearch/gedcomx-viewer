@@ -80,7 +80,7 @@ RelChartBuilder.prototype.addSpouses = function(personBox, subtree, needsRelativ
         continue; // don't bother creating family lines that will not connect anyone
       }
       if (!this.relChart.familyLineMap[spouseFamily.familyId]) {
-        spouseFamilyLine = new FamilyLine(spouseFamily, personBox.generation, this.relChart.$familyLinesDiv);
+        spouseFamilyLine = new FamilyLine(this.relChart, spouseFamily, personBox.generation, this.relChart.$familyLinesDiv);
         this.relChart.familyLineMap[spouseFamily.familyId] = spouseFamilyLine;
         this.relChart.familyLines.push(spouseFamilyLine);
         personBox.spouseLines.push(spouseFamilyLine);
@@ -108,14 +108,14 @@ RelChartBuilder.prototype.addSpouses = function(personBox, subtree, needsRelativ
             // Reverse the list of children and then add them all to the spouse family line so they'll be in the right order
             childBoxes.reverse();
             for (c = 0; c < childBoxes.length; c++) {
-              spouseFamilyLine.addChild(childBoxes[c]);
+              spouseFamilyLine.addChild(childBoxes[c], this.relChart.isEditable);
             }
           }
           else {
             // Insert children above the person (i.e., the mother), from first to last
             for (c = 0; c < spouseFamily.children.length; c++) {
               childBox = this.insert(direction, personBox, spouseFamily.children[c], childGeneration, null, spouseFamilyLine, needsRelativesQueue, subtree);
-              spouseFamilyLine.addChild(childBox);
+              spouseFamilyLine.addChild(childBox, this.relChart.isEditable);
             }
           }
         }
@@ -151,7 +151,7 @@ RelChartBuilder.prototype.addParents = function(personBox, subtree, needsRelativ
       }
       if (!this.relChart.familyLineMap[parentFamily.familyId]) {
         parentGeneration = this.getGen(personBox.generation.index + 1);
-        parentFamilyLine = new FamilyLine(parentFamily, parentGeneration, this.relChart.$familyLinesDiv);
+        parentFamilyLine = new FamilyLine(this.relChart, parentFamily, parentGeneration, this.relChart.$familyLinesDiv);
         this.relChart.familyLineMap[parentFamily.familyId] = parentFamilyLine;
         this.relChart.familyLines.push(parentFamilyLine);
         personBox.parentLines.push(parentFamilyLine);
@@ -167,12 +167,12 @@ RelChartBuilder.prototype.addParents = function(personBox, subtree, needsRelativ
             child = children[personPosition++];
             if (child !== personNode) {
               siblingBox = this.insert(this.ABOVE, personBox, child, personBox.generation, null, parentFamilyLine, needsRelativesQueue, subtree);
-              parentFamilyLine.addChild(siblingBox);
+              parentFamilyLine.addChild(siblingBox, this.relChart.isEditable);
             }
           } while (personPosition < children.length && child !== personNode);
 
           // Add the person to the parent family line's child list
-          parentFamilyLine.addChild(personBox);
+          parentFamilyLine.addChild(personBox, this.relChart.isEditable);
 
           // Insert younger siblings below the person from youngest to oldest
           youngerSiblingBoxes = [];
@@ -186,7 +186,7 @@ RelChartBuilder.prototype.addParents = function(personBox, subtree, needsRelativ
           }
           // Add younger siblings to the family line from oldest to youngest so that the child list is in order
           for (c = youngerSiblingBoxes.length - 1; c >= 0; c--) {
-            parentFamilyLine.addChild(youngerSiblingBoxes[c]);
+            parentFamilyLine.addChild(youngerSiblingBoxes[c], this.relChart.isEditable);
           }
         }
       }
@@ -371,7 +371,9 @@ RelChartBuilder.prototype.setFamilyLineTopBottoms = function() {
     familyLine.bottomPerson = familyLine.mother ? familyLine.mother : familyLine.children[familyLine.children.length - 1];
     var height = Math.max(familyLine.bottomPerson.center - familyLine.topPerson.center, 1);
     familyLine.$familyLineDiv.css({top: familyLine.topPerson.center, height: height});
-    familyLine.$familyLineDrop.css({height: height});
+    if (familyLine.$familyLineDrop) { // => isEditable
+      familyLine.$familyLineDrop.css({height: height});
+    }
   }
 };
 
@@ -452,9 +454,6 @@ RelChartBuilder.prototype.insertBelow = function(origPerson, newPerson, generati
   return newPersonBox;
 };
 
-// Global variable so it is available to onClick functions.
-var relChart;
-
 /**
  * Constructor.  Creates a RelChartBuilder object an initializes the various structures.
  *   Adds all of the persons from the relationship graph to 'remaining', beginning with the first person flagged as primary, or else the first person.
@@ -463,9 +462,9 @@ var relChart;
  * @param shouldIncludeDetails - Whether to include alternate names and facts in the chart initially.
  * @param shouldCompress - Whether to do collapsing initially.
  */
-function RelChartBuilder(relGraph, $relChartDiv, shouldIncludeDetails, shouldCompress) {
+function RelChartBuilder(relGraph, $relChartDiv, shouldIncludeDetails, shouldCompress, isEditable) {
   // Create a chart with PersonBoxes created, but no FamilyLines or Generations yet.
-  this.relChart = new RelationshipChart(relGraph, $relChartDiv, shouldIncludeDetails, shouldCompress);
+  this.relChart = new RelationshipChart(relGraph, $relChartDiv, shouldIncludeDetails, shouldCompress, isEditable);
   this.ABOVE = true;
   this.BELOW = false;
   // Set of personIds remaining to be added to the chart.
@@ -473,9 +472,6 @@ function RelChartBuilder(relGraph, $relChartDiv, shouldIncludeDetails, shouldCom
   // Set of personIds for PersonBoxes that are 'duplicates' of a box that already appeared elsewhere in the graph
   this.duplicateBoxes = [];
   this.generationMap = {}; // Map of generation index to Generation. (In relChart, it is a simple 0-based array, so no map is needed.)
-
-  // Set global variable relChart so onClick functions can access it.
-  relChart = this.relChart;
 }
 
 /**
@@ -485,6 +481,10 @@ function RelChartBuilder(relGraph, $relChartDiv, shouldIncludeDetails, shouldCom
 RelChartBuilder.prototype.buildChart = function(prevChart) {
   this.relChart.$personsDiv.empty();
   this.relChart.$familyLinesDiv.empty();
+  if (this.isEditable) {
+    this.relChart.$editControlsDiv.empty();
+  }
+
   this.addPersons();
   this.relChart.generations = this.createGenerations();
   this.setFamilyLineTopBottoms();

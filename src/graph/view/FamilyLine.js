@@ -1,6 +1,6 @@
 
 FamilyLine.prototype.makeFamilyLineDiv = function(familyId) {
-  var html = "<div class='familyLine' id='" + familyId + "' onclick='toggleFamilyLine(\"" + familyId + "\", event)'>" +
+  var html = "<div class='familyLine' id='" + familyId + "'>" +
       "  <div class='familyLineDropZone' id='" + familyId + "-drop'></div>" +
       "</div>";
   return $.parseHTML(html);
@@ -47,11 +47,10 @@ FamilyLine.prototype.addPersonDot = function(personLineId, left, top, width) {
  */
 FamilyLine.prototype.addChildX = function(childLineId, childBox) {
   var childXId = "childX-" + childLineId;
-  var html = "<div class='relX' id='" + childXId + "'></div>";
+  var html = "<div class='childX' id='" + childXId + "'></div>";
   var childXDiv = $.parseHTML(html);
   this.$familyLinesDiv.append(childXDiv);
   var $childX = $("#" + childXId);
-  // $childX.hide();
   if (!this.xSize) {
     // Get the image size based on what graph.css said it should be.
     this.xSize = $childX.height();
@@ -60,8 +59,9 @@ FamilyLine.prototype.addChildX = function(childLineId, childBox) {
   var familyLine = this;
   $childX.click(function() {
     familyLine.removeChild(childBox);
-    updateRecord(relChart.relGraph.gx);
+    updateRecord(familyLine.relChart.relGraph.gx);
   });
+  $childX.draggable({revert: true, scope : "personDropScope"});
   return $childX;
 };
 
@@ -71,7 +71,7 @@ FamilyLine.prototype.safeWidth = function(width) {
 };
 
 // Add a PersonBox to the list of children for this FamilyLine, and create a div for the line connecting that child's PersonBox to the FamilyLine.
-FamilyLine.prototype.addChild = function(childBox) {
+FamilyLine.prototype.addChild = function(childBox, isEditable) {
   if (childBox) {
     this.children.push(childBox);
     this.prevChildCenter.push(childBox.center);
@@ -80,187 +80,11 @@ FamilyLine.prototype.addChild = function(childBox) {
     var width = this.safeWidth(this.x - left);
     this.$childrenLineDivs.push(this.addPersonLine(childLineId, left, childBox.center, width));
     this.$childrenLineDots.push(this.addPersonDot(childLineId, left, childBox.center, width));
-    this.$childrenX.push(this.addChildX(childLineId, childBox))
-  }
-};
-
-
-/**
- * Delete the JQuery object at the given index in the array, and return the array with that element removed.
- * @param $divs - Array of JQuery objects for divs.
- * @param index - Index in the array of the div to delete.
- */
-function removeDiv($divs, index) {
-  $divs[index].remove();
-  $divs.splice(index, 1);
-}
-
-// GEDCOMX UPDATES ======================================================
-
-/**
- * Remove a parent from this FamilyLine, updating the underlying GedcomX.
- * @param parentNode - father or mother in the FamilyLine.
- * @param spouseNode - mother or father in the FamilyLine (or null or undefined if there isn't one).
- * @param parentRels - fatherRels or motherRels for the family.
- */
-FamilyLine.prototype.removeParent = function(parentNode, spouseNode, parentRels) {
-  var doc = currentRelChart.relGraph.gx;
-  var familyNode = this.familyNode;
-  if (spouseNode) {
-    // Remove couple relationship between father and mother.
-    var index = doc.relationships.indexOf(familyNode.coupleRel);
-    doc.relationships.splice(index, 1);
-  }
-  // Remove this family from the parentNode's list of spouseFamilies so it won't get in the way when we look for remaining spouseFamilies with the same child.
-  var s;
-  for (s = 0; s < parentNode.spouseFamilies.length; s++) {
-    if (parentNode.spouseFamilies[s] === familyNode) {
-      parentNode.spouseFamilies.splice(s, 1);
-      break;
-    }
-  }
-  // Remove parent-child relationships between this parent and each child in the family,
-  //  UNLESS there's another family with this parent in it (i.e., with another spouse)
-  //  that has this same child, in which case that relationship is kept.
-  if (familyNode.children) {
-    for (var c = 0; c < familyNode.children.length; c++) {
-      var childId = familyNode.children[c].personId;
-      var foundParentWithOtherSpouse = false;
-      for (s = 0; s < parentNode.spouseFamilies.length && !foundParentWithOtherSpouse; s++) {
-        var otherSpouseFamily = parentNode.spouseFamilies[s];
-        if (otherSpouseFamily.children) {
-          for (var c2 = 0; c2 < otherSpouseFamily.children.length; c2++) {
-            if (otherSpouseFamily.children[c2].personId === childId) {
-              foundParentWithOtherSpouse = true;
-              break;
-            }
-          }
-        }
-      }
-      if (!foundParentWithOtherSpouse) {
-        // The only family in which child c is a child of this father is the one in which the father is being removed.
-        // So remove the parent-child relationship from this father to this child.
-        removeFromArray(parentRels[c], doc.relationships);
-      }
+    if (isEditable) {
+      this.$childrenX.push(this.addChildX(childLineId, childBox))
     }
   }
 };
-
-FamilyLine.prototype.updateParents = function(fatherBox, motherBox) {
-  this.father = fatherBox;
-  this.mother = motherBox;
-  if (fatherBox || motherBox) {
-    var newFamilyId = makeFamilyId(fatherBox ? fatherBox.personNode : null, motherBox ? motherBox.personNode : null);
-    if (!currentRelChart.familyLineMap[newFamilyId]) {
-      // We're creating a new family line out of this one. So update this one so that the new chart will re-use its position.
-      this.familyId = newFamilyId;
-      currentRelChart.familyLineMap[newFamilyId] = this;
-    }
-  }
-};
-
-// Remove the father from this family, updating the underlying GedcomX
-FamilyLine.prototype.removeFather = function() {
-  this.removeParent(this.father.personNode, this.mother ? this.mother.personNode : null, this.familyNode.fatherRels);
-  this.updateParents(null, this.mother);
-};
-
-// Remove the mother from this family, updating the underlying GedcomX
-FamilyLine.prototype.removeMother = function() {
-  this.removeParent(this.mother.personNode, this.father ? this.father.personNode : null, this.familyNode.motherRels);
-  this.updateParents(this.father, null);
-};
-
-// Remove the given child from the family. Delete the parent-child relationships from the GedcomX. Call updateRecord.
-FamilyLine.prototype.removeChild = function(childBox) {
-  var doc = currentRelChart.relGraph.gx;
-  var childIndex = this.children.indexOf(childBox);
-  var familyNode = this.familyNode;
-  var fatherRel = !isEmpty(familyNode.fatherRels) ? familyNode.fatherRels[childIndex] : null;
-  var motherRel = !isEmpty(familyNode.motherRels) ? familyNode.motherRels[childIndex] : null;
-
-  // These updates fix up the relationship graph, which is unnecessary if we're going to rebuild it from scratch.
-  familyNode.children.splice(childIndex, 1);
-  familyNode.fatherRels.splice(childIndex, 1);
-  familyNode.motherRels.splice(childIndex, 1);
-  removeDiv(this.$childrenLineDivs, childIndex);
-  removeDiv(this.$childrenLineDots, childIndex);
-  removeDiv(this.$childrenX, childIndex);
-  childBox.removeParentFamilyLine(this);
-
-  // Remove the relationships from the GedcomX.
-  for (var r = 0; r < doc.relationships.length; r++) {
-    var parentChildRelationship = doc.relationships[r];
-    if (parentChildRelationship === fatherRel || parentChildRelationship === motherRel) {
-      // Remove this relationship from the array.
-      doc.relationships.splice(r, 1);
-      r--; // Make sure the next element gets examined since we just shifted the later ones down one.
-      // Eventually: Add the relationship to an undo/redo log.
-    }
-  }
-
-  if (RelChartBuilder.prototype.familyHasOnlyOnePerson(familyNode)) {
-    // Removed last child, and only one parent, so family line should go away.
-    currentRelChart.removeFamily(this);
-  }
-};
-
-// Set the person in the given motherBox to be the mother of this family, updating the underlying GedcomX as needed. Update record.
-FamilyLine.prototype.changeMother = function(motherBox) {
-  var doc = currentRelChart.relGraph.gx;
-  if (this.mother) {
-    // Remove the existing mother from the family, if any.
-    this.removeMother();
-  }
-  if (!this.father) {
-    throw "Expected there to be a father when adding mother to family.";
-  }
-  var fatherId = this.father ? this.father.personNode.personId : null;
-  var motherId = motherBox.personNode.personId;
-  var familyId = makeFamilyId(this.father.personNode, motherBox.personNode);
-  // See if there's already a family with this couple. If so, merge this family with that one.
-  var existingFamilyLine = currentRelChart.familyLineMap[familyId];
-  if (!existingFamilyLine) {
-    // Create the missing couple relationship between the father and mother.
-    this.ensureRelationship(doc, GX_COUPLE, fatherId, motherId);
-    // Change the family ID of this FamilyLine so that the new chart will use its position.
-    this.familyId = familyId;
-    this.mother = motherBox;
-    currentRelChart.familyLineMap[familyId] = this;
-  }
-  // Create any missing parent-child relationships between the mother and each child.
-  currentRelChart.ensureRelationships(doc, GX_PARENT_CHILD, motherId, this.children);
-};
-
-// Set the person in the given fatherBox to be the father of this family, updating the underlying GedcomX as needed. Update record.
-FamilyLine.prototype.changeFather = function(fatherBox) {
-  var doc = currentRelChart.relGraph.gx;
-  if (this.father) {
-    // Remove the existing mother from the family, if any.
-    this.removeFather();
-  }
-  if (!this.mother) {
-    throw "Expected there to be a mother when adding father to family.";
-  }
-  var motherId = this.mother ? this.mother.personNode.personId : null;
-  var fatherId = fatherBox.personNode.personId;
-  var familyId = makeFamilyId(fatherBox.personNode, this.mother.personNode);
-  // See if there's already a family with this couple. If so, merge this family with that one.
-  var existingFamilyLine = currentRelChart.familyLineMap[familyId];
-  if (!existingFamilyLine) {
-    // Create the missing couple relationship between the father and mother.
-    this.ensureRelationship(doc, GX_COUPLE, fatherId, motherId);
-    // Change the family ID of this FamilyLine so that the new chart will use its position.
-    this.familyId = familyId;
-    this.father = fatherBox;
-    currentRelChart.familyLineMap[familyId] = this;
-  }
-  // Create any missing parent-child relationships between the mother and each child.
-  currentRelChart.ensureRelationships(doc, GX_PARENT_CHILD, fatherId, this.children);
-};
-
-
-// ===== END OF GEDCOMX UPDATES =======
 
 
 FamilyLine.prototype.setFather = function(fatherBox) {
@@ -312,7 +136,9 @@ FamilyLine.prototype.setPosition = function() {
   var bottom = this.bottomPerson.center;
   var height = 1 + bottom - top;
   this.$familyLineDiv.animate({"left": this.x, "top": top, "height": height}, RelationshipChart.prototype.animationSpeed);
-  this.$familyLineDrop.animate({"height": height}, RelationshipChart.prototype.animationSpeed);
+  if (this.$familyLineDrop) { // => isEditable
+    this.$familyLineDrop.animate({"height": height}, RelationshipChart.prototype.animationSpeed);
+  }
   this.prevTop = top;
   this.prevBottom = bottom;
   this.prevX = this.x;
@@ -333,7 +159,9 @@ FamilyLine.prototype.setPosition = function() {
     this.$childrenLineDivs[c].animate({"left": childBox.getRight(), "top": childBox.center - this.lineThickness/2, "width": width}, RelationshipChart.prototype.animationSpeed);
     this.prevChildCenter[c] = childBox.center;
     this.$childrenLineDots[c].animate({"left": childBox.getRight() + width - this.dotWidth, "top": childBox.center - this.dotHeight/2}, RelationshipChart.prototype.animationSpeed);
-    this.$childrenX[c].animate({"left": this.x - this.xSize, "top": childBox.center - this.xSize/2}, RelationshipChart.prototype.animationSpeed);
+    if (this.$childrenX) { // => isEditable
+      this.$childrenX[c].animate({"left": this.x - this.xSize, "top": childBox.center - this.xSize/2}, RelationshipChart.prototype.animationSpeed);
+    }
   }
 };
 
@@ -476,7 +304,8 @@ FamilyLine.prototype.setLineX = function(generationLines, x, lineGap) {
  * @param $familyLinesDiv - The JQuery object for the familyLines div in the HTML, which is where the new FamilyLine should be added.
  * @constructor
  */
-function FamilyLine(familyNode, parentGeneration, $familyLinesDiv) {
+function FamilyLine(relChart, familyNode, parentGeneration, $familyLinesDiv) {
+  this.relChart = relChart;
   this.familyNode = familyNode;
   this.parentGeneration = parentGeneration;
   // PersonBox references
@@ -494,7 +323,6 @@ function FamilyLine(familyNode, parentGeneration, $familyLinesDiv) {
   var familyLineDiv = this.makeFamilyLineDiv(familyNode.familyId);
   $familyLinesDiv.append(familyLineDiv);
   this.$familyLineDiv = $("#" + familyNode.familyId);
-  this.$familyLineDrop = $("#" + familyNode.familyId + "-drop");
 
   // See how wide the lines are, which is set in graph.css
   // Use this to make sure "dots" are centered, and there aren't gaps at "single parent" corners.
@@ -509,19 +337,39 @@ function FamilyLine(familyNode, parentGeneration, $familyLinesDiv) {
 
   this.$familyLinesDiv = $familyLinesDiv;
 
-  // Allow a person box to be able to receive a drag & drop event.
-  this.$familyLineDrop.droppable({
-    hoverClass : "familyDropHover",
-    scope : "personDropScope",
-    accept : "#personParentPlus",
-    drop:
-        function(e) {
-          var plus = e.originalEvent.target.id;
-          if (plus === "personParentPlus") {
+  if (relChart.isEditable) {
+    var thisFamilyLine = this;
+    this.$familyLineDiv.click(function(e) {
+      thisFamilyLine.toggleFamilyLine(e);
+    });
+    // Allow a person box to be able to receive a drag & drop event.
+    this.$familyLineDrop = $("#" + familyNode.familyId + "-drop");
+    this.$familyLineDrop.droppable({
+      hoverClass: "familyDropHover",
+      scope: "personDropScope",
+      accept: "#personParentPlus,.childX",
+      drop:
+          function (e) {
+            var plus = e.originalEvent.target.id;
             var familyId = e.target.id.replace("-drop", "");
             var droppedFamilyLine = relChart.familyLineMap[familyId];
-            var sourcePersonId = relChart.personBoxMap[selectedPersonBoxId].personNode.personId;
             var doc = relChart.relGraph.gx;
+            var sourcePersonId;
+            if (plus === "personParentPlus") {
+              sourcePersonId = relChart.selectedPersonBox.personNode.personId;
+            }
+            else {
+              var parts = e.originalEvent.target.id.match(/childX-(.*)-c([0-9]*)/);
+              var oldFamilyId = parts[1];
+              if (oldFamilyId === familyId) {
+                return; // Dropped '+' on same family the child was already in, so do nothing.
+              }
+              var childIndex = parts[2];
+              var oldFamilyLine = relChart.familyLineMap[oldFamilyId];
+              var childBox = oldFamilyLine.children[childIndex];
+              oldFamilyLine.removeChild(childBox);
+              sourcePersonId = childBox.personNode.personId;
+            }
             if (droppedFamilyLine.father) {
               relChart.ensureRelationship(doc, GX_PARENT_CHILD, droppedFamilyLine.father.personNode.personId, sourcePersonId);
             }
@@ -530,7 +378,6 @@ function FamilyLine(familyNode, parentGeneration, $familyLinesDiv) {
             }
             updateRecord(doc);
           }
-        }
-  });
-
+    });
+  }
 }

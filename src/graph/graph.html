@@ -13,6 +13,7 @@
   <script src="model/RelationshipGraph.js"></script>
 
   <script src="../gx-util.js"></script>
+  <script src="../gx-fix.js"></script>
   <script src="view/Generation.js"></script>
   <script src="view/LinkedHashSet.js"></script>
   <script src="view/IntegerByRef.js"></script>
@@ -21,7 +22,7 @@
   <script src="view/ChartCompressor.js"></script>
   <script src="view/RelationshipChart.js"></script>
   <script src="view/RelChartBuilder.js"></script>
-
+  <script src="view/EditChart.js"></script>
   <script src="graph.js"></script>
 </head>
 <body>
@@ -32,7 +33,7 @@
 
     $(document).ready(function(){
       $.getJSON("sample.json", function(sampleGx){
-        currentRelChart = buildGraph(sampleGx);
+        currentRelChart = buildGraph(sampleGx, true);
       });
     });
 
@@ -42,7 +43,7 @@
      * @param doc - GedcomX document to rebuild the chart with.
      */
     function updateRecord(doc) {
-      currentRelChart = buildGraph(doc, currentRelChart);
+      currentRelChart = buildGraph(doc, true, currentRelChart);
     }
   </script>
 </body>

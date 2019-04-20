@@ -110,20 +110,20 @@
     top: 0;
 }
 
-.familyLineDropZone:hover,.familyDropHover {
-    background-color: #b8b680;
+.familyLineDropZone:hover {
+    background-color: #8697b3;
 }
 
-/*.familyLine:hover {*/
-    /*width: 4px;*/
-/*}*/
-
 .familyDropHover {
+    background-color: #a7b385;
+}
 
+.familyLine[chosen] > .familyLineDropZone {
+    background-color: transparent;
 }
 
 .familyLine[chosen] {
-    background-color: #23ff21;
+    background-color: #23ed21;
     box-shadow: #6c757d;
     width: 4px;
 }
@@ -140,7 +140,7 @@
 }
 
 /* Edit controls */
-.relX,.relPlus {
+.relX,.childX,.relPlus {
     position: absolute;
     background-size: 8px 8px;
     width: 8px;
@@ -148,7 +148,7 @@
     z-index: 5;
 }
 
-.relX {
+.relX,.childX {
     background-image: url('images/x.png');
 }
 

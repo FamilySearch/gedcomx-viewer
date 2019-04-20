@@ -176,7 +176,9 @@ RelationshipChart.prototype.setPreviousPositions = function(prevRelChart) {
     if (prevFamilyLine) {
       var height = 1 + prevFamilyLine.bottomPerson.center - prevFamilyLine.topPerson.center;
       familyLine.$familyLineDiv.css({left: prevFamilyLine.x + "px", top: prevFamilyLine.topPerson.center + "px", height: height + "px"});
-      familyLine.$familyLineDrop.css({height: height + "px"});
+      if (familyLine.$familyLineDrop) { // => isEditable
+        familyLine.$familyLineDrop.css({height: height + "px"});
+      }
       var width;
       if (familyLine.$fatherLineDiv) {
         width = prevFamilyLine.safeWidth(prevFamilyLine.father.getLeft() - prevFamilyLine.x);
@@ -192,263 +194,23 @@ RelationshipChart.prototype.setPreviousPositions = function(prevRelChart) {
         var prevChildBox = prevRelChart.personBoxMap[childPersonBox.personBoxId];
         width = prevFamilyLine.safeWidth(prevFamilyLine.x - prevChildBox.getRight());
         familyLine.$childrenLineDivs[c].css({"left": prevChildBox.getRight(), "top": prevChildBox.center, "width": width});
-        familyLine.$childrenX[c].css({"left": prevFamilyLine.x - prevFamilyLine.xSize, "top": prevChildBox.center - prevFamilyLine.xSize/2});
         familyLine.$childrenLineDots[c].css({"left": prevChildBox.getRight() + width - familyLine.dotWidth/2, "top": prevChildBox.center - familyLine.dotHeight/2});
-      }
-    }
-  }
-};
-
-/**
- * Add a relationship of the given type between the two given persons to the given GedcomX document.
- * @param doc - GedcomX document to add the relationship to.
- * @param relType - Relationship type (GX_PARENT_CHILD or GX_COUPLE)
- * @param personId1 - JEncoded person ID of the first person.
- * @param personId2 - JEncoded person ID of the second person.
- */
-RelationshipChart.prototype.addRelationship = function(doc, relType, personId1, personId2) {
-  if (!doc.relationships) {
-    doc.relationships = [];
-  }
-  var relationship = {};
-  var prefix = (relType === GX_PARENT_CHILD ? "r-pc" : (relType === GX_COUPLE ? "r-c" : "r-" + relType));
-  relationship.id = prefix + "-" + personId1 + "-" + personId2;
-  relationship.type = relType;
-  relationship.person1 = {resource :"#" + personId1, resourceId : personId1};
-  relationship.person2 = {resource : "#" + personId2, resourceId : personId2};
-  doc.relationships.push(relationship);
-};
-
-
-RelationshipChart.prototype.sameId = function(personRef1, personId2) {
-  if (personRef1 && personId2) {
-    var personId1 = getPersonIdFromReference(personRef1);
-    return personId1 === personId2;
-  }
-};
-
-/**
- * Make sure the given relationship type exists between the two person IDs in the given GedcomX document.
- * If not, then add it.
- * @param doc - GedcomX document to check and, if needed, add the relationship to.
- * @param relType - Relationship type (GX_PARENT_CHILD or GX_COUPLE)
- * @param personId1 - JEncoded person ID of the first person.
- * @param personId2 - JEncoded person ID of the second person.
- */
-RelationshipChart.prototype.ensureRelationship = function(doc, relType, personId1, personId2) {
-  if (personId1 && personId2) {
-    if (doc.relationships) {
-      for (var r = 0; r < doc.relationships.length; r++) {
-        var rel = doc.relationships[r];
-        if (rel.type === relType && this.sameId(rel.person1, personId1) && this.sameId(rel.person2, personId2)) {
-          return; // Relationship already exists.
+        if (familyLine.$childrenX) { // => isEditable
+          familyLine.$childrenX[c].css({"left": prevFamilyLine.x - prevFamilyLine.xSize, "top": prevChildBox.center - prevFamilyLine.xSize/2});
         }
       }
     }
-    this.addRelationship(doc, relType, personId1, personId2);
   }
 };
-
-/**
- * Ensure that the given relationship type exists between the first person ID and the person ID of all of the PersonNodes in the person2Nodes array.
- * @param doc - GedcomX document to check and update if needed.
- * @param relType - Relationship type (GX_PARENT_CHILD or GX_COUPLE)
- * @param person1Id - Person ID for person1 in each relationship.
- * @param person2Nodes - Array of PersonNode from which to get the personId for checking each relationship.
- */
-RelationshipChart.prototype.ensureRelationships = function(doc, relType, person1Id, person2Nodes) {
-  if (person2Nodes) {
-    for (var c = 0; c < person2Nodes.length; c++) {
-      var person2Id = person2Nodes[c].personNode.personId;
-      this.ensureRelationship(doc, relType, person1Id, person2Id);
-    }
-  }
-};
-
-// Remove a FamilyLine from the chart, along with its corresponding FamilyNode and HTML elements.
-RelationshipChart.prototype.removeFamily = function(familyLine) {
-  familyLine.$familyLineDiv.remove();
-  if (familyLine.$fatherLineDiv) {
-    familyLine.$fatherLineDiv.remove();
-  }
-  if (familyLine.$motherLineDiv) {
-    familyLine.$motherLineDiv.remove();
-  }
-  this.familyLines.splice(this.familyLines.indexOf(familyLine), 1);
-
-  var familyNode = familyLine.familyNode;
-  delete this.familyLineMap[familyNode.familyId];
-  this.relGraph.removeFamilyNode(familyNode);
-};
-
-RelationshipChart.prototype.hideFamilyControls = function() {
-  this.$fatherX.hide();
-  this.$motherX.hide();
-  this.$fatherPlus.hide();
-  this.$motherPlus.hide();
-  if (selectedFamilyLineId) {
-    var selectedFamily = this.familyLineMap[selectedFamilyLineId];
-    if (selectedFamily && !isEmpty(selectedFamily.$childrenX)) {
-      for (var c = 0; c < selectedFamily.$childrenX.length; c++) {
-        selectedFamily.$childrenX[c].hide();
-      }
-    }
-  }
-};
-
-RelationshipChart.prototype.hidePersonControls = function() {
-  this.$personParentPlus.hide();
-  this.$personSpousePlus.hide();
-  this.$personChildPlus.hide();
-};
-
-RelationshipChart.prototype.positionFamilyControl = function($control, x, y) {
-  $control.css({left: x, top: y});
-  $control.show();
-};
-
-RelationshipChart.prototype.REL_PLUS = "relPlus";
-
-/**
- * Create a '+' or 'x' control div for relationships.
- * @param divId - ID to use for the div.
- * @param imgClass - class to assign to the div ("relX" or "relPlus").
- * @returns {jQuery.fn.init|jQuery|HTMLElement}
- */
-RelationshipChart.prototype.makeControl = function(divId, imgClass) {
-  var html = '<div id="' + divId + '" class="' + imgClass + '"></div>';
-  var controlDiv = $.parseHTML(html);
-  this.$editControlsDiv.append(controlDiv);
-  var $control = $("#" + divId);
-  $control.hide();
-  if (imgClass === RelationshipChart.prototype.REL_PLUS) {
-    $control.draggable({revert: true, scope : "personDropScope"});
-  }
-  $control.click(function(event) {
-    handleFamilyClick(event, divId);
-  });
-  return $control;
-};
-
-function handleFamilyClick(event, divId) {
-  event.stopPropagation();
-  var familyLine = relChart.familyLineMap[selectedFamilyLineId];
-  if (divId === "fatherX") {
-    familyLine.removeFather();
-    updateRecord(relChart.relGraph.gx);
-  }
-  else if (divId === "motherX") {
-    familyLine.removeMother();
-    updateRecord(relChart.relGraph.gx);
-  }
-  else {
-    console.log("Click!");
-  }
-
-}
-
-// FamilyId of the selected family line
-var selectedFamilyLineId = null;
-
-// PersonBoxId of the selected person box. (A person can appear in multiple boxes, so we have to use the box id).
-var selectedPersonBoxId = null;
-
-function togglePerson(personBoxId, event) {
-  clearSelectedFamilyLine();
-  var personBox = relChart.personBoxMap[personBoxId];
-  if (selectedPersonBoxId === personBoxId) {
-    if (personBox) {
-      personBox.$personDiv.removeAttr("chosen");
-    }
-    relChart.hidePersonControls();
-    selectedPersonBoxId = null;
-  }
-  else {
-    if (selectedPersonBoxId) {
-      togglePerson(selectedPersonBoxId);
-    }
-    personBox.$personDiv.attr("chosen", "uh-huh");
-    selectedPersonBoxId = personBoxId;
-
-    // Set the '+' controls: child at center of left side; parent at center of right side;
-    //    and spouse in center of top (if female or unknown) or bottom (if male).
-    var d = relChart.editControlSize / 2;
-    var centerX = (personBox.getLeft() + personBox.getRight()) / 2;
-    relChart.positionFamilyControl(relChart.$personChildPlus, personBox.getLeft() - d, personBox.getCenter() - d);
-    relChart.positionFamilyControl(relChart.$personParentPlus, personBox.getRight() - d, personBox.getCenter() - d);
-    relChart.positionFamilyControl(relChart.$personSpousePlus, centerX - d, personBox.personNode.gender === 'F' ? personBox.getTop() - d : personBox.getBottom() - d);
-  }
-
-  // Prevent parent divs from getting the event, since that would immediately clear the selection.
-  if (event) {
-    event.stopPropagation();
-  }
-}
-
-// Toggle whether the given familyId is selected.
-function toggleFamilyLine(familyId, event) {
-  clearSelectedPerson();
-  var familyLine = relChart.familyLineMap[familyId];
-  if (selectedFamilyLineId === familyId) {
-    // Deselect family line.
-    if (familyLine) { // might be undefined if this family line got removed after deleting the last child or spouse.
-      familyLine.$familyLineDiv.removeAttr("chosen");
-    }
-    relChart.hideFamilyControls();
-    selectedFamilyLineId = null;
-  }
-  else {
-    if (selectedFamilyLineId) {
-      // Deselect currently selected family line
-      toggleFamilyLine(selectedFamilyLineId);
-    }
-    familyLine.$familyLineDiv.attr("chosen", "yep");
-    selectedFamilyLineId = familyId;
-    // Set the + or x controls at the top and bottom of the family line.
-    var x = familyLine.x + familyLine.lineThickness;
-    var d = relChart.editControlSize / 2;
-    relChart.positionFamilyControl(familyLine.father ? relChart.$fatherX : relChart.$fatherPlus, x, familyLine.getTop() + 1 - d);
-    relChart.positionFamilyControl(familyLine.mother ? relChart.$motherX : relChart.$motherPlus, x, familyLine.getBottom() - d + familyLine.lineThickness);
-
-    if (!isEmpty(familyLine.$childrenX)) {
-      for (var c = 0; c < familyLine.$childrenX.length; c++) {
-        familyLine.$childrenX[c].show();
-      }
-    }
-  }
-  // Prevent parent divs from getting the event, since that would immediately clear the selection.
-  if (event) {
-    event.stopPropagation();
-  }
-}
-
-function clearSelectedPerson() {
-  if (selectedPersonBoxId) {
-    togglePerson(selectedPersonBoxId);
-  }
-}
-
-function clearSelectedFamilyLine() {
-  if (selectedFamilyLineId) {
-    toggleFamilyLine(selectedFamilyLineId);
-  }
-}
-
-function clearSelections() {
-  clearSelectedPerson();
-  clearSelectedFamilyLine();
-}
-
 
 // Constructor. Creates an empty RelationshipChart. Needs to be built up using RelChartBuilder.buildChart().
-function RelationshipChart(relGraph, $relChartDiv, shouldIncludeDetails, shouldCompress) {
+function RelationshipChart(relGraph, $relChartDiv, shouldIncludeDetails, shouldCompress, isEditable) {
   this.relGraph = relGraph;
+  this.isEditable = isEditable;
   $relChartDiv.empty();
   $relChartDiv.append($.parseHTML("<div id='personNodes'></div>\n<div id='familyLines'></div>\n<div id='editControls'></div>"));
-  $relChartDiv.click(clearSelections);
   this.$personsDiv = $("#personNodes");
   this.$familyLinesDiv = $("#familyLines");
-  this.$editControlsDiv = $("#editControls");
   this.personBoxes = []; // array of all PersonBoxes in the relationship chart, positioned top to bottom
   this.generations = []; // array of Generations that the persons are in, left to right
   this.familyLines = []; // array of family lines
@@ -473,13 +235,13 @@ function RelationshipChart(relGraph, $relChartDiv, shouldIncludeDetails, shouldC
   this.prevHeight = 0; // height of chart before last update
   this.chartCompressor = new ChartCompressor(this);
 
-  // Edit controls
-  this.$fatherX = this.makeControl("fatherX", "relX");
-  this.$motherX = this.makeControl("motherX", "relX");
-  this.$fatherPlus = this.makeControl("fatherPlus", RelationshipChart.prototype.REL_PLUS);
-  this.$motherPlus = this.makeControl("motherPlus", RelationshipChart.prototype.REL_PLUS);
-  this.$personParentPlus = this.makeControl("personParentPlus", RelationshipChart.prototype.REL_PLUS);
-  this.$personSpousePlus = this.makeControl("personSpousePlus", RelationshipChart.prototype.REL_PLUS);
-  this.$personChildPlus = this.makeControl("personChildPlus", RelationshipChart.prototype.REL_PLUS);
-  this.editControlSize = this.$personChildPlus.width();
+  if (isEditable) {
+    this.addEditControls();
+    var relChart = this;
+    $relChartDiv.click(function(){
+      relChart.clearSelections();
+    });
+    this.selectedFamilyLine = null;
+    this.selectedPersonBox = null;
+  }
 }

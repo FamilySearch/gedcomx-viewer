@@ -39,17 +39,18 @@ var GX_PARENT_CHILD = "http://gedcomx.org/ParentChild";
 /**
  *
  * @param gx - GedcomX document to visualize
+ * @param isEditable - Flag for whether to include edit controls (requires JQuery UI dependency)
  * @param prevChart - Previous RelationshipChart object to use to get initial positions for corresponding PersonBox and FamilyLine elements.
  * @param $relChartDiv - JQuery object for the div with id="rel-chart". If null, will look it up.
  * @returns {RelationshipChart}
  */
-function buildGraph(gx, prevChart, $relChartDiv) {
+function buildGraph(gx, isEditable, prevChart, $relChartDiv) {
   try {
     var graph = new RelationshipGraph(gx);
     if (!$relChartDiv) {
       $relChartDiv = $("#rel-chart");
     }
-    return new RelChartBuilder(graph, $relChartDiv, true, true).buildChart(prevChart);
+    return new RelChartBuilder(graph, $relChartDiv, true, true, isEditable).buildChart(prevChart);
   }
   catch (err) {
     console.log(err);

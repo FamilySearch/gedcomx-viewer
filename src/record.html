@@ -88,6 +88,7 @@
 
     // Current GedcomX record object, used by the pop-up bounding box window to get access to the record and image data.
     var currentGx;
+    var relChart;
 
     /**
      *  Update a record.
@@ -133,7 +134,7 @@
       updateSelectablePersons(doc, $("#copy-person-fact-target-persons"));
 
       // Rebuild the relationship graph. Set global variable (defined in RelChartBuilder.js).
-      relChart = buildGraph(doc, relChart);
+      relChart = buildGraph(doc, relChart, true);
     }
 
     /**

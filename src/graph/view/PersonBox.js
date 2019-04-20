@@ -339,58 +339,6 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generation) {
   relChart.$personsDiv.append(personDiv);
   this.$personDiv = $("#" + this.personBoxId);
 
-  // Allow a person box to be able to receive a drag & drop event.
-  this.$personDiv.droppable({hoverClass : "personDropHover", scope : "personDropScope", drop:
-        function(e, ui) {
-          var droppedPersonBox = relChart.personBoxMap[e.target.id];
-          var plus = e.originalEvent.target.id;
-          if (plus === "motherPlus" || plus === "fatherPlus") {
-            var familyLine = relChart.familyLineMap[selectedFamilyLineId];
-            switch (plus) {
-              case "motherPlus":
-                familyLine.changeMother(droppedPersonBox);
-                break;
-              case "fatherPlus":
-                familyLine.changeFather(droppedPersonBox);
-                break;
-            }
-          }
-          else {
-            var sourcePersonBox = relChart.personBoxMap[selectedPersonBoxId];
-            var sourcePersonId = sourcePersonBox.personNode.personId;
-            var droppedPersonId = droppedPersonBox.personNode.personId;
-            var doc = relChart.relGraph.gx;
-            switch (plus) {
-              case "personParentPlus":
-                relChart.ensureRelationship(doc, GX_PARENT_CHILD, droppedPersonId, sourcePersonId);
-                break;
-              case "personChildPlus":
-                relChart.ensureRelationship(doc, GX_PARENT_CHILD, sourcePersonId, droppedPersonId);
-                break;
-              case "personSpousePlus":
-                var sourcePersonNode = sourcePersonBox.personNode;
-                var droppedPersonNode = droppedPersonBox.personNode;
-                if (wrongGender(sourcePersonNode, droppedPersonNode)) {
-                  relChart.ensureRelationship(doc, GX_COUPLE, droppedPersonId, sourcePersonId);
-                }
-                else {
-                  relChart.ensureRelationship(doc, GX_COUPLE, sourcePersonId, droppedPersonId);
-                }
-                break;
-              default:
-                return; // Don't update the record, because nothing happened.
-            }
-          }
-          updateRecord(relChart.relGraph.gx);
-        }
-
-  });
-  
-  var personBoxId = this.personBoxId;
-  this.$personDiv.click(function(e) {
-    togglePerson(personBoxId, e);
-  });
-  
   this.$personDiv.outerWidth(generation.relChart.generationWidth);
   this.height = this.$personDiv.outerHeight();
   this.width = this.$personDiv.outerWidth();
@@ -402,4 +350,18 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generation) {
   this.prevHeight = this.height;
   this.prevTop = this.top;
   this.prevCenter = this.center;
+
+  if (relChart.isEditable) {
+    var personBox = this;
+    this.$personDiv.click(function(e) {
+      personBox.togglePerson(e, relChart);
+    });
+
+    // Allow a person box to be able to receive a drag & drop event.
+    this.$personDiv.droppable({
+      hoverClass: "personDropHover", scope: "personDropScope", drop: function(e) {
+        personBox.personDrop(e, relChart);
+      }
+    });
+  }
 }
