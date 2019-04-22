@@ -461,6 +461,7 @@ RelChartBuilder.prototype.insertBelow = function(origPerson, newPerson, generati
  * @param $relChartDiv - JQuery object for the div that the chart goes in.
  * @param shouldIncludeDetails - Whether to include alternate names and facts in the chart initially.
  * @param shouldCompress - Whether to do collapsing initially.
+ * @param isEditable - Flag for whether to include GedcomX editing functionality.
  */
 function RelChartBuilder(relGraph, $relChartDiv, shouldIncludeDetails, shouldCompress, isEditable) {
   // Create a chart with PersonBoxes created, but no FamilyLines or Generations yet.
@@ -475,7 +476,7 @@ function RelChartBuilder(relGraph, $relChartDiv, shouldIncludeDetails, shouldCom
 }
 
 /**
- * Build a relationship chart (RelChart) from a relationship graph, starting at the given person.
+ * Build a relationship chart (RelChart) from this RelChartBuilder's relationship graph, starting at the given person.
  * @return RelationshipChart built from the given graph starting with the given person
  */
 RelChartBuilder.prototype.buildChart = function(prevChart) {

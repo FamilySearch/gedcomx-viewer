@@ -32,6 +32,7 @@
   <script src="graph/view/ChartCompressor.js"></script>
   <script src="graph/view/RelationshipChart.js"></script>
   <script src="graph/view/RelChartBuilder.js"></script>
+  <script src="graph/view/EditChart.js"></script>
 
   <script src="graph/graph.js"></script>
   <script src="gx-fix.js"></script>
@@ -134,7 +135,7 @@
       updateSelectablePersons(doc, $("#copy-person-fact-target-persons"));
 
       // Rebuild the relationship graph. Set global variable (defined in RelChartBuilder.js).
-      relChart = buildGraph(doc, relChart, true);
+      relChart = buildGraph(doc, true, relChart);
     }
 
     /**

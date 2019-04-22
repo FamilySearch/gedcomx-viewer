@@ -294,7 +294,8 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generation) {
   function makePersonDiv(personNode, personBoxId, duplicateOfBox) {
     var html = "<div class='personNode gender-" + personNode.gender + (duplicateOfBox ? " duplicate" : "") + "' id='" + personBoxId + "'>\n";
     var imageFile = PersonBox.prototype.genderImageMap[personNode.gender];
-    html += "<img src='images/" + imageFile + "' class='gender-image'>";
+    // Use CDN to deliver these to avoid problems with different relative paths for different consumers.
+    html += "<img src='https://cdn.jsdelivr.net/gh/FamilySearch/gedcomx-viewer@master/src/graph/images/" + imageFile + "' class='gender-image'>";
     var person = personNode.person;
     html += addNameSpans(person);
     html += addIdDiv(person);
