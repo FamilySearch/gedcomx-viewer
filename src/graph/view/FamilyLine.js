@@ -299,6 +299,7 @@ FamilyLine.prototype.setLineX = function(generationLines, x, lineGap) {
 
 /**
  * FamilyLine constructor ============================================
+ * @param relChart - RelationshipChart that this FamilyLine is being added to.
  * @param familyNode - FamilyNode to make vertical family line for.
  * @param parentGeneration - Generation that the parents in the FamilyNode are in.
  * @param $familyLinesDiv - The JQuery object for the familyLines div in the HTML, which is where the new FamilyLine should be added.
