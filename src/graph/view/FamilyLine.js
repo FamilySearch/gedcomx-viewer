@@ -334,11 +334,11 @@ function FamilyLine(relChart, familyNode, parentGeneration, $familyLinesDiv) {
   this.$motherLineDiv = null;
   this.$childrenLineDivs = [];
   this.$childrenLineDots = [];
-  this.$childrenX = [];
 
   this.$familyLinesDiv = $familyLinesDiv;
 
   if (relChart.isEditable) {
+    this.$childrenX = [];
     var thisFamilyLine = this;
     this.$familyLineDiv.click(function(e) {
       thisFamilyLine.toggleFamilyLine(e);
