@@ -14,8 +14,8 @@ body {
 
 .fs-image-viewer__overlay[type="article"] {
     background: transparent;
-    border: 7px dashed #802e3d;
-    opacity: .5;
+    border: 20px dashed #FF6700;
+    opacity: 1;
 }
 
 .marker-default,.marker-name,.marker-date,.marker-place {
