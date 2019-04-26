@@ -348,7 +348,7 @@ function FamilyLine(relChart, familyNode, parentGeneration, $familyLinesDiv) {
     this.$familyLineDrop.droppable({
       hoverClass: "familyDropHover",
       scope: "personDropScope",
-      accept: "#personParentPlus,.childX",
+      accept: "#personParentPlus,.childX,#personSpousePlus,#personChildPlus",
       drop:
           function(e) {
             thisFamilyLine.familyDrop(e);

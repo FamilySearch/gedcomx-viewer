@@ -280,6 +280,10 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generation) {
     "U" : "unknown.png"
   };
 
+  function getGenderDivId(personBoxId) {
+    return personBoxId + "-g";
+  }
+
   /**
    Generate a JQuery HTML node like this:
    <div class='personNode gender-M' id='XXXX-YYY'>
@@ -292,10 +296,12 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generation) {
    @param duplicateOfBox - PersonBox that this one is a duplicate of (if any)
    */
   function makePersonDiv(personNode, personBoxId, duplicateOfBox) {
-    var html = "<div class='personNode gender-" + personNode.gender + (duplicateOfBox ? " duplicate" : "") + "' id='" + personBoxId + "'>\n";
+    var html = "<div class='personNode gender-" + personNode.gender + (duplicateOfBox ? " duplicate" : "") +
+        (personNode.person.principal ? " principalPerson" : "") +
+        "' id='" + personBoxId + "'>\n";
     var imageFile = PersonBox.prototype.genderImageMap[personNode.gender];
     // Use CDN to deliver these to avoid problems with different relative paths for different consumers.
-    html += "<img src='https://cdn.jsdelivr.net/gh/FamilySearch/gedcomx-viewer@master/src/graph/images/" + imageFile + "' class='gender-image'>";
+    html += "<img id='" + getGenderDivId(personBoxId) + "' src='https://cdn.jsdelivr.net/gh/FamilySearch/gedcomx-viewer@master/src/graph/images/" + imageFile + "' class='gender-image'>";
     var person = personNode.person;
     html += addNameSpans(person);
     html += addIdDiv(person);
@@ -339,7 +345,10 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generation) {
   var personDiv = makePersonDiv(personNode, this.personBoxId, this.duplicateOf);
   relChart.$personsDiv.append(personDiv);
   this.$personDiv = $("#" + this.personBoxId);
-
+  // $("#" + getGenderDivId(this.personBoxId)).click(function(e){
+  //   alert("Change gender!");
+  //   stopPropagation(e);
+  // });
   this.$personDiv.outerWidth(generation.relChart.generationWidth);
   this.height = this.$personDiv.outerHeight();
   this.width = this.$personDiv.outerWidth();

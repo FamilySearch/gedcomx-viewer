@@ -17,6 +17,7 @@ RelationshipChart.prototype.addEditControls = function() {
   this.$personChildPlus = this.makeControl("personChildPlus", RelationshipChart.prototype.REL_PLUS);
   this.editControlSize = this.$personChildPlus.width();
 };
+
 RelationshipChart.prototype.hideFamilyControls = function() {
   this.$fatherX.hide();
   this.$motherX.hide();
@@ -140,30 +141,51 @@ PersonBox.prototype.personDrop = function(e, relChart) {
 
 /**
  * Handle a control ('+' or 'x') being dropped onto a family line.
+ *   If a person's "parent plus" is dropped, then add them as a child to the family.
+ *   If a family line's "child x" is dropped, then remove them from that family and add them as a child to this one.
+ *   If a person's "spouse plus" OR "child plus" is dropped on a family then put them in as the father or mother
+ *     (according to their gender).
  * @param e - Drop event. The dropped element's id is in e.originalEvent.target.id
  */
 FamilyLine.prototype.familyDrop = function(e) {
   var plus = e.originalEvent.target.id;
   var sourcePersonId;
-  if (plus === "personParentPlus") {
-    sourcePersonId = this.relChart.selectedPersonBox.personNode.personId;
+  if (plus === "personSpousePlus" || plus === "personChildPlus") {
+    // A person's spouse or child "plus" has been dropped on this family line,
+    // so we're saying "this person is the parent or spouse in this family".
+    // So add or replace the appropriate parent (based on gender).
+    var personBox = this.relChart.selectedPersonBox;
+    if (personBox.personNode.gender === "M") {//!this.father) {
+      this.changeFather(personBox);
+    }
+    else if (personBox.personNode.gender === "F") {//!this.mother) {
+      this.changeMother(personBox);
+    }
+    else {
+      return; // no need to update.
+    }
   }
   else {
-    var oldFamilyIdInfo = PersonBox.prototype.parseChildXId(e.originalEvent.target.id);
-    var oldFamilyId = oldFamilyIdInfo.familyId;
-    if (oldFamilyId === this.familyId) {
-      return; // Dropped '+' on same family the child was already in, so do nothing.
+    if (plus === "personParentPlus") {
+      sourcePersonId = this.relChart.selectedPersonBox.personNode.personId;
     }
-    var oldFamilyLine = this.relChart.familyLineMap[oldFamilyId];
-    var childBox = oldFamilyLine.children[oldFamilyIdInfo.childIndex];
-    oldFamilyLine.removeChild(childBox);
-    sourcePersonId = childBox.personNode.personId;
-  }
-  if (this.father) {
-    this.relChart.ensureRelationship(GX_PARENT_CHILD, this.father.personNode.personId, sourcePersonId);
-  }
-  if (this.mother) {
-    this.relChart.ensureRelationship(GX_PARENT_CHILD, this.mother.personNode.personId, sourcePersonId);
+    else {
+      var oldFamilyIdInfo = PersonBox.prototype.parseChildXId(e.originalEvent.target.id);
+      var oldFamilyId = oldFamilyIdInfo.familyId;
+      if (oldFamilyId === this.familyId) {
+        return; // Dropped '+' on same family the child was already in, so do nothing.
+      }
+      var oldFamilyLine = this.relChart.familyLineMap[oldFamilyId];
+      var childBox = oldFamilyLine.children[oldFamilyIdInfo.childIndex];
+      oldFamilyLine.removeChild(childBox);
+      sourcePersonId = childBox.personNode.personId;
+    }
+    if (this.father) {
+      this.relChart.ensureRelationship(GX_PARENT_CHILD, this.father.personNode.personId, sourcePersonId);
+    }
+    if (this.mother) {
+      this.relChart.ensureRelationship(GX_PARENT_CHILD, this.mother.personNode.personId, sourcePersonId);
+    }
   }
   updateRecord(this.getGedcomX());
 };
