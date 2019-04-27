@@ -87,6 +87,7 @@ FamilyLine.prototype.addChild = function(childBox, isEditable) {
 };
 
 
+// Set the father PersonBox of this FamilyLine.
 FamilyLine.prototype.setFather = function(fatherBox) {
   if (fatherBox) {
     this.father = fatherBox;
@@ -297,18 +298,29 @@ FamilyLine.prototype.setLineX = function(generationLines, x, lineGap) {
   return x;
 };
 
+FamilyLine.prototype.getParentGenerationIndex = function() {
+  if (this.father) {
+    return this.father.generationIndex;
+  }
+  if (this.mother) {
+    return this.mother.generationIndex;
+  }
+  if (!isEmpty(this.children)) {
+    return this.children[0].generationIndex;
+  }
+  return 0;
+};
+
 /**
  * FamilyLine constructor ============================================
  * @param relChart - RelationshipChart that this FamilyLine is being added to.
  * @param familyNode - FamilyNode to make vertical family line for.
- * @param parentGeneration - Generation that the parents in the FamilyNode are in.
  * @param $familyLinesDiv - The JQuery object for the familyLines div in the HTML, which is where the new FamilyLine should be added.
  * @constructor
  */
-function FamilyLine(relChart, familyNode, parentGeneration, $familyLinesDiv) {
+function FamilyLine(relChart, familyNode, $familyLinesDiv) {
   this.relChart = relChart;
   this.familyNode = familyNode;
-  this.parentGeneration = parentGeneration;
   // PersonBox references
   this.topPerson = null;
   this.bottomPerson = null;

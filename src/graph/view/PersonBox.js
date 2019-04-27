@@ -26,7 +26,7 @@ PersonBox.prototype.setPosition = function() {
 };
 
 PersonBox.prototype.getLeft = function() {
-  return this.generation.getLeft();
+  return this.generation ? this.generation.getLeft() : 0;
 };
 
 PersonBox.prototype.getRight = function() {
@@ -69,10 +69,10 @@ PersonBox.prototype.removeParentFamilyLine = function(parentFamilyLine) {
  * @param relChart
  * @param personAbove
  * @param personBelow
- * @param generation
+ * @param generationIndex
  * @constructor
  */
-function PersonBox(personNode, relChart, personAbove, personBelow, generation) {
+function PersonBox(personNode, relChart, personAbove, personBelow, generationIndex) {
 
   function addNameSpans(person) {
     var html = "";
@@ -317,7 +317,8 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generation) {
   this.below = personBelow; // PersonBox of person below in the global list.
   this.genAbove = null; // PersonBox of person above in the same generation
   this.genBelow = null; // PersonBox of person below in the same generation
-  this.generation = generation;
+  this.generationIndex = generationIndex;
+  this.generation = null;
   this.subtree = null; // 0-based integer indicating which subtree of related persons this PersonBox is part of.
   this.order    = 0; // Global order of this PersonBox in the chart
   this.genOrder = 0; // Order of this PersonBox within its generation
@@ -349,7 +350,7 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generation) {
   //   alert("Change gender!");
   //   stopPropagation(e);
   // });
-  this.$personDiv.outerWidth(generation.relChart.generationWidth);
+  this.$personDiv.outerWidth(relChart.generationWidth);
   this.height = this.$personDiv.outerHeight();
   this.width = this.$personDiv.outerWidth();
 

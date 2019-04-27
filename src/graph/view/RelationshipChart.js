@@ -65,7 +65,7 @@ RelationshipChart.prototype.makeGenerationLinesList = function(familyLines) {
   }
   for (f = 0; f < familyLines.length; f++) {
     familyLine = familyLines[f];
-    generationNumber = familyLine.parentGeneration.index;
+    generationNumber = familyLine.getParentGenerationIndex();
     generationLinesList[generationNumber].push(familyLine);
   }
   // Sort the lines in each generation's list by the top coordinate.
