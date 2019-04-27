@@ -23,9 +23,10 @@
 }
 
 .gender-image {
-    position: absolute;
+    position: relative;
     width: 18px;
     height: 18px;
+    vertical-align: top;
 }
 
 .personDropHover,.personNode[chosen] {
@@ -34,8 +35,9 @@
 }
 
 .fullName,.altName {
-    position: absolute;
+    position: relative;
     text-indent: 20px;
+    vertical-align: top;
 }
 
 .altName {
