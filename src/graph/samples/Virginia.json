@@ -1,0 +1,3321 @@
+{
+  "id" : "r_102216320825",
+  "links" : {
+    "next" : {
+      "href" : "https://www.familysearch.org/ark:/61903/1:2:Q2WD-1K57?seek=next"
+    },
+    "prev" : {
+      "href" : "https://www.familysearch.org/ark:/61903/1:2:Q2WD-1K57?seek=prev"
+    },
+    "self" : {
+      "href" : "https://www.familysearch.org/ark:/61903/1:2:Q2WD-1K57"
+    }
+  },
+  "description" : "#sd_p_101193959325",
+  "persons" : [ {
+    "id" : "p_101193959325",
+    "extracted" : true,
+    "principal" : true,
+    "gender" : {
+      "type" : "http://gedcomx.org/Female",
+      "fields" : [ {
+        "type" : "http://gedcomx.org/Gender",
+        "values" : [ {
+          "type" : "http://gedcomx.org/Original",
+          "labelId" : "PR_SEX_CODE_ORIG",
+          "text" : "F",
+          "resource" : "http://gedcomx.org/Unknown"
+        }, {
+          "type" : "http://gedcomx.org/Interpreted",
+          "labelId" : "PR_SEX_CODE",
+          "text" : "Female",
+          "resource" : "http://gedcomx.org/Female"
+        } ]
+      } ]
+    },
+    "links" : {
+      "persona" : {
+        "href" : "https://www.familysearch.org/platform/records/personas/QV5Z-5DJF.json?flag=fsh"
+      },
+      "record" : {
+        "href" : "https://www.familysearch.org/platform/records/records/Q2WD-1K57.json?flag=fsh"
+      }
+    },
+    "sources" : [ {
+      "description" : "#sd2"
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:QV5Z-5DJF" ]
+    },
+    "names" : [ {
+      "type" : "http://gedcomx.org/BirthName",
+      "nameForms" : [ {
+        "fullText" : "Virginia Lee Sullens",
+        "parts" : [ {
+          "type" : "http://gedcomx.org/Given",
+          "value" : "Virginia Lee",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Given",
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_GN_ORIG",
+              "text" : "Virginia Lee"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_GN",
+              "text" : "Virginia Lee"
+            } ]
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/Surname",
+          "value" : "Sullens",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Surname",
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_SURN_ORIG",
+              "text" : "Sullens"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_SURN",
+              "text" : "Sullens"
+            } ]
+          } ]
+        } ],
+        "fields" : [ {
+          "type" : "http://gedcomx.org/Name",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_NAME",
+            "text" : "Virginia Lee Sullens"
+          } ]
+        } ]
+      } ]
+    } ],
+    "facts" : [ {
+      "type" : "http://gedcomx.org/Obituary",
+      "date" : {
+        "original" : "15 Apr 2012",
+        "fields" : [ {
+          "type" : "http://gedcomx.org/Date",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Original",
+            "labelId" : "EVENT_DATE_ORIG",
+            "text" : "15 Apr 2012"
+          }, {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "EVENT_DATE",
+            "text" : "15 Apr 2012"
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/Month",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "EVENT_MONTH",
+            "text" : "Apr"
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/Day",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "EVENT_DAY",
+            "text" : "15"
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/Year",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Original",
+            "labelId" : "EVENT_YEAR_ORIG",
+            "text" : "2012"
+          }, {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "EVENT_YEAR",
+            "text" : "2012"
+          } ]
+        } ]
+      },
+      "place" : {
+        "original" : "New Mexico, United States",
+        "fields" : [ {
+          "type" : "http://gedcomx.org/Place",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "EVENT_PLACE",
+            "text" : "New Mexico, United States"
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/State",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "EVENT_PLACE_LEVEL_2",
+            "text" : "New Mexico"
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/State",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "EVENT_STATE",
+            "text" : "New Mexico"
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/Country",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "EVENT_COUNTRY",
+            "text" : "United States"
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/Country",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "EVENT_PLACE_LEVEL_1",
+            "text" : "United States"
+          } ]
+        } ]
+      },
+      "primary" : true,
+      "fields" : [ {
+        "type" : "http://familysearch.org/types/fields/EventType",
+        "values" : [ {
+          "type" : "http://gedcomx.org/Interpreted",
+          "labelId" : "EVENT_TYPE",
+          "text" : "Obituary"
+        } ]
+      } ]
+    }, {
+      "type" : "http://gedcomx.org/Birth",
+      "date" : {
+        "original" : "1923",
+        "fields" : [ {
+          "type" : "http://gedcomx.org/Year",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_BIR_YEAR_EST",
+            "text" : "1923"
+          } ]
+        } ]
+      }
+    }, {
+      "type" : "http://gedcomx.org/Death",
+      "date" : {
+        "original" : "10 Apr 2012",
+        "fields" : [ {
+          "type" : "http://gedcomx.org/Date",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Original",
+            "labelId" : "PR_DEA_DATE_ORIG",
+            "text" : "10 Apr 2012"
+          }, {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_DEA_DATE",
+            "text" : "10 Apr 2012"
+          } ]
+        } ]
+      }
+    } ],
+    "fields" : [ {
+      "type" : "http://gedcomx.org/Age",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Original",
+        "labelId" : "PR_AGE_ORIG",
+        "text" : "89"
+      }, {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "PR_AGE",
+        "text" : "89"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/EventPlaceLevel1Type",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "EVENT_PLACE_LEVEL_1_TYPE",
+        "text" : "Country"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/EventPlaceLevel2Type",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "EVENT_PLACE_LEVEL_2_TYPE",
+        "text" : "State"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/EventPlaceLevel3Type",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "EVENT_PLACE_LEVEL_3_TYPE",
+        "text" : "Section"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/ExternalImageId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "EXT_IMAGE_ID",
+        "text" : "14698CAB201E4658"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/ExtRepositoryName",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "EXT_REPOSITORY_NAME",
+        "text" : "NewsBank, Inc."
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/BatchLocality",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_BATCH_LOCALITY",
+        "text" : "New Mexico, United States"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/CollectionId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_COLLECTION_ID",
+        "text" : "2333694"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/DasVerify",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_DAS_VERIFY",
+        "text" : "18-DEC-14"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/DigitalFilmNumber",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_DIGITAL_FILM_NBR",
+        "text" : "100809760"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/FilmNumber",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_FILM_NBR",
+        "text" : "100809760"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/ImageApid",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_IMAGE_APID",
+        "text" : "TH-1942-47684-7208-4"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/ImageNumber",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_IMAGE_NBR",
+        "text" : "00183"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/ImageArk",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "IMAGE_ARK",
+        "text" : "https://familysearch.org/ark:/61903/3:1:3QSQ-G9G1-XHMH"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/FsImsImageId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_IMS_IMAGE_ID",
+        "text" : "100809760_00183"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/Language",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_LANGUAGE",
+        "text" : "English"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/FsObitGroupId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_OBIT_GROUP_ID",
+        "text" : "2066455"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/PpqId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_PPQ_ID",
+        "text" : "14-0244"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/RecordGroup",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_RECORD_GROUP",
+        "text" : "2333694 ; 14-0244 ; NewsBank Obituaries, 1980-2014 - Image Ingest and FSI ; (status:220)"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/RecordId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_RECORD_ID",
+        "text" : "100809760_00183_0"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/SortKey",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_SORT_KEY",
+        "text" : "000000000_100809760_00183_00000_0012320404202"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/TravelerTitle",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_TRAVELER_TITLE",
+        "text" : "NewsBank Obituaries, 1980-2014 - Image Ingest and FSI"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/UniqueId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_UNIQUE_ID",
+        "text" : "12320404202"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/RoleType",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "PR_ROLE_TYPE",
+        "text" : "Deceased"
+      } ]
+    }, {
+      "type" : "http://gedcomx.org/RelationshipToHead",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "PR_RELATIONSHIP_TO_DEC",
+        "text" : "Deceased"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/RelationshipToHeadCode",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "PR_RELATIONSHIP_CODE",
+        "text" : "Head"
+      } ]
+    } ]
+  }, {
+    "id" : "p_101193959326",
+    "extracted" : true,
+    "principal" : false,
+    "gender" : {
+      "type" : "http://gedcomx.org/Unknown",
+      "fields" : [ {
+        "type" : "http://gedcomx.org/Gender",
+        "values" : [ {
+          "type" : "http://gedcomx.org/Interpreted",
+          "labelId" : "PR_SEX_CODE",
+          "text" : "Unknown",
+          "resource" : "http://gedcomx.org/Unknown"
+        } ]
+      } ]
+    },
+    "links" : {
+      "persona" : {
+        "href" : "https://www.familysearch.org/platform/records/personas/QV5Z-5DJN.json?flag=fsh"
+      },
+      "record" : {
+        "href" : "https://www.familysearch.org/platform/records/records/Q2WD-1K57.json?flag=fsh"
+      }
+    },
+    "sources" : [ {
+      "description" : "#sd2"
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:QV5Z-5DJN" ]
+    },
+    "names" : [ {
+      "type" : "http://gedcomx.org/BirthName",
+      "nameForms" : [ {
+        "fullText" : "Roy Clyde Gray",
+        "parts" : [ {
+          "type" : "http://gedcomx.org/Given",
+          "value" : "Roy Clyde",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Given",
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_GN_ORIG",
+              "text" : "Roy Clyde"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_GN",
+              "text" : "Roy Clyde"
+            } ]
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/Surname",
+          "value" : "Gray",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Surname",
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_SURN_ORIG",
+              "text" : "Gray"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_SURN",
+              "text" : "Gray"
+            } ]
+          } ]
+        } ],
+        "fields" : [ {
+          "type" : "http://gedcomx.org/Name",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_NAME",
+            "text" : "Roy Clyde Gray"
+          } ]
+        } ]
+      } ]
+    } ],
+    "fields" : [ {
+      "type" : "http://familysearch.org/types/fields/EventPlaceLevel1Type",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "EVENT_PLACE_LEVEL_1_TYPE",
+        "text" : "Country"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/EventPlaceLevel2Type",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "EVENT_PLACE_LEVEL_2_TYPE",
+        "text" : "State"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/EventPlaceLevel3Type",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "EVENT_PLACE_LEVEL_3_TYPE",
+        "text" : "Section"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/ExternalImageId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "EXT_IMAGE_ID",
+        "text" : "14698CAB201E4658"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/ExtRepositoryName",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "EXT_REPOSITORY_NAME",
+        "text" : "NewsBank, Inc."
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/BatchLocality",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_BATCH_LOCALITY",
+        "text" : "New Mexico, United States"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/CollectionId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_COLLECTION_ID",
+        "text" : "2333694"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/DasVerify",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_DAS_VERIFY",
+        "text" : "18-DEC-14"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/DigitalFilmNumber",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_DIGITAL_FILM_NBR",
+        "text" : "100809760"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/FilmNumber",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_FILM_NBR",
+        "text" : "100809760"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/ImageApid",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_IMAGE_APID",
+        "text" : "TH-1942-47684-7208-4"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/ImageNumber",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_IMAGE_NBR",
+        "text" : "00183"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/ImageArk",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "IMAGE_ARK",
+        "text" : "https://familysearch.org/ark:/61903/3:1:3QSQ-G9G1-XHMH"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/FsImsImageId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_IMS_IMAGE_ID",
+        "text" : "100809760_00183"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/Language",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_LANGUAGE",
+        "text" : "English"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/FsObitGroupId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_OBIT_GROUP_ID",
+        "text" : "2066455"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/PpqId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_PPQ_ID",
+        "text" : "14-0244"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/RecordGroup",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_RECORD_GROUP",
+        "text" : "2333694 ; 14-0244 ; NewsBank Obituaries, 1980-2014 - Image Ingest and FSI ; (status:220)"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/RecordId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_RECORD_ID",
+        "text" : "100809760_00183_1"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/SortKey",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_SORT_KEY",
+        "text" : "000000000_100809760_00183_00001_0012320404203"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/TravelerTitle",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_TRAVELER_TITLE",
+        "text" : "NewsBank Obituaries, 1980-2014 - Image Ingest and FSI"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/UniqueId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_UNIQUE_ID",
+        "text" : "12320404203"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/RoleType",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "PR_ROLE_TYPE",
+        "text" : "Other"
+      } ]
+    }, {
+      "type" : "http://gedcomx.org/RelationshipToHead",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Original",
+        "labelId" : "PR_RELATIONSHIP_TO_DEC_ORIG",
+        "text" : "Parent"
+      }, {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "PR_RELATIONSHIP_TO_DEC",
+        "text" : "Parent"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/RelationshipToHeadCode",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "PR_RELATIONSHIP_CODE",
+        "text" : "Parent"
+      } ]
+    } ]
+  }, {
+    "id" : "p_101193959327",
+    "extracted" : true,
+    "principal" : false,
+    "gender" : {
+      "type" : "http://gedcomx.org/Unknown",
+      "fields" : [ {
+        "type" : "http://gedcomx.org/Gender",
+        "values" : [ {
+          "type" : "http://gedcomx.org/Interpreted",
+          "labelId" : "PR_SEX_CODE",
+          "text" : "Unknown",
+          "resource" : "http://gedcomx.org/Unknown"
+        } ]
+      } ]
+    },
+    "links" : {
+      "persona" : {
+        "href" : "https://www.familysearch.org/platform/records/personas/QV5Z-5DJJ.json?flag=fsh"
+      },
+      "record" : {
+        "href" : "https://www.familysearch.org/platform/records/records/Q2WD-1K57.json?flag=fsh"
+      }
+    },
+    "sources" : [ {
+      "description" : "#sd2"
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:QV5Z-5DJJ" ]
+    },
+    "names" : [ {
+      "type" : "http://gedcomx.org/BirthName",
+      "nameForms" : [ {
+        "fullText" : "Ellen Beatrice Milnor",
+        "parts" : [ {
+          "type" : "http://gedcomx.org/Given",
+          "value" : "Ellen Beatrice",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Given",
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_GN_ORIG",
+              "text" : "Ellen Beatrice"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_GN",
+              "text" : "Ellen Beatrice"
+            } ]
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/Surname",
+          "value" : "Milnor",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Surname",
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_SURN_ORIG",
+              "text" : "Milnor"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_SURN",
+              "text" : "Milnor"
+            } ]
+          } ]
+        } ],
+        "fields" : [ {
+          "type" : "http://gedcomx.org/Name",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_NAME",
+            "text" : "Ellen Beatrice Milnor"
+          } ]
+        } ]
+      } ]
+    } ],
+    "fields" : [ {
+      "type" : "http://familysearch.org/types/fields/EventPlaceLevel1Type",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "EVENT_PLACE_LEVEL_1_TYPE",
+        "text" : "Country"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/EventPlaceLevel2Type",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "EVENT_PLACE_LEVEL_2_TYPE",
+        "text" : "State"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/EventPlaceLevel3Type",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "EVENT_PLACE_LEVEL_3_TYPE",
+        "text" : "Section"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/ExternalImageId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "EXT_IMAGE_ID",
+        "text" : "14698CAB201E4658"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/ExtRepositoryName",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "EXT_REPOSITORY_NAME",
+        "text" : "NewsBank, Inc."
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/BatchLocality",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_BATCH_LOCALITY",
+        "text" : "New Mexico, United States"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/CollectionId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_COLLECTION_ID",
+        "text" : "2333694"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/DasVerify",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_DAS_VERIFY",
+        "text" : "18-DEC-14"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/DigitalFilmNumber",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_DIGITAL_FILM_NBR",
+        "text" : "100809760"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/FilmNumber",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_FILM_NBR",
+        "text" : "100809760"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/ImageApid",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_IMAGE_APID",
+        "text" : "TH-1942-47684-7208-4"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/ImageNumber",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_IMAGE_NBR",
+        "text" : "00183"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/ImageArk",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "IMAGE_ARK",
+        "text" : "https://familysearch.org/ark:/61903/3:1:3QSQ-G9G1-XHMH"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/FsImsImageId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_IMS_IMAGE_ID",
+        "text" : "100809760_00183"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/Language",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_LANGUAGE",
+        "text" : "English"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/FsObitGroupId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_OBIT_GROUP_ID",
+        "text" : "2066455"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/PpqId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_PPQ_ID",
+        "text" : "14-0244"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/RecordGroup",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_RECORD_GROUP",
+        "text" : "2333694 ; 14-0244 ; NewsBank Obituaries, 1980-2014 - Image Ingest and FSI ; (status:220)"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/RecordId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_RECORD_ID",
+        "text" : "100809760_00183_2"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/SortKey",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_SORT_KEY",
+        "text" : "000000000_100809760_00183_00002_0012320404205"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/TravelerTitle",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_TRAVELER_TITLE",
+        "text" : "NewsBank Obituaries, 1980-2014 - Image Ingest and FSI"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/UniqueId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_UNIQUE_ID",
+        "text" : "12320404205"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/RoleType",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "PR_ROLE_TYPE",
+        "text" : "Other"
+      } ]
+    }, {
+      "type" : "http://gedcomx.org/RelationshipToHead",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Original",
+        "labelId" : "PR_RELATIONSHIP_TO_DEC_ORIG",
+        "text" : "Parent"
+      }, {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "PR_RELATIONSHIP_TO_DEC",
+        "text" : "Parent"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/RelationshipToHeadCode",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "PR_RELATIONSHIP_CODE",
+        "text" : "Parent"
+      } ]
+    } ]
+  }, {
+    "id" : "p_101193959328",
+    "extracted" : true,
+    "principal" : false,
+    "gender" : {
+      "type" : "http://gedcomx.org/Male",
+      "fields" : [ {
+        "type" : "http://gedcomx.org/Gender",
+        "values" : [ {
+          "type" : "http://gedcomx.org/Interpreted",
+          "labelId" : "PR_SEX_CODE",
+          "text" : "Male",
+          "resource" : "http://gedcomx.org/Male"
+        } ]
+      } ]
+    },
+    "links" : {
+      "persona" : {
+        "href" : "https://www.familysearch.org/platform/records/personas/QV5Z-5DJV.json?flag=fsh"
+      },
+      "record" : {
+        "href" : "https://www.familysearch.org/platform/records/records/Q2WD-1K57.json?flag=fsh"
+      }
+    },
+    "sources" : [ {
+      "description" : "#sd2"
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:QV5Z-5DJV" ]
+    },
+    "names" : [ {
+      "type" : "http://gedcomx.org/BirthName",
+      "nameForms" : [ {
+        "fullText" : "Perry Sullens",
+        "parts" : [ {
+          "type" : "http://gedcomx.org/Given",
+          "value" : "Perry",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Given",
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_GN_ORIG",
+              "text" : "Perry"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_GN",
+              "text" : "Perry"
+            } ]
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/Surname",
+          "value" : "Sullens",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Surname",
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_SURN_ORIG",
+              "text" : "Sullens"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_SURN",
+              "text" : "Sullens"
+            } ]
+          } ]
+        } ],
+        "fields" : [ {
+          "type" : "http://gedcomx.org/Name",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_NAME",
+            "text" : "Perry Sullens"
+          } ]
+        } ]
+      } ]
+    } ],
+    "fields" : [ {
+      "type" : "http://familysearch.org/types/fields/EventPlaceLevel1Type",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "EVENT_PLACE_LEVEL_1_TYPE",
+        "text" : "Country"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/EventPlaceLevel2Type",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "EVENT_PLACE_LEVEL_2_TYPE",
+        "text" : "State"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/EventPlaceLevel3Type",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "EVENT_PLACE_LEVEL_3_TYPE",
+        "text" : "Section"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/ExternalImageId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "EXT_IMAGE_ID",
+        "text" : "14698CAB201E4658"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/ExtRepositoryName",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "EXT_REPOSITORY_NAME",
+        "text" : "NewsBank, Inc."
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/BatchLocality",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_BATCH_LOCALITY",
+        "text" : "New Mexico, United States"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/CollectionId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_COLLECTION_ID",
+        "text" : "2333694"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/DasVerify",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_DAS_VERIFY",
+        "text" : "18-DEC-14"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/DigitalFilmNumber",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_DIGITAL_FILM_NBR",
+        "text" : "100809760"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/FilmNumber",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_FILM_NBR",
+        "text" : "100809760"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/ImageApid",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_IMAGE_APID",
+        "text" : "TH-1942-47684-7208-4"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/ImageNumber",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_IMAGE_NBR",
+        "text" : "00183"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/ImageArk",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "IMAGE_ARK",
+        "text" : "https://familysearch.org/ark:/61903/3:1:3QSQ-G9G1-XHMH"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/FsImsImageId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_IMS_IMAGE_ID",
+        "text" : "100809760_00183"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/Language",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_LANGUAGE",
+        "text" : "English"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/FsObitGroupId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_OBIT_GROUP_ID",
+        "text" : "2066455"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/PpqId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_PPQ_ID",
+        "text" : "14-0244"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/RecordGroup",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_RECORD_GROUP",
+        "text" : "2333694 ; 14-0244 ; NewsBank Obituaries, 1980-2014 - Image Ingest and FSI ; (status:220)"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/RecordId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_RECORD_ID",
+        "text" : "100809760_00183_3"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/SortKey",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_SORT_KEY",
+        "text" : "000000000_100809760_00183_00003_0012320404222"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/TravelerTitle",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_TRAVELER_TITLE",
+        "text" : "NewsBank Obituaries, 1980-2014 - Image Ingest and FSI"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/UniqueId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_UNIQUE_ID",
+        "text" : "12320404222"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/RoleType",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "PR_ROLE_TYPE",
+        "text" : "Other"
+      } ]
+    }, {
+      "type" : "http://gedcomx.org/RelationshipToHead",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Original",
+        "labelId" : "PR_RELATIONSHIP_TO_DEC_ORIG",
+        "text" : "Husband"
+      }, {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "PR_RELATIONSHIP_TO_DEC",
+        "text" : "Husband"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/RelationshipToHeadCode",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "PR_RELATIONSHIP_CODE",
+        "text" : "Spouse"
+      } ]
+    } ]
+  }, {
+    "id" : "p_101193959329",
+    "extracted" : true,
+    "principal" : false,
+    "gender" : {
+      "type" : "http://gedcomx.org/Female",
+      "fields" : [ {
+        "type" : "http://gedcomx.org/Gender",
+        "values" : [ {
+          "type" : "http://gedcomx.org/Interpreted",
+          "labelId" : "PR_SEX_CODE",
+          "text" : "Female",
+          "resource" : "http://gedcomx.org/Female"
+        } ]
+      } ]
+    },
+    "links" : {
+      "persona" : {
+        "href" : "https://www.familysearch.org/platform/records/personas/QV5Z-5DJK.json?flag=fsh"
+      },
+      "record" : {
+        "href" : "https://www.familysearch.org/platform/records/records/Q2WD-1K57.json?flag=fsh"
+      }
+    },
+    "sources" : [ {
+      "description" : "#sd2"
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:QV5Z-5DJK" ]
+    },
+    "names" : [ {
+      "type" : "http://gedcomx.org/BirthName",
+      "nameForms" : [ {
+        "fullText" : "Judith Steel",
+        "parts" : [ {
+          "type" : "http://gedcomx.org/Given",
+          "value" : "Judith",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Given",
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_GN_ORIG",
+              "text" : "Judith"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_GN",
+              "text" : "Judith"
+            } ]
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/Surname",
+          "value" : "Steel",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Surname",
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_SURN_ORIG",
+              "text" : "Steel"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_SURN",
+              "text" : "Steel"
+            } ]
+          } ]
+        } ],
+        "fields" : [ {
+          "type" : "http://gedcomx.org/Name",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_NAME",
+            "text" : "Judith Steel"
+          } ]
+        } ]
+      } ]
+    } ],
+    "fields" : [ {
+      "type" : "http://familysearch.org/types/fields/EventPlaceLevel1Type",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "EVENT_PLACE_LEVEL_1_TYPE",
+        "text" : "Country"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/EventPlaceLevel2Type",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "EVENT_PLACE_LEVEL_2_TYPE",
+        "text" : "State"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/EventPlaceLevel3Type",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "EVENT_PLACE_LEVEL_3_TYPE",
+        "text" : "Section"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/ExternalImageId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "EXT_IMAGE_ID",
+        "text" : "14698CAB201E4658"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/ExtRepositoryName",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "EXT_REPOSITORY_NAME",
+        "text" : "NewsBank, Inc."
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/BatchLocality",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_BATCH_LOCALITY",
+        "text" : "New Mexico, United States"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/CollectionId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_COLLECTION_ID",
+        "text" : "2333694"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/DasVerify",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_DAS_VERIFY",
+        "text" : "18-DEC-14"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/DigitalFilmNumber",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_DIGITAL_FILM_NBR",
+        "text" : "100809760"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/FilmNumber",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_FILM_NBR",
+        "text" : "100809760"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/ImageApid",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_IMAGE_APID",
+        "text" : "TH-1942-47684-7208-4"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/ImageNumber",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_IMAGE_NBR",
+        "text" : "00183"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/ImageArk",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "IMAGE_ARK",
+        "text" : "https://familysearch.org/ark:/61903/3:1:3QSQ-G9G1-XHMH"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/FsImsImageId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_IMS_IMAGE_ID",
+        "text" : "100809760_00183"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/Language",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_LANGUAGE",
+        "text" : "English"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/FsObitGroupId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_OBIT_GROUP_ID",
+        "text" : "2066455"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/PpqId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_PPQ_ID",
+        "text" : "14-0244"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/RecordGroup",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_RECORD_GROUP",
+        "text" : "2333694 ; 14-0244 ; NewsBank Obituaries, 1980-2014 - Image Ingest and FSI ; (status:220)"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/RecordId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_RECORD_ID",
+        "text" : "100809760_00183_4"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/SortKey",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_SORT_KEY",
+        "text" : "000000000_100809760_00183_00004_0012320404223"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/TravelerTitle",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_TRAVELER_TITLE",
+        "text" : "NewsBank Obituaries, 1980-2014 - Image Ingest and FSI"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/UniqueId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_UNIQUE_ID",
+        "text" : "12320404223"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/RoleType",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "PR_ROLE_TYPE",
+        "text" : "Other"
+      } ]
+    }, {
+      "type" : "http://gedcomx.org/RelationshipToHead",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Original",
+        "labelId" : "PR_RELATIONSHIP_TO_DEC_ORIG",
+        "text" : "Daughter"
+      }, {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "PR_RELATIONSHIP_TO_DEC",
+        "text" : "Daughter"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/RelationshipToHeadCode",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "PR_RELATIONSHIP_CODE",
+        "text" : "Daughter"
+      } ]
+    } ]
+  }, {
+    "id" : "p_101193959330",
+    "extracted" : true,
+    "principal" : false,
+    "gender" : {
+      "type" : "http://gedcomx.org/Male",
+      "fields" : [ {
+        "type" : "http://gedcomx.org/Gender",
+        "values" : [ {
+          "type" : "http://gedcomx.org/Interpreted",
+          "labelId" : "PR_SEX_CODE",
+          "text" : "Male",
+          "resource" : "http://gedcomx.org/Male"
+        } ]
+      } ]
+    },
+    "links" : {
+      "persona" : {
+        "href" : "https://www.familysearch.org/platform/records/personas/QV5Z-5DJ2.json?flag=fsh"
+      },
+      "record" : {
+        "href" : "https://www.familysearch.org/platform/records/records/Q2WD-1K57.json?flag=fsh"
+      }
+    },
+    "sources" : [ {
+      "description" : "#sd2"
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:QV5Z-5DJ2" ]
+    },
+    "names" : [ {
+      "type" : "http://gedcomx.org/BirthName",
+      "nameForms" : [ {
+        "fullText" : "Curtis Steel",
+        "parts" : [ {
+          "type" : "http://gedcomx.org/Given",
+          "value" : "Curtis",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Given",
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_GN_ORIG",
+              "text" : "Curtis"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_GN",
+              "text" : "Curtis"
+            } ]
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/Surname",
+          "value" : "Steel",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Surname",
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_SURN_ORIG",
+              "text" : "Steel"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_SURN",
+              "text" : "Steel"
+            } ]
+          } ]
+        } ],
+        "fields" : [ {
+          "type" : "http://gedcomx.org/Name",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_NAME",
+            "text" : "Curtis Steel"
+          } ]
+        } ]
+      } ]
+    } ],
+    "fields" : [ {
+      "type" : "http://familysearch.org/types/fields/EventPlaceLevel1Type",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "EVENT_PLACE_LEVEL_1_TYPE",
+        "text" : "Country"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/EventPlaceLevel2Type",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "EVENT_PLACE_LEVEL_2_TYPE",
+        "text" : "State"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/EventPlaceLevel3Type",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "EVENT_PLACE_LEVEL_3_TYPE",
+        "text" : "Section"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/ExternalImageId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "EXT_IMAGE_ID",
+        "text" : "14698CAB201E4658"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/ExtRepositoryName",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "EXT_REPOSITORY_NAME",
+        "text" : "NewsBank, Inc."
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/BatchLocality",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_BATCH_LOCALITY",
+        "text" : "New Mexico, United States"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/CollectionId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_COLLECTION_ID",
+        "text" : "2333694"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/DasVerify",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_DAS_VERIFY",
+        "text" : "18-DEC-14"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/DigitalFilmNumber",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_DIGITAL_FILM_NBR",
+        "text" : "100809760"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/FilmNumber",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_FILM_NBR",
+        "text" : "100809760"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/ImageApid",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_IMAGE_APID",
+        "text" : "TH-1942-47684-7208-4"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/ImageNumber",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_IMAGE_NBR",
+        "text" : "00183"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/ImageArk",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "IMAGE_ARK",
+        "text" : "https://familysearch.org/ark:/61903/3:1:3QSQ-G9G1-XHMH"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/FsImsImageId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_IMS_IMAGE_ID",
+        "text" : "100809760_00183"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/Language",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_LANGUAGE",
+        "text" : "English"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/FsObitGroupId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_OBIT_GROUP_ID",
+        "text" : "2066455"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/PpqId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_PPQ_ID",
+        "text" : "14-0244"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/RecordGroup",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_RECORD_GROUP",
+        "text" : "2333694 ; 14-0244 ; NewsBank Obituaries, 1980-2014 - Image Ingest and FSI ; (status:220)"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/RecordId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_RECORD_ID",
+        "text" : "100809760_00183_5"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/SortKey",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_SORT_KEY",
+        "text" : "000000000_100809760_00183_00005_0012320404224"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/TravelerTitle",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_TRAVELER_TITLE",
+        "text" : "NewsBank Obituaries, 1980-2014 - Image Ingest and FSI"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/UniqueId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_UNIQUE_ID",
+        "text" : "12320404224"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/RoleType",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "PR_ROLE_TYPE",
+        "text" : "Other"
+      } ]
+    }, {
+      "type" : "http://gedcomx.org/RelationshipToHead",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Original",
+        "labelId" : "PR_RELATIONSHIP_TO_DEC_ORIG",
+        "text" : "Son-in-Law"
+      }, {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "PR_RELATIONSHIP_TO_DEC",
+        "text" : "Son-In-Law"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/RelationshipToHeadCode",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "PR_RELATIONSHIP_CODE",
+        "text" : "Son-in-law"
+      } ]
+    } ]
+  }, {
+    "id" : "p_101193959331",
+    "extracted" : true,
+    "principal" : false,
+    "gender" : {
+      "type" : "http://gedcomx.org/Female",
+      "fields" : [ {
+        "type" : "http://gedcomx.org/Gender",
+        "values" : [ {
+          "type" : "http://gedcomx.org/Interpreted",
+          "labelId" : "PR_SEX_CODE",
+          "text" : "Female",
+          "resource" : "http://gedcomx.org/Female"
+        } ]
+      } ]
+    },
+    "links" : {
+      "persona" : {
+        "href" : "https://www.familysearch.org/platform/records/personas/QV5Z-5DJL.json?flag=fsh"
+      },
+      "record" : {
+        "href" : "https://www.familysearch.org/platform/records/records/Q2WD-1K57.json?flag=fsh"
+      }
+    },
+    "sources" : [ {
+      "description" : "#sd2"
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:QV5Z-5DJL" ]
+    },
+    "names" : [ {
+      "type" : "http://gedcomx.org/BirthName",
+      "nameForms" : [ {
+        "fullText" : "Peri Clark",
+        "parts" : [ {
+          "type" : "http://gedcomx.org/Given",
+          "value" : "Peri",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Given",
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_GN_ORIG",
+              "text" : "Peri"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_GN",
+              "text" : "Peri"
+            } ]
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/Surname",
+          "value" : "Clark",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Surname",
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_SURN_ORIG",
+              "text" : "Clark"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_SURN",
+              "text" : "Clark"
+            } ]
+          } ]
+        } ],
+        "fields" : [ {
+          "type" : "http://gedcomx.org/Name",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_NAME",
+            "text" : "Peri Clark"
+          } ]
+        } ]
+      } ]
+    } ],
+    "fields" : [ {
+      "type" : "http://familysearch.org/types/fields/EventPlaceLevel1Type",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "EVENT_PLACE_LEVEL_1_TYPE",
+        "text" : "Country"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/EventPlaceLevel2Type",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "EVENT_PLACE_LEVEL_2_TYPE",
+        "text" : "State"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/EventPlaceLevel3Type",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "EVENT_PLACE_LEVEL_3_TYPE",
+        "text" : "Section"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/ExternalImageId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "EXT_IMAGE_ID",
+        "text" : "14698CAB201E4658"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/ExtRepositoryName",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "EXT_REPOSITORY_NAME",
+        "text" : "NewsBank, Inc."
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/BatchLocality",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_BATCH_LOCALITY",
+        "text" : "New Mexico, United States"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/CollectionId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_COLLECTION_ID",
+        "text" : "2333694"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/DasVerify",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_DAS_VERIFY",
+        "text" : "18-DEC-14"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/DigitalFilmNumber",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_DIGITAL_FILM_NBR",
+        "text" : "100809760"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/FilmNumber",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_FILM_NBR",
+        "text" : "100809760"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/ImageApid",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_IMAGE_APID",
+        "text" : "TH-1942-47684-7208-4"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/ImageNumber",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_IMAGE_NBR",
+        "text" : "00183"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/ImageArk",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "IMAGE_ARK",
+        "text" : "https://familysearch.org/ark:/61903/3:1:3QSQ-G9G1-XHMH"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/FsImsImageId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_IMS_IMAGE_ID",
+        "text" : "100809760_00183"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/Language",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_LANGUAGE",
+        "text" : "English"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/FsObitGroupId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_OBIT_GROUP_ID",
+        "text" : "2066455"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/PpqId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_PPQ_ID",
+        "text" : "14-0244"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/RecordGroup",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_RECORD_GROUP",
+        "text" : "2333694 ; 14-0244 ; NewsBank Obituaries, 1980-2014 - Image Ingest and FSI ; (status:220)"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/RecordId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_RECORD_ID",
+        "text" : "100809760_00183_6"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/SortKey",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_SORT_KEY",
+        "text" : "000000000_100809760_00183_00006_0012320404225"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/TravelerTitle",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_TRAVELER_TITLE",
+        "text" : "NewsBank Obituaries, 1980-2014 - Image Ingest and FSI"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/UniqueId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_UNIQUE_ID",
+        "text" : "12320404225"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/RoleType",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "PR_ROLE_TYPE",
+        "text" : "Other"
+      } ]
+    }, {
+      "type" : "http://gedcomx.org/RelationshipToHead",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Original",
+        "labelId" : "PR_RELATIONSHIP_TO_DEC_ORIG",
+        "text" : "Daughter"
+      }, {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "PR_RELATIONSHIP_TO_DEC",
+        "text" : "Daughter"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/RelationshipToHeadCode",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "PR_RELATIONSHIP_CODE",
+        "text" : "Daughter"
+      } ]
+    } ]
+  }, {
+    "id" : "p_101193959332",
+    "extracted" : true,
+    "principal" : false,
+    "gender" : {
+      "type" : "http://gedcomx.org/Male",
+      "fields" : [ {
+        "type" : "http://gedcomx.org/Gender",
+        "values" : [ {
+          "type" : "http://gedcomx.org/Interpreted",
+          "labelId" : "PR_SEX_CODE",
+          "text" : "Male",
+          "resource" : "http://gedcomx.org/Male"
+        } ]
+      } ]
+    },
+    "links" : {
+      "persona" : {
+        "href" : "https://www.familysearch.org/platform/records/personas/QV5Z-5DJG.json?flag=fsh"
+      },
+      "record" : {
+        "href" : "https://www.familysearch.org/platform/records/records/Q2WD-1K57.json?flag=fsh"
+      }
+    },
+    "sources" : [ {
+      "description" : "#sd2"
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:QV5Z-5DJG" ]
+    },
+    "names" : [ {
+      "type" : "http://gedcomx.org/BirthName",
+      "nameForms" : [ {
+        "fullText" : "Ernest Clark",
+        "parts" : [ {
+          "type" : "http://gedcomx.org/Given",
+          "value" : "Ernest",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Given",
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_GN_ORIG",
+              "text" : "Ernest"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_GN",
+              "text" : "Ernest"
+            } ]
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/Surname",
+          "value" : "Clark",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Surname",
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_SURN_ORIG",
+              "text" : "Clark"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_SURN",
+              "text" : "Clark"
+            } ]
+          } ]
+        } ],
+        "fields" : [ {
+          "type" : "http://gedcomx.org/Name",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_NAME",
+            "text" : "Ernest Clark"
+          } ]
+        } ]
+      } ]
+    } ],
+    "fields" : [ {
+      "type" : "http://familysearch.org/types/fields/EventPlaceLevel1Type",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "EVENT_PLACE_LEVEL_1_TYPE",
+        "text" : "Country"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/EventPlaceLevel2Type",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "EVENT_PLACE_LEVEL_2_TYPE",
+        "text" : "State"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/EventPlaceLevel3Type",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "EVENT_PLACE_LEVEL_3_TYPE",
+        "text" : "Section"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/ExternalImageId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "EXT_IMAGE_ID",
+        "text" : "14698CAB201E4658"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/ExtRepositoryName",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "EXT_REPOSITORY_NAME",
+        "text" : "NewsBank, Inc."
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/BatchLocality",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_BATCH_LOCALITY",
+        "text" : "New Mexico, United States"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/CollectionId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_COLLECTION_ID",
+        "text" : "2333694"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/DasVerify",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_DAS_VERIFY",
+        "text" : "18-DEC-14"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/DigitalFilmNumber",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_DIGITAL_FILM_NBR",
+        "text" : "100809760"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/FilmNumber",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_FILM_NBR",
+        "text" : "100809760"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/ImageApid",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_IMAGE_APID",
+        "text" : "TH-1942-47684-7208-4"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/ImageNumber",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_IMAGE_NBR",
+        "text" : "00183"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/ImageArk",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "IMAGE_ARK",
+        "text" : "https://familysearch.org/ark:/61903/3:1:3QSQ-G9G1-XHMH"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/FsImsImageId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_IMS_IMAGE_ID",
+        "text" : "100809760_00183"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/Language",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_LANGUAGE",
+        "text" : "English"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/FsObitGroupId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_OBIT_GROUP_ID",
+        "text" : "2066455"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/PpqId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_PPQ_ID",
+        "text" : "14-0244"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/RecordGroup",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_RECORD_GROUP",
+        "text" : "2333694 ; 14-0244 ; NewsBank Obituaries, 1980-2014 - Image Ingest and FSI ; (status:220)"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/RecordId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_RECORD_ID",
+        "text" : "100809760_00183_7"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/SortKey",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_SORT_KEY",
+        "text" : "000000000_100809760_00183_00007_0012320404226"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/TravelerTitle",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_TRAVELER_TITLE",
+        "text" : "NewsBank Obituaries, 1980-2014 - Image Ingest and FSI"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/UniqueId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_UNIQUE_ID",
+        "text" : "12320404226"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/RoleType",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "PR_ROLE_TYPE",
+        "text" : "Other"
+      } ]
+    }, {
+      "type" : "http://gedcomx.org/RelationshipToHead",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Original",
+        "labelId" : "PR_RELATIONSHIP_TO_DEC_ORIG",
+        "text" : "Son-in-Law"
+      }, {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "PR_RELATIONSHIP_TO_DEC",
+        "text" : "Son-In-Law"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/RelationshipToHeadCode",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "PR_RELATIONSHIP_CODE",
+        "text" : "Son-in-law"
+      } ]
+    } ]
+  }, {
+    "id" : "p_101193959333",
+    "extracted" : true,
+    "principal" : false,
+    "gender" : {
+      "type" : "http://gedcomx.org/Female",
+      "fields" : [ {
+        "type" : "http://gedcomx.org/Gender",
+        "values" : [ {
+          "type" : "http://gedcomx.org/Interpreted",
+          "labelId" : "PR_SEX_CODE",
+          "text" : "Female",
+          "resource" : "http://gedcomx.org/Female"
+        } ]
+      } ]
+    },
+    "links" : {
+      "persona" : {
+        "href" : "https://www.familysearch.org/platform/records/personas/QV5Z-5DJP.json?flag=fsh"
+      },
+      "record" : {
+        "href" : "https://www.familysearch.org/platform/records/records/Q2WD-1K57.json?flag=fsh"
+      }
+    },
+    "sources" : [ {
+      "description" : "#sd2"
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:QV5Z-5DJP" ]
+    },
+    "names" : [ {
+      "type" : "http://gedcomx.org/BirthName",
+      "nameForms" : [ {
+        "fullText" : "Kacey Clark",
+        "parts" : [ {
+          "type" : "http://gedcomx.org/Given",
+          "value" : "Kacey",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Given",
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_GN_ORIG",
+              "text" : "Kacey"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_GN",
+              "text" : "Kacey"
+            } ]
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/Surname",
+          "value" : "Clark",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Surname",
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_SURN_ORIG",
+              "text" : "Clark"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_SURN",
+              "text" : "Clark"
+            } ]
+          } ]
+        } ],
+        "fields" : [ {
+          "type" : "http://gedcomx.org/Name",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_NAME",
+            "text" : "Kacey Clark"
+          } ]
+        } ]
+      } ]
+    } ],
+    "fields" : [ {
+      "type" : "http://familysearch.org/types/fields/EventPlaceLevel1Type",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "EVENT_PLACE_LEVEL_1_TYPE",
+        "text" : "Country"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/EventPlaceLevel2Type",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "EVENT_PLACE_LEVEL_2_TYPE",
+        "text" : "State"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/EventPlaceLevel3Type",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "EVENT_PLACE_LEVEL_3_TYPE",
+        "text" : "Section"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/ExternalImageId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "EXT_IMAGE_ID",
+        "text" : "14698CAB201E4658"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/ExtRepositoryName",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "EXT_REPOSITORY_NAME",
+        "text" : "NewsBank, Inc."
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/BatchLocality",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_BATCH_LOCALITY",
+        "text" : "New Mexico, United States"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/CollectionId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_COLLECTION_ID",
+        "text" : "2333694"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/DasVerify",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_DAS_VERIFY",
+        "text" : "18-DEC-14"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/DigitalFilmNumber",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_DIGITAL_FILM_NBR",
+        "text" : "100809760"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/FilmNumber",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_FILM_NBR",
+        "text" : "100809760"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/ImageApid",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_IMAGE_APID",
+        "text" : "TH-1942-47684-7208-4"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/ImageNumber",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_IMAGE_NBR",
+        "text" : "00183"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/ImageArk",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "IMAGE_ARK",
+        "text" : "https://familysearch.org/ark:/61903/3:1:3QSQ-G9G1-XHMH"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/FsImsImageId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_IMS_IMAGE_ID",
+        "text" : "100809760_00183"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/Language",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_LANGUAGE",
+        "text" : "English"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/FsObitGroupId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_OBIT_GROUP_ID",
+        "text" : "2066455"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/PpqId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_PPQ_ID",
+        "text" : "14-0244"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/RecordGroup",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_RECORD_GROUP",
+        "text" : "2333694 ; 14-0244 ; NewsBank Obituaries, 1980-2014 - Image Ingest and FSI ; (status:220)"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/RecordId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_RECORD_ID",
+        "text" : "100809760_00183_8"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/SortKey",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_SORT_KEY",
+        "text" : "000000000_100809760_00183_00008_0012320404227"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/TravelerTitle",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_TRAVELER_TITLE",
+        "text" : "NewsBank Obituaries, 1980-2014 - Image Ingest and FSI"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/UniqueId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_UNIQUE_ID",
+        "text" : "12320404227"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/RoleType",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "PR_ROLE_TYPE",
+        "text" : "Other"
+      } ]
+    }, {
+      "type" : "http://gedcomx.org/RelationshipToHead",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Original",
+        "labelId" : "PR_RELATIONSHIP_TO_DEC_ORIG",
+        "text" : "Granddaughter"
+      }, {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "PR_RELATIONSHIP_TO_DEC",
+        "text" : "Granddaughter"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/RelationshipToHeadCode",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "PR_RELATIONSHIP_CODE",
+        "text" : "Granddaughter"
+      } ]
+    } ]
+  }, {
+    "id" : "p_101193959334",
+    "extracted" : true,
+    "principal" : false,
+    "gender" : {
+      "type" : "http://gedcomx.org/Female",
+      "fields" : [ {
+        "type" : "http://gedcomx.org/Gender",
+        "values" : [ {
+          "type" : "http://gedcomx.org/Interpreted",
+          "labelId" : "PR_SEX_CODE",
+          "text" : "Female",
+          "resource" : "http://gedcomx.org/Female"
+        } ]
+      } ]
+    },
+    "links" : {
+      "persona" : {
+        "href" : "https://www.familysearch.org/platform/records/personas/QV5Z-5DJ5.json?flag=fsh"
+      },
+      "record" : {
+        "href" : "https://www.familysearch.org/platform/records/records/Q2WD-1K57.json?flag=fsh"
+      }
+    },
+    "sources" : [ {
+      "description" : "#sd2"
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:QV5Z-5DJ5" ]
+    },
+    "names" : [ {
+      "type" : "http://gedcomx.org/BirthName",
+      "nameForms" : [ {
+        "fullText" : "Betty Jean Peters",
+        "parts" : [ {
+          "type" : "http://gedcomx.org/Given",
+          "value" : "Betty Jean",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Given",
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_GN_ORIG",
+              "text" : "Betty Jean"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_GN",
+              "text" : "Betty Jean"
+            } ]
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/Surname",
+          "value" : "Peters",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Surname",
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_SURN_ORIG",
+              "text" : "Peters"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_SURN",
+              "text" : "Peters"
+            } ]
+          } ]
+        } ],
+        "fields" : [ {
+          "type" : "http://gedcomx.org/Name",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_NAME",
+            "text" : "Betty Jean Peters"
+          } ]
+        } ]
+      } ]
+    } ],
+    "fields" : [ {
+      "type" : "http://familysearch.org/types/fields/EventPlaceLevel1Type",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "EVENT_PLACE_LEVEL_1_TYPE",
+        "text" : "Country"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/EventPlaceLevel2Type",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "EVENT_PLACE_LEVEL_2_TYPE",
+        "text" : "State"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/EventPlaceLevel3Type",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "EVENT_PLACE_LEVEL_3_TYPE",
+        "text" : "Section"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/ExternalImageId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "EXT_IMAGE_ID",
+        "text" : "14698CAB201E4658"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/ExtRepositoryName",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "EXT_REPOSITORY_NAME",
+        "text" : "NewsBank, Inc."
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/BatchLocality",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_BATCH_LOCALITY",
+        "text" : "New Mexico, United States"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/CollectionId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_COLLECTION_ID",
+        "text" : "2333694"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/DasVerify",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_DAS_VERIFY",
+        "text" : "18-DEC-14"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/DigitalFilmNumber",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_DIGITAL_FILM_NBR",
+        "text" : "100809760"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/FilmNumber",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_FILM_NBR",
+        "text" : "100809760"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/ImageApid",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_IMAGE_APID",
+        "text" : "TH-1942-47684-7208-4"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/ImageNumber",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_IMAGE_NBR",
+        "text" : "00183"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/ImageArk",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "IMAGE_ARK",
+        "text" : "https://familysearch.org/ark:/61903/3:1:3QSQ-G9G1-XHMH"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/FsImsImageId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_IMS_IMAGE_ID",
+        "text" : "100809760_00183"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/Language",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_LANGUAGE",
+        "text" : "English"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/FsObitGroupId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_OBIT_GROUP_ID",
+        "text" : "2066455"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/PpqId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_PPQ_ID",
+        "text" : "14-0244"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/RecordGroup",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_RECORD_GROUP",
+        "text" : "2333694 ; 14-0244 ; NewsBank Obituaries, 1980-2014 - Image Ingest and FSI ; (status:220)"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/RecordId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_RECORD_ID",
+        "text" : "100809760_00183_9"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/SortKey",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_SORT_KEY",
+        "text" : "000000000_100809760_00183_00009_0012320404228"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/TravelerTitle",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_TRAVELER_TITLE",
+        "text" : "NewsBank Obituaries, 1980-2014 - Image Ingest and FSI"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/UniqueId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_UNIQUE_ID",
+        "text" : "12320404228"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/RoleType",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "PR_ROLE_TYPE",
+        "text" : "Other"
+      } ]
+    }, {
+      "type" : "http://gedcomx.org/RelationshipToHead",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Original",
+        "labelId" : "PR_RELATIONSHIP_TO_DEC_ORIG",
+        "text" : "Sister"
+      }, {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "PR_RELATIONSHIP_TO_DEC",
+        "text" : "Sister"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/RelationshipToHeadCode",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "PR_RELATIONSHIP_CODE",
+        "text" : "Sister"
+      } ]
+    } ]
+  }, {
+    "id" : "p_101193959335",
+    "extracted" : true,
+    "principal" : false,
+    "gender" : {
+      "type" : "http://gedcomx.org/Male",
+      "fields" : [ {
+        "type" : "http://gedcomx.org/Gender",
+        "values" : [ {
+          "type" : "http://gedcomx.org/Interpreted",
+          "labelId" : "PR_SEX_CODE",
+          "text" : "Male",
+          "resource" : "http://gedcomx.org/Male"
+        } ]
+      } ]
+    },
+    "links" : {
+      "persona" : {
+        "href" : "https://www.familysearch.org/platform/records/personas/QV5Z-5DJR.json?flag=fsh"
+      },
+      "record" : {
+        "href" : "https://www.familysearch.org/platform/records/records/Q2WD-1K57.json?flag=fsh"
+      }
+    },
+    "sources" : [ {
+      "description" : "#sd2"
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:QV5Z-5DJR" ]
+    },
+    "names" : [ {
+      "type" : "http://gedcomx.org/BirthName",
+      "nameForms" : [ {
+        "fullText" : "Joseph Peters",
+        "parts" : [ {
+          "type" : "http://gedcomx.org/Given",
+          "value" : "Joseph",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Given",
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_GN_ORIG",
+              "text" : "Joseph"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_GN",
+              "text" : "Joseph"
+            } ]
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/Surname",
+          "value" : "Peters",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Surname",
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_SURN_ORIG",
+              "text" : "Peters"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_SURN",
+              "text" : "Peters"
+            } ]
+          } ]
+        } ],
+        "fields" : [ {
+          "type" : "http://gedcomx.org/Name",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_NAME",
+            "text" : "Joseph Peters"
+          } ]
+        } ]
+      } ]
+    } ],
+    "fields" : [ {
+      "type" : "http://familysearch.org/types/fields/EventPlaceLevel1Type",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "EVENT_PLACE_LEVEL_1_TYPE",
+        "text" : "Country"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/EventPlaceLevel2Type",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "EVENT_PLACE_LEVEL_2_TYPE",
+        "text" : "State"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/EventPlaceLevel3Type",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "EVENT_PLACE_LEVEL_3_TYPE",
+        "text" : "Section"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/ExternalImageId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "EXT_IMAGE_ID",
+        "text" : "14698CAB201E4658"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/ExtRepositoryName",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "EXT_REPOSITORY_NAME",
+        "text" : "NewsBank, Inc."
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/BatchLocality",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_BATCH_LOCALITY",
+        "text" : "New Mexico, United States"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/CollectionId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_COLLECTION_ID",
+        "text" : "2333694"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/DasVerify",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_DAS_VERIFY",
+        "text" : "18-DEC-14"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/DigitalFilmNumber",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_DIGITAL_FILM_NBR",
+        "text" : "100809760"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/FilmNumber",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_FILM_NBR",
+        "text" : "100809760"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/ImageApid",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_IMAGE_APID",
+        "text" : "TH-1942-47684-7208-4"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/ImageNumber",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_IMAGE_NBR",
+        "text" : "00183"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/ImageArk",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "IMAGE_ARK",
+        "text" : "https://familysearch.org/ark:/61903/3:1:3QSQ-G9G1-XHMH"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/FsImsImageId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_IMS_IMAGE_ID",
+        "text" : "100809760_00183"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/Language",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_LANGUAGE",
+        "text" : "English"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/FsObitGroupId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_OBIT_GROUP_ID",
+        "text" : "2066455"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/PpqId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_PPQ_ID",
+        "text" : "14-0244"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/RecordGroup",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_RECORD_GROUP",
+        "text" : "2333694 ; 14-0244 ; NewsBank Obituaries, 1980-2014 - Image Ingest and FSI ; (status:220)"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/RecordId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_RECORD_ID",
+        "text" : "100809760_00183_10"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/SortKey",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_SORT_KEY",
+        "text" : "000000000_100809760_00183_00010_0012320404204"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/TravelerTitle",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_TRAVELER_TITLE",
+        "text" : "NewsBank Obituaries, 1980-2014 - Image Ingest and FSI"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/UniqueId",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "FS_UNIQUE_ID",
+        "text" : "12320404204"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/RoleType",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "PR_ROLE_TYPE",
+        "text" : "Other"
+      } ]
+    }, {
+      "type" : "http://gedcomx.org/RelationshipToHead",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Original",
+        "labelId" : "PR_RELATIONSHIP_TO_DEC_ORIG",
+        "text" : "Brother-in-Law"
+      }, {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "PR_RELATIONSHIP_TO_DEC",
+        "text" : "Brother-In-Law"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/RelationshipToHeadCode",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "PR_RELATIONSHIP_CODE",
+        "text" : "Brother-in-law"
+      } ]
+    } ]
+  } ],
+  "relationships" : [ {
+    "id" : "MM9.1.6/VZYZ-JJ1",
+    "type" : "http://gedcomx.org/Couple",
+    "person1" : {
+      "resource" : "#p_101193959325",
+      "resourceId" : "p_101193959325"
+    },
+    "person2" : {
+      "resource" : "#p_101193959328",
+      "resourceId" : "p_101193959328"
+    }
+  }, {
+    "id" : "MM9.1.6/VZYZ-JVM",
+    "type" : "http://gedcomx.org/ParentChild",
+    "person1" : {
+      "resource" : "#p_101193959325",
+      "resourceId" : "p_101193959325"
+    },
+    "person2" : {
+      "resource" : "#p_101193959329",
+      "resourceId" : "p_101193959329"
+    }
+  }, {
+    "id" : "MM9.1.6/VZYZ-JV9",
+    "type" : "http://gedcomx.org/ParentChild",
+    "person1" : {
+      "resource" : "#p_101193959325",
+      "resourceId" : "p_101193959325"
+    },
+    "person2" : {
+      "resource" : "#p_101193959331",
+      "resourceId" : "p_101193959331"
+    }
+  }, {
+    "id" : "MM9.1.6/VZYZ-JVS",
+    "type" : "http://gedcomx.org/ParentChild",
+    "person1" : {
+      "resource" : "#p_101193959326",
+      "resourceId" : "p_101193959326"
+    },
+    "person2" : {
+      "resource" : "#p_101193959325",
+      "resourceId" : "p_101193959325"
+    }
+  }, {
+    "id" : "MM9.1.6/VZYZ-JV3",
+    "type" : "http://gedcomx.org/ParentChild",
+    "person1" : {
+      "resource" : "#p_101193959327",
+      "resourceId" : "p_101193959327"
+    },
+    "person2" : {
+      "resource" : "#p_101193959325",
+      "resourceId" : "p_101193959325"
+    }
+  }, {
+    "id" : "MM9.1.6/VZYZ-JVQ",
+    "type" : "http://gedcomx.org/Couple",
+    "person1" : {
+      "resource" : "#p_101193959329",
+      "resourceId" : "p_101193959329"
+    },
+    "person2" : {
+      "resource" : "#p_101193959330",
+      "resourceId" : "p_101193959330"
+    }
+  }, {
+    "id" : "MM9.1.6/VZYZ-JV7",
+    "type" : "http://gedcomx.org/Couple",
+    "person1" : {
+      "resource" : "#p_101193959331",
+      "resourceId" : "p_101193959331"
+    },
+    "person2" : {
+      "resource" : "#p_101193959332",
+      "resourceId" : "p_101193959332"
+    }
+  }, {
+    "id" : "MM9.1.6/VZYZ-JVW",
+    "type" : "http://gedcomx.org/ParentChild",
+    "person1" : {
+      "resource" : "#p_101193959331",
+      "resourceId" : "p_101193959331"
+    },
+    "person2" : {
+      "resource" : "#p_101193959333",
+      "resourceId" : "p_101193959333"
+    }
+  }, {
+    "id" : "MM9.1.6/VZYZ-JV4",
+    "type" : "http://gedcomx.org/ParentChild",
+    "person1" : {
+      "resource" : "#p_101193959332",
+      "resourceId" : "p_101193959332"
+    },
+    "person2" : {
+      "resource" : "#p_101193959333",
+      "resourceId" : "p_101193959333"
+    }
+  } ],
+  "sourceDescriptions" : [ {
+    "id" : "sd_c_2333694",
+    "about" : "https://www.familysearch.org/platform/records/collections/2333694.json",
+    "resourceType" : "http://gedcomx.org/Collection",
+    "created" : 1406667046846,
+    "modified" : 1556523692002,
+    "coverage" : [ {
+      "spatial" : {
+        "original" : "United States",
+        "description" : "#place_1"
+      },
+      "recordType" : "http://gedcomx.org/Obituary"
+    } ],
+    "titles" : [ {
+      "lang" : "en",
+      "value" : "United States, GenealogyBank Obituaries, 1980-2014"
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Primary" : [ "https://www.familysearch.org/platform/records/collections/2333694.json" ]
+    }
+  }, {
+    "id" : "src_r_102216320825",
+    "mediaType" : "application/json",
+    "about" : "https://www.familysearch.org/ark:/61903/1:2:Q2WD-1K57",
+    "componentOf" : {
+      "description" : "#sd_c_2333694"
+    },
+    "resourceType" : "http://gedcomx.org/Record",
+    "created" : 1419014068069,
+    "modified" : 1500206373522,
+    "coverage" : [ {
+      "spatial" : {
+        "original" : "New Mexico, United States"
+      },
+      "temporal" : {
+        "original" : "15 Apr 2012"
+      },
+      "recordType" : "http://gedcomx.org/Obituary"
+    } ],
+    "citations" : [ {
+      "value" : "\"United States, GenealogyBank Obituaries, 1980-2014,\" database with images, <i>FamilySearch</i> (https://familysearch.org/ark:/61903/1:2:Q2WD-1K57 : accessed 29 April 2019), Entry for Virginia Lee Sullens, New Mexico, United States, 15 Apr 2012; from \"Recent Newspaper Obituaries (1977 - Today),\" database, <i>GenealogyBank.com</i> (http://www.genealogybank.com : 2014); citing <i></i>, born-digital text.\n"
+    } ],
+    "sources" : [ {
+      "description" : "#sd2"
+    } ],
+    "titles" : [ {
+      "lang" : "en",
+      "value" : "Entry for Virginia Lee Sullens, \"United States, GenealogyBank Obituaries, 1980-2014\""
+    } ],
+    "rights" : [ "http://familysearch.org/records/recordPermissions/CdsPrmAnyone" ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:2:Q2WD-1K57" ]
+    },
+    "descriptor" : {
+      "resource" : "https://www.familysearch.org/service/cds/recapi/collections/2333694#rd_MM9.1.9/MMMM-WPR"
+    }
+  }, {
+    "id" : "sd_p_101193959325",
+    "about" : "https://www.familysearch.org/ark:/61903/1:1:QV5Z-5DJF",
+    "componentOf" : {
+      "description" : "#src_r_102216320825"
+    },
+    "resourceType" : "http://gedcomx.org/Person",
+    "citations" : [ {
+      "value" : "\"United States, GenealogyBank Obituaries, 1980-2014,\" database with images, <i>FamilySearch</i> (https://familysearch.org/ark:/61903/1:1:QV5Z-5DJF : accessed 29 April 2019), Virginia Lee Sullens, New Mexico, United States, 15 Apr 2012; from \"Recent Newspaper Obituaries (1977 - Today),\" database, <i>GenealogyBank.com</i> (http://www.genealogybank.com : 2014); citing <i></i>, born-digital text.\n\n"
+    } ],
+    "titles" : [ {
+      "lang" : "en",
+      "value" : "Virginia Lee Sullens, \"United States, GenealogyBank Obituaries, 1980-2014\""
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:QV5Z-5DJF" ]
+    }
+  }, {
+    "id" : "sd_p_101193959326",
+    "about" : "https://www.familysearch.org/ark:/61903/1:1:QV5Z-5DJN",
+    "componentOf" : {
+      "description" : "#src_r_102216320825"
+    },
+    "resourceType" : "http://gedcomx.org/Person",
+    "citations" : [ {
+      "value" : "\"United States, GenealogyBank Obituaries, 1980-2014,\" database with images, <i>FamilySearch</i> (https://familysearch.org/ark:/61903/1:1:QV5Z-5DJN : accessed 29 April 2019), Roy Clyde Gray in entry for Virginia Lee Sullens, New Mexico, United States, 15 Apr 2012; from \"Recent Newspaper Obituaries (1977 - Today),\" database, <i>GenealogyBank.com</i> (http://www.genealogybank.com : 2014); citing <i></i>, born-digital text.\n\n"
+    } ],
+    "titles" : [ {
+      "lang" : "en",
+      "value" : "Roy Clyde Gray in entry for Virginia Lee Sullens, \"United States, GenealogyBank Obituaries, 1980-2014\""
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:QV5Z-5DJN" ]
+    }
+  }, {
+    "id" : "sd_p_101193959327",
+    "about" : "https://www.familysearch.org/ark:/61903/1:1:QV5Z-5DJJ",
+    "componentOf" : {
+      "description" : "#src_r_102216320825"
+    },
+    "resourceType" : "http://gedcomx.org/Person",
+    "citations" : [ {
+      "value" : "\"United States, GenealogyBank Obituaries, 1980-2014,\" database with images, <i>FamilySearch</i> (https://familysearch.org/ark:/61903/1:1:QV5Z-5DJJ : accessed 29 April 2019), Ellen Beatrice Milnor in entry for Virginia Lee Sullens, New Mexico, United States, 15 Apr 2012; from \"Recent Newspaper Obituaries (1977 - Today),\" database, <i>GenealogyBank.com</i> (http://www.genealogybank.com : 2014); citing <i></i>, born-digital text.\n\n"
+    } ],
+    "titles" : [ {
+      "lang" : "en",
+      "value" : "Ellen Beatrice Milnor in entry for Virginia Lee Sullens, \"United States, GenealogyBank Obituaries, 1980-2014\""
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:QV5Z-5DJJ" ]
+    }
+  }, {
+    "id" : "sd_p_101193959328",
+    "about" : "https://www.familysearch.org/ark:/61903/1:1:QV5Z-5DJV",
+    "componentOf" : {
+      "description" : "#src_r_102216320825"
+    },
+    "resourceType" : "http://gedcomx.org/Person",
+    "citations" : [ {
+      "value" : "\"United States, GenealogyBank Obituaries, 1980-2014,\" database with images, <i>FamilySearch</i> (https://familysearch.org/ark:/61903/1:1:QV5Z-5DJV : accessed 29 April 2019), Perry Sullens in entry for Virginia Lee Sullens, New Mexico, United States, 15 Apr 2012; from \"Recent Newspaper Obituaries (1977 - Today),\" database, <i>GenealogyBank.com</i> (http://www.genealogybank.com : 2014); citing <i></i>, born-digital text.\n\n"
+    } ],
+    "titles" : [ {
+      "lang" : "en",
+      "value" : "Perry Sullens in entry for Virginia Lee Sullens, \"United States, GenealogyBank Obituaries, 1980-2014\""
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:QV5Z-5DJV" ]
+    }
+  }, {
+    "id" : "sd_p_101193959329",
+    "about" : "https://www.familysearch.org/ark:/61903/1:1:QV5Z-5DJK",
+    "componentOf" : {
+      "description" : "#src_r_102216320825"
+    },
+    "resourceType" : "http://gedcomx.org/Person",
+    "citations" : [ {
+      "value" : "\"United States, GenealogyBank Obituaries, 1980-2014,\" database with images, <i>FamilySearch</i> (https://familysearch.org/ark:/61903/1:1:QV5Z-5DJK : accessed 29 April 2019), Judith Steel in entry for Virginia Lee Sullens, New Mexico, United States, 15 Apr 2012; from \"Recent Newspaper Obituaries (1977 - Today),\" database, <i>GenealogyBank.com</i> (http://www.genealogybank.com : 2014); citing <i></i>, born-digital text.\n\n"
+    } ],
+    "titles" : [ {
+      "lang" : "en",
+      "value" : "Judith Steel in entry for Virginia Lee Sullens, \"United States, GenealogyBank Obituaries, 1980-2014\""
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:QV5Z-5DJK" ]
+    }
+  }, {
+    "id" : "sd_p_101193959330",
+    "about" : "https://www.familysearch.org/ark:/61903/1:1:QV5Z-5DJ2",
+    "componentOf" : {
+      "description" : "#src_r_102216320825"
+    },
+    "resourceType" : "http://gedcomx.org/Person",
+    "citations" : [ {
+      "value" : "\"United States, GenealogyBank Obituaries, 1980-2014,\" database with images, <i>FamilySearch</i> (https://familysearch.org/ark:/61903/1:1:QV5Z-5DJ2 : accessed 29 April 2019), Curtis Steel in entry for Virginia Lee Sullens, New Mexico, United States, 15 Apr 2012; from \"Recent Newspaper Obituaries (1977 - Today),\" database, <i>GenealogyBank.com</i> (http://www.genealogybank.com : 2014); citing <i></i>, born-digital text.\n\n"
+    } ],
+    "titles" : [ {
+      "lang" : "en",
+      "value" : "Curtis Steel in entry for Virginia Lee Sullens, \"United States, GenealogyBank Obituaries, 1980-2014\""
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:QV5Z-5DJ2" ]
+    }
+  }, {
+    "id" : "sd_p_101193959331",
+    "about" : "https://www.familysearch.org/ark:/61903/1:1:QV5Z-5DJL",
+    "componentOf" : {
+      "description" : "#src_r_102216320825"
+    },
+    "resourceType" : "http://gedcomx.org/Person",
+    "citations" : [ {
+      "value" : "\"United States, GenealogyBank Obituaries, 1980-2014,\" database with images, <i>FamilySearch</i> (https://familysearch.org/ark:/61903/1:1:QV5Z-5DJL : accessed 29 April 2019), Peri Clark in entry for Virginia Lee Sullens, New Mexico, United States, 15 Apr 2012; from \"Recent Newspaper Obituaries (1977 - Today),\" database, <i>GenealogyBank.com</i> (http://www.genealogybank.com : 2014); citing <i></i>, born-digital text.\n\n"
+    } ],
+    "titles" : [ {
+      "lang" : "en",
+      "value" : "Peri Clark in entry for Virginia Lee Sullens, \"United States, GenealogyBank Obituaries, 1980-2014\""
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:QV5Z-5DJL" ]
+    }
+  }, {
+    "id" : "sd_p_101193959332",
+    "about" : "https://www.familysearch.org/ark:/61903/1:1:QV5Z-5DJG",
+    "componentOf" : {
+      "description" : "#src_r_102216320825"
+    },
+    "resourceType" : "http://gedcomx.org/Person",
+    "citations" : [ {
+      "value" : "\"United States, GenealogyBank Obituaries, 1980-2014,\" database with images, <i>FamilySearch</i> (https://familysearch.org/ark:/61903/1:1:QV5Z-5DJG : accessed 29 April 2019), Ernest Clark in entry for Virginia Lee Sullens, New Mexico, United States, 15 Apr 2012; from \"Recent Newspaper Obituaries (1977 - Today),\" database, <i>GenealogyBank.com</i> (http://www.genealogybank.com : 2014); citing <i></i>, born-digital text.\n\n"
+    } ],
+    "titles" : [ {
+      "lang" : "en",
+      "value" : "Ernest Clark in entry for Virginia Lee Sullens, \"United States, GenealogyBank Obituaries, 1980-2014\""
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:QV5Z-5DJG" ]
+    }
+  }, {
+    "id" : "sd_p_101193959333",
+    "about" : "https://www.familysearch.org/ark:/61903/1:1:QV5Z-5DJP",
+    "componentOf" : {
+      "description" : "#src_r_102216320825"
+    },
+    "resourceType" : "http://gedcomx.org/Person",
+    "citations" : [ {
+      "value" : "\"United States, GenealogyBank Obituaries, 1980-2014,\" database with images, <i>FamilySearch</i> (https://familysearch.org/ark:/61903/1:1:QV5Z-5DJP : accessed 29 April 2019), Kacey Clark in entry for Virginia Lee Sullens, New Mexico, United States, 15 Apr 2012; from \"Recent Newspaper Obituaries (1977 - Today),\" database, <i>GenealogyBank.com</i> (http://www.genealogybank.com : 2014); citing <i></i>, born-digital text.\n\n"
+    } ],
+    "titles" : [ {
+      "lang" : "en",
+      "value" : "Kacey Clark in entry for Virginia Lee Sullens, \"United States, GenealogyBank Obituaries, 1980-2014\""
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:QV5Z-5DJP" ]
+    }
+  }, {
+    "id" : "sd_p_101193959334",
+    "about" : "https://www.familysearch.org/ark:/61903/1:1:QV5Z-5DJ5",
+    "componentOf" : {
+      "description" : "#src_r_102216320825"
+    },
+    "resourceType" : "http://gedcomx.org/Person",
+    "citations" : [ {
+      "value" : "\"United States, GenealogyBank Obituaries, 1980-2014,\" database with images, <i>FamilySearch</i> (https://familysearch.org/ark:/61903/1:1:QV5Z-5DJ5 : accessed 29 April 2019), Betty Jean Peters in entry for Virginia Lee Sullens, New Mexico, United States, 15 Apr 2012; from \"Recent Newspaper Obituaries (1977 - Today),\" database, <i>GenealogyBank.com</i> (http://www.genealogybank.com : 2014); citing <i></i>, born-digital text.\n\n"
+    } ],
+    "titles" : [ {
+      "lang" : "en",
+      "value" : "Betty Jean Peters in entry for Virginia Lee Sullens, \"United States, GenealogyBank Obituaries, 1980-2014\""
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:QV5Z-5DJ5" ]
+    }
+  }, {
+    "id" : "sd_p_101193959335",
+    "about" : "https://www.familysearch.org/ark:/61903/1:1:QV5Z-5DJR",
+    "componentOf" : {
+      "description" : "#src_r_102216320825"
+    },
+    "resourceType" : "http://gedcomx.org/Person",
+    "citations" : [ {
+      "value" : "\"United States, GenealogyBank Obituaries, 1980-2014,\" database with images, <i>FamilySearch</i> (https://familysearch.org/ark:/61903/1:1:QV5Z-5DJR : accessed 29 April 2019), Joseph Peters in entry for Virginia Lee Sullens, New Mexico, United States, 15 Apr 2012; from \"Recent Newspaper Obituaries (1977 - Today),\" database, <i>GenealogyBank.com</i> (http://www.genealogybank.com : 2014); citing <i></i>, born-digital text.\n\n"
+    } ],
+    "titles" : [ {
+      "lang" : "en",
+      "value" : "Joseph Peters in entry for Virginia Lee Sullens, \"United States, GenealogyBank Obituaries, 1980-2014\""
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:QV5Z-5DJR" ]
+    }
+  }, {
+    "id" : "sd2",
+    "mediaType" : "application/json",
+    "about" : "https://www.familysearch.org/ark:/61903/3:1:3QSQ-G9G1-XHMH?cc=2333694",
+    "resourceType" : "http://gedcomx.org/DigitalArtifact",
+    "repository" : {
+      "resourceId" : "#a1"
+    },
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/3:1:3QSQ-G9G1-XHMH?cc=2333694" ]
+    }
+  } ],
+  "agents" : [ {
+    "id" : "a1",
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "das.familysearch.org" ]
+    }
+  } ],
+  "places" : [ {
+    "id" : "place_1",
+    "identifiers" : {
+      "http://gedcomx.org/Primary" : [ "https://api.familysearch.org/authorities/v1/place/1" ]
+    }
+  } ]
+}

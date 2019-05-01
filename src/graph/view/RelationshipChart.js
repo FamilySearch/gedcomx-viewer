@@ -230,7 +230,7 @@ function RelationshipChart(relGraph, $relChartDiv, shouldIncludeDetails, shouldC
   this.treeGap = 10; // Additional vertical pixels between someone in one connected tree and another one.
   this.shouldIncludeDetails = shouldIncludeDetails;
   this.shouldCompress = shouldCompress;
-  this.shouldDisplayIds = true;
+  this.shouldDisplayIds = false;
 
   this.width = 0; // overall size of chart
   this.height = 0;

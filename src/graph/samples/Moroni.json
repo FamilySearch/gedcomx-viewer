@@ -1,0 +1,2916 @@
+{
+  "id" : "r_102687439586",
+  "links" : {
+    "next" : {
+      "href" : "https://www.familysearch.org/ark:/61903/1:2:Q2R5-VFST?seek=next"
+    },
+    "prev" : {
+      "href" : "https://www.familysearch.org/ark:/61903/1:2:Q2R5-VFST?seek=prev"
+    },
+    "self" : {
+      "href" : "https://www.familysearch.org/ark:/61903/1:2:Q2R5-VFST"
+    }
+  },
+  "description" : "#sd_p_101957290112",
+  "persons" : [ {
+    "id" : "p_101957290112",
+    "extracted" : true,
+    "principal" : true,
+    "gender" : {
+      "type" : "http://gedcomx.org/Male",
+      "fields" : [ {
+        "type" : "http://gedcomx.org/Gender",
+        "values" : [ {
+          "type" : "http://gedcomx.org/Original",
+          "labelId" : "PR_SEX_CODE_ORIG",
+          "text" : "M",
+          "resource" : "http://gedcomx.org/Unknown"
+        }, {
+          "type" : "http://gedcomx.org/Interpreted",
+          "labelId" : "PR_SEX_CODE",
+          "text" : "Male",
+          "resource" : "http://gedcomx.org/Male"
+        } ]
+      } ]
+    },
+    "links" : {
+      "persona" : {
+        "href" : "https://www.familysearch.org/platform/records/personas/QKRP-7YYS.json?flag=fsh"
+      },
+      "record" : {
+        "href" : "https://www.familysearch.org/platform/records/records/Q2R5-VFST.json?flag=fsh"
+      }
+    },
+    "sources" : [ {
+      "description" : "#sd2"
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:QKRP-7YYS" ]
+    },
+    "names" : [ {
+      "type" : "http://gedcomx.org/BirthName",
+      "nameForms" : [ {
+        "fullText" : "Howard Moroni Gray Jr",
+        "parts" : [ {
+          "type" : "http://gedcomx.org/Given",
+          "value" : "Howard Moroni",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Given",
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_GN_ORIG",
+              "text" : "Howard Moroni"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_GN",
+              "text" : "Howard Moroni"
+            } ]
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/Surname",
+          "value" : "Gray",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Surname",
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_SURN_ORIG",
+              "text" : "Gray"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_SURN",
+              "text" : "Gray"
+            } ]
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/Suffix",
+          "value" : "Jr",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Suffix",
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_SUF_ORIG",
+              "text" : "Jr"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_SUF",
+              "text" : "Jr"
+            } ]
+          } ]
+        } ],
+        "fields" : [ {
+          "type" : "http://gedcomx.org/Name",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Original",
+            "labelId" : "PR_NAME_ORIG",
+            "text" : "Howard Moroni Gray Jr."
+          }, {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_NAME",
+            "text" : "Howard Moroni Gray Jr"
+          } ]
+        } ]
+      } ]
+    } ],
+    "facts" : [ {
+      "type" : "http://gedcomx.org/Obituary",
+      "date" : {
+        "original" : "27 Dec 2007",
+        "fields" : [ {
+          "type" : "http://gedcomx.org/Date",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Original",
+            "labelId" : "EVENT_DATE_ORIG",
+            "text" : "27 Dec 2007"
+          }, {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "EVENT_DATE",
+            "text" : "27 Dec 2007"
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/Month",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "EVENT_MONTH",
+            "text" : "Dec"
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/Day",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "EVENT_DAY",
+            "text" : "27"
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/Year",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Original",
+            "labelId" : "EVENT_YEAR_ORIG",
+            "text" : "2007"
+          }, {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "EVENT_YEAR",
+            "text" : "2007"
+          } ]
+        } ]
+      },
+      "place" : {
+        "original" : "Utah, United States",
+        "fields" : [ {
+          "type" : "http://gedcomx.org/Place",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "EVENT_PLACE",
+            "text" : "Utah, United States"
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/State",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "EVENT_STATE",
+            "text" : "Utah"
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/State",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "EVENT_PLACE_LEVEL_2",
+            "text" : "Utah"
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/Country",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "EVENT_COUNTRY",
+            "text" : "United States"
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/Country",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "EVENT_PLACE_LEVEL_1",
+            "text" : "United States"
+          } ]
+        }, {
+          "type" : "http://familysearch.org/types/fields/Institution",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "EVENT_INSTITUTION",
+            "text" : "Salt Lake Tribune, The"
+          } ]
+        }, {
+          "type" : "http://familysearch.org/types/fields/StateOrCountry",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "EVENT_STATE_COUNTRY",
+            "text" : "Utah"
+          } ]
+        } ]
+      },
+      "primary" : true
+    }, {
+      "type" : "http://gedcomx.org/Birth",
+      "date" : {
+        "original" : "27 Jan 1924",
+        "fields" : [ {
+          "type" : "http://gedcomx.org/Date",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Original",
+            "labelId" : "PR_BIR_DATE_ORIG",
+            "text" : "27 Jan 1924"
+          }, {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_BIR_DATE",
+            "text" : "27 Jan 1924"
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/Month",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_BIR_MONTH",
+            "text" : "Jan"
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/Day",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_BIR_DAY",
+            "text" : "27"
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/Year",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Original",
+            "labelId" : "PR_BIR_YEAR_ORIG",
+            "text" : "1924"
+          }, {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_BIR_YEAR",
+            "text" : "1924"
+          } ]
+        } ]
+      },
+      "place" : {
+        "original" : "Salt Lake City, Utah",
+        "fields" : [ {
+          "type" : "http://gedcomx.org/Place",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_BIR_PLACE",
+            "text" : "Salt Lake City, Utah"
+          } ]
+        }, {
+          "type" : "http://familysearch.org/types/fields/CityOrTown",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_BIR_CITY_TOWN",
+            "text" : "Salt Lake City"
+          } ]
+        }, {
+          "type" : "http://familysearch.org/types/fields/StateOrCountry",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_BIR_STATE_COUNTRY",
+            "text" : "Utah"
+          } ]
+        } ]
+      }
+    }, {
+      "type" : "http://gedcomx.org/Burial",
+      "place" : {
+        "original" : "10600 South 1900 East, Larkin Sunset Gardens",
+        "fields" : [ {
+          "type" : "http://gedcomx.org/Address",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_BUR_ADDRESS",
+            "text" : "10600 South 1900 East"
+          } ]
+        }, {
+          "type" : "http://familysearch.org/types/fields/Institution",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_BUR_INSTITUTION",
+            "text" : "Larkin Sunset Gardens"
+          } ]
+        } ]
+      }
+    }, {
+      "type" : "http://gedcomx.org/Death",
+      "date" : {
+        "original" : "24 Dec 2007",
+        "fields" : [ {
+          "type" : "http://gedcomx.org/Date",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Original",
+            "labelId" : "PR_DEA_DATE_ORIG",
+            "text" : "24 Dec 2007"
+          }, {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_DEA_DATE",
+            "text" : "24 Dec 2007"
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/Month",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_DEA_MONTH",
+            "text" : "Dec"
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/Day",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_DEA_DAY",
+            "text" : "24"
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/Year",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Original",
+            "labelId" : "PR_DEA_YEAR_ORIG",
+            "text" : "2007"
+          }, {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_DEA_YEAR",
+            "text" : "2007"
+          } ]
+        } ]
+      }
+    }, {
+      "type" : "http://gedcomx.org/Occupation",
+      "fields" : [ {
+        "type" : "http://gedcomx.org/Occupation",
+        "values" : [ {
+          "type" : "http://gedcomx.org/Interpreted",
+          "labelId" : "PR_OCCUPATION",
+          "text" : "Postal Employee"
+        }, {
+          "type" : "http://gedcomx.org/Interpreted",
+          "labelId" : "PR_OCCUPATION",
+          "text" : "Director"
+        }, {
+          "type" : "http://gedcomx.org/Interpreted",
+          "labelId" : "PR_OCCUPATION",
+          "text" : "Tax Consultant"
+        } ]
+      } ]
+    } ],
+    "fields" : [ {
+      "type" : "http://gedcomx.org/Age",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Original",
+        "labelId" : "PR_AGE_ORIG",
+        "text" : "83"
+      }, {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "PR_AGE",
+        "text" : "83"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/types/fields/IsPrincipal",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "PR_IS_PRINCIPAL",
+        "text" : "True"
+      } ]
+    } ]
+  }, {
+    "id" : "p_101957290128",
+    "extracted" : true,
+    "principal" : false,
+    "gender" : {
+      "type" : "http://gedcomx.org/Male",
+      "fields" : [ {
+        "type" : "http://gedcomx.org/Gender",
+        "values" : [ {
+          "type" : "http://gedcomx.org/Original",
+          "labelId" : "PR_SEX_CODE_ORIG",
+          "text" : "M",
+          "resource" : "http://gedcomx.org/Unknown"
+        }, {
+          "type" : "http://gedcomx.org/Interpreted",
+          "labelId" : "PR_SEX_CODE",
+          "text" : "Male",
+          "resource" : "http://gedcomx.org/Male"
+        } ]
+      } ]
+    },
+    "links" : {
+      "persona" : {
+        "href" : "https://www.familysearch.org/platform/records/personas/QKRP-7YYV.json?flag=fsh"
+      },
+      "record" : {
+        "href" : "https://www.familysearch.org/platform/records/records/Q2R5-VFST.json?flag=fsh"
+      }
+    },
+    "sources" : [ {
+      "description" : "#sd2"
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:QKRP-7YYV" ]
+    },
+    "names" : [ {
+      "type" : "http://gedcomx.org/BirthName",
+      "nameForms" : [ {
+        "fullText" : "Robert",
+        "parts" : [ {
+          "type" : "http://gedcomx.org/Given",
+          "value" : "Robert",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Given",
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_GN_ORIG",
+              "text" : "Robert"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_GN",
+              "text" : "Robert"
+            } ]
+          } ]
+        } ],
+        "fields" : [ {
+          "type" : "http://gedcomx.org/Name",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Original",
+            "labelId" : "PR_NAME_ORIG",
+            "text" : "Robert"
+          }, {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_NAME",
+            "text" : "Robert"
+          } ]
+        } ]
+      } ]
+    } ]
+  }, {
+    "id" : "p_101957290113",
+    "extracted" : true,
+    "principal" : false,
+    "gender" : {
+      "type" : "http://gedcomx.org/Male",
+      "fields" : [ {
+        "type" : "http://gedcomx.org/Gender",
+        "values" : [ {
+          "type" : "http://gedcomx.org/Original",
+          "labelId" : "PR_SEX_CODE_ORIG",
+          "text" : "M",
+          "resource" : "http://gedcomx.org/Unknown"
+        }, {
+          "type" : "http://gedcomx.org/Interpreted",
+          "labelId" : "PR_SEX_CODE",
+          "text" : "Male",
+          "resource" : "http://gedcomx.org/Male"
+        } ]
+      } ]
+    },
+    "links" : {
+      "persona" : {
+        "href" : "https://www.familysearch.org/platform/records/personas/QKRP-7YY3.json?flag=fsh"
+      },
+      "record" : {
+        "href" : "https://www.familysearch.org/platform/records/records/Q2R5-VFST.json?flag=fsh"
+      }
+    },
+    "sources" : [ {
+      "description" : "#sd2"
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:QKRP-7YY3" ]
+    },
+    "names" : [ {
+      "type" : "http://gedcomx.org/BirthName",
+      "nameForms" : [ {
+        "fullText" : "Howard Moroni Gray",
+        "parts" : [ {
+          "type" : "http://gedcomx.org/Given",
+          "value" : "Howard",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Given",
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_GN_ORIG",
+              "text" : "Howard"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_GN",
+              "text" : "Howard"
+            } ]
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/Surname",
+          "value" : "Moroni Gray",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Surname",
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_SURN_ORIG",
+              "text" : "Moroni Gray"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_SURN",
+              "text" : "Moroni Gray"
+            } ]
+          } ]
+        } ],
+        "fields" : [ {
+          "type" : "http://gedcomx.org/Name",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Original",
+            "labelId" : "PR_NAME_ORIG",
+            "text" : "Howard Moroni Gray"
+          }, {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_NAME",
+            "text" : "Howard Moroni Gray"
+          } ]
+        } ]
+      } ]
+    } ]
+  }, {
+    "id" : "p_101957290114",
+    "extracted" : true,
+    "principal" : false,
+    "gender" : {
+      "type" : "http://gedcomx.org/Female",
+      "fields" : [ {
+        "type" : "http://gedcomx.org/Gender",
+        "values" : [ {
+          "type" : "http://gedcomx.org/Original",
+          "labelId" : "PR_SEX_CODE_ORIG",
+          "text" : "F",
+          "resource" : "http://gedcomx.org/Unknown"
+        }, {
+          "type" : "http://gedcomx.org/Interpreted",
+          "labelId" : "PR_SEX_CODE",
+          "text" : "Female",
+          "resource" : "http://gedcomx.org/Female"
+        } ]
+      } ]
+    },
+    "links" : {
+      "persona" : {
+        "href" : "https://www.familysearch.org/platform/records/personas/QKRP-7YYQ.json?flag=fsh"
+      },
+      "record" : {
+        "href" : "https://www.familysearch.org/platform/records/records/Q2R5-VFST.json?flag=fsh"
+      }
+    },
+    "sources" : [ {
+      "description" : "#sd2"
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:QKRP-7YYQ" ]
+    },
+    "names" : [ {
+      "type" : "http://gedcomx.org/BirthName",
+      "nameForms" : [ {
+        "fullText" : "Lily Matilda Schmidlin Gray",
+        "parts" : [ {
+          "type" : "http://gedcomx.org/Given",
+          "value" : "Lily Matilda",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Given",
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_GN_ORIG",
+              "text" : "Lily Matilda"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_GN",
+              "text" : "Lily Matilda"
+            } ]
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/Surname",
+          "value" : "Schmidlin Gray",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Surname",
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_SURN_ORIG",
+              "text" : "Schmidlin Gray"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_SURN",
+              "text" : "Schmidlin Gray"
+            } ]
+          } ]
+        } ],
+        "fields" : [ {
+          "type" : "http://gedcomx.org/Name",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Original",
+            "labelId" : "PR_NAME_ORIG",
+            "text" : "Lily Matilda Schmidlin Gray"
+          }, {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_NAME",
+            "text" : "Lily Matilda Schmidlin Gray"
+          } ]
+        } ]
+      } ]
+    } ]
+  }, {
+    "id" : "p_101957290117",
+    "extracted" : true,
+    "principal" : false,
+    "gender" : {
+      "type" : "http://gedcomx.org/Male",
+      "fields" : [ {
+        "type" : "http://gedcomx.org/Gender",
+        "values" : [ {
+          "type" : "http://gedcomx.org/Original",
+          "labelId" : "PR_SEX_CODE_ORIG",
+          "text" : "M",
+          "resource" : "http://gedcomx.org/Unknown"
+        }, {
+          "type" : "http://gedcomx.org/Interpreted",
+          "labelId" : "PR_SEX_CODE",
+          "text" : "Male",
+          "resource" : "http://gedcomx.org/Male"
+        } ]
+      } ]
+    },
+    "links" : {
+      "persona" : {
+        "href" : "https://www.familysearch.org/platform/records/personas/QKRP-7YY4.json?flag=fsh"
+      },
+      "record" : {
+        "href" : "https://www.familysearch.org/platform/records/records/Q2R5-VFST.json?flag=fsh"
+      }
+    },
+    "sources" : [ {
+      "description" : "#sd2"
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:QKRP-7YY4" ]
+    },
+    "names" : [ {
+      "type" : "http://gedcomx.org/BirthName",
+      "nameForms" : [ {
+        "fullText" : "Richard M Gray",
+        "parts" : [ {
+          "type" : "http://gedcomx.org/Given",
+          "value" : "Richard M",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Given",
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_GN_ORIG",
+              "text" : "Richard M"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_GN",
+              "text" : "Richard M"
+            } ]
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/Surname",
+          "value" : "Gray",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Surname",
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_SURN_ORIG",
+              "text" : "Gray"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_SURN",
+              "text" : "Gray"
+            } ]
+          } ]
+        } ],
+        "fields" : [ {
+          "type" : "http://gedcomx.org/Name",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Original",
+            "labelId" : "PR_NAME_ORIG",
+            "text" : "Richard M. Gray"
+          }, {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_NAME",
+            "text" : "Richard M Gray"
+          } ]
+        } ]
+      } ]
+    } ]
+  }, {
+    "id" : "p_101957290118",
+    "extracted" : true,
+    "principal" : false,
+    "gender" : {
+      "type" : "http://gedcomx.org/Female",
+      "fields" : [ {
+        "type" : "http://gedcomx.org/Gender",
+        "values" : [ {
+          "type" : "http://gedcomx.org/Original",
+          "labelId" : "PR_SEX_CODE_ORIG",
+          "text" : "F",
+          "resource" : "http://gedcomx.org/Unknown"
+        }, {
+          "type" : "http://gedcomx.org/Interpreted",
+          "labelId" : "PR_SEX_CODE",
+          "text" : "Female",
+          "resource" : "http://gedcomx.org/Female"
+        } ]
+      } ]
+    },
+    "links" : {
+      "persona" : {
+        "href" : "https://www.familysearch.org/platform/records/personas/QKRP-7YYH.json?flag=fsh"
+      },
+      "record" : {
+        "href" : "https://www.familysearch.org/platform/records/records/Q2R5-VFST.json?flag=fsh"
+      }
+    },
+    "sources" : [ {
+      "description" : "#sd2"
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:QKRP-7YYH" ]
+    },
+    "names" : [ {
+      "type" : "http://gedcomx.org/BirthName",
+      "nameForms" : [ {
+        "fullText" : "Sheila Gray",
+        "parts" : [ {
+          "type" : "http://gedcomx.org/Given",
+          "value" : "Sheila",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Given",
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_GN_ORIG",
+              "text" : "Sheila"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_GN",
+              "text" : "Sheila"
+            } ]
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/Surname",
+          "value" : "Gray",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Surname",
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_SURN_ORIG",
+              "text" : "Gray"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_SURN",
+              "text" : "Gray"
+            } ]
+          } ]
+        } ],
+        "fields" : [ {
+          "type" : "http://gedcomx.org/Name",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Original",
+            "labelId" : "PR_NAME_ORIG",
+            "text" : "(Sheila) Gray"
+          }, {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_NAME",
+            "text" : "Sheila Gray"
+          } ]
+        } ]
+      } ]
+    } ]
+  }, {
+    "id" : "p_101957290119",
+    "extracted" : true,
+    "principal" : false,
+    "gender" : {
+      "type" : "http://gedcomx.org/Male",
+      "fields" : [ {
+        "type" : "http://gedcomx.org/Gender",
+        "values" : [ {
+          "type" : "http://gedcomx.org/Original",
+          "labelId" : "PR_SEX_CODE_ORIG",
+          "text" : "M",
+          "resource" : "http://gedcomx.org/Unknown"
+        }, {
+          "type" : "http://gedcomx.org/Interpreted",
+          "labelId" : "PR_SEX_CODE",
+          "text" : "Male",
+          "resource" : "http://gedcomx.org/Male"
+        } ]
+      } ]
+    },
+    "links" : {
+      "persona" : {
+        "href" : "https://www.familysearch.org/platform/records/personas/QKRP-7YYC.json?flag=fsh"
+      },
+      "record" : {
+        "href" : "https://www.familysearch.org/platform/records/records/Q2R5-VFST.json?flag=fsh"
+      }
+    },
+    "sources" : [ {
+      "description" : "#sd2"
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:QKRP-7YYC" ]
+    },
+    "names" : [ {
+      "type" : "http://gedcomx.org/BirthName",
+      "nameForms" : [ {
+        "fullText" : "Randall Gray",
+        "parts" : [ {
+          "type" : "http://gedcomx.org/Given",
+          "value" : "Randall",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Given",
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_GN_ORIG",
+              "text" : "Randall"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_GN",
+              "text" : "Randall"
+            } ]
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/Surname",
+          "value" : "Gray",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Surname",
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_SURN_ORIG",
+              "text" : "Gray"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_SURN",
+              "text" : "Gray"
+            } ]
+          } ]
+        } ],
+        "fields" : [ {
+          "type" : "http://gedcomx.org/Name",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Original",
+            "labelId" : "PR_NAME_ORIG",
+            "text" : "Randall Gray"
+          }, {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_NAME",
+            "text" : "Randall Gray"
+          } ]
+        } ]
+      } ]
+    } ]
+  }, {
+    "id" : "p_101957290120",
+    "extracted" : true,
+    "principal" : false,
+    "gender" : {
+      "type" : "http://gedcomx.org/Female",
+      "fields" : [ {
+        "type" : "http://gedcomx.org/Gender",
+        "values" : [ {
+          "type" : "http://gedcomx.org/Original",
+          "labelId" : "PR_SEX_CODE_ORIG",
+          "text" : "F",
+          "resource" : "http://gedcomx.org/Unknown"
+        }, {
+          "type" : "http://gedcomx.org/Interpreted",
+          "labelId" : "PR_SEX_CODE",
+          "text" : "Female",
+          "resource" : "http://gedcomx.org/Female"
+        } ]
+      } ]
+    },
+    "links" : {
+      "persona" : {
+        "href" : "https://www.familysearch.org/platform/records/personas/QKRP-7YYZ.json?flag=fsh"
+      },
+      "record" : {
+        "href" : "https://www.familysearch.org/platform/records/records/Q2R5-VFST.json?flag=fsh"
+      }
+    },
+    "sources" : [ {
+      "description" : "#sd2"
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:QKRP-7YYZ" ]
+    },
+    "names" : [ {
+      "type" : "http://gedcomx.org/BirthName",
+      "nameForms" : [ {
+        "fullText" : "Leann Gray",
+        "parts" : [ {
+          "type" : "http://gedcomx.org/Given",
+          "value" : "Leann",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Given",
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_GN_ORIG",
+              "text" : "LeAnn"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_GN",
+              "text" : "Leann"
+            } ]
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/Surname",
+          "value" : "Gray",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Surname",
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_SURN_ORIG",
+              "text" : "Gray"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_SURN",
+              "text" : "Gray"
+            } ]
+          } ]
+        } ],
+        "fields" : [ {
+          "type" : "http://gedcomx.org/Name",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Original",
+            "labelId" : "PR_NAME_ORIG",
+            "text" : "(LeAnn) Gray"
+          }, {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_NAME",
+            "text" : "Leann Gray"
+          } ]
+        } ]
+      } ]
+    } ]
+  }, {
+    "id" : "p_101957290121",
+    "extracted" : true,
+    "principal" : false,
+    "gender" : {
+      "type" : "http://gedcomx.org/Female",
+      "fields" : [ {
+        "type" : "http://gedcomx.org/Gender",
+        "values" : [ {
+          "type" : "http://gedcomx.org/Original",
+          "labelId" : "PR_SEX_CODE_ORIG",
+          "text" : "F",
+          "resource" : "http://gedcomx.org/Unknown"
+        }, {
+          "type" : "http://gedcomx.org/Interpreted",
+          "labelId" : "PR_SEX_CODE",
+          "text" : "Female",
+          "resource" : "http://gedcomx.org/Female"
+        } ]
+      } ]
+    },
+    "links" : {
+      "persona" : {
+        "href" : "https://www.familysearch.org/platform/records/personas/QKRP-7YY8.json?flag=fsh"
+      },
+      "record" : {
+        "href" : "https://www.familysearch.org/platform/records/records/Q2R5-VFST.json?flag=fsh"
+      }
+    },
+    "sources" : [ {
+      "description" : "#sd2"
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:QKRP-7YY8" ]
+    },
+    "names" : [ {
+      "type" : "http://gedcomx.org/BirthName",
+      "nameForms" : [ {
+        "fullText" : "Rebecca Burgess",
+        "parts" : [ {
+          "type" : "http://gedcomx.org/Given",
+          "value" : "Rebecca",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Given",
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_GN_ORIG",
+              "text" : "Rebecca"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_GN",
+              "text" : "Rebecca"
+            } ]
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/Surname",
+          "value" : "Burgess",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Surname",
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_SURN_ORIG",
+              "text" : "Burgess"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_SURN",
+              "text" : "Burgess"
+            } ]
+          } ]
+        } ],
+        "fields" : [ {
+          "type" : "http://gedcomx.org/Name",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Original",
+            "labelId" : "PR_NAME_ORIG",
+            "text" : "Rebecca Burgess"
+          }, {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_NAME",
+            "text" : "Rebecca Burgess"
+          } ]
+        } ]
+      } ]
+    } ]
+  }, {
+    "id" : "p_101957290122",
+    "extracted" : true,
+    "principal" : false,
+    "gender" : {
+      "type" : "http://gedcomx.org/Male",
+      "fields" : [ {
+        "type" : "http://gedcomx.org/Gender",
+        "values" : [ {
+          "type" : "http://gedcomx.org/Original",
+          "labelId" : "PR_SEX_CODE_ORIG",
+          "text" : "M",
+          "resource" : "http://gedcomx.org/Unknown"
+        }, {
+          "type" : "http://gedcomx.org/Interpreted",
+          "labelId" : "PR_SEX_CODE",
+          "text" : "Male",
+          "resource" : "http://gedcomx.org/Male"
+        } ]
+      } ]
+    },
+    "links" : {
+      "persona" : {
+        "href" : "https://www.familysearch.org/platform/records/personas/QKRP-7YYD.json?flag=fsh"
+      },
+      "record" : {
+        "href" : "https://www.familysearch.org/platform/records/records/Q2R5-VFST.json?flag=fsh"
+      }
+    },
+    "sources" : [ {
+      "description" : "#sd2"
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:QKRP-7YYD" ]
+    },
+    "names" : [ {
+      "type" : "http://gedcomx.org/BirthName",
+      "nameForms" : [ {
+        "fullText" : "Mark Burgess",
+        "parts" : [ {
+          "type" : "http://gedcomx.org/Given",
+          "value" : "Mark",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Given",
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_GN_ORIG",
+              "text" : "Mark"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_GN",
+              "text" : "Mark"
+            } ]
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/Surname",
+          "value" : "Burgess",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Surname",
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_SURN_ORIG",
+              "text" : "Burgess"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_SURN",
+              "text" : "Burgess"
+            } ]
+          } ]
+        } ],
+        "fields" : [ {
+          "type" : "http://gedcomx.org/Name",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Original",
+            "labelId" : "PR_NAME_ORIG",
+            "text" : "(Mark) Burgess"
+          }, {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_NAME",
+            "text" : "Mark Burgess"
+          } ]
+        } ]
+      } ]
+    } ]
+  }, {
+    "id" : "p_101957290123",
+    "extracted" : true,
+    "principal" : false,
+    "gender" : {
+      "type" : "http://gedcomx.org/Female",
+      "fields" : [ {
+        "type" : "http://gedcomx.org/Gender",
+        "values" : [ {
+          "type" : "http://gedcomx.org/Original",
+          "labelId" : "PR_SEX_CODE_ORIG",
+          "text" : "F",
+          "resource" : "http://gedcomx.org/Unknown"
+        }, {
+          "type" : "http://gedcomx.org/Interpreted",
+          "labelId" : "PR_SEX_CODE",
+          "text" : "Female",
+          "resource" : "http://gedcomx.org/Female"
+        } ]
+      } ]
+    },
+    "links" : {
+      "persona" : {
+        "href" : "https://www.familysearch.org/platform/records/personas/QKRP-7YY6.json?flag=fsh"
+      },
+      "record" : {
+        "href" : "https://www.familysearch.org/platform/records/records/Q2R5-VFST.json?flag=fsh"
+      }
+    },
+    "sources" : [ {
+      "description" : "#sd2"
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:QKRP-7YY6" ]
+    },
+    "names" : [ {
+      "type" : "http://gedcomx.org/BirthName",
+      "nameForms" : [ {
+        "fullText" : "Maurine Benson",
+        "parts" : [ {
+          "type" : "http://gedcomx.org/Given",
+          "value" : "Maurine",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Given",
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_GN_ORIG",
+              "text" : "Maurine"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_GN",
+              "text" : "Maurine"
+            } ]
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/Surname",
+          "value" : "Benson",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Surname",
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_SURN_ORIG",
+              "text" : "Benson"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_SURN",
+              "text" : "Benson"
+            } ]
+          } ]
+        } ],
+        "fields" : [ {
+          "type" : "http://gedcomx.org/Name",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Original",
+            "labelId" : "PR_NAME_ORIG",
+            "text" : "Maurine Benson"
+          }, {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_NAME",
+            "text" : "Maurine Benson"
+          } ]
+        } ]
+      } ]
+    } ]
+  }, {
+    "id" : "p_101957290125",
+    "extracted" : true,
+    "principal" : false,
+    "gender" : {
+      "type" : "http://gedcomx.org/Male",
+      "fields" : [ {
+        "type" : "http://gedcomx.org/Gender",
+        "values" : [ {
+          "type" : "http://gedcomx.org/Original",
+          "labelId" : "PR_SEX_CODE_ORIG",
+          "text" : "M",
+          "resource" : "http://gedcomx.org/Unknown"
+        }, {
+          "type" : "http://gedcomx.org/Interpreted",
+          "labelId" : "PR_SEX_CODE",
+          "text" : "Male",
+          "resource" : "http://gedcomx.org/Male"
+        } ]
+      } ]
+    },
+    "links" : {
+      "persona" : {
+        "href" : "https://www.familysearch.org/platform/records/personas/QKRP-7YYF.json?flag=fsh"
+      },
+      "record" : {
+        "href" : "https://www.familysearch.org/platform/records/records/Q2R5-VFST.json?flag=fsh"
+      }
+    },
+    "sources" : [ {
+      "description" : "#sd2"
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:QKRP-7YYF" ]
+    },
+    "names" : [ {
+      "type" : "http://gedcomx.org/BirthName",
+      "nameForms" : [ {
+        "fullText" : "James",
+        "parts" : [ {
+          "type" : "http://gedcomx.org/Given",
+          "value" : "James",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Given",
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_GN_ORIG",
+              "text" : "James"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_GN",
+              "text" : "James"
+            } ]
+          } ]
+        } ],
+        "fields" : [ {
+          "type" : "http://gedcomx.org/Name",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Original",
+            "labelId" : "PR_NAME_ORIG",
+            "text" : "James"
+          }, {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_NAME",
+            "text" : "James"
+          } ]
+        } ]
+      } ]
+    } ]
+  }, {
+    "id" : "p_101957290126",
+    "extracted" : true,
+    "principal" : false,
+    "gender" : {
+      "type" : "http://gedcomx.org/Male",
+      "fields" : [ {
+        "type" : "http://gedcomx.org/Gender",
+        "values" : [ {
+          "type" : "http://gedcomx.org/Original",
+          "labelId" : "PR_SEX_CODE_ORIG",
+          "text" : "M",
+          "resource" : "http://gedcomx.org/Unknown"
+        }, {
+          "type" : "http://gedcomx.org/Interpreted",
+          "labelId" : "PR_SEX_CODE",
+          "text" : "Male",
+          "resource" : "http://gedcomx.org/Male"
+        } ]
+      } ]
+    },
+    "links" : {
+      "persona" : {
+        "href" : "https://www.familysearch.org/platform/records/personas/QKRP-7YYN.json?flag=fsh"
+      },
+      "record" : {
+        "href" : "https://www.familysearch.org/platform/records/records/Q2R5-VFST.json?flag=fsh"
+      }
+    },
+    "sources" : [ {
+      "description" : "#sd2"
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:QKRP-7YYN" ]
+    },
+    "names" : [ {
+      "type" : "http://gedcomx.org/BirthName",
+      "nameForms" : [ {
+        "fullText" : "John",
+        "parts" : [ {
+          "type" : "http://gedcomx.org/Given",
+          "value" : "John",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Given",
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_GN_ORIG",
+              "text" : "John"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_GN",
+              "text" : "John"
+            } ]
+          } ]
+        } ],
+        "fields" : [ {
+          "type" : "http://gedcomx.org/Name",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Original",
+            "labelId" : "PR_NAME_ORIG",
+            "text" : "John"
+          }, {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_NAME",
+            "text" : "John"
+          } ]
+        } ]
+      } ]
+    } ]
+  }, {
+    "id" : "p_101957290127",
+    "extracted" : true,
+    "principal" : false,
+    "gender" : {
+      "type" : "http://gedcomx.org/Male",
+      "fields" : [ {
+        "type" : "http://gedcomx.org/Gender",
+        "values" : [ {
+          "type" : "http://gedcomx.org/Original",
+          "labelId" : "PR_SEX_CODE_ORIG",
+          "text" : "M",
+          "resource" : "http://gedcomx.org/Unknown"
+        }, {
+          "type" : "http://gedcomx.org/Interpreted",
+          "labelId" : "PR_SEX_CODE",
+          "text" : "Male",
+          "resource" : "http://gedcomx.org/Male"
+        } ]
+      } ]
+    },
+    "links" : {
+      "persona" : {
+        "href" : "https://www.familysearch.org/platform/records/personas/QKRP-7YYJ.json?flag=fsh"
+      },
+      "record" : {
+        "href" : "https://www.familysearch.org/platform/records/records/Q2R5-VFST.json?flag=fsh"
+      }
+    },
+    "sources" : [ {
+      "description" : "#sd2"
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:QKRP-7YYJ" ]
+    },
+    "names" : [ {
+      "type" : "http://gedcomx.org/BirthName",
+      "nameForms" : [ {
+        "fullText" : "Richard",
+        "parts" : [ {
+          "type" : "http://gedcomx.org/Given",
+          "value" : "Richard",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Given",
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_GN_ORIG",
+              "text" : "Richard"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_GN",
+              "text" : "Richard"
+            } ]
+          } ]
+        } ],
+        "fields" : [ {
+          "type" : "http://gedcomx.org/Name",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Original",
+            "labelId" : "PR_NAME_ORIG",
+            "text" : "Richard"
+          }, {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_NAME",
+            "text" : "Richard"
+          } ]
+        } ]
+      } ]
+    } ]
+  }, {
+    "id" : "p_101957290115",
+    "extracted" : true,
+    "principal" : false,
+    "gender" : {
+      "type" : "http://gedcomx.org/Female",
+      "fields" : [ {
+        "type" : "http://gedcomx.org/Gender",
+        "values" : [ {
+          "type" : "http://gedcomx.org/Original",
+          "labelId" : "PR_SEX_CODE_ORIG",
+          "text" : "F",
+          "resource" : "http://gedcomx.org/Unknown"
+        }, {
+          "type" : "http://gedcomx.org/Interpreted",
+          "labelId" : "PR_SEX_CODE",
+          "text" : "Female",
+          "resource" : "http://gedcomx.org/Female"
+        } ]
+      } ]
+    },
+    "links" : {
+      "persona" : {
+        "href" : "https://www.familysearch.org/platform/records/personas/QKRP-7YY7.json?flag=fsh"
+      },
+      "record" : {
+        "href" : "https://www.familysearch.org/platform/records/records/Q2R5-VFST.json?flag=fsh"
+      }
+    },
+    "sources" : [ {
+      "description" : "#sd2"
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:QKRP-7YY7" ]
+    },
+    "names" : [ {
+      "type" : "http://gedcomx.org/BirthName",
+      "nameForms" : [ {
+        "fullText" : "Claudine Reed",
+        "parts" : [ {
+          "type" : "http://gedcomx.org/Given",
+          "value" : "Claudine",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Given",
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_GN_ORIG",
+              "text" : "Claudine"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_GN",
+              "text" : "Claudine"
+            } ]
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/Surname",
+          "value" : "Reed",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Surname",
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_SURN_ORIG",
+              "text" : "Reed"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_SURN",
+              "text" : "Reed"
+            } ]
+          } ]
+        } ],
+        "fields" : [ {
+          "type" : "http://gedcomx.org/Name",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Original",
+            "labelId" : "PR_NAME_ORIG",
+            "text" : "Claudine Reed"
+          }, {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_NAME",
+            "text" : "Claudine Reed"
+          } ]
+        } ]
+      } ]
+    } ]
+  }, {
+    "id" : "p_101957290124",
+    "extracted" : true,
+    "principal" : false,
+    "gender" : {
+      "type" : "http://gedcomx.org/Female",
+      "fields" : [ {
+        "type" : "http://gedcomx.org/Gender",
+        "values" : [ {
+          "type" : "http://gedcomx.org/Original",
+          "labelId" : "PR_SEX_CODE_ORIG",
+          "text" : "F",
+          "resource" : "http://gedcomx.org/Unknown"
+        }, {
+          "type" : "http://gedcomx.org/Interpreted",
+          "labelId" : "PR_SEX_CODE",
+          "text" : "Female",
+          "resource" : "http://gedcomx.org/Female"
+        } ]
+      } ]
+    },
+    "links" : {
+      "persona" : {
+        "href" : "https://www.familysearch.org/platform/records/personas/QKRP-7YYX.json?flag=fsh"
+      },
+      "record" : {
+        "href" : "https://www.familysearch.org/platform/records/records/Q2R5-VFST.json?flag=fsh"
+      }
+    },
+    "sources" : [ {
+      "description" : "#sd2"
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:QKRP-7YYX" ]
+    },
+    "names" : [ {
+      "type" : "http://gedcomx.org/BirthName",
+      "nameForms" : [ {
+        "fullText" : "Catherine Jones",
+        "parts" : [ {
+          "type" : "http://gedcomx.org/Given",
+          "value" : "Catherine",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Given",
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_GN_ORIG",
+              "text" : "Catherine"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_GN",
+              "text" : "Catherine"
+            } ]
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/Surname",
+          "value" : "Jones",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Surname",
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_SURN_ORIG",
+              "text" : "Jones"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_SURN",
+              "text" : "Jones"
+            } ]
+          } ]
+        } ],
+        "fields" : [ {
+          "type" : "http://gedcomx.org/Name",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Original",
+            "labelId" : "PR_NAME_ORIG",
+            "text" : "Catherine Jones"
+          }, {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_NAME",
+            "text" : "Catherine Jones"
+          } ]
+        } ]
+      } ]
+    } ]
+  } ],
+  "relationships" : [ {
+    "id" : "MM9.1.6/VYHW-4HV",
+    "type" : "http://gedcomx.org/ParentChild",
+    "person1" : {
+      "resource" : "#p_101957290114",
+      "resourceId" : "p_101957290114"
+    },
+    "person2" : {
+      "resource" : "#p_101957290123",
+      "resourceId" : "p_101957290123"
+    },
+    "fields" : [ {
+      "type" : "http://familysearch.org/RelativeTypeInverse",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE_INV",
+        "text" : "Daughter"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/RelativeType",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE",
+        "text" : "Mother",
+        "resource" : "http://gedcomx.org/ParentChild"
+      } ]
+    } ]
+  }, {
+    "id" : "MM9.1.6/VYHW-4HK",
+    "type" : "http://gedcomx.org/ParentChild",
+    "person1" : {
+      "resource" : "#p_101957290113",
+      "resourceId" : "p_101957290113"
+    },
+    "person2" : {
+      "resource" : "#p_101957290128",
+      "resourceId" : "p_101957290128"
+    },
+    "fields" : [ {
+      "type" : "http://familysearch.org/RelativeTypeInverse",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE_INV",
+        "text" : "Son"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/RelativeType",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE",
+        "text" : "Father",
+        "resource" : "http://gedcomx.org/ParentChild"
+      } ]
+    } ]
+  }, {
+    "id" : "MM9.1.6/VYHW-4H2",
+    "type" : "http://gedcomx.org/ParentChild",
+    "person1" : {
+      "resource" : "#p_101957290113",
+      "resourceId" : "p_101957290113"
+    },
+    "person2" : {
+      "resource" : "#p_101957290123",
+      "resourceId" : "p_101957290123"
+    },
+    "fields" : [ {
+      "type" : "http://familysearch.org/RelativeTypeInverse",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE_INV",
+        "text" : "Daughter"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/RelativeType",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE",
+        "text" : "Father",
+        "resource" : "http://gedcomx.org/ParentChild"
+      } ]
+    } ]
+  }, {
+    "id" : "MM9.1.6/VYHW-4HG",
+    "type" : "http://gedcomx.org/ParentChild",
+    "person1" : {
+      "resource" : "#p_101957290113",
+      "resourceId" : "p_101957290113"
+    },
+    "person2" : {
+      "resource" : "#p_101957290127",
+      "resourceId" : "p_101957290127"
+    },
+    "fields" : [ {
+      "type" : "http://familysearch.org/RelativeTypeInverse",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE_INV",
+        "text" : "Son"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/RelativeType",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE",
+        "text" : "Father",
+        "resource" : "http://gedcomx.org/ParentChild"
+      } ]
+    } ]
+  }, {
+    "id" : "MM9.1.6/VYHW-4HP",
+    "type" : "http://familysearch.org/types/relationships/Sibling",
+    "person1" : {
+      "resource" : "#p_101957290128",
+      "resourceId" : "p_101957290128"
+    },
+    "person2" : {
+      "resource" : "#p_101957290112",
+      "resourceId" : "p_101957290112"
+    },
+    "fields" : [ {
+      "type" : "http://familysearch.org/RelativeTypeInverse",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE_INV",
+        "text" : "Brother"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/RelativeType",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Original",
+        "labelId" : "REL_TYPE_ORIG",
+        "text" : "Brother"
+      }, {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE",
+        "text" : "Brother",
+        "resource" : "http://familysearch.org/types/relationships/Sibling"
+      } ]
+    } ]
+  }, {
+    "id" : "MM9.1.6/VYHW-4H5",
+    "type" : "http://familysearch.org/types/relationships/Sibling",
+    "person1" : {
+      "resource" : "#p_101957290127",
+      "resourceId" : "p_101957290127"
+    },
+    "person2" : {
+      "resource" : "#p_101957290112",
+      "resourceId" : "p_101957290112"
+    },
+    "fields" : [ {
+      "type" : "http://familysearch.org/RelativeTypeInverse",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE_INV",
+        "text" : "Brother"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/RelativeType",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Original",
+        "labelId" : "REL_TYPE_ORIG",
+        "text" : "Brother"
+      }, {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE",
+        "text" : "Brother",
+        "resource" : "http://familysearch.org/types/relationships/Sibling"
+      } ]
+    } ]
+  }, {
+    "id" : "MM9.1.6/VYHW-4HR",
+    "type" : "http://gedcomx.org/ParentChild",
+    "person1" : {
+      "resource" : "#p_101957290114",
+      "resourceId" : "p_101957290114"
+    },
+    "person2" : {
+      "resource" : "#p_101957290112",
+      "resourceId" : "p_101957290112"
+    },
+    "fields" : [ {
+      "type" : "http://familysearch.org/RelativeTypeInverse",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE_INV",
+        "text" : "Son"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/RelativeType",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Original",
+        "labelId" : "REL_TYPE_ORIG",
+        "text" : "Mother"
+      }, {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE",
+        "text" : "Mother",
+        "resource" : "http://gedcomx.org/ParentChild"
+      } ]
+    } ]
+  }, {
+    "id" : "MM9.1.6/VYHW-4HY",
+    "type" : "http://gedcomx.org/ParentChild",
+    "person1" : {
+      "resource" : "#p_101957290112",
+      "resourceId" : "p_101957290112"
+    },
+    "person2" : {
+      "resource" : "#p_101957290117",
+      "resourceId" : "p_101957290117"
+    },
+    "fields" : [ {
+      "type" : "http://familysearch.org/RelativeTypeInverse",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Original",
+        "labelId" : "REL_TYPE_INV_ORIG",
+        "text" : "Son"
+      }, {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE_INV",
+        "text" : "Son"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/RelativeType",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE",
+        "text" : "Father",
+        "resource" : "http://gedcomx.org/ParentChild"
+      } ]
+    } ]
+  }, {
+    "id" : "MM9.1.6/VYHW-4HB",
+    "type" : "http://familysearch.org/types/relationships/ParentChildInLaw",
+    "person1" : {
+      "resource" : "#p_101957290112",
+      "resourceId" : "p_101957290112"
+    },
+    "person2" : {
+      "resource" : "#p_101957290118",
+      "resourceId" : "p_101957290118"
+    },
+    "fields" : [ {
+      "type" : "http://familysearch.org/RelativeTypeInverse",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Original",
+        "labelId" : "REL_TYPE_INV_ORIG",
+        "text" : "Daughter-in-Law"
+      }, {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE_INV",
+        "text" : "Daughter-In-Law"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/RelativeType",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE",
+        "text" : "Father-In-Law",
+        "resource" : "http://familysearch.org/types/relationships/ParentChildInLaw"
+      } ]
+    } ]
+  }, {
+    "id" : "MM9.1.6/VYHW-4H1",
+    "type" : "http://gedcomx.org/ParentChild",
+    "person1" : {
+      "resource" : "#p_101957290112",
+      "resourceId" : "p_101957290112"
+    },
+    "person2" : {
+      "resource" : "#p_101957290119",
+      "resourceId" : "p_101957290119"
+    },
+    "fields" : [ {
+      "type" : "http://familysearch.org/RelativeTypeInverse",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Original",
+        "labelId" : "REL_TYPE_INV_ORIG",
+        "text" : "Son"
+      }, {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE_INV",
+        "text" : "Son"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/RelativeType",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE",
+        "text" : "Father",
+        "resource" : "http://gedcomx.org/ParentChild"
+      } ]
+    } ]
+  }, {
+    "id" : "MM9.1.6/VYHW-4CM",
+    "type" : "http://familysearch.org/types/relationships/ParentChildInLaw",
+    "person1" : {
+      "resource" : "#p_101957290112",
+      "resourceId" : "p_101957290112"
+    },
+    "person2" : {
+      "resource" : "#p_101957290120",
+      "resourceId" : "p_101957290120"
+    },
+    "fields" : [ {
+      "type" : "http://familysearch.org/RelativeTypeInverse",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Original",
+        "labelId" : "REL_TYPE_INV_ORIG",
+        "text" : "Daughter-in-Law"
+      }, {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE_INV",
+        "text" : "Daughter-In-Law"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/RelativeType",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE",
+        "text" : "Father-In-Law",
+        "resource" : "http://familysearch.org/types/relationships/ParentChildInLaw"
+      } ]
+    } ]
+  }, {
+    "id" : "MM9.1.6/VYHW-4C9",
+    "type" : "http://gedcomx.org/ParentChild",
+    "person1" : {
+      "resource" : "#p_101957290112",
+      "resourceId" : "p_101957290112"
+    },
+    "person2" : {
+      "resource" : "#p_101957290121",
+      "resourceId" : "p_101957290121"
+    },
+    "fields" : [ {
+      "type" : "http://familysearch.org/RelativeTypeInverse",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Original",
+        "labelId" : "REL_TYPE_INV_ORIG",
+        "text" : "Daughter"
+      }, {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE_INV",
+        "text" : "Daughter"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/RelativeType",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE",
+        "text" : "Father",
+        "resource" : "http://gedcomx.org/ParentChild"
+      } ]
+    } ]
+  }, {
+    "id" : "MM9.1.6/VYHW-4CS",
+    "type" : "http://familysearch.org/types/relationships/ParentChildInLaw",
+    "person1" : {
+      "resource" : "#p_101957290112",
+      "resourceId" : "p_101957290112"
+    },
+    "person2" : {
+      "resource" : "#p_101957290122",
+      "resourceId" : "p_101957290122"
+    },
+    "fields" : [ {
+      "type" : "http://familysearch.org/RelativeTypeInverse",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Original",
+        "labelId" : "REL_TYPE_INV_ORIG",
+        "text" : "Son-in-Law"
+      }, {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE_INV",
+        "text" : "Son-In-Law"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/RelativeType",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE",
+        "text" : "Father-In-Law",
+        "resource" : "http://familysearch.org/types/relationships/ParentChildInLaw"
+      } ]
+    } ]
+  }, {
+    "id" : "MM9.1.6/VYHW-4C3",
+    "type" : "http://familysearch.org/types/relationships/Sibling",
+    "person1" : {
+      "resource" : "#p_101957290123",
+      "resourceId" : "p_101957290123"
+    },
+    "person2" : {
+      "resource" : "#p_101957290112",
+      "resourceId" : "p_101957290112"
+    },
+    "fields" : [ {
+      "type" : "http://familysearch.org/RelativeTypeInverse",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE_INV",
+        "text" : "Brother"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/RelativeType",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Original",
+        "labelId" : "REL_TYPE_ORIG",
+        "text" : "Sister"
+      }, {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE",
+        "text" : "Sister",
+        "resource" : "http://familysearch.org/types/relationships/Sibling"
+      } ]
+    } ]
+  }, {
+    "id" : "MM9.1.6/VYHW-4CQ",
+    "type" : "http://familysearch.org/types/relationships/Sibling",
+    "person1" : {
+      "resource" : "#p_101957290124",
+      "resourceId" : "p_101957290124"
+    },
+    "person2" : {
+      "resource" : "#p_101957290112",
+      "resourceId" : "p_101957290112"
+    },
+    "fields" : [ {
+      "type" : "http://familysearch.org/RelativeTypeInverse",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE_INV",
+        "text" : "Brother"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/RelativeType",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Original",
+        "labelId" : "REL_TYPE_ORIG",
+        "text" : "Sister"
+      }, {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE",
+        "text" : "Sister",
+        "resource" : "http://familysearch.org/types/relationships/Sibling"
+      } ]
+    } ]
+  }, {
+    "id" : "MM9.1.6/VYHW-4C7",
+    "type" : "http://gedcomx.org/ParentChild",
+    "person1" : {
+      "resource" : "#p_101957290112",
+      "resourceId" : "p_101957290112"
+    },
+    "person2" : {
+      "resource" : "#p_101957290125",
+      "resourceId" : "p_101957290125"
+    },
+    "fields" : [ {
+      "type" : "http://familysearch.org/RelativeTypeInverse",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Original",
+        "labelId" : "REL_TYPE_INV_ORIG",
+        "text" : "Son"
+      }, {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE_INV",
+        "text" : "Son"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/RelativeType",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE",
+        "text" : "Father",
+        "resource" : "http://gedcomx.org/ParentChild"
+      } ]
+    } ]
+  }, {
+    "id" : "MM9.1.6/VYHW-4CW",
+    "type" : "http://gedcomx.org/ParentChild",
+    "person1" : {
+      "resource" : "#p_101957290112",
+      "resourceId" : "p_101957290112"
+    },
+    "person2" : {
+      "resource" : "#p_101957290126",
+      "resourceId" : "p_101957290126"
+    },
+    "fields" : [ {
+      "type" : "http://familysearch.org/RelativeTypeInverse",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Original",
+        "labelId" : "REL_TYPE_INV_ORIG",
+        "text" : "Son"
+      }, {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE_INV",
+        "text" : "Son"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/RelativeType",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE",
+        "text" : "Father",
+        "resource" : "http://gedcomx.org/ParentChild"
+      } ]
+    } ]
+  }, {
+    "id" : "MM9.1.6/VYHW-4C4",
+    "type" : "http://gedcomx.org/ParentChild",
+    "person1" : {
+      "resource" : "#p_101957290113",
+      "resourceId" : "p_101957290113"
+    },
+    "person2" : {
+      "resource" : "#p_101957290112",
+      "resourceId" : "p_101957290112"
+    },
+    "fields" : [ {
+      "type" : "http://familysearch.org/RelativeTypeInverse",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE_INV",
+        "text" : "Son"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/RelativeType",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Original",
+        "labelId" : "REL_TYPE_ORIG",
+        "text" : "Father"
+      }, {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE",
+        "text" : "Father",
+        "resource" : "http://gedcomx.org/ParentChild"
+      } ]
+    } ]
+  }, {
+    "id" : "MM9.1.6/VYHW-4CH",
+    "type" : "http://gedcomx.org/Couple",
+    "person1" : {
+      "resource" : "#p_101957290121",
+      "resourceId" : "p_101957290121"
+    },
+    "person2" : {
+      "resource" : "#p_101957290122",
+      "resourceId" : "p_101957290122"
+    },
+    "facts" : [ {
+      "type" : "http://gedcomx.org/Marriage"
+    } ],
+    "fields" : [ {
+      "type" : "http://familysearch.org/RelativeTypeInverse",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE_INV",
+        "text" : "Husband"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/RelativeType",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE",
+        "text" : "Wife",
+        "resource" : "http://gedcomx.org/Couple"
+      } ]
+    } ]
+  }, {
+    "id" : "MM9.1.6/VYHW-4CC",
+    "type" : "http://gedcomx.org/Couple",
+    "person1" : {
+      "resource" : "#p_101957290117",
+      "resourceId" : "p_101957290117"
+    },
+    "person2" : {
+      "resource" : "#p_101957290118",
+      "resourceId" : "p_101957290118"
+    },
+    "facts" : [ {
+      "type" : "http://gedcomx.org/Marriage"
+    } ],
+    "fields" : [ {
+      "type" : "http://familysearch.org/RelativeTypeInverse",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE_INV",
+        "text" : "Wife"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/RelativeType",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE",
+        "text" : "Husband",
+        "resource" : "http://gedcomx.org/Couple"
+      } ]
+    } ]
+  }, {
+    "id" : "MM9.1.6/VYHW-4CZ",
+    "type" : "http://gedcomx.org/Couple",
+    "person1" : {
+      "resource" : "#p_101957290113",
+      "resourceId" : "p_101957290113"
+    },
+    "person2" : {
+      "resource" : "#p_101957290114",
+      "resourceId" : "p_101957290114"
+    },
+    "facts" : [ {
+      "type" : "http://gedcomx.org/Marriage"
+    } ],
+    "fields" : [ {
+      "type" : "http://familysearch.org/RelativeTypeInverse",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE_INV",
+        "text" : "Wife"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/RelativeType",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE",
+        "text" : "Husband",
+        "resource" : "http://gedcomx.org/Couple"
+      } ]
+    } ]
+  }, {
+    "id" : "MM9.1.6/VYHW-4C8",
+    "type" : "http://gedcomx.org/Couple",
+    "person1" : {
+      "resource" : "#p_101957290119",
+      "resourceId" : "p_101957290119"
+    },
+    "person2" : {
+      "resource" : "#p_101957290120",
+      "resourceId" : "p_101957290120"
+    },
+    "facts" : [ {
+      "type" : "http://gedcomx.org/Marriage"
+    } ],
+    "fields" : [ {
+      "type" : "http://familysearch.org/RelativeTypeInverse",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE_INV",
+        "text" : "Wife"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/RelativeType",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE",
+        "text" : "Husband",
+        "resource" : "http://gedcomx.org/Couple"
+      } ]
+    } ]
+  }, {
+    "id" : "MM9.1.6/VYHW-4CD",
+    "type" : "http://gedcomx.org/Couple",
+    "person1" : {
+      "resource" : "#p_101957290115",
+      "resourceId" : "p_101957290115"
+    },
+    "person2" : {
+      "resource" : "#p_101957290112",
+      "resourceId" : "p_101957290112"
+    },
+    "facts" : [ {
+      "type" : "http://gedcomx.org/Marriage",
+      "date" : {
+        "original" : "24 Aug",
+        "fields" : [ {
+          "type" : "http://familysearch.org/CpMarMonth",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "CP_MAR_MONTH",
+            "text" : "Aug"
+          } ]
+        }, {
+          "type" : "http://familysearch.org/CpMarDay",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "CP_MAR_DAY",
+            "text" : "24"
+          } ]
+        } ]
+      },
+      "place" : {
+        "original" : "Salt Lake, Salt Lake Temple, Salt Lake City, Utah",
+        "fields" : [ {
+          "type" : "http://familysearch.org/CpMarCounty",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "CP_MAR_COUNTY",
+            "text" : "Salt Lake"
+          } ]
+        }, {
+          "type" : "http://familysearch.org/CpMarInstitution",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "CP_MAR_INSTITUTION",
+            "text" : "Salt Lake Temple"
+          } ]
+        }, {
+          "type" : "http://familysearch.org/CpMarCityTown",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "CP_MAR_CITY_TOWN",
+            "text" : "Salt Lake City"
+          } ]
+        }, {
+          "type" : "http://familysearch.org/CpMarStateCountry",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "CP_MAR_STATE_COUNTRY",
+            "text" : "Utah"
+          } ]
+        } ]
+      }
+    } ],
+    "fields" : [ {
+      "type" : "http://familysearch.org/RelativeTypeInverse",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE_INV",
+        "text" : "Husband"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/RelativeType",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Original",
+        "labelId" : "REL_TYPE_ORIG",
+        "text" : "Spouse"
+      }, {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE",
+        "text" : "Wife",
+        "resource" : "http://gedcomx.org/Couple"
+      } ]
+    } ]
+  }, {
+    "id" : "MM9.1.6/VYHW-4C6",
+    "type" : "http://gedcomx.org/ParentChild",
+    "person1" : {
+      "resource" : "#p_101957290114",
+      "resourceId" : "p_101957290114"
+    },
+    "person2" : {
+      "resource" : "#p_101957290127",
+      "resourceId" : "p_101957290127"
+    },
+    "fields" : [ {
+      "type" : "http://familysearch.org/RelativeTypeInverse",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE_INV",
+        "text" : "Son"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/RelativeType",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE",
+        "text" : "Mother",
+        "resource" : "http://gedcomx.org/ParentChild"
+      } ]
+    } ]
+  }, {
+    "id" : "MM9.1.6/VYHW-4CN",
+    "type" : "http://gedcomx.org/ParentChild",
+    "person1" : {
+      "resource" : "#p_101957290114",
+      "resourceId" : "p_101957290114"
+    },
+    "person2" : {
+      "resource" : "#p_101957290124",
+      "resourceId" : "p_101957290124"
+    },
+    "fields" : [ {
+      "type" : "http://familysearch.org/RelativeTypeInverse",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE_INV",
+        "text" : "Daughter"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/RelativeType",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE",
+        "text" : "Mother",
+        "resource" : "http://gedcomx.org/ParentChild"
+      } ]
+    } ]
+  }, {
+    "id" : "MM9.1.6/VYHW-4CV",
+    "type" : "http://gedcomx.org/ParentChild",
+    "person1" : {
+      "resource" : "#p_101957290114",
+      "resourceId" : "p_101957290114"
+    },
+    "person2" : {
+      "resource" : "#p_101957290128",
+      "resourceId" : "p_101957290128"
+    },
+    "fields" : [ {
+      "type" : "http://familysearch.org/RelativeTypeInverse",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE_INV",
+        "text" : "Son"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/RelativeType",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE",
+        "text" : "Mother",
+        "resource" : "http://gedcomx.org/ParentChild"
+      } ]
+    } ]
+  }, {
+    "id" : "MM9.1.6/VYHW-4CK",
+    "type" : "http://gedcomx.org/ParentChild",
+    "person1" : {
+      "resource" : "#p_101957290113",
+      "resourceId" : "p_101957290113"
+    },
+    "person2" : {
+      "resource" : "#p_101957290124",
+      "resourceId" : "p_101957290124"
+    },
+    "fields" : [ {
+      "type" : "http://familysearch.org/RelativeTypeInverse",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE_INV",
+        "text" : "Daughter"
+      } ]
+    }, {
+      "type" : "http://familysearch.org/RelativeType",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE",
+        "text" : "Father",
+        "resource" : "http://gedcomx.org/ParentChild"
+      } ]
+    } ]
+  } ],
+  "sourceDescriptions" : [ {
+    "id" : "sd_c_2333694",
+    "about" : "https://www.familysearch.org/platform/records/collections/2333694.json",
+    "resourceType" : "http://gedcomx.org/Collection",
+    "created" : 1406667046846,
+    "modified" : 1556523692002,
+    "coverage" : [ {
+      "spatial" : {
+        "original" : "United States",
+        "description" : "#place_1"
+      },
+      "recordType" : "http://gedcomx.org/Obituary"
+    } ],
+    "titles" : [ {
+      "lang" : "en",
+      "value" : "United States, GenealogyBank Obituaries, 1980-2014"
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Primary" : [ "https://www.familysearch.org/platform/records/collections/2333694.json" ]
+    }
+  }, {
+    "id" : "src_r_102687439586",
+    "mediaType" : "application/json",
+    "about" : "https://www.familysearch.org/ark:/61903/1:2:Q2R5-VFST",
+    "componentOf" : {
+      "description" : "#sd_c_2333694"
+    },
+    "resourceType" : "http://gedcomx.org/Record",
+    "created" : 1473198958210,
+    "modified" : 1538701736877,
+    "coverage" : [ {
+      "spatial" : {
+        "original" : "Utah, United States"
+      },
+      "temporal" : {
+        "original" : "27 Dec 2007"
+      },
+      "recordType" : "http://gedcomx.org/Obituary"
+    } ],
+    "citations" : [ {
+      "value" : "\"United States, GenealogyBank Obituaries, 1980-2014,\" database with images, <i>FamilySearch</i> (https://familysearch.org/ark:/61903/1:2:Q2R5-VFST : accessed 29 April 2019), Entry for Howard Moroni Gray Jr, Utah, United States, 27 Dec 2007; from \"Recent Newspaper Obituaries (1977 - Today),\" database, <i>GenealogyBank.com</i> (http://www.genealogybank.com : 2014); citing <i>Salt Lake Tribune, The</i>, born-digital text.\n"
+    } ],
+    "sources" : [ {
+      "description" : "#sd2"
+    } ],
+    "titles" : [ {
+      "lang" : "en",
+      "value" : "Entry for Howard Moroni Gray Jr, \"United States, GenealogyBank Obituaries, 1980-2014\""
+    } ],
+    "rights" : [ "http://familysearch.org/records/recordPermissions/CdsPrmAnyone" ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:2:Q2R5-VFST" ]
+    },
+    "descriptor" : {
+      "resource" : "https://www.familysearch.org/service/cds/recapi/collections/2333694#rd_MM9.1.9/MMMM-WPR"
+    }
+  }, {
+    "id" : "sd_p_101957290112",
+    "about" : "https://www.familysearch.org/ark:/61903/1:1:QKRP-7YYS",
+    "componentOf" : {
+      "description" : "#src_r_102687439586"
+    },
+    "resourceType" : "http://gedcomx.org/Person",
+    "citations" : [ {
+      "value" : "\"United States, GenealogyBank Obituaries, 1980-2014,\" database with images, <i>FamilySearch</i> (https://familysearch.org/ark:/61903/1:1:QKRP-7YYS : accessed 29 April 2019), Howard Moroni Gray Jr, Utah, United States, 27 Dec 2007; from \"Recent Newspaper Obituaries (1977 - Today),\" database, <i>GenealogyBank.com</i> (http://www.genealogybank.com : 2014); citing <i>Salt Lake Tribune, The</i>, born-digital text.\n\n"
+    } ],
+    "titles" : [ {
+      "lang" : "en",
+      "value" : "Howard Moroni Gray Jr, \"United States, GenealogyBank Obituaries, 1980-2014\""
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:QKRP-7YYS" ]
+    }
+  }, {
+    "id" : "sd_p_101957290128",
+    "about" : "https://www.familysearch.org/ark:/61903/1:1:QKRP-7YYV",
+    "componentOf" : {
+      "description" : "#src_r_102687439586"
+    },
+    "resourceType" : "http://gedcomx.org/Person",
+    "citations" : [ {
+      "value" : "\"United States, GenealogyBank Obituaries, 1980-2014,\" database with images, <i>FamilySearch</i> (https://familysearch.org/ark:/61903/1:1:QKRP-7YYV : accessed 29 April 2019), Robert in entry for Howard Moroni Gray Jr, Utah, United States, 27 Dec 2007; from \"Recent Newspaper Obituaries (1977 - Today),\" database, <i>GenealogyBank.com</i> (http://www.genealogybank.com : 2014); citing <i>Salt Lake Tribune, The</i>, born-digital text.\n\n"
+    } ],
+    "titles" : [ {
+      "lang" : "en",
+      "value" : "Robert in entry for Howard Moroni Gray Jr, \"United States, GenealogyBank Obituaries, 1980-2014\""
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:QKRP-7YYV" ]
+    }
+  }, {
+    "id" : "sd_p_101957290113",
+    "about" : "https://www.familysearch.org/ark:/61903/1:1:QKRP-7YY3",
+    "componentOf" : {
+      "description" : "#src_r_102687439586"
+    },
+    "resourceType" : "http://gedcomx.org/Person",
+    "citations" : [ {
+      "value" : "\"United States, GenealogyBank Obituaries, 1980-2014,\" database with images, <i>FamilySearch</i> (https://familysearch.org/ark:/61903/1:1:QKRP-7YY3 : accessed 29 April 2019), Howard Moroni Gray in entry for Howard Moroni Gray Jr, Utah, United States, 27 Dec 2007; from \"Recent Newspaper Obituaries (1977 - Today),\" database, <i>GenealogyBank.com</i> (http://www.genealogybank.com : 2014); citing <i>Salt Lake Tribune, The</i>, born-digital text.\n\n"
+    } ],
+    "titles" : [ {
+      "lang" : "en",
+      "value" : "Howard Moroni Gray in entry for Howard Moroni Gray Jr, \"United States, GenealogyBank Obituaries, 1980-2014\""
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:QKRP-7YY3" ]
+    }
+  }, {
+    "id" : "sd_p_101957290114",
+    "about" : "https://www.familysearch.org/ark:/61903/1:1:QKRP-7YYQ",
+    "componentOf" : {
+      "description" : "#src_r_102687439586"
+    },
+    "resourceType" : "http://gedcomx.org/Person",
+    "citations" : [ {
+      "value" : "\"United States, GenealogyBank Obituaries, 1980-2014,\" database with images, <i>FamilySearch</i> (https://familysearch.org/ark:/61903/1:1:QKRP-7YYQ : accessed 29 April 2019), Lily Matilda Schmidlin Gray in entry for Howard Moroni Gray Jr, Utah, United States, 27 Dec 2007; from \"Recent Newspaper Obituaries (1977 - Today),\" database, <i>GenealogyBank.com</i> (http://www.genealogybank.com : 2014); citing <i>Salt Lake Tribune, The</i>, born-digital text.\n\n"
+    } ],
+    "titles" : [ {
+      "lang" : "en",
+      "value" : "Lily Matilda Schmidlin Gray in entry for Howard Moroni Gray Jr, \"United States, GenealogyBank Obituaries, 1980-2014\""
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:QKRP-7YYQ" ]
+    }
+  }, {
+    "id" : "sd_p_101957290117",
+    "about" : "https://www.familysearch.org/ark:/61903/1:1:QKRP-7YY4",
+    "componentOf" : {
+      "description" : "#src_r_102687439586"
+    },
+    "resourceType" : "http://gedcomx.org/Person",
+    "citations" : [ {
+      "value" : "\"United States, GenealogyBank Obituaries, 1980-2014,\" database with images, <i>FamilySearch</i> (https://familysearch.org/ark:/61903/1:1:QKRP-7YY4 : accessed 29 April 2019), Richard M Gray in entry for Howard Moroni Gray Jr, Utah, United States, 27 Dec 2007; from \"Recent Newspaper Obituaries (1977 - Today),\" database, <i>GenealogyBank.com</i> (http://www.genealogybank.com : 2014); citing <i>Salt Lake Tribune, The</i>, born-digital text.\n\n"
+    } ],
+    "titles" : [ {
+      "lang" : "en",
+      "value" : "Richard M Gray in entry for Howard Moroni Gray Jr, \"United States, GenealogyBank Obituaries, 1980-2014\""
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:QKRP-7YY4" ]
+    }
+  }, {
+    "id" : "sd_p_101957290118",
+    "about" : "https://www.familysearch.org/ark:/61903/1:1:QKRP-7YYH",
+    "componentOf" : {
+      "description" : "#src_r_102687439586"
+    },
+    "resourceType" : "http://gedcomx.org/Person",
+    "citations" : [ {
+      "value" : "\"United States, GenealogyBank Obituaries, 1980-2014,\" database with images, <i>FamilySearch</i> (https://familysearch.org/ark:/61903/1:1:QKRP-7YYH : accessed 29 April 2019), Sheila Gray in entry for Howard Moroni Gray Jr, Utah, United States, 27 Dec 2007; from \"Recent Newspaper Obituaries (1977 - Today),\" database, <i>GenealogyBank.com</i> (http://www.genealogybank.com : 2014); citing <i>Salt Lake Tribune, The</i>, born-digital text.\n\n"
+    } ],
+    "titles" : [ {
+      "lang" : "en",
+      "value" : "Sheila Gray in entry for Howard Moroni Gray Jr, \"United States, GenealogyBank Obituaries, 1980-2014\""
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:QKRP-7YYH" ]
+    }
+  }, {
+    "id" : "sd_p_101957290119",
+    "about" : "https://www.familysearch.org/ark:/61903/1:1:QKRP-7YYC",
+    "componentOf" : {
+      "description" : "#src_r_102687439586"
+    },
+    "resourceType" : "http://gedcomx.org/Person",
+    "citations" : [ {
+      "value" : "\"United States, GenealogyBank Obituaries, 1980-2014,\" database with images, <i>FamilySearch</i> (https://familysearch.org/ark:/61903/1:1:QKRP-7YYC : accessed 29 April 2019), Randall Gray in entry for Howard Moroni Gray Jr, Utah, United States, 27 Dec 2007; from \"Recent Newspaper Obituaries (1977 - Today),\" database, <i>GenealogyBank.com</i> (http://www.genealogybank.com : 2014); citing <i>Salt Lake Tribune, The</i>, born-digital text.\n\n"
+    } ],
+    "titles" : [ {
+      "lang" : "en",
+      "value" : "Randall Gray in entry for Howard Moroni Gray Jr, \"United States, GenealogyBank Obituaries, 1980-2014\""
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:QKRP-7YYC" ]
+    }
+  }, {
+    "id" : "sd_p_101957290120",
+    "about" : "https://www.familysearch.org/ark:/61903/1:1:QKRP-7YYZ",
+    "componentOf" : {
+      "description" : "#src_r_102687439586"
+    },
+    "resourceType" : "http://gedcomx.org/Person",
+    "citations" : [ {
+      "value" : "\"United States, GenealogyBank Obituaries, 1980-2014,\" database with images, <i>FamilySearch</i> (https://familysearch.org/ark:/61903/1:1:QKRP-7YYZ : accessed 29 April 2019), Leann Gray in entry for Howard Moroni Gray Jr, Utah, United States, 27 Dec 2007; from \"Recent Newspaper Obituaries (1977 - Today),\" database, <i>GenealogyBank.com</i> (http://www.genealogybank.com : 2014); citing <i>Salt Lake Tribune, The</i>, born-digital text.\n\n"
+    } ],
+    "titles" : [ {
+      "lang" : "en",
+      "value" : "Leann Gray in entry for Howard Moroni Gray Jr, \"United States, GenealogyBank Obituaries, 1980-2014\""
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:QKRP-7YYZ" ]
+    }
+  }, {
+    "id" : "sd_p_101957290121",
+    "about" : "https://www.familysearch.org/ark:/61903/1:1:QKRP-7YY8",
+    "componentOf" : {
+      "description" : "#src_r_102687439586"
+    },
+    "resourceType" : "http://gedcomx.org/Person",
+    "citations" : [ {
+      "value" : "\"United States, GenealogyBank Obituaries, 1980-2014,\" database with images, <i>FamilySearch</i> (https://familysearch.org/ark:/61903/1:1:QKRP-7YY8 : accessed 29 April 2019), Rebecca Burgess in entry for Howard Moroni Gray Jr, Utah, United States, 27 Dec 2007; from \"Recent Newspaper Obituaries (1977 - Today),\" database, <i>GenealogyBank.com</i> (http://www.genealogybank.com : 2014); citing <i>Salt Lake Tribune, The</i>, born-digital text.\n\n"
+    } ],
+    "titles" : [ {
+      "lang" : "en",
+      "value" : "Rebecca Burgess in entry for Howard Moroni Gray Jr, \"United States, GenealogyBank Obituaries, 1980-2014\""
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:QKRP-7YY8" ]
+    }
+  }, {
+    "id" : "sd_p_101957290122",
+    "about" : "https://www.familysearch.org/ark:/61903/1:1:QKRP-7YYD",
+    "componentOf" : {
+      "description" : "#src_r_102687439586"
+    },
+    "resourceType" : "http://gedcomx.org/Person",
+    "citations" : [ {
+      "value" : "\"United States, GenealogyBank Obituaries, 1980-2014,\" database with images, <i>FamilySearch</i> (https://familysearch.org/ark:/61903/1:1:QKRP-7YYD : accessed 29 April 2019), Mark Burgess in entry for Howard Moroni Gray Jr, Utah, United States, 27 Dec 2007; from \"Recent Newspaper Obituaries (1977 - Today),\" database, <i>GenealogyBank.com</i> (http://www.genealogybank.com : 2014); citing <i>Salt Lake Tribune, The</i>, born-digital text.\n\n"
+    } ],
+    "titles" : [ {
+      "lang" : "en",
+      "value" : "Mark Burgess in entry for Howard Moroni Gray Jr, \"United States, GenealogyBank Obituaries, 1980-2014\""
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:QKRP-7YYD" ]
+    }
+  }, {
+    "id" : "sd_p_101957290123",
+    "about" : "https://www.familysearch.org/ark:/61903/1:1:QKRP-7YY6",
+    "componentOf" : {
+      "description" : "#src_r_102687439586"
+    },
+    "resourceType" : "http://gedcomx.org/Person",
+    "citations" : [ {
+      "value" : "\"United States, GenealogyBank Obituaries, 1980-2014,\" database with images, <i>FamilySearch</i> (https://familysearch.org/ark:/61903/1:1:QKRP-7YY6 : accessed 29 April 2019), Maurine Benson in entry for Howard Moroni Gray Jr, Utah, United States, 27 Dec 2007; from \"Recent Newspaper Obituaries (1977 - Today),\" database, <i>GenealogyBank.com</i> (http://www.genealogybank.com : 2014); citing <i>Salt Lake Tribune, The</i>, born-digital text.\n\n"
+    } ],
+    "titles" : [ {
+      "lang" : "en",
+      "value" : "Maurine Benson in entry for Howard Moroni Gray Jr, \"United States, GenealogyBank Obituaries, 1980-2014\""
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:QKRP-7YY6" ]
+    }
+  }, {
+    "id" : "sd_p_101957290125",
+    "about" : "https://www.familysearch.org/ark:/61903/1:1:QKRP-7YYF",
+    "componentOf" : {
+      "description" : "#src_r_102687439586"
+    },
+    "resourceType" : "http://gedcomx.org/Person",
+    "citations" : [ {
+      "value" : "\"United States, GenealogyBank Obituaries, 1980-2014,\" database with images, <i>FamilySearch</i> (https://familysearch.org/ark:/61903/1:1:QKRP-7YYF : accessed 29 April 2019), James in entry for Howard Moroni Gray Jr, Utah, United States, 27 Dec 2007; from \"Recent Newspaper Obituaries (1977 - Today),\" database, <i>GenealogyBank.com</i> (http://www.genealogybank.com : 2014); citing <i>Salt Lake Tribune, The</i>, born-digital text.\n\n"
+    } ],
+    "titles" : [ {
+      "lang" : "en",
+      "value" : "James in entry for Howard Moroni Gray Jr, \"United States, GenealogyBank Obituaries, 1980-2014\""
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:QKRP-7YYF" ]
+    }
+  }, {
+    "id" : "sd_p_101957290126",
+    "about" : "https://www.familysearch.org/ark:/61903/1:1:QKRP-7YYN",
+    "componentOf" : {
+      "description" : "#src_r_102687439586"
+    },
+    "resourceType" : "http://gedcomx.org/Person",
+    "citations" : [ {
+      "value" : "\"United States, GenealogyBank Obituaries, 1980-2014,\" database with images, <i>FamilySearch</i> (https://familysearch.org/ark:/61903/1:1:QKRP-7YYN : accessed 29 April 2019), John in entry for Howard Moroni Gray Jr, Utah, United States, 27 Dec 2007; from \"Recent Newspaper Obituaries (1977 - Today),\" database, <i>GenealogyBank.com</i> (http://www.genealogybank.com : 2014); citing <i>Salt Lake Tribune, The</i>, born-digital text.\n\n"
+    } ],
+    "titles" : [ {
+      "lang" : "en",
+      "value" : "John in entry for Howard Moroni Gray Jr, \"United States, GenealogyBank Obituaries, 1980-2014\""
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:QKRP-7YYN" ]
+    }
+  }, {
+    "id" : "sd_p_101957290127",
+    "about" : "https://www.familysearch.org/ark:/61903/1:1:QKRP-7YYJ",
+    "componentOf" : {
+      "description" : "#src_r_102687439586"
+    },
+    "resourceType" : "http://gedcomx.org/Person",
+    "citations" : [ {
+      "value" : "\"United States, GenealogyBank Obituaries, 1980-2014,\" database with images, <i>FamilySearch</i> (https://familysearch.org/ark:/61903/1:1:QKRP-7YYJ : accessed 29 April 2019), Richard in entry for Howard Moroni Gray Jr, Utah, United States, 27 Dec 2007; from \"Recent Newspaper Obituaries (1977 - Today),\" database, <i>GenealogyBank.com</i> (http://www.genealogybank.com : 2014); citing <i>Salt Lake Tribune, The</i>, born-digital text.\n\n"
+    } ],
+    "titles" : [ {
+      "lang" : "en",
+      "value" : "Richard in entry for Howard Moroni Gray Jr, \"United States, GenealogyBank Obituaries, 1980-2014\""
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:QKRP-7YYJ" ]
+    }
+  }, {
+    "id" : "sd_p_101957290115",
+    "about" : "https://www.familysearch.org/ark:/61903/1:1:QKRP-7YY7",
+    "componentOf" : {
+      "description" : "#src_r_102687439586"
+    },
+    "resourceType" : "http://gedcomx.org/Person",
+    "citations" : [ {
+      "value" : "\"United States, GenealogyBank Obituaries, 1980-2014,\" database with images, <i>FamilySearch</i> (https://familysearch.org/ark:/61903/1:1:QKRP-7YY7 : accessed 29 April 2019), Claudine Reed in entry for Howard Moroni Gray Jr, Utah, United States, 27 Dec 2007; from \"Recent Newspaper Obituaries (1977 - Today),\" database, <i>GenealogyBank.com</i> (http://www.genealogybank.com : 2014); citing <i>Salt Lake Tribune, The</i>, born-digital text.\n\n"
+    } ],
+    "titles" : [ {
+      "lang" : "en",
+      "value" : "Claudine Reed in entry for Howard Moroni Gray Jr, \"United States, GenealogyBank Obituaries, 1980-2014\""
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:QKRP-7YY7" ]
+    }
+  }, {
+    "id" : "sd_p_101957290124",
+    "about" : "https://www.familysearch.org/ark:/61903/1:1:QKRP-7YYX",
+    "componentOf" : {
+      "description" : "#src_r_102687439586"
+    },
+    "resourceType" : "http://gedcomx.org/Person",
+    "citations" : [ {
+      "value" : "\"United States, GenealogyBank Obituaries, 1980-2014,\" database with images, <i>FamilySearch</i> (https://familysearch.org/ark:/61903/1:1:QKRP-7YYX : accessed 29 April 2019), Catherine Jones in entry for Howard Moroni Gray Jr, Utah, United States, 27 Dec 2007; from \"Recent Newspaper Obituaries (1977 - Today),\" database, <i>GenealogyBank.com</i> (http://www.genealogybank.com : 2014); citing <i>Salt Lake Tribune, The</i>, born-digital text.\n\n"
+    } ],
+    "titles" : [ {
+      "lang" : "en",
+      "value" : "Catherine Jones in entry for Howard Moroni Gray Jr, \"United States, GenealogyBank Obituaries, 1980-2014\""
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:QKRP-7YYX" ]
+    }
+  }, {
+    "id" : "sd2",
+    "mediaType" : "application/json",
+    "about" : "https://www.familysearch.org/ark:/61903/3:1:3Q9M-CSZZ-G33D?cc=2333694",
+    "resourceType" : "http://gedcomx.org/DigitalArtifact",
+    "repository" : {
+      "resourceId" : "#a1"
+    },
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/3:1:3Q9M-CSZZ-G33D?cc=2333694" ]
+    }
+  } ],
+  "agents" : [ {
+    "id" : "a1",
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "das.familysearch.org" ]
+    }
+  } ],
+  "places" : [ {
+    "id" : "place_1",
+    "identifiers" : {
+      "http://gedcomx.org/Primary" : [ "https://api.familysearch.org/authorities/v1/place/1" ]
+    }
+  } ],
+  "fields" : [ {
+    "type" : "http://familysearch.org/types/fields/EventPlaceLevel2Type",
+    "values" : [ {
+      "type" : "http://gedcomx.org/Interpreted",
+      "labelId" : "EVENT_PLACE_LEVEL_2_TYPE",
+      "text" : "State"
+    } ]
+  }, {
+    "type" : "http://familysearch.org/types/fields/ImageNumber",
+    "values" : [ {
+      "type" : "http://gedcomx.org/Interpreted",
+      "labelId" : "FS_IMAGE_NBR",
+      "text" : "00468"
+    } ]
+  }, {
+    "type" : "http://familysearch.org/types/fields/SortKey",
+    "values" : [ {
+      "type" : "http://gedcomx.org/Interpreted",
+      "labelId" : "FS_SORT_KEY",
+      "text" : "101975867_00468_0011DD6B40B9AE28B8"
+    } ]
+  }, {
+    "type" : "http://familysearch.org/types/fields/FsImsImageId",
+    "values" : [ {
+      "type" : "http://gedcomx.org/Interpreted",
+      "labelId" : "FS_IMS_IMAGE_ID",
+      "text" : "101975867_00468"
+    } ]
+  }, {
+    "type" : "http://familysearch.org/types/fields/SystemOfOrigin",
+    "values" : [ {
+      "type" : "http://gedcomx.org/Interpreted",
+      "labelId" : "FS_SYSTEM_OF_ORIGIN",
+      "text" : "6"
+    } ]
+  }, {
+    "type" : "http://familysearch.org/types/fields/SourceNewspaper",
+    "values" : [ {
+      "type" : "http://gedcomx.org/Original",
+      "labelId" : "SOURCE_NEWSPAPER_ORIG",
+      "text" : "Salt Lake Tribune, The"
+    }, {
+      "type" : "http://gedcomx.org/Interpreted",
+      "labelId" : "SOURCE_NEWSPAPER",
+      "text" : "Salt Lake Tribune, The"
+    } ]
+  }, {
+    "type" : "http://familysearch.org/types/fields/RecordGroup",
+    "values" : [ {
+      "type" : "http://gedcomx.org/Interpreted",
+      "labelId" : "FS_RECORD_GROUP",
+      "text" : "OutputDeliveryAllRobo"
+    } ]
+  }, {
+    "type" : "http://familysearch.org/types/fields/ImageArk",
+    "values" : [ {
+      "type" : "http://gedcomx.org/Interpreted",
+      "labelId" : "IMAGE_ARK",
+      "text" : "https://familysearch.org/ark:/61903/3:1:3Q9M-CSZZ-G33D"
+    } ]
+  }, {
+    "type" : "http://familysearch.org/types/fields/EventPlaceLevel1Type",
+    "values" : [ {
+      "type" : "http://gedcomx.org/Interpreted",
+      "labelId" : "EVENT_PLACE_LEVEL_1_TYPE",
+      "text" : "Country"
+    } ]
+  }, {
+    "type" : "http://familysearch.org/types/fields/CollectionId",
+    "values" : [ {
+      "type" : "http://gedcomx.org/Interpreted",
+      "labelId" : "FS_COLLECTION_ID",
+      "text" : "2333694"
+    } ]
+  }, {
+    "type" : "http://familysearch.org/types/fields/FilmNumber",
+    "values" : [ {
+      "type" : "http://gedcomx.org/Interpreted",
+      "labelId" : "FS_FILM_NBR",
+      "text" : "101975867"
+    } ]
+  }, {
+    "type" : "http://familysearch.org/types/fields/ExtUniqueId",
+    "values" : [ {
+      "type" : "http://gedcomx.org/Interpreted",
+      "labelId" : "EXT_UNIQUE_ID",
+      "text" : "11DD6B40B9AE28B8"
+    } ]
+  }, {
+    "type" : "http://familysearch.org/types/fields/PpqId",
+    "values" : [ {
+      "type" : "http://gedcomx.org/Interpreted",
+      "labelId" : "FS_PPQ_ID",
+      "text" : "15-1283"
+    } ]
+  }, {
+    "type" : "http://familysearch.org/types/fields/ImageApid",
+    "values" : [ {
+      "type" : "http://gedcomx.org/Interpreted",
+      "labelId" : "FS_IMAGE_APID",
+      "text" : "TH-909-63322-2802-63"
+    } ]
+  }, {
+    "type" : "http://familysearch.org/types/fields/DigitalFilmNumber",
+    "values" : [ {
+      "type" : "http://gedcomx.org/Interpreted",
+      "labelId" : "FS_DIGITAL_FILM_NBR",
+      "text" : "101975867"
+    } ]
+  }, {
+    "type" : "http://familysearch.org/types/fields/EventPlaceLevel3Type",
+    "values" : [ {
+      "type" : "http://gedcomx.org/Interpreted",
+      "labelId" : "EVENT_PLACE_LEVEL_3_TYPE",
+      "text" : "Section"
+    } ]
+  }, {
+    "type" : "http://familysearch.org/types/fields/ExtRepositoryName",
+    "values" : [ {
+      "type" : "http://gedcomx.org/Interpreted",
+      "labelId" : "EXT_REPOSITORY_NAME",
+      "text" : "GenealogyBank, Inc."
+    } ]
+  }, {
+    "type" : "http://familysearch.org/types/fields/EventType",
+    "values" : [ {
+      "type" : "http://gedcomx.org/Interpreted",
+      "labelId" : "EVENT_TYPE",
+      "text" : "Obituary"
+    } ]
+  } ]
+}
