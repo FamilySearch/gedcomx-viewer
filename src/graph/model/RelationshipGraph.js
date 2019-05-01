@@ -118,8 +118,8 @@ function getParentMap(graph) {
         }
       }
     }
-    return parentMap;
   }
+  return parentMap;
 }
 
 // Modify the given array by removing the first occurrence of the given value, if any.
