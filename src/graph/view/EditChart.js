@@ -294,6 +294,7 @@ PersonBox.prototype.clickPerson = function(event) {
   // Prevent parent divs from getting the event, since that would immediately clear the selection.
   if (event) {
     event.stopPropagation();
+    // Prevent HTML text from being selected when doing a shift-click on persons.
     document.getSelection().removeAllRanges();
   }
 };
