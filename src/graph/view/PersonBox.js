@@ -159,10 +159,13 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
    */
   function getFactHtml(fact, qualifier) {
     var info = getFactInfo(fact);
-    return "  <div class='fact'><span class='factType'>" + encode(getFactName(fact)) +
-        (qualifier ? " (" + encode(qualifier) + ")" : "") + (info ? ":" : "") + "</span>" +
-        (info ? " <span class='factDatePlace'>" + encode(info) + "</span>" : "") +
-        "</div>\n";
+    if (info) {
+      return "  <div class='fact'><span class='factType'>" + encode(getFactName(fact)) +
+          (qualifier ? " (" + encode(qualifier) + ")" : "") + (info ? ":" : "") + "</span>" +
+          (info ? " <span class='factDatePlace'>" + encode(info) + "</span>" : "") +
+          "</div>\n";
+    }
+    return "";
   }
 
   function getFactsHtml(factsContainer, prefix) {
@@ -295,7 +298,7 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
    @param personBoxId - Id for this PersonBox
    @param duplicateOfBox - PersonBox that this one is a duplicate of (if any)
    */
-  function makePersonDiv(personNode, personBoxId, duplicateOfBox) {
+  function makePersonDiv(personNode, personBoxId, duplicateOfBox, shouldDisplayIds) {
     var html = "<div class='personNode gender-" + personNode.gender + (duplicateOfBox ? " duplicate" : "") +
         (personNode.person.principal ? " principalPerson" : "") +
         "' id='" + personBoxId + "'>\n";
@@ -304,7 +307,9 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
     html += "<img id='" + getGenderDivId(personBoxId) + "' src='https://cdn.jsdelivr.net/gh/FamilySearch/gedcomx-viewer@master/src/graph/images/" + imageFile + "' class='gender-image'>";
     var person = personNode.person;
     html += addNameSpans(person);
-    html += addIdDiv(person);
+    if (shouldDisplayIds) {
+      html += addIdDiv(person);
+    }
     html += addFactDivs(personNode);
     html += "</div>";
     return $.parseHTML(html);
@@ -342,8 +347,8 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
     this.personBoxId += "_dup" + dupCount;
   }
   relChart.personBoxMap[this.personBoxId] = this;
-  
-  var personDiv = makePersonDiv(personNode, this.personBoxId, this.duplicateOf);
+
+  var personDiv = makePersonDiv(personNode, this.personBoxId, this.duplicateOf, relChart.shouldDisplayIds);
   relChart.$personsDiv.append(personDiv);
   this.$personDiv = $("#" + this.personBoxId);
   // $("#" + getGenderDivId(this.personBoxId)).click(function(e){
@@ -364,14 +369,17 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
 
   if (relChart.isEditable) {
     var personBox = this;
+    this.$childPlus = relChart.makeControl(this.personBoxId + "-personChildPlus", "relPlus personChildPlus");
+    this.$spousePlus = relChart.makeControl(this.personBoxId + "-personSpousePlus", "relPlus personSpousePlus");
+    this.$parentPlus = relChart.makeControl(this.personBoxId + "-personParentPlus", "relPlus personParentPlus");
     this.$personDiv.click(function(e) {
-      personBox.togglePerson(e, relChart);
+      personBox.clickPerson(e);
     });
 
     // Allow a person box to be able to receive a drag & drop event.
     this.$personDiv.droppable({
       hoverClass: "personDropHover", scope: "personDropScope", drop: function(e) {
-        personBox.personDrop(e, relChart);
+        personBox.personDrop(e);
       }
     });
   }

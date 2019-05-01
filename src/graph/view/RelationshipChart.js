@@ -244,6 +244,6 @@ function RelationshipChart(relGraph, $relChartDiv, shouldIncludeDetails, shouldC
       relChart.clearSelections();
     });
     this.selectedFamilyLine = null;
-    this.selectedPersonBox = null;
+    this.selectedPersonBoxes = [];
   }
 }

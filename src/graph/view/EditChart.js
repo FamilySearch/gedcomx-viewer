@@ -12,10 +12,7 @@ RelationshipChart.prototype.addEditControls = function() {
   this.$motherX = this.makeControl("motherX", "relX");
   this.$fatherPlus = this.makeControl("fatherPlus", RelationshipChart.prototype.REL_PLUS);
   this.$motherPlus = this.makeControl("motherPlus", RelationshipChart.prototype.REL_PLUS);
-  this.$personParentPlus = this.makeControl("personParentPlus", RelationshipChart.prototype.REL_PLUS);
-  this.$personSpousePlus = this.makeControl("personSpousePlus", RelationshipChart.prototype.REL_PLUS);
-  this.$personChildPlus = this.makeControl("personChildPlus", RelationshipChart.prototype.REL_PLUS);
-  this.editControlSize = this.$personChildPlus.width();
+  this.editControlSize = this.$fatherPlus.width();
 };
 
 RelationshipChart.prototype.hideFamilyControls = function() {
@@ -30,12 +27,6 @@ RelationshipChart.prototype.hideFamilyControls = function() {
   }
 };
 
-RelationshipChart.prototype.hidePersonControls = function() {
-  this.$personParentPlus.hide();
-  this.$personSpousePlus.hide();
-  this.$personChildPlus.hide();
-};
-
 RelationshipChart.prototype.positionFamilyControl = function($control, x, y) {
   $control.css({left: x, top: y});
   $control.show();
@@ -47,12 +38,16 @@ RelationshipChart.prototype.REL_PLUS = "relPlus";
  * Create a '+' or 'x' control div for relationships.
  * @param divId - ID to use for the div.
  * @param imgClass - class to assign to the div ("relX" or "relPlus").
+ * @param $containerDiv - JQuery object of a DIV in which to add the new DIV as a child.
  * @returns {jQuery.fn.init|jQuery|HTMLElement}
  */
-RelationshipChart.prototype.makeControl = function(divId, imgClass) {
+RelationshipChart.prototype.makeControl = function(divId, imgClass, $containerDiv) {
+  if (!$containerDiv) {
+    $containerDiv = this.$editControlsDiv;
+  }
   var html = '<div id="' + divId + '" class="' + imgClass + '"></div>';
   var controlDiv = $.parseHTML(html);
-  this.$editControlsDiv.append(controlDiv);
+  $containerDiv.append(controlDiv);
   var $control = $("#" + divId);
   $control.hide();
   $control.draggable({revert: true, scope : "personDropScope"});
@@ -89,54 +84,64 @@ PersonBox.prototype.parseChildXId = function(childXId) {
 /**
  * Handle an event in which a control ('+' or 'x') was dropped on this PersonBox.
  * @param e - Event. Has the div id of the dropped control in e.originalEvent.target.id
- * @param relChart - RelationshipChart to modify.
  */
-PersonBox.prototype.personDrop = function(e, relChart) {
+PersonBox.prototype.personDrop = function(e) {
   var droppedPersonBox = this; // = relChart.personBoxMap[e.target.id];
-  var plus = e.originalEvent.target.id; // The div ID of the plus (or 'x') that was dropped on this person.
+  var plus = e.originalEvent.target.id.replace(/.*-/, ""); // The div ID of the plus (or 'x') that was dropped on this person.
   if (plus.startsWith("childX")) {
     var oldFamilyIdInfo = this.parseChildXId(plus);
-    relChart.selectedFamilyLine.changeChildParent(oldFamilyIdInfo.childIndex, droppedPersonBox);
+    this.relChart.selectedFamilyLine.changeChildParent(oldFamilyIdInfo.childIndex, droppedPersonBox);
   }
   else if (plus === "motherPlus" || plus === "fatherPlus" || plus === "fatherX" || plus === "motherX") {
     switch (plus) {
       case "motherPlus":
       case "motherX":
-        relChart.selectedFamilyLine.changeMother(droppedPersonBox);
+        this.relChart.selectedFamilyLine.changeMother(droppedPersonBox);
         break;
       case "fatherPlus":
       case "fatherX":
-        relChart.selectedFamilyLine.changeFather(droppedPersonBox);
+        this.relChart.selectedFamilyLine.changeFather(droppedPersonBox);
         break;
     }
   }
   else {
-    var sourcePersonBox = relChart.selectedPersonBox;
-    var sourcePersonId = sourcePersonBox.personNode.personId;
-    var droppedPersonId = droppedPersonBox.personNode.personId;
-    var doc = relChart.relGraph.gx;
-    switch (plus) {
-      case "personParentPlus":
-        relChart.ensureRelationship(GX_PARENT_CHILD, droppedPersonId, sourcePersonId);
-        break;
-      case "personChildPlus":
-        relChart.ensureRelationship(GX_PARENT_CHILD, sourcePersonId, droppedPersonId);
-        break;
-      case "personSpousePlus":
-        var sourcePersonNode = sourcePersonBox.personNode;
-        var droppedPersonNode = droppedPersonBox.personNode;
-        if (wrongGender(sourcePersonNode, droppedPersonNode)) {
-          relChart.ensureRelationship(GX_COUPLE, droppedPersonId, sourcePersonId);
-        }
-        else {
-          relChart.ensureRelationship(GX_COUPLE, sourcePersonId, droppedPersonId);
-        }
-        break;
-      default:
-        return; // Don't update the record, because nothing happened.
+    var draggedPersonBoxId = e.originalEvent.target.id.replace(/-.*/, "");
+    for (var s = 0; s < this.relChart.selectedPersonBoxes.length; s++) {
+      var sourcePersonBox = this.relChart.selectedPersonBoxes[s];
+      var sourcePersonId = sourcePersonBox.personNode.personId;
+      var droppedPersonId = droppedPersonBox.personNode.personId;
+      switch (plus) {
+        case "personParentPlus":
+          // Add all selected persons as children of the parent dropped on.
+          this.relChart.ensureRelationship(GX_PARENT_CHILD, droppedPersonId, sourcePersonId);
+          break;
+        case "personChildPlus":
+          // Don't make all selected persons be parents of the child dropped on--that would be unlikely to make sense.
+          // Instead, ignore who is selected and only pay attention to whose child '+' was dragged.
+          if (sourcePersonBox.personBoxId === draggedPersonBoxId) {
+            this.relChart.ensureRelationship(GX_PARENT_CHILD, sourcePersonId, droppedPersonId);
+          }
+          break;
+        case "personSpousePlus":
+          // Don't make all selected persons be spouses of the person dropped on--that would be unlikely to make sense.
+          // Instead, ignore who is selected and only pay attention to whose spouse '+' was dragged.
+          if (sourcePersonBox.personBoxId === draggedPersonBoxId) {
+            var sourcePersonNode = sourcePersonBox.personNode;
+            var droppedPersonNode = droppedPersonBox.personNode;
+            if (wrongGender(sourcePersonNode, droppedPersonNode)) {
+              this.relChart.ensureRelationship(GX_COUPLE, droppedPersonId, sourcePersonId);
+            }
+            else {
+              this.relChart.ensureRelationship(GX_COUPLE, sourcePersonId, droppedPersonId);
+            }
+          }
+          break;
+        default:
+          return; // Don't update the record, because nothing happened.
+      }
     }
   }
-  updateRecord(relChart.relGraph.gx);
+  updateRecord(this.relChart.relGraph.gx);
 };
 
 /**
@@ -148,26 +153,34 @@ PersonBox.prototype.personDrop = function(e, relChart) {
  * @param e - Drop event. The dropped element's id is in e.originalEvent.target.id
  */
 FamilyLine.prototype.familyDrop = function(e) {
-  var plus = e.originalEvent.target.id;
+  var plus = e.originalEvent.target.id.replace(/.*-/, "");
   var sourcePersonId;
-  if (plus === "personSpousePlus" || plus === "personChildPlus") {
+  if (plus === "spousePlus" || plus === "childPlus") {
     // A person's spouse or child "plus" has been dropped on this family line,
     // so we're saying "this person is the parent or spouse in this family".
     // So add or replace the appropriate parent (based on gender).
-    var personBox = this.relChart.selectedPersonBox;
-    if (personBox.personNode.gender === "M") {//!this.father) {
-      this.changeFather(personBox);
+    if (this.relChart.selectedPersonBoxes.length === 1) { // If multiple persons selected, avoid ambiguity by doing nothing.
+      var personBox = this.relChart.selectedPersonBoxes[0];
+      if (personBox.personNode.gender === "M") {//!this.father) {
+        this.changeFather(personBox);
+      }
+      else if (personBox.personNode.gender === "F") {//!this.mother) {
+        this.changeMother(personBox);
+      }
     }
-    else if (personBox.personNode.gender === "F") {//!this.mother) {
-      this.changeMother(personBox);
-    }
-    else {
-      return; // no need to update.
-    }
+    return; // no need to update.
   }
   else {
     if (plus === "personParentPlus") {
-      sourcePersonId = this.relChart.selectedPersonBox.personNode.personId;
+      for (var s = 0; s < this.relChart.selectedPersonBoxes.length; s++) {
+        sourcePersonId = this.relChart.selectedPersonBoxes[s].personNode.personId;
+        if (this.father) {
+          this.relChart.ensureRelationship(GX_PARENT_CHILD, this.father.personNode.personId, sourcePersonId);
+        }
+        if (this.mother) {
+          this.relChart.ensureRelationship(GX_PARENT_CHILD, this.mother.personNode.personId, sourcePersonId);
+        }
+      }
     }
     else {
       var oldFamilyIdInfo = PersonBox.prototype.parseChildXId(e.originalEvent.target.id);
@@ -179,12 +192,12 @@ FamilyLine.prototype.familyDrop = function(e) {
       var childBox = oldFamilyLine.children[oldFamilyIdInfo.childIndex];
       oldFamilyLine.removeChild(childBox);
       sourcePersonId = childBox.personNode.personId;
-    }
-    if (this.father) {
-      this.relChart.ensureRelationship(GX_PARENT_CHILD, this.father.personNode.personId, sourcePersonId);
-    }
-    if (this.mother) {
-      this.relChart.ensureRelationship(GX_PARENT_CHILD, this.mother.personNode.personId, sourcePersonId);
+      if (this.father) {
+        this.relChart.ensureRelationship(GX_PARENT_CHILD, this.father.personNode.personId, sourcePersonId);
+      }
+      if (this.mother) {
+        this.relChart.ensureRelationship(GX_PARENT_CHILD, this.mother.personNode.personId, sourcePersonId);
+      }
     }
   }
   updateRecord(this.getGedcomX());
@@ -192,43 +205,104 @@ FamilyLine.prototype.familyDrop = function(e) {
 
 // SELECTION ==================================
 
-PersonBox.prototype.togglePerson = function(event, relChart) {
-  relChart.clearSelectedFamilyLine();
-  var personBox = relChart.personBoxMap[this.personBoxId];
-  if (relChart.selectedPersonBox === this) {
-    if (personBox) {
-      personBox.$personDiv.removeAttr("chosen");
+PersonBox.prototype.deselectPerson = function() {
+  // Clicked on the only selected person, so deselect it.
+  this.$personDiv.removeAttr("chosen");
+  this.$parentPlus.hide();
+  this.$spousePlus.hide();
+  this.$childPlus.hide();
+  removeFromArray(this, this.relChart.selectedPersonBoxes);
+};
+
+PersonBox.prototype.selectPerson = function() {
+  this.$personDiv.attr("chosen", "uh-huh");
+  this.relChart.selectedPersonBoxes.push(this);
+
+  // Set the '+' controls: child at center of left side; parent at center of right side;
+  //    and spouse in center of top (if female or unknown) or bottom (if male).
+  var d = this.relChart.editControlSize / 2;
+  var centerX = (this.getLeft() + this.getRight()) / 2;
+  this.relChart.positionFamilyControl(this.$childPlus, this.getLeft() - d, this.getCenter() - d);
+  this.relChart.positionFamilyControl(this.$parentPlus, this.getRight() - d, this.getCenter() - d);
+  this.relChart.positionFamilyControl(this.$spousePlus, centerX - d, this.personNode.gender === 'F' ? this.getTop() - d : this.getBottom() - d);
+  this.$personDiv.focus(); // avoid text getting selected accidentally.
+};
+
+PersonBox.prototype.isSelected = function() {
+  return this.$personDiv[0].hasAttribute("chosen");
+};
+
+/**
+ * Handle a click event on a person. Behavior is similar to click, shift-click (range) and cmd-click (multiselect) in Mac Finder lists.
+ * - Click selects a person, unless that person is the only one already selected, in which case it deselects (toggles) it.
+ * - Shift-click selects a "range" between the last-selected person and the shift-clicked one, within the same generation.
+ * - Cmd/Meta/Ctrl-click
+ * @param event
+ */
+PersonBox.prototype.clickPerson = function(event) {
+  this.relChart.clearSelectedFamilyLine();
+  var personBox = this;
+  var selected = this.relChart.selectedPersonBoxes;
+
+  if (selected.length === 1 && selected[0] === this) {
+    // Clicked the only selected person, so whether or not shift or cmd/ctrl are used, deselect the person.
+    this.deselectPerson();
+  }
+  else if (event.metaKey || event.ctrlKey) {
+    // Person was clicked with Cmd or Control held down, so toggle that person's selection.
+    if (this.isSelected()) {
+      this.deselectPerson();
     }
-    relChart.hidePersonControls();
-    relChart.selectedPersonBox = null;
+    else {
+      this.selectPerson();
+    }
+  }
+  else if (event.shiftKey) {
+    // Shift key is held down, so if the clicked person is in the same generation as the most recently-selected person,
+    //   then select all of the people in that generation that are between them.
+    // Otherwise, deselect everyone, and select just the newly-clicked person.
+    if (selected.length > 0) {
+      var lastSelected = selected[selected.length - 1];
+      if (lastSelected.generation === this.generation) {
+        // Shift-clicked on someone in same generation as the latest selected person, so select everyone between them.
+        // (Don't select the last-selected one, because it's already selected; and don't select the clicked one,
+        // because that will be done "last").
+        var g;
+        if (this.genOrder > lastSelected.genOrder) {
+          for (g = lastSelected.genOrder + 1; g < this.genOrder; g++) {
+            this.generation.genPersons[g].selectPerson();
+          }
+        }
+        else {
+          for (g = this.genOrder + 1; g < lastSelected.genOrder; g++) {
+            this.generation.genPersons[g].selectPerson();
+          }
+        }
+      }
+      else {
+        // Wrong generation, so deselect everyone who is selected before selecting the newly-clicked person.
+        this.relChart.clearSelections();
+      }
+    }
+    this.selectPerson();
   }
   else {
-    if (relChart.selectedPersonBox) {
-      relChart.selectedPersonBox.togglePerson(null, relChart);
-    }
-    personBox.$personDiv.attr("chosen", "uh-huh");
-    relChart.selectedPersonBox = this;
-
-    // Set the '+' controls: child at center of left side; parent at center of right side;
-    //    and spouse in center of top (if female or unknown) or bottom (if male).
-    var d = relChart.editControlSize / 2;
-    var centerX = (personBox.getLeft() + personBox.getRight()) / 2;
-    relChart.positionFamilyControl(relChart.$personChildPlus, personBox.getLeft() - d, personBox.getCenter() - d);
-    relChart.positionFamilyControl(relChart.$personParentPlus, personBox.getRight() - d, personBox.getCenter() - d);
-    relChart.positionFamilyControl(relChart.$personSpousePlus, centerX - d, personBox.personNode.gender === 'F' ? personBox.getTop() - d : personBox.getBottom() - d);
+    this.relChart.clearSelections();
+    this.selectPerson();
   }
 
   // Prevent parent divs from getting the event, since that would immediately clear the selection.
   if (event) {
     event.stopPropagation();
+    document.getSelection().removeAllRanges();
   }
 };
 
 // Toggle whether the given familyId is selected.
 FamilyLine.prototype.toggleFamilyLine = function(event) {
-  this.relChart.clearSelectedPerson();
-  var familyLine = this;
   var relChart = this.relChart;
+  relChart.clearSelectedPerson();
+  var familyLine = this;
   if (relChart.selectedFamilyLine === this) {
     // Deselect family line.
     // if (familyLine) { // might be undefined if this family line got removed after deleting the last child or spouse.
@@ -263,8 +337,8 @@ FamilyLine.prototype.toggleFamilyLine = function(event) {
 };
 
 RelationshipChart.prototype.clearSelectedPerson = function() {
-  if (this.selectedPersonBox) {
-    this.selectedPersonBox.togglePerson(null, this);
+  while (this.selectedPersonBoxes.length > 0) {
+    this.selectedPersonBoxes[0].deselectPerson();
   }
 };
 

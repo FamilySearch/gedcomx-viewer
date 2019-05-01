@@ -32,9 +32,30 @@
     var currentRelChart;
 
     $(document).ready(function(){
-      $.getJSON("sample.json", function(sampleGx){
-        currentRelChart = buildGraph(sampleGx, true);
+      var params = window.location.search;
+      var urlParams = new URLSearchParams(params);
+      var url = urlParams.get('url');
+
+      if (!url) {
+        url = "samples/sample.json";
+      }
+      else if (url.includes(":")) {
+        var personaId = url.match(/.*1:1:(.*)/)[1];
+        url = "https://api.familysearch.org/platform/records/personas/" + personaId + "?access_token=91275f3a-4c03-4d14-93d4-cebe89d0f97d-aws-prod";
+      }
+      $.ajax({
+        beforeSend: function(request) {
+          request.setRequestHeader("Accept", "application/x-gedcomx-v1+json");
+        },
+        dataType: "json",
+        url: url,
+        success:function(sampleGx){
+          currentRelChart = buildGraph(sampleGx, true);
+        }
       });
+      // $.getJSON(url, {format: "json"}, function(sampleGx){
+      //   currentRelChart = buildGraph(sampleGx, true);
+      // });
     });
 
     /**
