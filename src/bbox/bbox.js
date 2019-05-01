@@ -157,6 +157,22 @@ function imageArkToApid(imageArk) {
   return null; // unrecognized Image Ark format.
 }
 
+
+function findNbxDocumentText(doc, docId) {
+  if (doc.documents) {
+    if (!docId) {
+      docId = "nbx";
+    }
+    for (var d = 0; d < doc.documents.length; d++) {
+      var document = doc.documents[d];
+      if (document.id === docId) {
+        return document.text;
+      }
+    }
+  }
+  return null;
+}
+
 function overlayBoxes(viewer, doc) {
 
   /**
@@ -290,19 +306,6 @@ function overlayBoxes(viewer, doc) {
   }
 
   // NBX bounding box [x,y,w,h] parsing...
-
-  function findNbxDocumentText(doc) {
-    if (doc.documents) {
-      for (var d = 0; d < doc.documents.length; d++) {
-        var document = doc.documents[d];
-        if (document.id === "nbx") {
-          return document.text;
-        }
-      }
-    }
-    return null;
-  }
-
   // Find the metadata string in the given array of {tag:, content:} with the given tag.
   function findMetadata(metadata, tag) {
     for (var m = 0; m < metadata.length; m++) {

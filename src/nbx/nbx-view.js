@@ -37,8 +37,9 @@ function textObjectArrayHtml(content, relexMap) {
     if (isList) {
       html += "<li>";
     }
+    var text = textObject.text.replace(/ *[\n] */g, " ");
     if (textObject.tag === undefined) {
-      html += "<pre>" + encode(textObject.text) + "</pre>";
+      html += "<span class='text'>" + encode(text) + "</span>";
     }
     else {
       // Tagged element => entity with an offset as its id.
@@ -56,7 +57,7 @@ function textObjectArrayHtml(content, relexMap) {
       }
 
       html +="<tr><td class='" + textObject.tag + "'>" + encode(textObject.type) + "</td></tr>" +
-             "<tr><td class='ref-" + getId(textObject.offset) + "' id='" + getId(textObject.offset) + "'>" + encode(textObject.text) + "</td></tr>" +
+             "<tr><td class='ref-" + getId(textObject.offset) + " text' id='" + getId(textObject.offset) + "'>" + encode(text) + "</td></tr>" +
            "</table>";
     }
     if (isList) {

@@ -126,6 +126,8 @@
       if (imageLink) {
         $("#image-link").html('<a href="' + imageLink + '" target="new_reusable_tab">View image</a>');
       }
+
+      $("#nbx-link").html('<a href="nbx/nbx.html" target="new_reusable_tab">View entities</a>');
       showRecord(doc, url);
 
       updateSelectablePersons(doc, $("#new-relationship-person-1"));
@@ -1780,7 +1782,8 @@
               <div class="pt-4">&nbsp;</div>
               <div id="source-file" class="pt-4"></div>
               <div id="gx-editor" class="pt-2"></div>
-              <div id="image-link">IMAGE LINK</div>
+              <div><span id="image-link">IMAGE LINK</span>&nbsp;&nbsp;<span id="nbx-link">ENTITY VIEWER</span></div>
+
             </div>
           </div>
           <div class="col-8 pt-4">
