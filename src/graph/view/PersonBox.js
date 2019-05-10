@@ -9,7 +9,7 @@ PersonBox.prototype.setPreviousPosition = function() {
 };
 
 // Move this PersonBox vertically down by the given delta-Y (which could be negative for up or positive for down).
-PersonBox.prototype.move = function(dy) {
+PersonBox.prototype.move = function(dy, dx) {
   this.top += dy;
   this.center += dy;
 };
@@ -61,6 +61,10 @@ PersonBox.prototype.removeParentFamilyLine = function(parentFamilyLine) {
     throw "Failed to find parent family line.";
   }
   this.parentLines.splice(index, 1);
+};
+
+PersonBox.prototype.getPersonBoxId = function(personId) {
+  return "box_" + personId;
 };
 
 /**
@@ -335,7 +339,7 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
 
   // The personBoxId is used to identify each PersonBox. The personId is not used alone because a person can sometimes appear more than once in a chart
   //   if they are related more than one way.
-  this.personBoxId = "box_" + personNode.personId;
+  this.personBoxId = this.getPersonBoxId(personNode.personId);
 
   // If this PersonBox is not the first appearance of this PersonNode in the chart (e.g., due to being related multiple ways),
   //  then note what PersonBox it is a duplicate of, and modify its personBoxId with "_dup<number>"
@@ -366,6 +370,7 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
   this.prevHeight = this.height;
   this.prevTop = this.top;
   this.prevCenter = this.center;
+  this.prevLeft = null; // A PersonBox derives its left from its Generation. But if a PersonBox is dragged, we remember where it got dropped so animation looks good.
 
   if (relChart.isEditable) {
     var personBox = this;
@@ -382,5 +387,6 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
         personBox.personDrop(e);
       }
     });
+    this.$personDiv.draggable({revert: true, scope: "wholePersonDropScope", zIndex: 2, opacity: 0.5});
   }
 }

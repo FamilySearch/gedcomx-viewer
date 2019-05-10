@@ -98,6 +98,10 @@ RelationshipChart.prototype.setPositions = function() {
   this.$personsDiv.height(bottom + 4);
 };
 
+RelationshipChart.prototype.getGedcomX = function() {
+  return this.relGraph.gx;
+};
+
 RelationshipChart.prototype.calculatePositions = function() {
   var y = 0;
   var prevBox = null;
@@ -163,7 +167,8 @@ RelationshipChart.prototype.setPreviousPositions = function(prevRelChart) {
     var personBox = this.personBoxes[p];
     var prevPersonBox = prevRelChart.personBoxMap[personBox.personBoxId];
     if (prevPersonBox) {
-      personBox.$personDiv.css({left: prevPersonBox.getLeft(), top: prevPersonBox.getTop()});
+      var prevLeft = prevPersonBox.prevLeft ? prevPersonBox.prevLeft : prevPersonBox.getLeft();
+      personBox.$personDiv.css({left: prevLeft, top: prevPersonBox.getTop()});
     }
     else {
       newPersons.add(personBox.personNode.personId);
@@ -230,7 +235,7 @@ function RelationshipChart(relGraph, $relChartDiv, shouldIncludeDetails, shouldC
   this.treeGap = 10; // Additional vertical pixels between someone in one connected tree and another one.
   this.shouldIncludeDetails = shouldIncludeDetails;
   this.shouldCompress = shouldCompress;
-  this.shouldDisplayIds = false;
+  this.shouldDisplayIds = true;
 
   this.width = 0; // overall size of chart
   this.height = 0;

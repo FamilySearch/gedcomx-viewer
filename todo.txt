@@ -1,9 +1,9 @@
 GedcomX viewer/editor prioritized list of what still needs to be done.
 
 I. Viewer
-- Optimize generations of subtrees (start each subtree at leftmost generation).
+- Optimize line crossings: Reduce number of crossed lines.
 - Optimize lines: Avoid unnecessarily long lines.
-- For multiple parents or spouses, spread horizontal lines vertically along box.
+- For multiple parents or spouses, spread horizontal lines vertically along box. (Optimize crossings).
 - Detailed display:
   - name forms, name parts, name fields.
   - fact value, date, place, fields
@@ -22,5 +22,6 @@ II. Editor
 - Checkbox next to each line to help user keep track of what they've validated.
 - Drop-down to change gender.
 - Output updated GedcomX JSON.
+- Undo/redo history.
 [If possible:]
 - Save GedcomX to labeled data store.

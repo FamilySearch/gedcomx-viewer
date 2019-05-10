@@ -12,14 +12,14 @@ RelChartBuilder.prototype.resetRemainingPersons = function() {
 
 // Get the next remaining person who is a principal person in the relGraph, if any. Otherwise, get the next remaining person.
 RelChartBuilder.prototype.getNextRemainingPerson = function() {
-  var p, personNode;
-  for (p = 0; p < this.relChart.relGraph.principals.length; p++) {
-    personNode = this.relChart.relGraph.principals[p];
-    if (this.remainingPersonIds.contains(personNode.personId)) {
-      return personNode.personId;
-    }
-  }
-  // No principals, so return the first personNode in 'remaining'.
+  // var p, personNode;
+  // for (p = 0; p < this.relChart.relGraph.principals.length; p++) {
+  //   personNode = this.relChart.relGraph.principals[p];
+  //   if (this.remainingPersonIds.contains(personNode.personId)) {
+  //     return personNode.personId;
+  //   }
+  // }
+  // // No principals, so return the first personNode in 'remaining'.
   return this.remainingPersonIds.getFirst();
 };
 
@@ -185,7 +185,7 @@ RelChartBuilder.prototype.addRelatives = function(personBox, subtree) {
   //   to the chart in the order of how closely related they are to the "main" person.  That way, if a person
   //   appears in the chart multiple times, their first ("main") appearance (which will then include their relatives)
   //   will be the one that is more closely related to the main person.
-  var needsRelativesQueue = [];
+  var needsRelativesQueue = [];                                        
   do {
     personBox.subtree = subtree;
 
@@ -465,7 +465,7 @@ function RelChartBuilder(relGraph, $relChartDiv, shouldIncludeDetails, shouldCom
 RelChartBuilder.prototype.buildChart = function(prevChart) {
   this.relChart.$personsDiv.empty();
   this.relChart.$familyLinesDiv.empty();
-  if (this.isEditable) {
+  if (this.relChart.isEditable) {
     this.relChart.$editControlsDiv.empty();
   }
 
@@ -478,5 +478,8 @@ RelChartBuilder.prototype.buildChart = function(prevChart) {
     this.relChart.setPreviousPositions(prevChart);
   }
   this.relChart.setPositions();
+  if (this.relChart.isEditable) {
+    this.relChart.addGapDropZones();
+  }
   return this.relChart;
 };

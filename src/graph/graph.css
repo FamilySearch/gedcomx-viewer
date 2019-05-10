@@ -158,3 +158,13 @@
 .relPlus {
     background-image: url('images/plus.png');
 }
+
+.gapDrop {
+    position: absolute;
+    /*background-color: yellow;*/
+}
+
+/* When a person box is being dragged over a generation gap drop zone */
+.gapDropHover {
+    background-color: #f6f1b0;
+}

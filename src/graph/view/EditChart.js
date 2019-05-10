@@ -205,6 +205,134 @@ FamilyLine.prototype.familyDrop = function(e) {
   updateRecord(this.getGedcomX());
 };
 
+/**
+ * Move all persons in a given subtree to just above everyone in the 'below' subtree, in the gedcomx "persons" array.
+ *   For example, if subtree=7 and belowSubtree=3, then everyone in subtree 7 will be inserted just before the first person in subtree 3.
+ * Leave as many other people in the same order as possible.
+ * @param movingSubtree - Index of subtree being moved.
+ * @param belowSubtree - Index of the subtree that will end up below, above which the people are being inserted.
+ */
+RelationshipChart.prototype.moveSubtree = function(movingSubtree, belowSubtree) {
+  var persons = this.relGraph.gx.persons;
+
+  // 1. Get the index in the GedcomX persons[] array of the first person in the 'belowSubtree'.
+  // 2. For persons after that who are in the 'movingSubtree', (a) remove them from the array, and then (b) insert them at the 'insertPos'.
+  var insertPos = null;
+  var movingPersons = [];
+
+  for (var p = 0; p < persons.length; p++) {
+    var person = persons[p];
+    var personBoxId = PersonBox.prototype.getPersonBoxId(persons[p].id);
+    var subtreeIndex = this.personBoxMap[personBoxId].subtree;
+    if (insertPos === null && subtreeIndex === belowSubtree) {
+      insertPos = p;
+    }
+    else if (subtreeIndex === movingSubtree) {
+      movingPersons.push(person);
+      persons.splice(p--, 1);
+    }
+  }
+  for (p = 0; p < movingPersons.length; p++) {
+    persons.splice(insertPos++, 0, movingPersons[p]);
+  }
+};
+
+/**
+ * Handle a PersonBox being dropped on the gap between (or above or below) PersonBoxes in a generation.
+ * - If person A in subtree 2 is dragged above person B in a higher subtree 1, then move everyone in subtree 2 above everyone in subtree 1.
+ * - If person A in subtree 1 is dragged below person B in a lower subtree 2, then move everyone in subtree 1 below everyone in subtree 2.
+ * - If person B is dragged above person A and they're both in the same subtree:
+ *   - If A is a higher child than B in the same family, then move B above A and B's parent-child relationships in the same families above A's.
+ *   - If A is an earlier spouse of the same PersonBox as B, then move B's couple relationship to that spouse earlier than A's.
+ * - Else if person A is dragged below person B and they're both in the same subtree:
+ *   - If A is a lower child than B in the same family, then move A below B and A's parent-child relationships in the same families below B's.
+ *   - If A is a lower spouse of the same PersonBox as B, then move A's couple relationship to that spouse later than B's.
+ * @param generationIndex - Index of which generation the dropped-on gap is in.
+ * @param personIndex - Index of person within that generation above which the gap exists. (If below bottom person, personIndex = # persons in generation)
+ * @param draggedPersonBox - PersonBox object that was dropped on the gap.
+ * @param newTop - top (in pixels) of where the draggedPersonBox was dropped.
+ * @param newLeft - left (in pixels) of where the draggedPersonBox was dropped.
+ */
+RelationshipChart.prototype.gapDrop = function(generationIndex, personIndex, draggedPersonBox, newTop, newLeft) {
+  var generation = this.generations[generationIndex];
+  var above = personIndex > 0 ? generation.genPersons[personIndex - 1] : null; // PersonBox above the dropped-on gap (if any)
+  var below = personIndex < generation.genPersons.length ? generation.genPersons[personIndex] : null; // PersonBox below the dropped-on-gap
+  var dropped = draggedPersonBox;
+  var changed = false;
+
+  if (below && dropped.subtree > below.subtree) {
+    // If a person in subtree X is dragged above a person in subtree Y, move everyone in X between the persons in Y-1 and Y.
+    this.moveSubtree(dropped.subtree, below.subtree);
+    changed = true;
+  }
+  else if (above && dropped.subtree < above.subtree) {
+    // If a person in subtree X is dragged below a person in subtree Y, move everyone in X between the persons in Y and Y + 1.
+    this.moveSubtree(dropped.subtree, above.subtree + 1);
+    changed = true;
+  }
+  if (changed) {
+    draggedPersonBox.move(newTop - draggedPersonBox.getTop());
+    // A PersonBox normally derives its left coordinate from its Generation. However, when a PersonBox is dragged somewhere,
+    //   it is natural to have it animate from wherever it was dropped to its new location, instead of jumping to its Generation.
+    draggedPersonBox.prevLeft = newLeft;
+    updateRecord(this.getGedcomX());
+  }
+};
+
+/**
+ * Create a "drop zone" above the given person index in the given generation (or below the last person
+ *   if the person index is beyond the list of persons for that generation).
+ * @param generationIndex - Index in relChart.generations[g] of the generation in which this drop zone exists.
+ * @param personIndex - Index in relCharts.generations[g].genPersons[p] of the person above which this drop zone is placed.
+ *                      (or below the last one, if beyond the length of genPersons).
+ * @param top    - Pixel coordinates of the drop zone div.
+ * @param left
+ * @param width
+ * @param height
+ */
+RelationshipChart.prototype.addGapDropZone = function(generationIndex, personIndex, top, left, width, height) {
+  var divId = "gen-" + generationIndex + "-above-p-" + personIndex;
+  var html = '<div id="' + divId + '" class="gapDrop"></div>';
+  var controlDiv = $.parseHTML(html);
+  this.$editControlsDiv.append(controlDiv);
+  var relChart = this;
+  var $control = $("#" + divId);
+  $control.css({left: left, top: top, width: width, height: height});
+  $control.droppable({
+    hoverClass: "gapDropHover", scope: "wholePersonDropScope", drop: function(e, ui) {
+      var draggedPersonBoxId = e.originalEvent.target.id;
+      if (!draggedPersonBoxId) {
+        draggedPersonBoxId = ui.draggable.attr("id");
+      }
+      relChart.gapDrop(generationIndex, personIndex, relChart.personBoxMap[draggedPersonBoxId], ui.draggable.offset().top, ui.draggable.offset().left);
+      e.stopPropagation();
+    }
+  });
+};
+
+/**
+ * Add a "drop zone" div between persons in each generation (and above first and below last),
+ *   in order to support drag & drop of person boxes for reordering of persons in the relationship graph.
+ */
+RelationshipChart.prototype.addGapDropZones = function() {
+  for (var g = 0; g < this.generations.length; g++) {
+    var generation = this.generations[g];
+    var prevPersonBox = null;
+    for (var p = 0; p < generation.genPersons.length; p++) {
+      var personBox = generation.genPersons[p];
+      var top = (p === 0) ? 0 : prevPersonBox.getBottom();
+      var height = Math.max(10, personBox.getTop() - top);
+      var left = personBox.getLeft();
+      var width = this.generationWidth;
+      this.addGapDropZone(g, p, top, left, width, height);
+      prevPersonBox = personBox;
+    }
+    if (prevPersonBox) {
+      this.addGapDropZone(g, p, prevPersonBox.getBottom(), prevPersonBox.getLeft(), this.generationWidth, 30);
+    }
+  }
+};
+
 // SELECTION ==================================
 
 PersonBox.prototype.deselectPerson = function() {
