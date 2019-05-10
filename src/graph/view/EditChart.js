@@ -155,7 +155,7 @@ PersonBox.prototype.personDrop = function(e) {
 FamilyLine.prototype.familyDrop = function(e) {
   var plus = e.originalEvent.target.id.replace(/.*-/, "");
   var sourcePersonId;
-  if (plus === "spousePlus" || plus === "childPlus") {
+  if (plus === "personSpousePlus" || plus === "personChildPlus") {
     // A person's spouse or child "plus" has been dropped on this family line,
     // so we're saying "this person is the parent or spouse in this family".
     // So add or replace the appropriate parent (based on gender).
@@ -168,7 +168,9 @@ FamilyLine.prototype.familyDrop = function(e) {
         this.changeMother(personBox);
       }
     }
-    return; // no need to update.
+    else {
+      return;
+    } // no need to update.
   }
   else {
     if (plus === "personParentPlus") {
