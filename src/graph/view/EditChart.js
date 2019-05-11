@@ -238,6 +238,103 @@ RelationshipChart.prototype.moveSubtree = function(movingSubtree, belowSubtree) 
 };
 
 /**
+ * Tell whether one PersonBox is above the other one, in the same generation (and if they're both non-null).
+ * @param aboveBox - PersonBox that may be above
+ * @param belowBox - PersonBox that may be below
+ * @return {boolean} true if both person boxes are non-null, are both in the same generation, and if 'aboveBox' is earlier in the genPersons array. false otherwise.
+ */
+RelationshipChart.prototype.aboveInGeneration = function(aboveBox, belowBox) {
+  if (aboveBox && belowBox && aboveBox.generation === belowBox.generation) {
+    var aboveGenIndex = aboveBox.generation.genPersons.indexOf(aboveBox);
+    var belowGenIndex = belowBox.generation.genPersons.indexOf(belowBox);
+    return aboveGenIndex < belowGenIndex;
+  }
+  return false;
+};
+
+
+/**
+ * Find the FamilyLine in which both given PersonBox's appear as children.
+ * @param childBox1 - PersonBox of first child to check.
+ * @param childBox2 - PersonBox of second child to check.
+ * @return FamilyLine that has both of these children PersonBoxes in it, or null if none in common.
+ */
+RelationshipChart.prototype.sameParentFamily = function(childBox1, childBox2) {
+  for (var f = 0; f < childBox1.parentLines.length; f++) {
+    if (childBox2.parentLines.includes(childBox1.parentLines[f])) {
+      return childBox1.parentLines[f];
+    }
+  }
+  return null;
+};
+
+/**
+ * Move one element from where it is now to just above (in front of) the one specified (or at the end if null)
+ * @param array - Array of elements to modify
+ * @param aboveElement - Element to remove from the array and insert above (before) the other one.
+ * @param belowElement - Element that will end up below when the 'above' element is inserted before it. (If null, move the 'above' element to the end).
+ */
+FamilyLine.prototype.moveAbove = function(array, aboveElement, belowElement) {
+  if (array && aboveElement) {
+    array.splice(array.indexOf(aboveElement), 1);
+    var insertPosition = belowElement ? array.indexOf(belowElement) : array.length;
+    array.splice(insertPosition, 0, aboveElement);
+  }
+};
+
+/**
+ * Move the 'above' child in the GedcomX so that it will appear above the 'below' child.
+ * - Move the person earlier in the persons array.
+ * - Move the parent-child relationships between the 'above' child and each of the parents in this family earlier in the relationships array.
+ * @param above - PersonBox of the child that should be moved above the 'below' child.
+ * @param below - PersonBox of the child that should end up below the 'above' child.
+ */
+FamilyLine.prototype.moveChildUp = function(above, below) {
+  // Move 'above' just before 'below' in the person array.
+  var gx = this.getGedcomX();
+  this.moveAbove(gx.persons, above.personNode.person, below.personNode.person);
+
+  // Move parent-child relationships for the 'above' child above those of the 'below' child.
+  var aboveChildIndex = this.children.indexOf(above);
+  var belowChildIndex = this.children.indexOf(below);
+  this.moveAbove(gx.relationships, this.familyNode.fatherRels[aboveChildIndex], this.familyNode.fatherRels[belowChildIndex]);
+  this.moveAbove(gx.relationships, this.familyNode.motherRels[aboveChildIndex], this.familyNode.motherRels[belowChildIndex]);
+};
+
+/**
+ * Move one element from where it is now to just in below (after) the one specified (or at the beginning if null)
+ * @param array - Array of elements to modify
+ * @param aboveElement - Element to remove from the array and insert after the other one.
+ * @param belowElement - Element after which the first element will be inserted. (If null, move it to the beginning).
+ */
+FamilyLine.prototype.moveBelow = function(array, aboveElement, belowElement) {
+  if (array && belowElement) {
+    array.splice(array.indexOf(aboveElement), 1);
+    var insertPosition = belowElement ? array.indexOf(belowElement) + 1 : 0;
+    array.splice(insertPosition, 0, aboveElement);
+  }
+};
+
+/**
+ * Move the 'below' child in the GedcomX so that it will appear just below the 'above' child.
+ * - Move the person later in the persons array.
+ * - Move the parent-child relationships between the 'below' child and each of the parents in this family later in the relationships array.
+ * @param above - PersonBox of the child that should end up above the 'below' child.
+ * @param below - PersonBox of the child that should be moved below the 'above' child.
+ */
+FamilyLine.prototype.moveChildDown = function(above, below) {
+  // Move 'above' just before 'below' in the person array.
+  var gx = this.getGedcomX();
+  this.moveBelow(gx.persons, above.personNode.person, below.personNode.person);
+
+  // Move parent-child relationships for the 'above' child above those of the 'below' child.
+  var aboveChildIndex = this.children.indexOf(above);
+  var belowChildIndex = this.children.indexOf(below);
+  this.moveBelow(gx.relationships, this.familyNode.fatherRels[aboveChildIndex], this.familyNode.fatherRels[belowChildIndex]);
+  this.moveBelow(gx.relationships, this.familyNode.motherRels[aboveChildIndex], this.familyNode.motherRels[belowChildIndex]);
+};
+
+/**
  * Handle a PersonBox being dropped on the gap between (or above or below) PersonBoxes in a generation.
  * - If person A in subtree 2 is dragged above person B in a higher subtree 1, then move everyone in subtree 2 above everyone in subtree 1.
  * - If person A in subtree 1 is dragged below person B in a lower subtree 2, then move everyone in subtree 1 below everyone in subtree 2.
@@ -259,6 +356,7 @@ RelationshipChart.prototype.gapDrop = function(generationIndex, personIndex, dra
   var below = personIndex < generation.genPersons.length ? generation.genPersons[personIndex] : null; // PersonBox below the dropped-on-gap
   var dropped = draggedPersonBox;
   var changed = false;
+  var commonFamily = null;
 
   if (below && dropped.subtree > below.subtree) {
     // If a person in subtree X is dragged above a person in subtree Y, move everyone in X between the persons in Y-1 and Y.
@@ -268,6 +366,18 @@ RelationshipChart.prototype.gapDrop = function(generationIndex, personIndex, dra
   else if (above && dropped.subtree < above.subtree) {
     // If a person in subtree X is dragged below a person in subtree Y, move everyone in X between the persons in Y and Y + 1.
     this.moveSubtree(dropped.subtree, above.subtree + 1);
+    changed = true;
+  }
+  else if (this.aboveInGeneration(below, dropped) && (commonFamily = this.sameParentFamily(below, dropped)) !== null) {
+    // The dropped person was dropped above someone who is in the same family but is currently above them.
+    // So move 'dropped' above 'below'; and move their parent-child relationships above below's parent-child relationships to the same parents.
+    commonFamily.moveChildUp(dropped, below);
+    changed = true;
+  }
+  else if (this.aboveInGeneration(dropped, above) && (commonFamily = this.sameParentFamily(dropped, above)) !== null) {
+    // The dropped person was dropped below someone who is in the same family but is currently above them.
+    // So move 'dropped' below 'above'; and move their parent-child relationships below above's parent-child relationships to the same parents.
+    commonFamily.moveChildDown(dropped, above);
     changed = true;
   }
   if (changed) {
@@ -436,9 +546,7 @@ FamilyLine.prototype.toggleFamilyLine = function(event) {
   var familyLine = this;
   if (relChart.selectedFamilyLine === this) {
     // Deselect family line.
-    // if (familyLine) { // might be undefined if this family line got removed after deleting the last child or spouse.
-      familyLine.$familyLineDiv.removeAttr("chosen");
-    // }
+    familyLine.$familyLineDiv.removeAttr("chosen");
     relChart.hideFamilyControls();
     relChart.selectedFamilyLine = null;
   }

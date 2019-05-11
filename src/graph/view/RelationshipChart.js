@@ -243,7 +243,6 @@ function RelationshipChart(relGraph, $relChartDiv, shouldIncludeDetails, shouldC
   this.chartCompressor = new ChartCompressor(this);
 
   if (isEditable) {
-    this.addEditControls();
     var relChart = this;
     $relChartDiv.click(function(){
       relChart.clearSelections();

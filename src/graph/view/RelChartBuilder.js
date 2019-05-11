@@ -463,10 +463,11 @@ function RelChartBuilder(relGraph, $relChartDiv, shouldIncludeDetails, shouldCom
  * @return RelationshipChart built from the given graph starting with the given person
  */
 RelChartBuilder.prototype.buildChart = function(prevChart) {
-  this.relChart.$personsDiv.empty();
-  this.relChart.$familyLinesDiv.empty();
+  // this.relChart.$personsDiv.empty();
+  // this.relChart.$familyLinesDiv.empty();
   if (this.relChart.isEditable) {
-    this.relChart.$editControlsDiv.empty();
+    // this.relChart.$editControlsDiv.empty();
+    this.relChart.addEditControls();
   }
 
   this.addPersons();
