@@ -69,7 +69,7 @@ RelationshipChart.prototype.makeControl = function(divId, imgClass, $containerDi
   return $control;
 };
 
-// DROP ==========================
+// DRAG AND DROP ==========================
 
 /**
  * Parse a child 'x' control's div ID, and return an object with {familyId, childIndex}.
@@ -205,6 +205,8 @@ FamilyLine.prototype.familyDrop = function(e) {
   updateRecord(this.getGedcomX());
 };
 
+// DRAG PERSONS TO REORDER =====================================
+
 /**
  * Move all persons in a given subtree to just above everyone in the 'below' subtree, in the gedcomx "persons" array.
  *   For example, if subtree=7 and belowSubtree=3, then everyone in subtree 7 will be inserted just before the first person in subtree 3.
@@ -231,6 +233,9 @@ RelationshipChart.prototype.moveSubtree = function(movingSubtree, belowSubtree) 
       movingPersons.push(person);
       persons.splice(p--, 1);
     }
+  }
+  if (insertPos === null) {
+    insertPos = persons.length;
   }
   for (p = 0; p < movingPersons.length; p++) {
     persons.splice(insertPos++, 0, movingPersons[p]);
@@ -335,6 +340,31 @@ FamilyLine.prototype.moveChildDown = function(above, below) {
 };
 
 /**
+ * Get a sorted list of subtree indexes to move. If the dropped person is one of multiple selected persons, then get a sorted list
+ *   of unique subtree indexes among any of the selected persons. Otherwise, just include the dropped person's subtree index.
+ * The idea is to allow the user to multi-select persons, and then drag any of them above someone else in order to move them all above,
+ *   while keeping the set of moved persons in the same order relative to each other.
+ * @param selectedPersonBoxes - Array of selected PersonBoxes, if any.
+ * @param droppedPersonBox - PersonBox that was drag & dropped on a drop zone.
+ * @returns {Array} subtree indexes that should be moved.
+ */
+RelationshipChart.prototype.getSelectedSubtrees = function(selectedPersonBoxes, droppedPersonBox) {
+  var selectedSubtrees = [];
+  if (selectedPersonBoxes && selectedPersonBoxes.length > 1 && selectedPersonBoxes.includes(droppedPersonBox)) {
+    for (var s = 0; s < selectedPersonBoxes.length; s++) {
+      var subtree = selectedPersonBoxes[s].subtree;
+      if (!selectedSubtrees.includes(subtree)) {
+        selectedSubtrees.push(subtree);
+      }
+    }
+  }
+  else {
+    selectedSubtrees.push(droppedPersonBox.subtree);
+  }
+  return selectedSubtrees;
+};
+
+/**
  * Handle a PersonBox being dropped on the gap between (or above or below) PersonBoxes in a generation.
  * - If person A in subtree 2 is dragged above person B in a higher subtree 1, then move everyone in subtree 2 above everyone in subtree 1.
  * - If person A in subtree 1 is dragged below person B in a lower subtree 2, then move everyone in subtree 1 below everyone in subtree 2.
@@ -357,15 +387,23 @@ RelationshipChart.prototype.gapDrop = function(generationIndex, personIndex, dra
   var dropped = draggedPersonBox;
   var changed = false;
   var commonFamily = null;
+  var selectedSubtrees; // Array of subtree indexes when moving people above/below subtrees.
+  var s;
 
   if (below && dropped.subtree > below.subtree) {
-    // If a person in subtree X is dragged above a person in subtree Y, move everyone in X between the persons in Y-1 and Y.
-    this.moveSubtree(dropped.subtree, below.subtree);
+    // If a person in subtree X is dragged above a person in subtree Y, move everyone in X just above the persons in Y.
+    selectedSubtrees = this.getSelectedSubtrees(this.selectedPersonBoxes, dropped);
+    for (s = 0; s < selectedSubtrees.length; s++) {
+      this.moveSubtree(selectedSubtrees[s], below.subtree);
+    }
     changed = true;
   }
   else if (above && dropped.subtree < above.subtree) {
     // If a person in subtree X is dragged below a person in subtree Y, move everyone in X between the persons in Y and Y + 1.
-    this.moveSubtree(dropped.subtree, above.subtree + 1);
+    selectedSubtrees = this.getSelectedSubtrees(this.selectedPersonBoxes, dropped);
+    for (s = 0; s < selectedSubtrees.length; s++) {
+      this.moveSubtree(selectedSubtrees[s], above.subtree + 1);
+    }
     changed = true;
   }
   else if (this.aboveInGeneration(below, dropped) && (commonFamily = this.sameParentFamily(below, dropped)) !== null) {
