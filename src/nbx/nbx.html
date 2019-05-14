@@ -27,6 +27,13 @@
       var doc = window.opener.currentGx;
       doc = fixGedcomx(doc);
       nbxText = findNbxDocumentText(doc, "relexPostRules");
+      if (!nbxText) {
+        nbxText = findNbxDocumentText(doc, "nbx");
+        if (nbxText) {
+          // Remove bounding boxes.
+          nbxText = nbxText.replace(/\[[0-9]*,[0-9]*:[0-9]*,[0-9]*] /g, "");
+        }
+      }
     }
     else {
       nbxText = getSample();
