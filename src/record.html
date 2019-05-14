@@ -119,15 +119,15 @@
         //   return imageArksAndRectangles[0].url;
         // }
         // return null; // No image link found
-        return "bbox/bbox.html";
+        return getImageArks(doc) ? "bbox/bbox.html" : null;
       }
 
       var imageLink = getImageLink(doc);
       if (imageLink) {
-        $("#image-link").html('<a href="' + imageLink + '" target="new_reusable_tab">View image</a>');
+        $("#image-link").html('<a href="' + imageLink + '" target="reusable_image_viewer_tab">View image</a>');
       }
 
-      $("#nbx-link").html('<a href="nbx/nbx.html" target="new_reusable_tab">View entities</a>');
+      $("#nbx-link").html('<a href="nbx/nbx.html" target="reusable_entity_tab">View entities</a>');
       showRecord(doc, url);
 
       updateSelectablePersons(doc, $("#new-relationship-person-1"));
