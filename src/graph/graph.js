@@ -36,18 +36,66 @@ var GX_PARENT_CHILD = "http://gedcomx.org/ParentChild";
      personDivs: HTML node for <div id="#personNodes">.
 
  */
+
+// Array of previous copies of the GedcomX before a set of changes was made.
+// [0] is the original GedcomX. Each time the graph is built, a copy of the latest GedcomX is added to the array (if isEditable is true).
+var gedcomxChangeHistory = [];
+// Position in gedcomxChangeHistory. Normally gedcomxChangePosition = gedcomxChangeHistory.length.
+// But if 'undo' has been done, it can be earlier. If 'redo' is done before any further changes, then it advances again.
+// If a change is made when this position is not at the end, then all following elements are removed.
+var gedcomxChangePosition = 0;
+var currentRelChart;
+
+function undoGraph() {
+  if (gedcomxChangePosition > 1) {
+    var gx = gedcomxChangeHistory[--gedcomxChangePosition - 1];
+    buildGraph(gx, true, currentRelChart, true);
+  }
+}
+
+function redoGraph() {
+  if (gedcomxChangePosition < gedcomxChangeHistory.length) {
+    var gx = gedcomxChangeHistory[gedcomxChangePosition++];
+    buildGraph(gx, true, currentRelChart, true);
+  }
+}
+
 /**
  *
  * @param gx - GedcomX document to visualize
  * @param isEditable - Flag for whether to include edit controls (requires JQuery UI dependency)
  * @param prevChart - Previous RelationshipChart object to use to get initial positions for corresponding PersonBox and FamilyLine elements.
+ * @param ignoreUndo - Flag for whether to ignore the undo logic (set to true for undo/redo actions).
  * @returns {RelationshipChart}
  */
-function buildGraph(gx, isEditable, prevChart) {
+function buildGraph(gx, isEditable, prevChart, ignoreUndo) {
   try {
     var graph = new RelationshipGraph(gx);
     var $relChartDiv = $("#rel-chart");
-    return new RelChartBuilder(graph, $relChartDiv, true, true, isEditable).buildChart(prevChart);
+    if (isEditable && !ignoreUndo) {
+      gedcomxChangeHistory[gedcomxChangePosition++] = JSON.parse(JSON.stringify(gx));
+      if (gedcomxChangePosition < gedcomxChangeHistory.length) {
+        // Did a change after doing multiple "undos". So ignore the rest of the change history.
+        gedcomxChangeHistory.length = gedcomxChangePosition;
+      }
+    }
+    if (!currentRelChart) {
+      $(document).keydown(function (e) {
+        if (e.ctrlKey || e.metaKey) {
+          // Handle ctrl/cmd keypress
+          if ((e.which === 90 && e.shiftKey) || e.which === 89) {
+            // Ctrl/Cmd-shift Z or Cmd-Y => Redo
+            redoGraph();
+          }
+          else if (e.which === 90) {
+            // Ctrl/Cmd-Z => Undo
+            undoGraph();
+          }
+        }
+      });
+    }
+    currentRelChart = new RelChartBuilder(graph, $relChartDiv, true, true, isEditable).buildChart(prevChart);
+    return currentRelChart;
   }
   catch (err) {
     console.log(err);
@@ -56,7 +104,6 @@ function buildGraph(gx, isEditable, prevChart) {
 
 /*
 Todo:
-- Add a "dot" (square; triangle) where a PersonLine meets a FamilyLine.
 - Have line out to that FamilyLine center on the marriage fact for that couple, if any?
 - Optimize horizontal arrangement of FamilyLines toi minimize line-crossings.
 - Able to enter URL to load from there.
