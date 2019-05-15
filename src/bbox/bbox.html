@@ -20,19 +20,20 @@
   ></fs-single-image-viewer>
   <div id="markers"></div>
   <script type="text/javascript">
+    var imageArk;
     $(document).ready(function(){
       const viewer = document.querySelector('fs-single-image-viewer');
       if (window.opener && window.opener.currentGx) {
         window.opener.imageChildWindow = document;
         var doc = window.opener.currentGx;
         doc = fixGedcomx(doc);
-        overlayBoxes(viewer, doc);
+        imageArk = overlayBoxes(viewer, doc);
       }
       else {
         // Not opened from a parent window, so use hard-coded sample json.
         $.getJSON("sample.json", function (sampleGx) {
           sampleGx = fixGedcomx(sampleGx);
-          overlayBoxes(viewer, sampleGx);
+          imageArk = overlayBoxes(viewer, sampleGx);
         });
       }
     });

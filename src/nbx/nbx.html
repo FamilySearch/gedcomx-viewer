@@ -21,10 +21,12 @@
 </div>
 
 <script>
+  var currentUrl = null;
   $(document).ready(function(){
     var nbxText = null;
     if (window.opener && window.opener.currentGx) {
       window.opener.entityChildWindow = document;
+      currentUrl = window.opener.currentUrl;
       var doc = window.opener.currentGx;
       doc = fixGedcomx(doc);
       nbxText = findNbxDocumentText(doc, "relexPostRules");
