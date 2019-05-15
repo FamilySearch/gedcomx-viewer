@@ -127,17 +127,17 @@
 
       var imageLink = getImageLink(doc);
       if (imageLink) {
-        $("#image-link").html('<a href="' + imageLink + '" target="reusable_image_viewer_tab">View image</a>');
-        if (imageChildWindow && imageChildWindow.location && !imageChildWindow.closed && !imageChildWindow.imageArk === imageLink) {
+        $("#image-link").html('<a href="' + imageLink + '?currentUrl=' + currentUrl + '" target="reusable_image_viewer_tab">View image</a>');
+        if (imageChildWindow && imageChildWindow.location && !imageChildWindow.closed && !imageChildWindow.location.href.endsWith(currentUrl)) {
           // Automatically load the image into the image viewer if it is already open.
-          window.open(imageLink, "reusable_image_viewer_tab");
+          window.open(imageLink + '?currentUrl=' + currentUrl, "reusable_image_viewer_tab");
         }
       }
 
-      $("#nbx-link").html('<a href="nbx/nbx.html" target="reusable_entity_tab">View entities</a>');
-      if (entityChildWindow && entityChildWindow.location && !entityChildWindow.closed && !entityChildWindow.currentUrl === currentUrl) {
+      $("#nbx-link").html('<a href="nbx/nbx.html?currentUrl=' + currentUrl + '" target="reusable_entity_tab">View entities</a>');
+      if (entityChildWindow && entityChildWindow.location && !entityChildWindow.closed && !entityChildWindow.location.href.endsWith(currentUrl)) {
         // Automatically load the NBX into the entity viewer if it is already open.
-        window.open("nbx/nbx.html", "reusable_entity_tab");
+        window.open("nbx/nbx.html?currentUrl=" + currentUrl, "reusable_entity_tab");
       }
 
       showRecord(doc, url);

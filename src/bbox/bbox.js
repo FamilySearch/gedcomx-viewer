@@ -424,10 +424,9 @@ function overlayBoxes(viewer, doc) {
 
   // Get an array of objects with {image: <imageArk>, rectangles: [array of Rectangle object with x1,y1,x2,y2]}
   var imageArksAndRects = getImageArks(doc);
-  var imageArk = null;
 
   if (!isEmpty(imageArksAndRects)) {
-    imageArk = imageArksAndRects[0].image;
+    var imageArk = imageArksAndRects[0].image;
     var imageApid = imageArkToApid(imageArk);
     viewer.src = "https://www.familysearch.org/dz/v1/apid:" + imageApid + "/";
 
@@ -462,5 +461,4 @@ function overlayBoxes(viewer, doc) {
     viewer.overlays.setAll(boxes);
     viewer.markers.setAll(markers);
   }
-  return imageArk;
 }
