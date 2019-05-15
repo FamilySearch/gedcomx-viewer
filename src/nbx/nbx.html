@@ -24,6 +24,7 @@
   $(document).ready(function(){
     var nbxText = null;
     if (window.opener && window.opener.currentGx) {
+      window.opener.entityChildWindow = document;
       var doc = window.opener.currentGx;
       doc = fixGedcomx(doc);
       nbxText = findNbxDocumentText(doc, "relexPostRules");

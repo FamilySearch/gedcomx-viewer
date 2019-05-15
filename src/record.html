@@ -91,6 +91,9 @@
     var currentGx;
     var relChart;
 
+    var imageChildWindow;
+    var entityChildWindow;
+
     /**
      *  Update a record.
      *
@@ -125,9 +128,18 @@
       var imageLink = getImageLink(doc);
       if (imageLink) {
         $("#image-link").html('<a href="' + imageLink + '" target="reusable_image_viewer_tab">View image</a>');
+        if (imageChildWindow && imageChildWindow.location && !imageChildWindow.closed) {
+          // Automatically load the image into the image viewer if it is already open.
+          window.open(imageLink, "reusable_image_viewer_tab");
+        }
       }
 
       $("#nbx-link").html('<a href="nbx/nbx.html" target="reusable_entity_tab">View entities</a>');
+      if (entityChildWindow && entityChildWindow.location && !entityChildWindow.closed) {
+        // Automatically load the NBX into the entity viewer if it is already open.
+        window.open("nbx/nbx.html", "reusable_entity_tab");
+      }
+
       showRecord(doc, url);
 
       updateSelectablePersons(doc, $("#new-relationship-person-1"));

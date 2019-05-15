@@ -23,6 +23,7 @@
     $(document).ready(function(){
       const viewer = document.querySelector('fs-single-image-viewer');
       if (window.opener && window.opener.currentGx) {
+        window.opener.imageChildWindow = document;
         var doc = window.opener.currentGx;
         doc = fixGedcomx(doc);
         overlayBoxes(viewer, doc);
