@@ -447,12 +447,12 @@ RelationshipChart.prototype.addGapDropZone = function(generationIndex, personInd
   var $control = $("#" + divId);
   $control.css({left: left, top: top, width: width, height: height});
   $control.droppable({
-    hoverClass: "gapDropHover", scope: "wholePersonDropScope", drop: function(e, ui) {
+    hoverClass: "gapDropHover", scope: "wholePersonDropScope", "tolerance": "pointer", drop: function(e, ui) {
       var draggedPersonBoxId = e.originalEvent.target.id;
       if (!draggedPersonBoxId) {
         draggedPersonBoxId = ui.draggable.attr("id");
       }
-      relChart.gapDrop(generationIndex, personIndex, relChart.personBoxMap[draggedPersonBoxId], ui.draggable.offset().top, ui.draggable.offset().left);
+      relChart.gapDrop(generationIndex, personIndex, relChart.personBoxMap[draggedPersonBoxId], ui.draggable.position().top, ui.draggable.position().left);
       e.stopPropagation();
     }
   });
