@@ -86,10 +86,12 @@ function buildGraph(gx, isEditable, prevChart, ignoreUndo) {
           if ((e.which === 90 && e.shiftKey) || e.which === 89) {
             // Ctrl/Cmd-shift Z or Cmd-Y => Redo
             redoGraph();
+            e.stopPropagation();
           }
           else if (e.which === 90) {
             // Ctrl/Cmd-Z => Undo
             undoGraph();
+            e.stopPropagation();
           }
         }
       });
