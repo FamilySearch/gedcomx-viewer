@@ -308,7 +308,7 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
         "' id='" + personBoxId + "'>\n";
     var imageFile = PersonBox.prototype.genderImageMap[personNode.gender];
     // Use CDN to deliver these to avoid problems with different relative paths for different consumers.
-    html += "<img id='" + getGenderDivId(personBoxId) + "' src='https://cdn.jsdelivr.net/gh/FamilySearch/gedcomx-viewer@master/src/graph/images/" + imageFile + "' class='gender-image'>";
+    html += "<img id='" + getGenderDivId(personBoxId) + "' src='https://cdn.jsdelivr.net/gh/FamilySearch/gedcomx-viewer@master/graph/images/" + imageFile + "' class='gender-image'>";
     var person = personNode.person;
     html += addNameSpans(person);
     if (shouldDisplayIds) {
