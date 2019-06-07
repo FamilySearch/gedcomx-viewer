@@ -9,13 +9,16 @@
        spouseFamilies[]: Array of FamilyNode for families where this person is a parent (or spouse).
  */
 
-var GX_MALE = "http://gedcomx.org/Male";
-var GX_FEMALE = "http://gedcomx.org/Female";
-var GENDER_CODE_MALE = "M";
-var GENDER_CODE_FEMALE = "F";
-var GENDER_CODE_UNKNOWN = "U";
+const GX_MALE = "http://gedcomx.org/Male";
+const GX_FEMALE = "http://gedcomx.org/Female";
+const GENDER_CODE_MALE = "M";
+const GENDER_CODE_FEMALE = "F";
+const GENDER_CODE_UNKNOWN = "U";
 
-function getGenderCode(person) {
+PersonNode.prototype.getGenderCode = function(person) {
+  if (!person) {
+    person = this.person;
+  }
   if (person.gender && person.gender.type) {
     if (person.gender.type === GX_MALE) {
       return GENDER_CODE_MALE;
@@ -25,9 +28,12 @@ function getGenderCode(person) {
     }
   }
   return GENDER_CODE_UNKNOWN;
-}
+};
 
-function getFirstFullName(person) {
+PersonNode.prototype. getFirstFullName = function(person) {
+  if (!person) {
+    person = this.person;
+  }
   var firstFullName = null;
   var n, f;
   var name, form;
@@ -50,14 +56,14 @@ function getFirstFullName(person) {
     firstFullName = "?";
   }
   return firstFullName;
-}
+};
 
 /*** Constructor ***/
 function PersonNode(person) {
   this.person = person;
   this.personId = person.id;
-  this.name = getFirstFullName(person);
-  this.gender = getGenderCode(person);
+  this.name = this.getFirstFullName(person);
+  this.gender = this.getGenderCode(person);
   this.parentFamilies =[];
   this.spouseFamilies = [];
 }

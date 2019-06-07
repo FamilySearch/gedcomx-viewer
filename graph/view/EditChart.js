@@ -69,6 +69,631 @@ RelationshipChart.prototype.makeControl = function(divId, imgClass, $containerDi
   return $control;
 };
 
+A// MERGE PERSONS ==========================
+const GX_PART_PREFIX  = "http://gedcomx.org/Prefix";
+const GX_PART_GIVEN   = "http://gedcomx.org/Given";
+const GX_PART_SURNAME = "http://gedcomx.org/Surname";
+const GX_PART_SUFFIX  = "http://gedcomx.org/Suffix";
+
+/**
+ * Find the Person object in the given GedcomX document's persons[] array that has an 'id' of the given personId.
+ * @param gx - GedcomX document
+ * @param pid - Person ID to find
+ * @returns Person object with the given person id, or null if not found.
+ */
+RelationshipChart.prototype.findPerson = function(gx, pid) {
+  if (gx.persons) {
+    for (var p = 0; p < gx.persons.length; p++) {
+      if (gx.persons[p].id === pid) {
+        return gx.persons[p];
+      }
+    }
+  }
+  return null;
+};
+
+/**
+ * Tell whether field2 has all of the field values found in field1.
+ * @param field1 - First field
+ * @param field2 - Second field
+ * @return {boolean} true if field2 contains all the field values (same label ID and value) as field1.
+ */
+RelationshipChart.prototype.hasAllFieldValues = function(field1, field2) {
+  const values1 = field1.values ? field1.values : [];
+  const values2 = field2.values ? field2.values : [];
+  if (values2.length < values1.length) {
+    return false;
+  }
+  for (let v1 = 0; v1 < values1.length; v1++) {
+    let value1 = values1[v1];
+    let foundMatch = false;
+    for (let v2 = 0; v2 < values2.length; v2++) {
+      let value2 = values2[v2];
+      if (value1.type === value2.type && value1.labelId === value2.labelId && value1.text === value2.text) {
+        foundMatch = true;
+        break;
+      }
+    }
+    if (!foundMatch) {
+      return false;
+    }
+  }
+  return true;
+};
+
+/**
+ * Tell whether field1 and field2 are duplicates of each other.
+ * @param field1 - Field object
+ * @param field2 - Field object to compare to field1.
+ * @returns {boolean} true if the two given GedcomX Field objects have the same type, sources (and qualifiers) and field values.
+ */
+RelationshipChart.prototype.isDuplicateField = function(field1, field2) {
+  if (!field1 && !field2) {
+    return true; // both null, so treat as duplicate
+  }
+  if (!field1 || !field2) {
+    return false; // only one null, so treat as not duplicate
+  }
+  if (field1.type === field2.type && this.sameSources(field1, field2)) {
+    // Same type of field, and same sources and qualifiers (e.g., image and rectangles), so might be duplicate.
+    return this.hasAllFieldValues(field1, field2) && this.hasAllFieldValues(field2, field1);
+  }
+  return false;
+};
+
+/**
+ * Merge the two arrays of fields and return the resulting array. Returns fields1 or fields2 if the other is empty.
+ * If both are non-empty, then all elements of fields2 are added to fields1 UNLESS there is already an "identical"
+ * field in fields1, meaning same type, value, label ID and bounding boxes (if any).
+ * @param fields1 - First array (modified to be the returned value, if not null)
+ * @param fields2 - Second array (incorporated into the first array, if both not null; or returned as-is if fields1 is null)
+ */
+RelationshipChart.prototype.mergeFields = function(fields1, fields2) {
+  if (isEmpty(fields2)) {
+    return fields1;
+  }
+  if (isEmpty(fields1)) {
+    return fields2;
+  }
+  // Both field arrays have at least one Field in them, so add all entries in fields2 to fields1.
+  for (let f2 = 0; f2 < fields2.length; f2++) {
+    let field2 = fields2[f2];
+    let isDuplicate = false;
+    for (let f1 = 0; f1 < fields1.length; f1++) {
+      let field1 = fields1[f1];
+      if (this.isDuplicateField(field1, field2)) {
+        isDuplicate = true;
+        break;
+      }
+    }
+    if (!isDuplicate) {
+      fields1.push(field2);
+    }
+  }
+  return fields1;
+};
+
+/**
+ * Look at the gender of both persons and return a gender object that combines the fields of both.
+ * If one is male and the other female, then person1's gender is used.
+ * If one is unknown then the other person's gender is used.
+ * Fields of both objects are combined into the fields of the returned object.
+ * @param gender1 - Gender object 1 (may be modified and returned).
+ * @param gender2 - Gender object 2 (will be returned if gender1 is null).
+ */
+RelationshipChart.prototype.mergeGenders = function(gender1, gender2) {
+  if (!gender1) {
+    return gender2;
+  }
+  if (!gender2) {
+    return gender1; // nothing to merge in, so return person1.gender as-is.
+  }
+  if (gender1.type !== gender2.type && gender1.type !== GX_MALE && gender1.type !== GX_FEMALE) {
+    if (gender2.type === GX_MALE || gender2.type === GX_FEMALE) {
+      // person1's gender is unknown, and person2's gender is known, so use that.
+      gender1.type = gender2.type;
+    }
+  }
+  gender1.fields = this.mergeFields(gender1.fields, gender2.fields);
+  return gender1;
+};
+
+/**
+ * Merge name part2 into name part1.
+ * - If part2's
+ * @param part1
+ * @param part2
+ */
+RelationshipChart.prototype.mergeNamePart = function(part1, part2) {
+  /**
+   * Break a name or name part string into "pieces", separated by space or period,
+   *   and return an array of these pieces (w/o spaces but with periods).
+   * @param s - String to break into pieces
+   * @returns {Array} Array of pieces of name string.
+   */
+  function getPieces(s) {
+    const patt1 = /[A-Za-z.'"-()]+( |$)/g;
+    const patt2 = /[^.]+([.]|$)/g;
+    let result = s.match(patt1);
+    let p = [];
+    for (let i = 0; i < result.length; i++) {
+      let piece = result[i].trim();
+      let subparts = piece.match(patt2);
+      if (subparts) {
+        for (let j = 0; j < subparts.length; j++) {
+          p.push(subparts[j]);
+        }
+      }
+      else {
+        p.push(piece);
+      }
+    }
+    return p;
+  }
+
+  /**
+   * Take an array of name pieces and normalize each by converting to lower case, converting spaces, tabs, periods,
+   *   parentheses, quotes, dashes and slashes into spaces, and then collapsing runs of spaces into a single space, and trimming.
+   * @param pieces - Array of name pieces to normalize.
+   * @returns {Array} Array of normalized name pieces corresponding to first array.
+   */
+  function normalizePieces(pieces) {
+    let norm = [];
+    for (let i = 0; i < pieces.length; i++) {
+      norm[i] = pieces[i].toLowerCase().replace(/[ \t.,"()\\[\]\/]+/, " ").replace(/ +/, " ").replace(/'/, "").trim();
+    }
+    return norm;
+  }
+
+  /**
+   * Tell whether pieces1 contains all of the "pieces" found in pieces2, meaning that all of the strings in pieces2
+   *   exist as strings in pieces1 or as prefixes of substrings in pieces1.
+   *   For example, "Elizabeth Jane" has the substrings ["elizabeth", "jane"], and this contains all
+   *   the substrings for "Eliza Jane", "Elizabeth J."; but not for "Lizzie Jane".
+   * @param pieces1 - First "superset" strings.
+   * @param pieces2 - Second "subset" strings.
+   */
+  function containsAllPieces(pieces1, pieces2) {
+    for (let p2 = 0; p2 < pieces2.length; p2++) {
+      let piece2 = pieces2[p2];
+      let containsPiece = false;
+      for (let p1 = 0; p1 < pieces1.length; p1++) {
+        let piece1 = pieces1[p1];
+        if (piece1.startsWith(piece2)) { // equal or subset
+          containsPiece = true;
+          break;
+        }
+      }
+      if (!containsPiece) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // == mergeNamePart(part1, part2) ==
+  this.mergeFields(part1.fields, part2.fields);
+  let pieces1 = getPieces(part1.value);
+  let pieces2 = getPieces(part2.value);
+  let normPieces1 = normalizePieces(pieces1);
+  let normPieces2 = normalizePieces(pieces2);
+
+  if (!containsAllPieces(normPieces1, normPieces2)) {
+    if (containsAllPieces(normPieces2, normPieces1)) {
+      // Part2 contains everything that part1 does, and more, so use that.
+      part1.value = part2.value;
+    }
+    else {
+      // Remove from pieces2 and normPieces2 any elements where normPieces2 is contained within normPieces1
+      for (let p2 = 0; p2 < normPieces2.length; p2++) {
+        let foundPiece = false;
+        for (let p1 = 0; p1 < normPieces1.length; p1++) {
+          if (normPieces1[p1].startsWith(normPieces2[p2])) {
+            foundPiece = true;
+            break;
+          }
+        }
+        if (foundPiece) {
+          normPieces2.splice(p2, 1);
+          pieces2.splice(p2, 1);
+          p2--;
+        }
+      }
+      // Append any remaining pieces to pieces1
+      if (pieces2.length > 0) {
+        part1.value = pieces1.concat(pieces2).join(" ");
+      }
+    }
+  }
+  // else part1 already contains everything part2 does, so leave it as-is.
+};
+
+/**
+ * Merge name form 2 into name form 1.
+ * - Assumes they are both non-null and of a compatible 'lang' (language/script).
+ *   (if lang is null, then "x-Latn" is assumed, so these two are treated as compatible).
+ * - All fields for each part are merged into the fields for the corresponding part type.
+ * - Fields for the name form itself are merged into form1.
+ * - The conclusion value for the
+ * @param form1 - Name form to merge into.
+ * @param form2 - Name form to bring in, which will later be discarded.
+ */
+RelationshipChart.prototype.mergeNameForm = function(form1, form2) {
+  function findLastPrefix(parts) {
+    let lastPrefix = -1;
+    for (let i = 0; i < parts.length; i++) {
+      if (parts[i].type === GX_PART_PREFIX) {
+        lastPrefix = i;
+      }
+    }
+    return lastPrefix;
+  }
+
+  function findFirstSurname(parts) {
+    let firstSurname = parts.length;
+    for (let i = parts.length - 1; i >= 0; i--) {
+      if (parts[i].type === GX_PART_SURNAME) {
+        firstSurname = i;
+      }
+    }
+    return firstSurname;
+  }
+
+  /**
+   * Tell whether a surname appears in the given list before a given name (and a given name appears after the surname).
+   * Returns false if there is not both a given and surname in the name or if the surname appears after the given name.
+   * @param parts - Array of NamePart objects.
+   * @returns {boolean} - true if a surname appears earlier in the array and a given name later in the array.
+   */
+  function isSurnameFirst(parts) {
+    if (parts) {
+      let sawSurname = false;
+      for (let p = 0; p < parts.length; p++) {
+        if (parts.type === GX_PART_GIVEN) {
+          return sawSurname;
+        }
+        if (parts.type === GX_PART_SURNAME) {
+          sawSurname = true;
+        }
+      }
+    }
+    return false;
+  }
+
+  // == mergeNameForm(form1, form2) ==
+
+  form1.fields = this.mergeFields(form1.fields, form2.fields);
+  if (isEmpty(form1.parts)) {
+    form1.parts = form2.parts;
+  }
+  else if (!isEmpty(form2.parts)) {
+    let remainingParts2 = form2.parts ? form2.parts.slice(0) : [];
+    let surnameFirst = isSurnameFirst(form2.parts);
+    for (let p1 = 0; p1 < form1.parts.length; p1++) {
+      let part1 = form1.parts[p1];
+      for (let p2 = 0; p2 < remainingParts2.length; p2++) {
+        let part2 = remainingParts2[p2];
+        if (part1.type === part2.type) {
+          this.mergeNamePart(part1, part2);
+          remainingParts2.splice(p2--, 1);
+        }
+      }
+    }
+    if (remainingParts2.length > 0) {
+      // There are remaining name parts in form2, and no corresponding part of the same type in form1.
+      // So insert them into form1's array of name parts.
+      for (let p2 = 0; p2 < remainingParts2.length; p2++) {
+        let part2 = remainingParts2[p2];
+        if (part2.type === GX_PART_PREFIX) {
+          form1.parts.splice(0, 0, part2);
+        }
+        else if ((part2.type === GX_PART_GIVEN && !surnameFirst) || (part2.type === GX_PART_SURNAME && surnameFirst)) {
+          form1.parts.splice(findLastPrefix(form1.parts) + 1, 0, part2);
+        }
+        else if ((part2.type === GX_PART_SURNAME && !surnameFirst) || (part2.type === GX_PART_GIVEN && surnameFirst)) {
+          form1.parts.splice(findFirstSurname(form1.parts), 0, part2);
+        }
+        else if (part2.type === GX_PART_SUFFIX) {
+          form1.parts.push(part2);
+        }
+        else {
+          throw "Unexpected case...";
+        }
+      }
+    }
+  }
+};
+
+/**
+ * Merge NameForm objects from remainingForms2 into nameForms1, as long as the forms are of the same type.
+ * If 'mustBeSameLang', then they must be strictly of the same type. Otherwise, if either type is null,
+ *   they can be merged as well.
+ * @param nameForms1 - List of name forms to merge into.
+ * @param remainingForms2 - List of remaining name forms to merge from. Any forms merged into nameForms1 will be removed from this list.
+ * @param mustBeSameLang
+ */
+RelationshipChart.prototype.mergeSameLangNameForms = function(nameForms1, remainingForms2, mustBeSameLang) {
+  for (let f = 0; f < nameForms1.length; f++) {
+    let nameForm1 = nameForms1[f];
+    for (let f2 = 0; f2 < remainingForms2.length; f2++) {
+      let nameForm2 = remainingForms2[f2];
+      let lang1 = nameForm1.lang ? nameForm1.lang : "x-Latn";
+      let lang2 = nameForm1.lang ? nameForm1.lang : "x-Latn";
+      if (nameForm1.lang === nameForm2.lang || (!mustBeSameLang && lang1 === lang2)) {
+        this.mergeNameForm(nameForm1, nameForm2);
+        remainingForms2.splice(f2--, 1);
+      }
+    }
+  }
+};
+
+// Merge name2 into name1. Both must be non-null.
+RelationshipChart.prototype.mergeName = function(name1, name2) {
+  /**
+   * If any type of name part has more than one NamePart object, concatenate them together.
+   * @param nameForms - Array of name forms to process.
+   */
+  function consolidateNameParts(nameForms) {
+    for (let f = 0; f < nameForms.length; f++) {
+      let form = nameForms[f];
+      // Map of part type to index of first occurance of that part type.
+      let partIndexMap = {};
+      if (form.parts) {
+        for (let p = 0; p < form.parts.length; p++) {
+          let part = form.parts[p];
+          let type = part.type ? part.type : "<noType>";
+          let firstIndex = partIndexMap[type];
+          if (firstIndex === undefined) {
+            partIndexMap[type] = p;
+          }
+          else {
+            // Found another part of the same type as an earlier one.
+            // So concatenate the 'value'; merge the list of fields;
+            let prevPart = form.parts[firstIndex];
+            this.mergeNamePart(prevPart, part);
+            form.parts.splice(p--, 1);
+          }
+        }
+      }
+    }
+  }
+  
+  //== mergeName(name1, name2) ==
+  name1.fields = this.mergeFields(name1.fields, name2.fields);
+  if (isEmpty(name1.nameForms)) {
+    name1.nameForms = name2.nameForms;
+  }
+  else if (!isEmpty(name2.nameForms)) {
+    consolidateNameParts(name1.nameForms);
+    consolidateNameParts(name2.nameForms);
+    let remainingForms2 = name2.nameForms.slice(0); // copy array of name forms.
+    this.mergeSameLangNameForms(name1.nameForms, remainingForms2, true);
+    this.mergeSameLangNameForms(name1.nameForms, remainingForms2, false);
+    // Add any remaining name forms that had a different script.
+    name1.nameForms = name1.nameForms.concat(remainingForms2);
+  }
+}; // mergeName
+
+RelationshipChart.prototype.mergeSameTypeNames = function(names1, remainingNames2, mustBeSameType) {
+  for (let n1 = 0; n1 < names1.length; n1++) {
+    let name1 = names1[n1];
+    for (let n2 = 0; n2 < remainingNames2.length; n2++) {
+      let name2 = remainingNames2[n2];
+      if (name1.type === name2.type || ((!name1.type || !name2.type) && !mustBeSameType)) {
+        // Merge name2 into name1
+        this.mergeName(name1, name2);
+        remainingNames2.splice(n2--, 1);
+      }
+    }
+  }
+};
+
+RelationshipChart.prototype.rebuildFullName = function(name) {
+  if (name.nameForms) {
+    for (let f = 0; f < name.nameForms.length; f++) {
+      let nameForm = name.nameForms[f];
+      if (nameForm.parts) {
+        let pieces = [];
+        for (let p = 0; p < nameForm.parts.length; p++) {
+          pieces.push(nameForm.parts[p].value);
+        }
+        nameForm.fullText = pieces.join(" ");
+      }
+    }
+  }
+};
+
+/**
+ * Merge two arrays of names, presumably for two persons being merged.
+ * - The common case for data coming out of ACE is that there is one Name object per person,
+ *   and usually this is what we want to end up with.
+ * - So when both arrays have one Name object, then names2[0] is merged into names1[0] as follows:
+ *   a) Merge the list of fields on the name and each name part into the name1 and each corresponding name part.
+ *   b) If either part is a subset of the other, create the superset.
+ *   c) If there are name pieces for a part remaining in name2, concatenate it to the end of that part in name1.
+ * - Only name objects of the same type are merged together, so an AkaName is not merged with a BirthName.
+ * - However, a null-typed name can be merged with any other type.
+ * @param names1 - First array of names. May be modified and returned.
+ * @param names2 - Second array of names. Will be returned if names1 is null.
+ * @returns array containing merged names from the two arrays.
+ */
+RelationshipChart.prototype.mergeNames = function(names1, names2) {
+  // ==== mergeNames(names1, names2) ====
+  if (isEmpty(names1)) {
+    return names2;
+  }
+  if (isEmpty(names2)) {
+    return names1;
+  }
+  // Arrays of names that haven't yet been
+  let remainingNames2 = names2.slice(0);
+  this.mergeSameTypeNames(names1, remainingNames2, true, this);
+  if (remainingNames2.length > 0) {
+    this.mergeSameTypeNames(names1, remainingNames2, false, this);
+    if (remainingNames2.length > 0) {
+      names1 = names1.concat(remainingNames2);
+    }
+  }
+  for (let n = 0; n < names1.length; n++) {
+    this.rebuildFullName(names1[n]);
+  }
+  return names1;
+};
+
+/**
+ * Merge all of the facts in facts2 into facts1 and return the resulting array (which might be facts2 if facts1 was empty).
+ * If any facts in facts2 are the "same" as one in facts1 (i.e., same type, date.original, place.original, value),
+ *   then merge the fields from facts2 and remove it from its list.
+ * @param facts1 - Array to merge into
+ * @param facts2 - Array to merge from (or returned if facts1 is null)
+ * @returns Array of facts that is a combination of the two lists.
+ */
+RelationshipChart.prototype.mergeFacts = function(facts1, facts2) {
+  if (!facts1) {
+    return facts2;
+  }
+  if (!facts2) {
+    return facts1;
+  }
+
+  function sameFact(fact1, fact2) {
+    function sameDate(date1, date2) {
+      let d1 = date1 ? date1.original : "";
+      let d2 = date2 ? date2.original : "";
+      return d1 === d2;
+    }
+
+    function samePlace(place1, place2) {
+      let p1 = place1 ? place1.original : "";
+      let p2 = place2 ? place2.original : "";
+      return p1 === p2;
+    }
+    return fact1.type === fact2.type
+        && sameDate(fact1.date, fact2.date)
+        && samePlace(fact1.place, fact2.place)
+        && fact1.value === fact2.value;
+  }
+
+  for (let f2 = 0; f2 < facts2.length; f2++) {
+    let fact2 = facts2[f2];
+    for (let f1 = 0; f1 < facts1.length; f1++) {
+      let fact1 = facts1[f1];
+      if (sameFact(fact1, fact2)) {
+        fact1.fields = this.mergeFields(fact1.fields, fact2.fields);
+        if (fact1.date && fact2.date) {
+          fact1.date.fields = this.mergeFields(fact1.date.fields, fact2.date.fields);
+        }
+        if (fact1.place && fact1.place) {
+          fact1.place.fields = this.mergeFields(fact1.place.fields, fact2.place.fields);
+        }
+        fact2 = null;
+        break;
+      }
+    }
+    if (fact2) { // no duplicate found, so ignore it.
+      facts1.push(fact2);
+    }
+  }
+};
+
+/**
+ * Go through the relationships in the given GedcomX document. Any relationships involving pid2 are changed to go to pid1 instead.
+ * If there is already a relationship of that type between pid1 and the other person in the relationship,
+ *   then merge the fields and facts between the two relationships and delete the one to pid2.
+ * @param gx - GedcomX document to look through.
+ * @param pid1 - PersonId 1 to move to
+ * @param pid2 - PersonId 2 whose relationships are being moved to pid1.
+ */
+RelationshipChart.prototype.mergeRelationships = function(gx, pid1, pid2) {
+  if (!gx.relationships) {
+    return;
+  }
+
+  function samePerson(personRef, personId) {
+    return personRef && personRef === ("#" + personId);
+  }
+
+  function setPerson(personRef, personId) {
+    personRef.resource = "#" + personId;
+    if (personRef.resourceId) {
+      personRef.resourceId = personId;
+    }
+  }
+
+  function sameRelationship(rel1, rel2) {
+    return rel1.type === rel2.type
+        && rel1.person1.resource === rel2.person1.resource
+        && rel1.person2.resource === rel2.person2.resource;
+  }
+
+  for (let r = 0; r < gx.relationships.length; r++) {
+    let rel = gx.relationships[r];
+    let changed = true;
+    if (samePerson(rel.person1, pid2)) {
+      setPerson(rel.person1, pid1);
+    }
+    else if (samePerson(rel.person2, pid2)) {
+      setPerson(rel.person2, pid1);
+    }
+    else {
+      changed = false;
+    }
+    if (changed) {
+      // Changed the relationship, so see if there's already one of the same type with the same people.
+      for (let r2 = 0; r2 < gx.relationships.length; r++) {
+        let origRel = gx.relationships[r2];
+        if (r2 !== r && sameRelationship(rel, origRel)) {
+          // There's already a relationship of the same type with the same people, so merge this one into that one.
+          origRel.facts = this.mergeFacts(origRel.facts, rel.facts);
+          origRel.fields = this.mergeFields(origRel.fields, rel.fields);
+          break;
+        }
+      }
+    }
+  }
+};
+
+/**
+ * Merge pid2 into pid1, and delete pid2 from the GedcomX document. Assumes that this is a GedcomX "record"
+ *   in which all relationships point at "local" person IDs (i.e., located within the GedcomX document,
+ *   rather than full URLs that point externally.)
+ * @param pid1 - person id to merge into and modify.
+ * @param pid2 - person id to merge from and delete.
+ */
+RelationshipChart.prototype.mergeTwoPersons = function(pid1, pid2) {
+  const gx = this.getGedcomX();
+
+  const person1 = this.findPerson(gx, pid1);
+  const person2 = this.findPerson(gx, pid2);
+
+  // Merge fields:
+  person1.fields = this.mergeFields(person1.fields, person2.fields);
+
+  // Merge genders:
+  person1.gender = this.mergeGenders(person1.gender, person2.gender);
+
+  // Merge names:
+  person1.names = this.mergeNames(person1.names, person2.names);
+
+  // Merge facts:
+  person1.facts = this.mergeFacts(person1.facts, person2.facts);
+
+  // Merge relationships:
+  // - For each relationship that refers to pid2,
+  //   - Update reference to point at pid1.
+  //   - Check to see if there is already a relationship of that type between those two people.
+  //   - If so, merge the facts between the two (see below), and delete the duplicate relationship.
+  this.mergeRelationships(gx, pid1, pid2);
+  removeFromArray(person2, gx.persons);
+};
+
+// Merge all of the given person IDs into the first, and delete all but the first one from the GedcomX document.
+RelationshipChart.prototype.mergePersonList = function(personIdsToMerge) {
+  for (let i = 1; i < personIdsToMerge.length; i++) {
+    this.mergeTwoPersons(personIdsToMerge[0], personIdsToMerge[i]);
+  }
+};
+
 // DRAG AND DROP ==========================
 
 /**
@@ -82,62 +707,109 @@ PersonBox.prototype.parseChildXId = function(childXId) {
 };
 
 /**
+ * Get the list of person IDs to merge, including the two provided, but also anyone
+ *   else who is currently selected (if any).
+ * @param boxId1 - personBoxId of "survivor" PersonBox that was dropped on.
+ * @param boxId2 - personBoxId of "dropped" PersonBox, to be merged into the first one.
+ */
+RelationshipChart.prototype.getPersonIdsToMerge = function(boxId1, boxId2) {
+  var personIds = [];
+  personIds.push(this.personBoxMap[boxId1].personNode.personId);
+  personIds.push(this.personBoxMap[boxId2].personNode.personId);
+  for (var p = 0; p < this.selectedPersonBoxes.length; p++) {
+    var personBox = this.selectedPersonBoxes[p];
+    var personId = personBox.personNode.personId;
+    if (!personIds.includes(personId)) {
+      personIds.push(personId);
+    }
+  }
+  return personIds;
+};
+
+RelationshipChart.prototype.getMergeMessage = function(personIdsToMerge) {
+  var message = "Merge the following people together?\n";
+  for (var p = 0; p < personIdsToMerge.length; p++) {
+    var personNode = this.relGraph.personNodeMap[personIdsToMerge[p]];
+    message += "  " + (p + 1) + ") " + personNode.getFirstFullName() + "\n";
+  }
+  message += "(Data from all these people will be combined into the first one)";
+  return message;
+};
+
+/**
  * Handle an event in which a control ('+' or 'x') was dropped on this PersonBox.
  * @param e - Event. Has the div id of the dropped control in e.originalEvent.target.id
+ * @param ui - UI object that has the div id of the dropped person if e doesn't have it.
  */
-PersonBox.prototype.personDrop = function(e) {
+PersonBox.prototype.personDrop = function(e, ui) {
   var droppedPersonBox = this; // = relChart.personBoxMap[e.target.id];
-  var plus = e.originalEvent.target.id.replace(/.*-/, ""); // The div ID of the plus (or 'x') that was dropped on this person.
-  if (plus.startsWith("childX")) {
-    var oldFamilyIdInfo = this.parseChildXId(plus);
-    this.relChart.selectedFamilyLine.changeChildParent(oldFamilyIdInfo.childIndex, droppedPersonBox);
+  var targetId = e.originalEvent.target.id;
+  if (!targetId) {
+    targetId = ui.draggable.attr("id");
   }
-  else if (plus === "motherPlus" || plus === "fatherPlus" || plus === "fatherX" || plus === "motherX") {
-    switch (plus) {
-      case "motherPlus":
-      case "motherX":
-        this.relChart.selectedFamilyLine.changeMother(droppedPersonBox);
-        break;
-      case "fatherPlus":
-      case "fatherX":
-        this.relChart.selectedFamilyLine.changeFather(droppedPersonBox);
-        break;
+
+  if (targetId.startsWith("box_")) {
+    var personIdsToMerge = this.relChart.getPersonIdsToMerge(droppedPersonBox.personBoxId, targetId);
+    if (targetId !== droppedPersonBox.personBoxId && confirm(this.relChart.getMergeMessage(personIdsToMerge))) {
+      this.relChart.mergePersonList(personIdsToMerge);
+    }
+    else {
+      return; // don't update the record: Nothing changed.
     }
   }
   else {
-    var draggedPersonBoxId = e.originalEvent.target.id.replace(/-.*/, "");
-    for (var s = 0; s < this.relChart.selectedPersonBoxes.length; s++) {
-      var sourcePersonBox = this.relChart.selectedPersonBoxes[s];
-      var sourcePersonId = sourcePersonBox.personNode.personId;
-      var droppedPersonId = droppedPersonBox.personNode.personId;
+    var plus = targetId.replace(/.*-/, ""); // The div ID of the plus (or 'x') that was dropped on this person.
+    if (plus.startsWith("childX")) {
+      var oldFamilyIdInfo = this.parseChildXId(plus);
+      this.relChart.selectedFamilyLine.changeChildParent(oldFamilyIdInfo.childIndex, droppedPersonBox);
+    }
+    else if (plus === "motherPlus" || plus === "fatherPlus" || plus === "fatherX" || plus === "motherX") {
       switch (plus) {
-        case "personParentPlus":
-          // Add all selected persons as children of the parent dropped on.
-          this.relChart.ensureRelationship(GX_PARENT_CHILD, droppedPersonId, sourcePersonId);
+        case "motherPlus":
+        case "motherX":
+          this.relChart.selectedFamilyLine.changeMother(droppedPersonBox);
           break;
-        case "personChildPlus":
-          // Don't make all selected persons be parents of the child dropped on--that would be unlikely to make sense.
-          // Instead, ignore who is selected and only pay attention to whose child '+' was dragged.
-          if (sourcePersonBox.personBoxId === draggedPersonBoxId) {
-            this.relChart.ensureRelationship(GX_PARENT_CHILD, sourcePersonId, droppedPersonId);
-          }
+        case "fatherPlus":
+        case "fatherX":
+          this.relChart.selectedFamilyLine.changeFather(droppedPersonBox);
           break;
-        case "personSpousePlus":
-          // Don't make all selected persons be spouses of the person dropped on--that would be unlikely to make sense.
-          // Instead, ignore who is selected and only pay attention to whose spouse '+' was dragged.
-          if (sourcePersonBox.personBoxId === draggedPersonBoxId) {
-            var sourcePersonNode = sourcePersonBox.personNode;
-            var droppedPersonNode = droppedPersonBox.personNode;
-            if (wrongGender(sourcePersonNode, droppedPersonNode)) {
-              this.relChart.ensureRelationship(GX_COUPLE, droppedPersonId, sourcePersonId);
+      }
+    }
+    else {
+      var draggedPersonBoxId = e.originalEvent.target.id.replace(/-.*/, "");
+      for (var s = 0; s < this.relChart.selectedPersonBoxes.length; s++) {
+        var sourcePersonBox = this.relChart.selectedPersonBoxes[s];
+        var sourcePersonId = sourcePersonBox.personNode.personId;
+        var droppedPersonId = droppedPersonBox.personNode.personId;
+        switch (plus) {
+          case "personParentPlus":
+            // Add all selected persons as children of the parent dropped on.
+            this.relChart.ensureRelationship(GX_PARENT_CHILD, droppedPersonId, sourcePersonId);
+            break;
+          case "personChildPlus":
+            // Don't make all selected persons be parents of the child dropped on--that would be unlikely to make sense.
+            // Instead, ignore who is selected and only pay attention to whose child '+' was dragged.
+            if (sourcePersonBox.personBoxId === draggedPersonBoxId) {
+              this.relChart.ensureRelationship(GX_PARENT_CHILD, sourcePersonId, droppedPersonId);
             }
-            else {
-              this.relChart.ensureRelationship(GX_COUPLE, sourcePersonId, droppedPersonId);
+            break;
+          case "personSpousePlus":
+            // Don't make all selected persons be spouses of the person dropped on--that would be unlikely to make sense.
+            // Instead, ignore who is selected and only pay attention to whose spouse '+' was dragged.
+            if (sourcePersonBox.personBoxId === draggedPersonBoxId) {
+              var sourcePersonNode = sourcePersonBox.personNode;
+              var droppedPersonNode = droppedPersonBox.personNode;
+              if (wrongGender(sourcePersonNode, droppedPersonNode)) {
+                this.relChart.ensureRelationship(GX_COUPLE, droppedPersonId, sourcePersonId);
+              }
+              else {
+                this.relChart.ensureRelationship(GX_COUPLE, sourcePersonId, droppedPersonId);
+              }
             }
-          }
-          break;
-        default:
-          return; // Don't update the record, because nothing happened.
+            break;
+          default:
+            return; // Don't update the record, because nothing happened.
+        }
       }
     }
   }
@@ -447,7 +1119,7 @@ RelationshipChart.prototype.addGapDropZone = function(generationIndex, personInd
   var $control = $("#" + divId);
   $control.css({left: left, top: top, width: width, height: height});
   $control.droppable({
-    hoverClass: "gapDropHover", scope: "wholePersonDropScope", "tolerance": "pointer", drop: function(e, ui) {
+    hoverClass: "gapDropHover", scope: "personDropScope", "tolerance": "pointer", drop: function(e, ui) {
       var draggedPersonBoxId = e.originalEvent.target.id;
       if (!draggedPersonBoxId) {
         draggedPersonBoxId = ui.draggable.attr("id");

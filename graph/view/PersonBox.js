@@ -383,10 +383,10 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
 
     // Allow a person box to be able to receive a drag & drop event.
     this.$personDiv.droppable({
-      hoverClass: "personDropHover", scope: "personDropScope", drop: function(e) {
-        personBox.personDrop(e);
+      hoverClass: "personDropHover", scope: "personDropScope", drop: function(e, ui) {
+        personBox.personDrop(e, ui);
       }
     });
-    this.$personDiv.draggable({revert: true, scope: "wholePersonDropScope", zIndex: 2, opacity: 0.5});
+    this.$personDiv.draggable({revert: true, scope: "personDropScope", zIndex: 2, opacity: 0.5});
   }
 }
