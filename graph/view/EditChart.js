@@ -69,7 +69,7 @@ RelationshipChart.prototype.makeControl = function(divId, imgClass, $containerDi
   return $control;
 };
 
-A// MERGE PERSONS ==========================
+// MERGE PERSONS ==========================
 const GX_PART_PREFIX  = "http://gedcomx.org/Prefix";
 const GX_PART_GIVEN   = "http://gedcomx.org/Given";
 const GX_PART_SURNAME = "http://gedcomx.org/Surname";
@@ -93,32 +93,70 @@ RelationshipChart.prototype.findPerson = function(gx, pid) {
 };
 
 /**
- * Tell whether field2 has all of the field values found in field1.
- * @param field1 - First field
- * @param field2 - Second field
- * @return {boolean} true if field2 contains all the field values (same label ID and value) as field1.
+ * Tell whether array1 contains everything in array2, using the given function 'hasOtherElement'
+ *   to determine whether one element from array1 equals (or contains) the other one.
+ * @param array1 - First "superset" array
+ * @param array2 - Second "subset" array
+ * @param hasOtherElement - Function that takes a non-empty element from each array and returns true if the one from array1
+ *   "contains" the one from array2.
+ * @returns {boolean}
  */
-RelationshipChart.prototype.hasAllFieldValues = function(field1, field2) {
-  const values1 = field1.values ? field1.values : [];
-  const values2 = field2.values ? field2.values : [];
-  if (values2.length < values1.length) {
+function hasOtherStuff(array1, array2, hasOtherElement) {
+  if (isEmpty(array2)) {
+    return true;
+  }
+  if (isEmpty(array1)) {
     return false;
   }
-  for (let v1 = 0; v1 < values1.length; v1++) {
-    let value1 = values1[v1];
-    let foundMatch = false;
-    for (let v2 = 0; v2 < values2.length; v2++) {
-      let value2 = values2[v2];
-      if (value1.type === value2.type && value1.labelId === value2.labelId && value1.text === value2.text) {
-        foundMatch = true;
-        break;
+  if (!hasOtherElement) {
+    hasOtherElement = function(a, b) { return a === b; }
+  }
+  for (let i = 0; i < array1.length; i++) {
+    let element2 = array2[i];
+    let found = false;
+    for (let j = 0; j < array2.length; j++) {
+      let element1 = array1[j];
+      if (element1 === element2 || (element1 && element2 && hasOtherElement(element1, element2))) {
+        found = true;
       }
     }
-    if (!foundMatch) {
+    if (!found) {
       return false;
     }
   }
   return true;
+}
+
+/**
+ * Tell whether the two arrays contain the same elements, using the 'isSameElement' function to determine
+ *   whether elements are the same.
+ * @param array1 - First array of elements.
+ * @param array2 - Second array of elements.
+ * @param isSameElement - Function to determine if two elements are the same (if null, then "===" is used).
+ * @returns {boolean} true if both elements empty or both contain the same list of elements.
+ */
+function hasSameStuff(array1, array2, isSameElement) {
+  return hasOtherStuff(array1, array2, isSameElement) && hasOtherStuff(array2, array1, isSameElement);
+}
+
+/**
+ * Tell whether the two given fields have the same sources, i.e., same image(s) with same rectangles (if any).
+ * Returns true if both empty or neither has sources.
+ * @param field1 - First field
+ * @param field2 - Second field
+ * @return {boolean} true if the two fields have the same sources (images and rectangles, if any). False otherwise.
+ */
+RelationshipChart.prototype.sameSources = function(field1, field2) {
+  function sameSource(source1, source2) {
+    function sameQualifier(qualifier1, qualifier2) {
+      return qualifier1.name === qualifier2.name && qualifier1.value === qualifier2.value;
+    }
+
+    return source1.descriptionRef === source2.descriptionRef &&
+        hasSameStuff(source1.qualifiers, source2.qualifiers, sameQualifier);
+  }
+
+  return hasSameStuff(field1 ? field1.sources : null, field2 ? field2.sources : null, sameSource);
 };
 
 /**
@@ -128,17 +166,13 @@ RelationshipChart.prototype.hasAllFieldValues = function(field1, field2) {
  * @returns {boolean} true if the two given GedcomX Field objects have the same type, sources (and qualifiers) and field values.
  */
 RelationshipChart.prototype.isDuplicateField = function(field1, field2) {
-  if (!field1 && !field2) {
-    return true; // both null, so treat as duplicate
+  function sameFieldValue(value1, value2) {
+    return value1.type === value2.type && value1.labelId === value2.labelId && value1.text === value2.text;
   }
-  if (!field1 || !field2) {
-    return false; // only one null, so treat as not duplicate
-  }
-  if (field1.type === field2.type && this.sameSources(field1, field2)) {
-    // Same type of field, and same sources and qualifiers (e.g., image and rectangles), so might be duplicate.
-    return this.hasAllFieldValues(field1, field2) && this.hasAllFieldValues(field2, field1);
-  }
-  return false;
+
+  return field1.type === field2.type
+      && this.sameSources(field1, field2)
+      && hasSameStuff(field1.values, field2.values, sameFieldValue);
 };
 
 /**
@@ -610,7 +644,7 @@ RelationshipChart.prototype.mergeRelationships = function(gx, pid1, pid2) {
   }
 
   function samePerson(personRef, personId) {
-    return personRef && personRef === ("#" + personId);
+    return personRef && personRef.resource === ("#" + personId);
   }
 
   function setPerson(personRef, personId) {
@@ -640,7 +674,7 @@ RelationshipChart.prototype.mergeRelationships = function(gx, pid1, pid2) {
     }
     if (changed) {
       // Changed the relationship, so see if there's already one of the same type with the same people.
-      for (let r2 = 0; r2 < gx.relationships.length; r++) {
+      for (let r2 = 0; r2 < gx.relationships.length; r2++) {
         let origRel = gx.relationships[r2];
         if (r2 !== r && sameRelationship(rel, origRel)) {
           // There's already a relationship of the same type with the same people, so merge this one into that one.
