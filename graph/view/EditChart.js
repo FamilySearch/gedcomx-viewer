@@ -782,7 +782,7 @@ PersonBox.prototype.personDrop = function(e, ui) {
     targetId = ui.draggable.attr("id");
   }
 
-  if (targetId.startsWith("box_")) {
+  if (targetId.startsWith("box_") && targetId.indexOf("Plus") < 0) {
     var personIdsToMerge = this.relChart.getPersonIdsToMerge(droppedPersonBox.personBoxId, targetId);
     if (targetId !== droppedPersonBox.personBoxId && confirm(this.relChart.getMergeMessage(personIdsToMerge))) {
       this.relChart.mergePersonList(personIdsToMerge);
