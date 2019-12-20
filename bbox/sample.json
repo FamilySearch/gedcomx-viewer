@@ -2,7 +2,9 @@
   "records" : [ {
     "id" : "r0",
     "description" : "#s0",
-    "persons" : [ {
+    "persons" :
+    [
+      {
       "id" : "p0",
       "extracted" : true,
       "principal" : true,
@@ -1294,7 +1296,9 @@
         } ]
       } ]
     } ],
-    "relationships" : [ {
+    "relationships" : [
+      {
+
       "type" : "http://familysearch.org/types/relationships/NonRelative",
       "person1" : {
         "resource" : "#p2",

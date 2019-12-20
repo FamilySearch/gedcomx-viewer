@@ -17,7 +17,6 @@ function parseType(typeUri) {
     replace(/.*\//gi, "").
     // Insert spaces before capitals, e.g., "SomeType" -> "Some Type"
     replace(/([A-Z])/g, '$1');
-  // Get iterpreted value, if any, or else the original value.
 }
 
 function card(sectionName, sectionContent, level, addHook, editHook) {
@@ -505,7 +504,7 @@ function removeFactButton(subject, fact, removeFactFn) {
 
 // Get the HTML for the list of a person's relatives.
 function buildRelativesUI(doc, person, idMap, editHooks) {
-  var r = div({class: "relatives"});
+  var relativesDiv = div({class: "relatives"});
   var i;
   var hasRelatives = false;
 
@@ -518,73 +517,58 @@ function buildRelativesUI(doc, person, idMap, editHooks) {
       var isP2 = ref2.endsWith(person.id);
       if (isP1 || isP2) {
         hasRelatives = true;
-        if (relationship.type === "http://gedcomx.org/Couple") {
-          var spouseRef = isP1 ? ref2 : ref1;
-          var spouse = findPersonByRef(doc, spouseRef);
-          if (spouse) {
-            var spouseLabel = relativeLabel(spouse.gender ? spouse.gender.type : null, "Husband", "Wife", "Spouse");
-            r.append(buildRelativeUI(relationship, spouse, spouseLabel, idMap, ".relationships[" + i + "]", editHooks));
+        var relative = findPersonByRef(doc, isP1 ? ref2 : ref1);
+        if (relative) {
+          var gender = relative.gender ? relative.gender.type : null;
+          var relativeLabel;
+          if (relationship.type === "http://gedcomx.org/Couple") {
+            relativeLabel = getRelativeLabel(gender, "Husband", "Wife", "Spouse");
           }
-        }
-        else if (relationship.type === "http://gedcomx.org/ParentChild") {
-          if (isP1) {
-            var childRef = isP1 ? ref2 : ref1;
-            var child = findPersonByRef(doc, childRef);
-            if (child) {
-              var childLabel = relativeLabel(child.gender ? child.gender.type : null, "Son", "Daughter", "Child");
-              r.append(buildRelativeUI(relationship, child, childLabel, idMap, ".relationships[" + i + "]", editHooks));
-            }
+          else if (relationship.type === "http://gedcomx.org/ParentChild") {
+            relativeLabel = getRelativeLabel(gender, "Father", "Mother", "Parent", isP1, "Son", "Daughter", "Child");
           }
-          else {
-            var parentRef = isP1 ? ref2 : ref1;
-            var parent = findPersonByRef(doc, parentRef);
-            if (parent) {
-              var parentLabel = relativeLabel(parent.gender ? parent.gender.type : null, "Father", "Mother", "Parent");
-              r.append(buildRelativeUI(relationship, parent, parentLabel, idMap, ".relationships[" + i + "]", editHooks));
-            }
+          else if (relationship.type === "http://familysearch.org/types/relationships/AuntOrUncle") {
+            relativeLabel = getRelativeLabel(gender, "Uncle", "Aunt", "Aunt Or Uncle", isP1, "Nephew", "Niece", "Niece Or Nephew");
           }
-        }
-        else if (relationship.type === "http://familysearch.org/types/relationships/AuntOrUncle") {
-          if (isP1) {
-            var nieceOrNephewRef = isP1 ? ref2 : ref1;
-            var nieceOrNephew = findPersonByRef(doc, nieceOrNephewRef);
-            if (nieceOrNephew) {
-              var nieceOrNephewLabel = relativeLabel(nieceOrNephew.gender ? nieceOrNephew.gender.type : null, "Nephew", "Niece", "Niece Or Nephew");
-              r.append(buildRelativeUI(relationship, nieceOrNephew, nieceOrNephewLabel, idMap, ".relationships[" + i + "]", editHooks));
-            }
+          else if (relationship.type === "http://familysearch.org/types/relationships/Godparent") {
+            relativeLabel = getRelativeLabel(gender, "Godfather", "Godmother", "Godparent", isP1, "Godson", "Goddaughter", "Godchild");
           }
           else {
-            var auntOrUncleRef = isP1 ? ref2 : ref1;
-            var auntOrUncle = findPersonByRef(doc, auntOrUncleRef);
-            if (auntOrUncle) {
-              var auntOrUncleLabel = relativeLabel(auntOrUncle.gender ? auntOrUncle.gender.type : null, "Uncle", "Aunt", "Aunt Or Uncle");
-              r.append(buildRelativeUI(relationship, auntOrUncle, auntOrUncleLabel, idMap, ".relationships[" + i + "]", editHooks));
-            }
+            relativeLabel = parseType(relationship.type);
           }
-        }
-        else {
-          var relativeRef = isP1 ? ref2 : ref1;
-          var relative = findPersonByRef(doc, relativeRef);
-          if (relative) {
-            r.append(buildRelativeUI(relationship, relative, parseType(relationship.type), idMap, ".relationships[" + i + "]", editHooks));
-          }
+          relativesDiv.append(buildRelativeUI(relationship, relative, relativeLabel, idMap, ".relationships[" + i + "]", editHooks));
         }
       }
     }
   }
 
   if (!hasRelatives) {
-    r.append(span().text("(None)"));
+    relativesDiv.append(span().text("(None)"));
   }
 
-  return r;
+  return relativesDiv;
 }
 
-function relativeLabel(gender, maleType, femaleType, neutralType) {
-  if (gender === "http://gedcomx.org/Male") {
+/**
+ * Get a label for a relative based on gender. If isReverse is included and is true, then use the reverse labels.
+ * @param gender - Gender of the relative
+ * @param maleType - Label to use if the relative is male
+ * @param femaleType - Label to use if the relative is female
+ * @param neutralType - Label to use if the relative's gender is unknown
+ * @param isReverse - Flag for whether to use the reverse labels (below) instead
+ * @param maleTypeReverse - Label to use if the relative is male, and we're looking at it from person2's point of view.
+ * @param femaleTypeReverse - similar
+ * @param neutralTypeReverse - similar
+ * @returns Label to use for the relationship, given the gender and which person's point of view is being used.
+ */
+function getRelativeLabel(gender, maleType, femaleType, neutralType, isReverse, maleTypeReverse, femaleTypeReverse, neutralTypeReverse) {
+  if (isReverse) {
+    return getRelativeLabel(gender, maleTypeReverse, femaleTypeReverse, neutralTypeReverse);
+  }
+  else if (gender === "http://gedcomx.org/Male") {
     return maleType;
   }
-  if (gender === "http://gedcomx.org/Female") {
+  else if (gender === "http://gedcomx.org/Female") {
     return femaleType;
   }
   return neutralType;
