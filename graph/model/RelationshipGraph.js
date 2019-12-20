@@ -228,10 +228,96 @@ function addFamiliesToPersonNodes(graph) {
   }
 }
 
+/**
+ * Get the label for the given relationship URI, given the relative's gender, and whether the relative is P1 or not.
+ *   In a "Grandparent" relationship, "P1 is the Grandparent of P2", so the default behavior is to return Grandparent, Grandfather or Grandmother,
+ *   depending on the relativeGender, where P1 is the "relative" (of P2).
+ *   When isReverse is set, then P2 is the "relative" (of P1), and we return Grandchild, Grandson or Granddaughter, depending on relativeGender.
+ * @param relationshipUri - Relationship type URI, e.g., "http://gedcomx.org/ParentChild" or "http://gedcomx.org/Grandparent"
+ * @param relativeGender - Gender URI of the relative, e.g., "http://gedcomx.org/Male"
+ * @param isReverse - Flag for whether to reverse the relationship (e.g., use Grandchild for a Grandparent relationship)
+ * @returns Label for the reltationship. (e.g., "Grandson")
+ */
+function getRelativeLabelFromRelationship(relationshipUri, relativeGender, isReverse) {
+  const relTypeMap = {
+    "http://gedcomx.org/Couple": ["Husband", "Wife", "Spouse"],
+    "http://gedcomx.org/ParentChild": ["Father", "Mother", "Parent", "Son", "Daughter", "Child"],
+    "http://familysearch.org/types/relationships/StepParentChild": ["Stepfather", "Stepmother", "Stepparent", "Stepson", "Stepdaughter", "Stepchild"],
+    "http://familysearch.org/types/relationships/ParentChildInLaw": ["Father-in-law", "Mother-in-law", "Parent-in-law", "Son-in-law", "Daughter-in-law", "Child-in-law"],
+    "http://familysearch.org/types/relationships/SurrogateParentChild": ["Surrogate father", "Surrogate mother", "Surrogate parent", "Surrogate son", "Surrogate daughter", "Surrogate child"],
+    "http://familysearch.org/types/relationships/AuntOrUncle": ["Uncle", "Aunt", "Aunt Or Uncle", "Nephew", "Niece", "Niece Or Nephew"],
+    "http://familysearch.org/types/relationships/Godparent": ["Godfather", "Godmother", "Godparent", "Godson", "Goddaughter", "Godchild"],
+    "http://familysearch.org/types/relationships/Sibling": ["Brother", "Sister", "Sibling"],
+    "http://familysearch.org/types/relationships/Fiance": ["Fiancé", "Fiancée", "Fiancé"], // female Fiancée has an extra "e"
+    "http://familysearch.org/types/relationships/Grandparent": ["Grandfather", "Grandmother", "Grandparent", "Grandson", "Granddaughter", "Grandchild"],
+    "http://familysearch.org/types/relationships/GreatGrandparent": ["Great-grandfather", "Great-grandmother", "Great-grandparent", "Great-grandson", "Great-granddaughter", "Great-grandchild"],
+    "http://familysearch.org/types/relationships/SiblingInLaw": ["Brother-in-law", "Sister-in-law", "Sibling-in-Law"],
+    "http://familysearch.org/types/relationships/StepSibling": ["Stepbrother", "Stepsister", "Stepsibling"]
+  };
+  var genderSpecific = relTypeMap[relationshipUri];
+  var relativeLabel;
+  if (genderSpecific && genderSpecific.length > 3) {
+    relativeLabel = getRelativeLabel(relativeGender, genderSpecific[0], genderSpecific[1], genderSpecific[2], isReverse, genderSpecific[3], genderSpecific[4], genderSpecific[5]);
+  }
+  else if (genderSpecific) {
+    relativeLabel = getRelativeLabel(relativeGender, genderSpecific[0], genderSpecific[1], genderSpecific[2]);
+  }
+  else {
+    relativeLabel = parseType(relationshipUri);
+  }
+  return relativeLabel;
+}
+
+/**
+ * Get a label for a relative based on gender. If isReverse is included and is true, then use the reverse labels.
+ * @param gender - Gender of the relative
+ * @param maleType - Label to use if the relative is male
+ * @param femaleType - Label to use if the relative is female
+ * @param neutralType - Label to use if the relative's gender is unknown
+ * @param isReverse - Flag for whether to use the reverse labels (below) instead
+ * @param maleTypeReverse - Label to use if the relative is male, and we're looking at it from person2's point of view.
+ * @param femaleTypeReverse - similar
+ * @param neutralTypeReverse - similar
+ * @returns Label to use for the relationship, given the gender and which person's point of view is being used.
+ */
+function getRelativeLabel(gender, maleType, femaleType, neutralType, isReverse, maleTypeReverse, femaleTypeReverse, neutralTypeReverse) {
+  if (isReverse) {
+    return getRelativeLabel(gender, maleTypeReverse, femaleTypeReverse, neutralTypeReverse);
+  }
+  else if (gender === "http://gedcomx.org/Male") {
+    return maleType;
+  }
+  else if (gender === "http://gedcomx.org/Female") {
+    return femaleType;
+  }
+  return neutralType;
+}
+
+function addOtherRelationshipsToPersonNodes(graph) {
+  if (graph.gx.relationships) {
+    var r;
+    for (r = 0; r < graph.gx.relationships.length; r++) {
+      var rel = graph.gx.relationships[r];
+      if (rel.type !== GX_COUPLE  && rel.type !== GX_PARENT_CHILD) {
+        // Other relationship type: We will not use it to display the relationship graph, but do want to include it as a "relative" in the PersonBox.
+        var pid1 = getPersonIdFromReference(rel.person1);
+        var pid2 = getPersonIdFromReference(rel.person2);
+        var personNode1 = graph.personNodeMap[pid1];
+        var personNode2 = graph.personNodeMap[pid2];
+        var gender1 = personNode1.person.gender ? personNode1.person.gender.type : null;
+        var gender2 = personNode2.person.gender ? personNode2.person.gender.type : null;
+        personNode1.addRelative(getRelativeLabelFromRelationship(rel.type, gender2, true), personNode2);
+        personNode2.addRelative(getRelativeLabelFromRelationship(rel.type, gender1, false), personNode1);
+      }
+    }
+  }
+}
+
 function addFamilyNodes(graph) {
   addCouples(graph);
   addChildren(graph);
   addFamiliesToPersonNodes(graph);
+  addOtherRelationshipsToPersonNodes(graph);
 }
 
 RelationshipGraph.prototype.getPerson = function(personId) {

@@ -58,6 +58,13 @@ PersonNode.prototype. getFirstFullName = function(person) {
   return firstFullName;
 };
 
+PersonNode.prototype.addRelative = function(label, personNode) {
+  var relative = {};
+  relative.label = label;
+  relative.personNode = personNode;
+  this.relatives.push(relative);
+};
+
 /*** Constructor ***/
 function PersonNode(person) {
   this.person = person;
@@ -66,6 +73,7 @@ function PersonNode(person) {
   this.gender = this.getGenderCode(person);
   this.parentFamilies =[];
   this.spouseFamilies = [];
+  this.relatives = []; // Array of "relatives", defined as {label: "<Label>", id: "<PersonNodeId>"}
 }
 
 PersonNode.prototype.addParentFamily = function(familyNode) {

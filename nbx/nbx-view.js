@@ -1,12 +1,3 @@
-/**
- * Encode a string so that it will safely and properly display in HTML.
- * @param s - String to encode (e.g., "2 + 3 < 7")
- * @returns html-encoded string (e.g., "2 + 3 &lt; 7")
- */
-function encode(s) {
-  return $('<div/>').text(s).html();
-}
-
 function getId(offset) {
   return "f" + offset;
 }

@@ -86,12 +86,12 @@
     text-indent: -10px;
 }
 
-.factType {
+.factType,.relativeType {
     color: #777777;
     font-size: 70%;
 }
 
-.factDatePlace {
+.factDatePlace,.relativeName {
     font-size: 70%;
 }
 

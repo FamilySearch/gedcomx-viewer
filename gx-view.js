@@ -2,21 +2,8 @@
 //UI Utilities
 //////////////
 
-function encode(s) {
-  return $('<div/>').text(s).html();
-}
-
 function empty(s) {
   return s === undefined || s === null || s.length === 0;
-}
-
-function parseType(typeUri) {
-  return typeUri === null || typeUri === undefined ? "(No type)" :
-    typeUri.
-    // Remove everything up to the last "/"
-    replace(/.*\//gi, "").
-    // Insert spaces before capitals, e.g., "SomeType" -> "Some Type"
-    replace(/([A-Z])/g, '$1');
 }
 
 function card(sectionName, sectionContent, level, addHook, editHook) {
@@ -520,22 +507,7 @@ function buildRelativesUI(doc, person, idMap, editHooks) {
         var relative = findPersonByRef(doc, isP1 ? ref2 : ref1);
         if (relative) {
           var gender = relative.gender ? relative.gender.type : null;
-          var relativeLabel;
-          if (relationship.type === "http://gedcomx.org/Couple") {
-            relativeLabel = getRelativeLabel(gender, "Husband", "Wife", "Spouse");
-          }
-          else if (relationship.type === "http://gedcomx.org/ParentChild") {
-            relativeLabel = getRelativeLabel(gender, "Father", "Mother", "Parent", isP1, "Son", "Daughter", "Child");
-          }
-          else if (relationship.type === "http://familysearch.org/types/relationships/AuntOrUncle") {
-            relativeLabel = getRelativeLabel(gender, "Uncle", "Aunt", "Aunt Or Uncle", isP1, "Nephew", "Niece", "Niece Or Nephew");
-          }
-          else if (relationship.type === "http://familysearch.org/types/relationships/Godparent") {
-            relativeLabel = getRelativeLabel(gender, "Godfather", "Godmother", "Godparent", isP1, "Godson", "Goddaughter", "Godchild");
-          }
-          else {
-            relativeLabel = parseType(relationship.type);
-          }
+          var relativeLabel = getRelativeLabelFromRelationship(relationship.type, gender, isP1);
           relativesDiv.append(buildRelativeUI(relationship, relative, relativeLabel, idMap, ".relationships[" + i + "]", editHooks));
         }
       }
@@ -547,31 +519,6 @@ function buildRelativesUI(doc, person, idMap, editHooks) {
   }
 
   return relativesDiv;
-}
-
-/**
- * Get a label for a relative based on gender. If isReverse is included and is true, then use the reverse labels.
- * @param gender - Gender of the relative
- * @param maleType - Label to use if the relative is male
- * @param femaleType - Label to use if the relative is female
- * @param neutralType - Label to use if the relative's gender is unknown
- * @param isReverse - Flag for whether to use the reverse labels (below) instead
- * @param maleTypeReverse - Label to use if the relative is male, and we're looking at it from person2's point of view.
- * @param femaleTypeReverse - similar
- * @param neutralTypeReverse - similar
- * @returns Label to use for the relationship, given the gender and which person's point of view is being used.
- */
-function getRelativeLabel(gender, maleType, femaleType, neutralType, isReverse, maleTypeReverse, femaleTypeReverse, neutralTypeReverse) {
-  if (isReverse) {
-    return getRelativeLabel(gender, maleTypeReverse, femaleTypeReverse, neutralTypeReverse);
-  }
-  else if (gender === "http://gedcomx.org/Male") {
-    return maleType;
-  }
-  else if (gender === "http://gedcomx.org/Female") {
-    return femaleType;
-  }
-  return neutralType;
 }
 
 function buildRelativeUI(relationship, relative, relativeLabel, idMap, path, editHooks) {
@@ -719,7 +666,7 @@ function getIdentifier(object) {
 }
 
 function getFirst(array) {
-  if (!empty(array)) {
+  if (!isEmpty(array)) {
     return array[0];
   }
   return null;

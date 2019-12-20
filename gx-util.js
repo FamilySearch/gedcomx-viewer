@@ -11,6 +11,22 @@ function encode(s) {
 }
 
 /**
+ * Parse a type URI (e.g., "http://gedcomx.org/Male" or "http://familysearch.org/types/relationships/AuntOrUncle")
+ *   and return a displayable string from it (e.g., "Male" or "Aunt Or Uncle").
+ * Removes the URL path, and separates capitalized letters with a space.
+ * @param typeUri - Type URL
+ * @returns Displayable string.
+ */
+function parseType(typeUri) {
+  return typeUri === null || typeUri === undefined ? "(No type)" :
+      typeUri.
+      // Remove everything up to the last "/"
+      replace(/.*\//gi, "").
+      // Insert spaces before capitals, e.g., "SomeType" -> "Some Type"
+      replace(/([A-Z])/g, '$1');
+}
+
+/**
  * Find the 'agent' object in the given GedcomX document that has the given ID (with or without the "#").
  * @param doc - GedcomX document to look in.
  * @param ref - Local ID of an agent (with or without the "#").

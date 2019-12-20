@@ -275,6 +275,19 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
     return html;
   }
 
+  function addRelativeDivs(person) {
+    var r;
+    var html = "";
+    for (r = 0; r < person.relatives.length; r++) {
+      var relative = person.relatives[r];
+      var relativeLabel = relative.label;
+      var relativeName = relative.personNode.getFirstFullName();
+      html += "  <div class='relative'><span class='relativeType'>" + encode(relativeLabel) + ":" + "</span>" +
+              "<span class='relativeName'>" + encode(relativeName) + "</span></div>\n";
+    }
+    return html;
+  }
+
   function addIdDiv(person) {
     // Use factType class for both label and id so that they're both subdued.
     return "  <div class='fact'><span class='factType'>" + encode("Id") +
@@ -301,6 +314,7 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
    @param personNode - PersonNode to create PersonBox for
    @param personBoxId - Id for this PersonBox
    @param duplicateOfBox - PersonBox that this one is a duplicate of (if any)
+   @param shouldDisplayIds - Flag for whether to include person IDs.
    */
   function makePersonDiv(personNode, personBoxId, duplicateOfBox, shouldDisplayIds) {
     var html = "<div class='personNode gender-" + personNode.gender + (duplicateOfBox ? " duplicate" : "") +
@@ -315,6 +329,7 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
       html += addIdDiv(person);
     }
     html += addFactDivs(personNode);
+    html += addRelativeDivs(personNode);
     html += "</div>";
     return $.parseHTML(html);
   }
