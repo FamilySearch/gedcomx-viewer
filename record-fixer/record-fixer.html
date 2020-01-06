@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Record Fixer</title>
+  <!-- Image viewer includes -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" type="text/css" href="../bbox/bbox.css">
+  <script src="../bbox/singleImage.iife.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="../gx-util.js"></script>
+  <script src="../gx-fix.js"></script>
+  <script src="../nbx/nbx-parse.js"></script>
+  <script src="../bbox/bbox.js"></script>
+
+  <!-- Relationship graph includes -->
+  <link rel="stylesheet" type="text/css" href="../graph/graph.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+
+  <script src="../graph/model/model-util.js"></script>
+  <script src="../graph/model/PersonNode.js"></script>
+  <script src="../graph/model/FamilyNode.js"></script>
+  <script src="../graph/model/RelationshipGraph.js"></script>
+
+  <script src="../gx-util.js"></script>
+  <script src="../gx-fix.js"></script>
+  <script src="../graph/view/Generation.js"></script>
+  <script src="../graph/view/LinkedHashSet.js"></script>
+  <script src="../graph/view/IntegerByRef.js"></script>
+  <script src="../graph/view/PersonBox.js"></script>
+  <script src="../graph/view/FamilyLine.js"></script>
+  <script src="../graph/view/ChartCompressor.js"></script>
+  <script src="../graph/view/RelationshipChart.js"></script>
+  <script src="../graph/view/RelChartBuilder.js"></script>
+  <script src="../graph/view/EditChart.js"></script>
+  <script src="../graph/graph.js"></script>
+
+  <!-- Record-fixer specific includes -->
+  <link rel="stylesheet" type="text/css" href="record-fixer.css">
+</head>
+<body>
+<fs-single-image-viewer id="image-viewer"
+    src="https://www.familysearch.org/dz/v1/apid:TH-1942-21131-31767-14/"
+    style="flex: 1;"
+></fs-single-image-viewer>
+<div id="rel-chart"></div>
+
+
+<script type="text/javascript">
+  var currentRelChart;
+
+  $(document).ready(function(){
+    // IMAGE VIEWER ==========================================================================
+    const viewer = document.querySelector("fs-single-image-viewer");
+    viewer.overlays.setAll([
+      {
+        id: 'test-1',
+        type: 'name',
+        selectable: true,
+        x: 0.25,
+        y: 0.25,
+        width: 0.2,
+        height: 0.1
+      },
+      {
+        id: 'test-2',
+        type: 'date',
+        //selectable: true,
+        x: 0.25,
+        y: 0.75,
+        width: 0.2,
+        height: 0.1
+      }
+    ]);
+
+    // REL CHART =============================================================================
+    var params = window.location.search;
+    var urlParams = new URLSearchParams(params);
+    var url = urlParams.get('url');
+
+    if (!url) {
+      url = "../graph/samples/sample.json";
+    }
+    else if (url.includes(":")) {
+      var personaId = url.match(/.*1:1:(.*)/)[1];
+      url = "https://api.familysearch.org/platform/records/personas/" + personaId;
+    }
+    $.ajax({
+      beforeSend: function(request) {
+        request.setRequestHeader("Accept", "application/x-gedcomx-v1+json").setRequestHeader("SameSite", "None");
+      },
+      dataType: "json",
+      url: url,
+      success:function(sampleGx){
+        currentRelChart = buildGraph(sampleGx, true);
+      }
+    });
+    // $.getJSON(url, {format: "json"}, function(sampleGx){
+    //   currentRelChart = buildGraph(sampleGx, true);
+    // });
+    // $("#rel-chart").droppable({
+    //    drop: function(e) {
+    //      alert("Dropped on doc!");
+    //    }
+    // });
+  });
+
+  /**
+   * Redraw the chart with an updated GedcomX document.
+   * Note that record.html has "updateRecord(doc)" as well, so we're using the same function name for both.
+   * @param doc - GedcomX document to rebuild the chart with.
+   */
+  function updateRecord(doc) {
+    currentRelChart = buildGraph(doc, true, currentRelChart);
+  }
+
+</script>
+</body>
+</html>

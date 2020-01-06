@@ -97,6 +97,8 @@ function buildGraph(gx, isEditable, prevChart, ignoreUndo) {
       });
     }
     currentRelChart = new RelChartBuilder(graph, $relChartDiv, true, true, isEditable).buildChart(prevChart);
+    $relChartDiv.width(currentRelChart.width);
+    $relChartDiv.height(currentRelChart.height);
     return currentRelChart;
   }
   catch (err) {
