@@ -48,7 +48,7 @@ function getAgent(doc, ref) {
 }
 
 /**
- * Find the SourceDescription object for the given 
+ * Find the SourceDescription object for the given source ID or URL (i.e., from the document's root "description" attribute)
  * @param doc - GedcomX document (e.g., for a persona or record)
  * @param sourceIdOrUrl - The local ID (with or without "#") or full "about" URL for the SourceDescription being sought.
  * @returns {*}
@@ -132,7 +132,7 @@ function Rectangle(x1OrRectangle, y1, x2, y2) {
 }
 
 /**
- * Find the image Ark(s) that are the source of the given indexed GedcomX document, along with corresponding rectangles within each.
+ * Find the image Ark(s) that are the source of the given indexed GedcomX document, along with corresponding record/article rectangles within each.
  *   Uses the 'description' element at the root to get the id of the Source Description for the Record.
  *   Then uses the 'sources' list of that record (recursively, following the source change until it finds DigitalArtifact sources).
  *   For each DigitalArtifact source, adds an object to the return array that includes:
@@ -144,6 +144,10 @@ function Rectangle(x1OrRectangle, y1, x2, y2) {
 function getImageArks(doc) {
   function isImage(sd) {
     return sd && sd.resourceType && sd.resourceType === "http://gedcomx.org/DigitalArtifact" || sd.resourceType === "http://gedcomx.org/Image";
+  }
+
+  function isRecord(sd) {
+    return sd && sd.resourceType && sd.resourceType === "http://gedcomx.org/Record";
   }
 
   function findImageArksAndRectangles(sd, imageArks) {
@@ -180,8 +184,12 @@ function getImageArks(doc) {
   var imageArks = [];
   // Get the "main" SourceDescription for this GedcomX document (i.e., for this Record).
   var mainSd = getSourceDescription(doc, doc.description);
+  var sd = mainSd;
+  while (sd && !isRecord(sd) && sd.componentOf) {
+    sd = getSourceDescription(doc, sd.componentOf.description);
+  }
 
-  findImageArksAndRectangles(mainSd, imageArks);
+  findImageArksAndRectangles(sd ? sd : mainSd, imageArks);
 
   return imageArks;
 }

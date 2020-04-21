@@ -210,7 +210,15 @@ RelationshipChart.prototype.setPreviousPositions = function(prevRelChart) {
   }
 };
 
-// Constructor. Creates an empty RelationshipChart. Needs to be built up using RelChartBuilder.buildChart().
+/**
+ * Constructor. Creates an empty RelationshipChart. Needs to be built up using RelChartBuilder.buildChart()
+ * @param relGraph - RelationshipGraph to represent in the RelationshipChart
+ * @param $relChartDiv - JQuery object for the "rel-chart div
+ * @param shouldIncludeDetails - Flag for whether to include person facts (false => just display names)
+ * @param shouldCompress - Flag for whether to do vertical compression (false => each person on own line)
+ * @param isEditable - Flag for whether to include edit controls (false => view only)
+ * @constructor
+ */
 function RelationshipChart(relGraph, $relChartDiv, shouldIncludeDetails, shouldCompress, isEditable) {
   this.relGraph = relGraph;
   this.isEditable = isEditable;
@@ -250,4 +258,6 @@ function RelationshipChart(relGraph, $relChartDiv, shouldIncludeDetails, shouldC
     this.selectedFamilyLine = null;
     this.selectedPersonBoxes = [];
   }
+  $relChartDiv.draggable();
+
 }

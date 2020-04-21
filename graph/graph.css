@@ -168,3 +168,11 @@
 .gapDropHover {
     background-color: #f6f1b0;
 }
+
+/* Optional style added when the relationship graph is being displayed floating on top of an image. */
+.backdrop {
+    z-index: 11;
+    background-color: rgba(255, 255, 255, 0.7);
+    border-radius: 4px;
+    box-shadow: 0 0 3px 15px rgba(255, 255, 255, 0.7);
+}

@@ -1,0 +1,1456 @@
+{
+  "id" : "r_145452405000",
+  "lang" : "es",
+  "attribution" : {
+    "contributor" : {
+      "resource" : "fs:AutomatedContentExtraction"
+    }
+  },
+  "links" : {
+    "next" : {
+      "href" : "https://www.familysearch.org/ark:/61903/1:2:WKF2-T3ZM?seek=next"
+    },
+    "prev" : {
+      "href" : "https://www.familysearch.org/ark:/61903/1:2:WKF2-T3ZM?seek=prev"
+    },
+    "self" : {
+      "href" : "https://www.familysearch.org/ark:/61903/1:2:WKF2-T3ZM"
+    }
+  },
+  "description" : "#sd_p_210048722700",
+  "persons" : [ {
+    "id" : "p_210048722700",
+    "extracted" : true,
+    "principal" : true,
+    "gender" : {
+      "type" : "http://gedcomx.org/Female",
+      "fields" : [ {
+        "type" : "http://gedcomx.org/Gender",
+        "values" : [ {
+          "id" : "fe0b3ed0-446b-426e-a5e0-414476961fee",
+          "type" : "http://gedcomx.org/Interpreted",
+          "labelId" : "PR_SEX_CODE",
+          "text" : "Female"
+        } ]
+      } ]
+    },
+    "links" : {
+      "persona" : {
+        "href" : "https://www.familysearch.org/platform/records/personas/CV31-DC2M?flag=fsh"
+      },
+      "record" : {
+        "href" : "https://www.familysearch.org/platform/records/records/WKF2-T3ZM?flag=fsh"
+      }
+    },
+    "sources" : [ {
+      "description" : "#sd2",
+      "descriptionId" : "sd2"
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:CV31-DC2M" ]
+    },
+    "names" : [ {
+      "type" : "http://gedcomx.org/BirthName",
+      "nameForms" : [ {
+        "fullText" : "María Leonides",
+        "parts" : [ {
+          "type" : "http://gedcomx.org/Given",
+          "value" : "María Leonides",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Given",
+            "sources" : [ {
+              "description" : "#sd2",
+              "qualifiers" : [ {
+                "value" : "0.12839,0.16617,0.17541,0.18338",
+                "name" : "http://gedcomx.org/RectangleRegion"
+              }, {
+                "value" : "0.18445,0.16617,0.23146,0.18338",
+                "name" : "http://gedcomx.org/RectangleRegion"
+              }, {
+                "value" : "0.03978,0.18694,0.06872,0.20475",
+                "name" : "http://gedcomx.org/RectangleRegion"
+              }, {
+                "value" : "0.07414,0.18694,0.08861,0.20475",
+                "name" : "http://gedcomx.org/RectangleRegion"
+              }, {
+                "value" : "0.08861,0.18694,0.09448,0.20475",
+                "name" : "http://gedcomx.org/RectangleRegion"
+              }, {
+                "value" : "0.03662,0.21424,0.0764,0.22374",
+                "name" : "http://gedcomx.org/RectangleRegion"
+              } ]
+            } ],
+            "values" : [ {
+              "id" : "63046931-ae9b-451a-9333-9c635c46e6e9",
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_GN_ORIG",
+              "text" : "María Leonides"
+            }, {
+              "id" : "cb24f2b8-73f4-4782-8bf8-e5491a607505",
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_GN",
+              "text" : "María Leonides"
+            }, {
+              "id" : "37c9ff0c-c29c-4f1e-8c59-62163fd465f1",
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_GN_ORIG",
+              "text" : "Maria Leonider"
+            }, {
+              "id" : "a9d3ed78-c44a-4b29-8526-adafc29ef2fb",
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_GN",
+              "text" : "María Leonides"
+            } ]
+          } ]
+        } ],
+        "fields" : [ {
+          "type" : "http://gedcomx.org/Name",
+          "values" : [ {
+            "id" : "17f33da5-2ccd-4816-81aa-849bbd79819c",
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_NAME",
+            "text" : "María Leonides"
+          } ]
+        } ]
+      } ]
+    } ],
+    "facts" : [ {
+      "type" : "http://gedcomx.org/Christening",
+      "date" : {
+        "original" : "27 de febrero de 1903",
+        "fields" : [ {
+          "type" : "http://gedcomx.org/Date",
+          "sources" : [ {
+            "description" : "#sd2",
+            "qualifiers" : [ {
+              "value" : "0.20389,0.07774,0.24141,0.10386",
+              "name" : "http://gedcomx.org/RectangleRegion"
+            }, {
+              "value" : "0.24955,0.07774,0.25769,0.10386",
+              "name" : "http://gedcomx.org/RectangleRegion"
+            }, {
+              "value" : "0.26582,0.07774,0.29521,0.10386",
+              "name" : "http://gedcomx.org/RectangleRegion"
+            }, {
+              "value" : "0.30335,0.07774,0.32233,0.10386",
+              "name" : "http://gedcomx.org/RectangleRegion"
+            }, {
+              "value" : "0.35714,0.07774,0.4141,0.10386",
+              "name" : "http://gedcomx.org/RectangleRegion"
+            }, {
+              "value" : "0.42541,0.08665,0.44259,0.10326",
+              "name" : "http://gedcomx.org/RectangleRegion"
+            }, {
+              "value" : "0.44756,0.08665,0.47152,0.10326",
+              "name" : "http://gedcomx.org/RectangleRegion"
+            }, {
+              "value" : "0.10624,0.10682,0.11844,0.127",
+              "name" : "http://gedcomx.org/RectangleRegion"
+            }, {
+              "value" : "0.12703,0.10682,0.15958,0.127",
+              "name" : "http://gedcomx.org/RectangleRegion"
+            }, {
+              "value" : "0.16772,0.10682,0.26221,0.127",
+              "name" : "http://gedcomx.org/RectangleRegion"
+            }, {
+              "value" : "0.27215,0.10682,0.29702,0.127",
+              "name" : "http://gedcomx.org/RectangleRegion"
+            } ]
+          } ],
+          "values" : [ {
+            "id" : "9d8918d9-4650-4330-9e98-803f634c309a",
+            "type" : "http://gedcomx.org/Original",
+            "labelId" : "EVENT_DATE_ORIG",
+            "text" : "veinte y siete de Febrero del año de mil novecientos tres"
+          }, {
+            "id" : "12d9a508-a29a-42b7-ae08-16cfa6e85a6e",
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "EVENT_DATE",
+            "text" : "27 de febrero de 1903",
+            "resource" : "+1903-02-27"
+          } ]
+        } ]
+      },
+      "place" : {
+        "original" : "San Pablo, Tocuyito, Carabobo, Venezuela",
+        "fields" : [ {
+          "type" : "http://gedcomx.org/Place",
+          "values" : [ {
+            "id" : "590c43b9-bfb4-4655-8a96-44c3103548de",
+            "confidence" : "http://confidence/100",
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "EVENT_PLACE",
+            "text" : "San Pablo, Tocuyito, Carabobo, Venezuela",
+            "resource" : "https://www.familysearch.org/platform/places/description/10947228"
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/Parish",
+          "sources" : [ {
+            "description" : "#sd2",
+            "qualifiers" : [ {
+              "value" : "0.33047,0.12463,0.35714,0.14599",
+              "name" : "http://gedcomx.org/RectangleRegion"
+            }, {
+              "value" : "0.36799,0.12463,0.41501,0.14599",
+              "name" : "http://gedcomx.org/RectangleRegion"
+            } ]
+          } ],
+          "values" : [ {
+            "id" : "142be171-1372-4a81-aeea-0ad15af5f840",
+            "type" : "http://gedcomx.org/Original",
+            "labelId" : "EVENT_PARISH_ORIG",
+            "text" : "fue Pablo"
+          }, {
+            "id" : "aa2e0d93-e443-4c3e-a87d-e244421907a4",
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "EVENT_PARISH",
+            "text" : "San Pablo"
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/City",
+          "sources" : [ {
+            "description" : "#sd2",
+            "qualifiers" : [ {
+              "value" : "0.44349,0.12938,0.4783,0.14599",
+              "name" : "http://gedcomx.org/RectangleRegion"
+            }, {
+              "value" : "0.4783,0.12938,0.48508,0.14599",
+              "name" : "http://gedcomx.org/RectangleRegion"
+            }, {
+              "value" : "0.09946,0.14481,0.11573,0.16439",
+              "name" : "http://gedcomx.org/RectangleRegion"
+            } ]
+          } ],
+          "values" : [ {
+            "id" : "c912393f-6bec-4720-b61a-3fa54d272585",
+            "type" : "http://gedcomx.org/Original",
+            "labelId" : "EVENT_CITY_ORIG",
+            "text" : "trenzato"
+          }, {
+            "id" : "b94eae2b-4178-40eb-8058-11e28d6bdcd7",
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "EVENT_CITY",
+            "text" : "Tocuyito"
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/State",
+          "values" : [ {
+            "id" : "6bd333f9-bc91-4384-86c6-f7523ee845c5",
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "EVENT_STATE",
+            "text" : "Carabobo"
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/Country",
+          "values" : [ {
+            "id" : "0c1b3cd1-f906-4252-b22e-e37dfce651d2",
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "EVENT_COUNTRY",
+            "text" : "Venezuela"
+          } ]
+        } ]
+      },
+      "value" : "Christening",
+      "primary" : true,
+      "sources" : [ {
+        "description" : "#sd2",
+        "qualifiers" : [ {
+          "value" : "0.1302,0.14481,0.17722,0.16439",
+          "name" : "http://gedcomx.org/RectangleRegion"
+        } ]
+      } ],
+      "fields" : [ {
+        "type" : "http://familysearch.org/types/fields/EventType",
+        "sources" : [ {
+          "qualifiers" : [ {
+            "value" : "0.1302,0.14481,0.17722,0.16439",
+            "name" : "http://gedcomx.org/RectangleRegion"
+          } ]
+        } ],
+        "values" : [ {
+          "id" : "5a424c5f-6f83-4d42-8f50-93f2282c6a6b",
+          "type" : "http://gedcomx.org/Original",
+          "labelId" : "EVENT_TYPE_ORIG",
+          "text" : "bauticé"
+        }, {
+          "id" : "02b59e0e-10fb-48f6-b437-3a36602a63c6",
+          "type" : "http://gedcomx.org/Interpreted",
+          "labelId" : "EVENT_TYPE",
+          "text" : "Christening"
+        } ]
+      } ]
+    }, {
+      "type" : "http://gedcomx.org/Birth",
+      "date" : {
+        "original" : "8 de abril de 1898",
+        "fields" : [ {
+          "type" : "http://gedcomx.org/Date",
+          "sources" : [ {
+            "description" : "#sd2",
+            "qualifiers" : [ {
+              "value" : "0.37794,0.16617,0.40506,0.18338",
+              "name" : "http://gedcomx.org/RectangleRegion"
+            }, {
+              "value" : "0.41772,0.16617,0.43219,0.18338",
+              "name" : "http://gedcomx.org/RectangleRegion"
+            }, {
+              "value" : "0.43942,0.16617,0.4774,0.18338",
+              "name" : "http://gedcomx.org/RectangleRegion"
+            }, {
+              "value" : "0.10759,0.18635,0.11754,0.20237",
+              "name" : "http://gedcomx.org/RectangleRegion"
+            }, {
+              "value" : "0.12251,0.18635,0.1528,0.20237",
+              "name" : "http://gedcomx.org/RectangleRegion"
+            }, {
+              "value" : "0.15958,0.18635,0.22694,0.20237",
+              "name" : "http://gedcomx.org/RectangleRegion"
+            }, {
+              "value" : "0.23237,0.18635,0.28797,0.20237",
+              "name" : "http://gedcomx.org/RectangleRegion"
+            }, {
+              "value" : "0.29476,0.18635,0.29973,0.20237",
+              "name" : "http://gedcomx.org/RectangleRegion"
+            }, {
+              "value" : "0.30651,0.18635,0.32821,0.20237",
+              "name" : "http://gedcomx.org/RectangleRegion"
+            } ]
+          } ],
+          "values" : [ {
+            "id" : "50ad2f0d-2e7e-4deb-8ba0-b48fcb1f415b",
+            "type" : "http://gedcomx.org/Original",
+            "labelId" : "PR_BIR_DATE_ORIG",
+            "text" : "ocho de Abril de mil ochocientos noventa y ocho"
+          }, {
+            "id" : "c8118d32-ea5d-4b06-ac27-51de048f2879",
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_BIR_DATE",
+            "text" : "8 de abril de 1898",
+            "resource" : "+1898-04-08"
+          } ]
+        } ]
+      },
+      "value" : "Birth",
+      "sources" : [ {
+        "description" : "#sd2",
+        "qualifiers" : [ {
+          "value" : "0.27537,0.16607,0.31426,0.18327",
+          "name" : "http://gedcomx.org/RectangleRegion"
+        } ]
+      } ],
+      "fields" : [ {
+        "type" : "http://familysearch.org/types/fields/Birth",
+        "sources" : [ {
+          "qualifiers" : [ {
+            "value" : "0.27537,0.16607,0.31426,0.18327",
+            "name" : "http://gedcomx.org/RectangleRegion"
+          } ]
+        } ],
+        "values" : [ {
+          "id" : "1151efb9-f4c2-4282-9ee9-c76354b02ad9",
+          "type" : "http://gedcomx.org/Original",
+          "labelId" : "PR_BIR_TYPE_ORIG",
+          "text" : "nació"
+        }, {
+          "id" : "a31dfdeb-aac5-4301-90ca-8781b4840b43",
+          "type" : "http://gedcomx.org/Interpreted",
+          "labelId" : "PR_BIR_TYPE",
+          "text" : "Birth"
+        } ]
+      } ]
+    } ]
+  }, {
+    "id" : "p_210048722800",
+    "extracted" : true,
+    "principal" : false,
+    "gender" : {
+      "type" : "http://gedcomx.org/Male",
+      "fields" : [ {
+        "type" : "http://gedcomx.org/Gender",
+        "values" : [ {
+          "id" : "b1aadc45-778b-42d2-b6b0-7998b8d4ea83",
+          "type" : "http://gedcomx.org/Interpreted",
+          "labelId" : "PR_SEX_CODE",
+          "text" : "Male"
+        } ]
+      } ]
+    },
+    "links" : {
+      "persona" : {
+        "href" : "https://www.familysearch.org/platform/records/personas/CV31-DCPZ?flag=fsh"
+      },
+      "record" : {
+        "href" : "https://www.familysearch.org/platform/records/records/WKF2-T3ZM?flag=fsh"
+      }
+    },
+    "sources" : [ {
+      "description" : "#sd2",
+      "descriptionId" : "sd2"
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:CV31-DCPZ" ]
+    },
+    "names" : [ {
+      "type" : "http://gedcomx.org/BirthName",
+      "nameForms" : [ {
+        "fullText" : "Juan Vitriago",
+        "parts" : [ {
+          "type" : "http://gedcomx.org/Given",
+          "value" : "Juan",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Given",
+            "sources" : [ {
+              "description" : "#sd2",
+              "qualifiers" : [ {
+                "value" : "0.45479,0.18635,0.47333,0.20237",
+                "name" : "http://gedcomx.org/RectangleRegion"
+              } ]
+            } ],
+            "values" : [ {
+              "id" : "74ea64e3-2317-49f0-b0cb-8d75a0de11fe",
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_GN_ORIG",
+              "text" : "Juan"
+            }, {
+              "id" : "c5b0d644-b2d6-4729-bed4-d63a29bb8f92",
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_GN",
+              "text" : "Juan"
+            } ]
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/Surname",
+          "value" : "Vitriago",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Surname",
+            "sources" : [ {
+              "description" : "#sd2",
+              "qualifiers" : [ {
+                "value" : "0.47333,0.18635,0.48192,0.20237",
+                "name" : "http://gedcomx.org/RectangleRegion"
+              } ]
+            } ],
+            "values" : [ {
+              "id" : "144466d8-71fe-4db6-8218-16d19d32802e",
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_SURN_ORIG",
+              "text" : "Vitriago"
+            }, {
+              "id" : "80422242-0582-4f5d-a6e2-5f5b98503b5a",
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_SURN",
+              "text" : "Vitriago"
+            } ]
+          } ]
+        } ],
+        "fields" : [ {
+          "type" : "http://gedcomx.org/Name",
+          "values" : [ {
+            "id" : "bedc79ac-aae3-4dd6-bf2a-f5b9a44211e2",
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_NAME",
+            "text" : "Juan Vitriago"
+          } ]
+        } ]
+      } ]
+    } ]
+  }, {
+    "id" : "p_210048722900",
+    "extracted" : true,
+    "principal" : false,
+    "gender" : {
+      "type" : "http://gedcomx.org/Female",
+      "fields" : [ {
+        "type" : "http://gedcomx.org/Gender",
+        "values" : [ {
+          "id" : "18c946c8-d8de-4305-a7a1-b5f88cc4373b",
+          "type" : "http://gedcomx.org/Interpreted",
+          "labelId" : "PR_SEX_CODE",
+          "text" : "Female"
+        } ]
+      } ]
+    },
+    "links" : {
+      "persona" : {
+        "href" : "https://www.familysearch.org/platform/records/personas/CV31-DCT2?flag=fsh"
+      },
+      "record" : {
+        "href" : "https://www.familysearch.org/platform/records/records/WKF2-T3ZM?flag=fsh"
+      }
+    },
+    "sources" : [ {
+      "description" : "#sd2",
+      "descriptionId" : "sd2"
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:CV31-DCT2" ]
+    },
+    "names" : [ {
+      "type" : "http://gedcomx.org/BirthName",
+      "nameForms" : [ {
+        "fullText" : "Alejandra Gutiérrez",
+        "parts" : [ {
+          "type" : "http://gedcomx.org/Given",
+          "value" : "Alejandra",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Given",
+            "sources" : [ {
+              "description" : "#sd2",
+              "qualifiers" : [ {
+                "value" : "0.22016,0.20534,0.30199,0.22908",
+                "name" : "http://gedcomx.org/RectangleRegion"
+              } ]
+            } ],
+            "values" : [ {
+              "id" : "b879346c-24b9-4305-8bc9-6dc5ead27088",
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_GN_ORIG",
+              "text" : "Alejandro"
+            }, {
+              "id" : "8010c5c2-0532-4468-a28a-ae49a859e6f4",
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_GN",
+              "text" : "Alejandra"
+            } ]
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/Surname",
+          "value" : "Gutiérrez",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Surname",
+            "sources" : [ {
+              "description" : "#sd2",
+              "qualifiers" : [ {
+                "value" : "0.31193,0.20534,0.36392,0.22908",
+                "name" : "http://gedcomx.org/RectangleRegion"
+              } ]
+            } ],
+            "values" : [ {
+              "id" : "0787301a-4c6d-40b0-adb7-9aff85520808",
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_SURN_ORIG",
+              "text" : "Gutiérrez"
+            }, {
+              "id" : "69016a2f-dc93-49db-b9b2-5bdc8fbdc607",
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_SURN",
+              "text" : "Gutiérrez"
+            } ]
+          } ]
+        } ],
+        "fields" : [ {
+          "type" : "http://gedcomx.org/Name",
+          "values" : [ {
+            "id" : "d028374b-4745-4f71-9110-4883f731b470",
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_NAME",
+            "text" : "Alejandra Gutiérrez"
+          } ]
+        } ]
+      } ]
+    } ]
+  }, {
+    "id" : "p_210048723000",
+    "extracted" : true,
+    "principal" : false,
+    "gender" : {
+      "type" : "http://gedcomx.org/Male",
+      "fields" : [ {
+        "type" : "http://gedcomx.org/Gender",
+        "values" : [ {
+          "id" : "e6ecf4b4-8575-4a3e-a7d9-717d0eeba690",
+          "type" : "http://gedcomx.org/Interpreted",
+          "labelId" : "PR_SEX_CODE",
+          "text" : "Male"
+        } ]
+      } ]
+    },
+    "links" : {
+      "persona" : {
+        "href" : "https://www.familysearch.org/platform/records/personas/CV31-DZMM?flag=fsh"
+      },
+      "record" : {
+        "href" : "https://www.familysearch.org/platform/records/records/WKF2-T3ZM?flag=fsh"
+      }
+    },
+    "sources" : [ {
+      "description" : "#sd2",
+      "descriptionId" : "sd2"
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:CV31-DZMM" ]
+    },
+    "names" : [ {
+      "type" : "http://gedcomx.org/BirthName",
+      "nameForms" : [ {
+        "fullText" : "Don Vicente Lizardo",
+        "parts" : [ {
+          "type" : "http://gedcomx.org/Prefix",
+          "value" : "Don",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Prefix",
+            "sources" : [ {
+              "description" : "#sd2",
+              "qualifiers" : [ {
+                "value" : "0.16365,0.22552,0.18174,0.2451",
+                "name" : "http://gedcomx.org/RectangleRegion"
+              } ]
+            } ],
+            "values" : [ {
+              "id" : "a801f12b-abda-45fc-9b6b-fefa50826cbc",
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_PRE_ORIG",
+              "text" : "Don"
+            }, {
+              "id" : "dc442ebb-71ef-426f-9fc6-5c4efc0bad83",
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_PRE",
+              "text" : "Don"
+            } ]
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/Given",
+          "value" : "Vicente",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Given",
+            "sources" : [ {
+              "description" : "#sd2",
+              "qualifiers" : [ {
+                "value" : "0.19394,0.22552,0.24096,0.2451",
+                "name" : "http://gedcomx.org/RectangleRegion"
+              } ]
+            } ],
+            "values" : [ {
+              "id" : "1ea52c4e-30ec-4660-b3f8-28d5f5ac8bfe",
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_GN_ORIG",
+              "text" : "Vicente"
+            }, {
+              "id" : "8bd30cf3-555a-44ab-b26e-60b23ef7a7df",
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_GN",
+              "text" : "Vicente"
+            } ]
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/Surname",
+          "value" : "Lizardo",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Surname",
+            "sources" : [ {
+              "description" : "#sd2",
+              "qualifiers" : [ {
+                "value" : "0.24729,0.22552,0.30425,0.2451",
+                "name" : "http://gedcomx.org/RectangleRegion"
+              } ]
+            } ],
+            "values" : [ {
+              "id" : "8a0b1e3c-a7e4-4501-afc1-84c19cabde59",
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_SURN_ORIG",
+              "text" : "Lizardo"
+            }, {
+              "id" : "bf754821-9876-486e-bc12-e2a0af5e5c89",
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_SURN",
+              "text" : "Lizardo"
+            } ]
+          } ]
+        } ],
+        "fields" : [ {
+          "type" : "http://gedcomx.org/Name",
+          "values" : [ {
+            "id" : "97405185-2c3a-4f2e-8727-06f6fcf40afc",
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_NAME",
+            "text" : "Don Vicente Lizardo"
+          } ]
+        } ]
+      } ]
+    } ]
+  }, {
+    "id" : "p_210048723100",
+    "extracted" : true,
+    "principal" : false,
+    "gender" : {
+      "type" : "http://gedcomx.org/Female",
+      "fields" : [ {
+        "type" : "http://gedcomx.org/Gender",
+        "values" : [ {
+          "id" : "aa8bc56b-c391-4f12-83d2-e5f6f295e9bc",
+          "type" : "http://gedcomx.org/Interpreted",
+          "labelId" : "PR_SEX_CODE",
+          "text" : "Female"
+        } ]
+      } ]
+    },
+    "links" : {
+      "persona" : {
+        "href" : "https://www.familysearch.org/platform/records/personas/CV31-DZ3Z?flag=fsh"
+      },
+      "record" : {
+        "href" : "https://www.familysearch.org/platform/records/records/WKF2-T3ZM?flag=fsh"
+      }
+    },
+    "sources" : [ {
+      "description" : "#sd2",
+      "descriptionId" : "sd2"
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:CV31-DZ3Z" ]
+    },
+    "names" : [ {
+      "type" : "http://gedcomx.org/BirthName",
+      "nameForms" : [ {
+        "fullText" : "María Luisa de Lizardo",
+        "parts" : [ {
+          "type" : "http://gedcomx.org/Given",
+          "value" : "María Luisa",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Given",
+            "sources" : [ {
+              "description" : "#sd2",
+              "qualifiers" : [ {
+                "value" : "0.33092,0.22552,0.38201,0.2451",
+                "name" : "http://gedcomx.org/RectangleRegion"
+              }, {
+                "value" : "0.39421,0.22552,0.42089,0.2451",
+                "name" : "http://gedcomx.org/RectangleRegion"
+              } ]
+            } ],
+            "values" : [ {
+              "id" : "d73d4e96-2824-4e02-a855-4216b00ada14",
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_GN_ORIG",
+              "text" : "Maria Gu"
+            }, {
+              "id" : "b181da36-7123-4aec-a481-74465fb52873",
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_GN",
+              "text" : "María Luisa"
+            } ]
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/Surname",
+          "value" : "de Lizardo",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Surname",
+            "sources" : [ {
+              "description" : "#sd2",
+              "qualifiers" : [ {
+                "value" : "0.45886,0.23145,0.4679,0.24095",
+                "name" : "http://gedcomx.org/RectangleRegion"
+              }, {
+                "value" : "0.4679,0.23145,0.4783,0.24095",
+                "name" : "http://gedcomx.org/RectangleRegion"
+              }, {
+                "value" : "0.10127,0.24866,0.13291,0.26706",
+                "name" : "http://gedcomx.org/RectangleRegion"
+              } ]
+            } ],
+            "values" : [ {
+              "id" : "fcfcfd2e-d8d2-4c9b-b0a3-26694f819acd",
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_SURN_ORIG",
+              "text" : "fecardo"
+            }, {
+              "id" : "b57bf807-9e3c-4940-960c-7297427b96ee",
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_SURN",
+              "text" : "de Lizardo"
+            } ]
+          } ]
+        } ],
+        "fields" : [ {
+          "type" : "http://gedcomx.org/Name",
+          "values" : [ {
+            "id" : "ad64faef-7a79-427d-a44c-4ee9938ea7d1",
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_NAME",
+            "text" : "María Luisa de Lizardo"
+          } ]
+        } ]
+      } ]
+    } ]
+  }, {
+    "id" : "p_210048723200",
+    "extracted" : true,
+    "principal" : false,
+    "gender" : {
+      "type" : "http://gedcomx.org/Female",
+      "fields" : [ {
+        "type" : "http://gedcomx.org/Gender",
+        "values" : [ {
+          "id" : "ea3ca73b-c0f5-4b44-bcfe-07857effbc86",
+          "type" : "http://gedcomx.org/Interpreted",
+          "labelId" : "PR_SEX_CODE",
+          "text" : "Female"
+        } ]
+      } ]
+    },
+    "links" : {
+      "persona" : {
+        "href" : "https://www.familysearch.org/platform/records/personas/CV31-DZW2?flag=fsh"
+      },
+      "record" : {
+        "href" : "https://www.familysearch.org/platform/records/records/WKF2-T3ZM?flag=fsh"
+      }
+    },
+    "sources" : [ {
+      "description" : "#sd2",
+      "descriptionId" : "sd2"
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:CV31-DZW2" ]
+    },
+    "names" : [ {
+      "type" : "http://gedcomx.org/BirthName",
+      "nameForms" : [ {
+        "fullText" : "Tomasa Segoria",
+        "parts" : [ {
+          "type" : "http://gedcomx.org/Given",
+          "value" : "Tomasa",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Given",
+            "sources" : [ {
+              "description" : "#sd2",
+              "qualifiers" : [ {
+                "value" : "0.30289,0.24866,0.36076,0.26706",
+                "name" : "http://gedcomx.org/RectangleRegion"
+              } ]
+            } ],
+            "values" : [ {
+              "id" : "80e9b5c8-4172-4ddf-8b90-abfcca8ea9b3",
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_GN_ORIG",
+              "text" : "Teresa"
+            }, {
+              "id" : "82b4d991-7619-4289-9a96-47a1264362bc",
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_GN",
+              "text" : "Tomasa"
+            } ]
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/Surname",
+          "value" : "Segoria",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Surname",
+            "sources" : [ {
+              "description" : "#sd2",
+              "qualifiers" : [ {
+                "value" : "0.36799,0.24866,0.41094,0.26706",
+                "name" : "http://gedcomx.org/RectangleRegion"
+              } ]
+            } ],
+            "values" : [ {
+              "id" : "c315faa2-f89c-4f3a-92ff-de70890bdf8c",
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_SURN_ORIG",
+              "text" : "Segoria"
+            }, {
+              "id" : "1eb5a545-c65b-4dcd-b996-766ca8adf368",
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_SURN",
+              "text" : "Segoria"
+            } ]
+          } ]
+        } ],
+        "fields" : [ {
+          "type" : "http://gedcomx.org/Name",
+          "values" : [ {
+            "id" : "3ec2bb70-6211-4c8d-80a4-d754f3798ae3",
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_NAME",
+            "text" : "Tomasa Segoria"
+          } ]
+        } ]
+      } ]
+    } ]
+  }, {
+    "id" : "p_210048723300",
+    "extracted" : true,
+    "principal" : false,
+    "gender" : {
+      "type" : "http://gedcomx.org/Male",
+      "fields" : [ {
+        "type" : "http://gedcomx.org/Gender",
+        "values" : [ {
+          "id" : "e87e29bf-c0d5-483c-8c36-c34637254618",
+          "type" : "http://gedcomx.org/Interpreted",
+          "labelId" : "PR_SEX_CODE",
+          "text" : "Male"
+        } ]
+      } ]
+    },
+    "links" : {
+      "persona" : {
+        "href" : "https://www.familysearch.org/platform/records/personas/CV31-DZZM?flag=fsh"
+      },
+      "record" : {
+        "href" : "https://www.familysearch.org/platform/records/records/WKF2-T3ZM?flag=fsh"
+      }
+    },
+    "sources" : [ {
+      "description" : "#sd2",
+      "descriptionId" : "sd2"
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:CV31-DZZM" ]
+    },
+    "names" : [ {
+      "type" : "http://gedcomx.org/BirthName",
+      "nameForms" : [ {
+        "fullText" : "Joaquín Urrutía",
+        "parts" : [ {
+          "type" : "http://gedcomx.org/Given",
+          "value" : "Joaquín",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Given",
+            "sources" : [ {
+              "description" : "#sd2",
+              "qualifiers" : [ {
+                "value" : "0.22288,0.3003,0.27532,0.33234",
+                "name" : "http://gedcomx.org/RectangleRegion"
+              } ]
+            } ],
+            "values" : [ {
+              "id" : "3571ccaa-9cad-46fb-b1e8-0a6469d2ea9e",
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_GN_ORIG",
+              "text" : "Joaquín"
+            }, {
+              "id" : "302b7d56-d9a2-4bc4-8943-5882839a9ebe",
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_GN",
+              "text" : "Joaquín"
+            } ]
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/Surname",
+          "value" : "Urrutía",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Surname",
+            "sources" : [ {
+              "description" : "#sd2",
+              "qualifiers" : [ {
+                "value" : "0.28843,0.3003,0.35759,0.33234",
+                "name" : "http://gedcomx.org/RectangleRegion"
+              } ]
+            } ],
+            "values" : [ {
+              "id" : "3c527c0d-9d77-4e58-aa5e-cd7caae6aa41",
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_SURN_ORIG",
+              "text" : "Urrutía"
+            }, {
+              "id" : "36fefbd4-34f7-43d9-b5dd-3da36750b0f0",
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_SURN",
+              "text" : "Urrutía"
+            } ]
+          } ]
+        } ],
+        "fields" : [ {
+          "type" : "http://gedcomx.org/Name",
+          "values" : [ {
+            "id" : "953ebe24-9c16-4b32-b157-3ab6b5b34914",
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_NAME",
+            "text" : "Joaquín Urrutía"
+          } ]
+        } ]
+      } ]
+    } ],
+    "facts" : [ {
+      "type" : "http://gedcomx.org/Occupation",
+      "value" : "Presbítero",
+      "sources" : [ {
+        "description" : "#sd2",
+        "qualifiers" : [ {
+          "value" : "0.1736,0.3003,0.19982,0.33234",
+          "name" : "http://gedcomx.org/RectangleRegion"
+        } ]
+      } ],
+      "fields" : [ {
+        "type" : "http://gedcomx.org/Occupation",
+        "sources" : [ {
+          "qualifiers" : [ {
+            "value" : "0.1736,0.3003,0.19982,0.33234",
+            "name" : "http://gedcomx.org/RectangleRegion"
+          } ]
+        } ],
+        "values" : [ {
+          "id" : "6b4cecb3-8fc6-4ad3-9155-fb0bb89780c4",
+          "type" : "http://gedcomx.org/Original",
+          "labelId" : "PR_OCCUPATION_ORIG",
+          "text" : "Pbro"
+        }, {
+          "id" : "0e022e20-e7ce-4d77-93f3-d9dc3a528ec5",
+          "type" : "http://gedcomx.org/Interpreted",
+          "labelId" : "PR_OCCUPATION",
+          "text" : "Presbítero"
+        } ]
+      } ]
+    } ]
+  } ],
+  "relationships" : [ {
+    "id" : "MM9.1.6/JJJB-ZZ38",
+    "type" : "http://gedcomx.org/Couple",
+    "person1" : {
+      "resource" : "#p_210048722800",
+      "resourceId" : "p_210048722800"
+    },
+    "person2" : {
+      "resource" : "#p_210048722900",
+      "resourceId" : "p_210048722900"
+    },
+    "facts" : [ ],
+    "fields" : [ {
+      "type" : "http://familysearch.org/RelativeType",
+      "sources" : [ {
+        "description" : "#sd2",
+        "qualifiers" : [ {
+          "value" : "0.34675,0.18635,0.37025,0.20237",
+          "name" : "http://gedcomx.org/RectangleRegion"
+        } ]
+      } ],
+      "values" : [ {
+        "id" : "666e8af2-ba3a-4995-aa75-50b0754ed5d7",
+        "type" : "http://gedcomx.org/Original",
+        "labelId" : "REL_TYPE_ORIG",
+        "text" : "hija legitima",
+        "resource" : "http://gedcomx.org/Couple"
+      } ]
+    } ]
+  }, {
+    "id" : "MM9.1.6/JJJB-ZZWL",
+    "type" : "http://gedcomx.org/ParentChild",
+    "person1" : {
+      "resource" : "#p_210048722800",
+      "resourceId" : "p_210048722800"
+    },
+    "person2" : {
+      "resource" : "#p_210048722700",
+      "resourceId" : "p_210048722700"
+    },
+    "facts" : [ ],
+    "fields" : [ {
+      "type" : "http://familysearch.org/RelativeType",
+      "sources" : [ {
+        "description" : "#sd2",
+        "qualifiers" : [ {
+          "value" : "0.34675,0.18635,0.37025,0.20237",
+          "name" : "http://gedcomx.org/RectangleRegion"
+        } ]
+      } ],
+      "values" : [ {
+        "id" : "baf053fb-fff2-4a93-92d8-50706cc20d42",
+        "type" : "http://gedcomx.org/Original",
+        "labelId" : "REL_TYPE_ORIG",
+        "text" : "hija",
+        "resource" : "http://gedcomx.org/ParentChild"
+      } ]
+    } ]
+  }, {
+    "id" : "MM9.1.6/JJJB-ZZZ9",
+    "type" : "http://gedcomx.org/ParentChild",
+    "person1" : {
+      "resource" : "#p_210048722900",
+      "resourceId" : "p_210048722900"
+    },
+    "person2" : {
+      "resource" : "#p_210048722700",
+      "resourceId" : "p_210048722700"
+    },
+    "facts" : [ ],
+    "fields" : [ {
+      "type" : "http://familysearch.org/RelativeType",
+      "sources" : [ {
+        "description" : "#sd2",
+        "qualifiers" : [ {
+          "value" : "0.34675,0.18635,0.37025,0.20237",
+          "name" : "http://gedcomx.org/RectangleRegion"
+        } ]
+      } ],
+      "values" : [ {
+        "id" : "dca46106-9368-4891-a1b1-3c69d08d9059",
+        "type" : "http://gedcomx.org/Original",
+        "labelId" : "REL_TYPE_ORIG",
+        "text" : "hija",
+        "resource" : "http://gedcomx.org/ParentChild"
+      } ]
+    } ]
+  }, {
+    "id" : "MM9.1.6/JJJB-ZZ68",
+    "type" : "http://familysearch.org/types/relationships/Godparent",
+    "person1" : {
+      "resource" : "#p_210048723000",
+      "resourceId" : "p_210048723000"
+    },
+    "person2" : {
+      "resource" : "#p_210048722700",
+      "resourceId" : "p_210048722700"
+    },
+    "facts" : [ ],
+    "fields" : [ {
+      "type" : "http://familysearch.org/RelativeType",
+      "sources" : [ {
+        "description" : "#sd2",
+        "qualifiers" : [ {
+          "value" : "0.10624,0.22552,0.15325,0.2451",
+          "name" : "http://gedcomx.org/RectangleRegion"
+        } ]
+      } ],
+      "values" : [ {
+        "id" : "3ebde328-7111-4049-88f1-53b532a8d3e9",
+        "type" : "http://gedcomx.org/Original",
+        "labelId" : "REL_TYPE_ORIG",
+        "text" : "drindos"
+      }, {
+        "id" : "72be932b-8359-4955-a528-5ec62266429a",
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE",
+        "text" : "padrinos",
+        "resource" : "http://familysearch.org/types/relationships/Godparent"
+      } ]
+    } ]
+  }, {
+    "id" : "MM9.1.6/JJJB-ZZNL",
+    "type" : "http://familysearch.org/types/relationships/Godparent",
+    "person1" : {
+      "resource" : "#p_210048723100",
+      "resourceId" : "p_210048723100"
+    },
+    "person2" : {
+      "resource" : "#p_210048722700",
+      "resourceId" : "p_210048722700"
+    },
+    "facts" : [ ],
+    "fields" : [ {
+      "type" : "http://familysearch.org/RelativeType",
+      "sources" : [ {
+        "description" : "#sd2",
+        "qualifiers" : [ {
+          "value" : "0.10624,0.22552,0.15325,0.2451",
+          "name" : "http://gedcomx.org/RectangleRegion"
+        } ]
+      } ],
+      "values" : [ {
+        "id" : "2692b740-0272-4d2d-9f1e-6e1242345586",
+        "type" : "http://gedcomx.org/Original",
+        "labelId" : "REL_TYPE_ORIG",
+        "text" : "drindos"
+      }, {
+        "id" : "a0333500-2c57-4934-8f0c-f9b08ce03955",
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE",
+        "text" : "padrinos",
+        "resource" : "http://familysearch.org/types/relationships/Godparent"
+      } ]
+    } ]
+  } ],
+  "sourceDescriptions" : [ {
+    "id" : "sd_c_1951777",
+    "about" : "https://www.familysearch.org/platform/records/collections/1951777",
+    "resourceType" : "http://gedcomx.org/Collection",
+    "created" : 1382223776360,
+    "modified" : 1587393103118,
+    "coverage" : [ {
+      "spatial" : {
+        "original" : "Venezuela",
+        "description" : "#place_1927137"
+      },
+      "recordType" : "http://gedcomx.org/Vital"
+    } ],
+    "titles" : [ {
+      "lang" : "en_US",
+      "value" : "Venezuela, Catholic Church Records, 1577-1995"
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Primary" : [ "https://www.familysearch.org/platform/records/collections/1951777" ]
+    }
+  }, {
+    "id" : "src_r_145452405000",
+    "mediaType" : "image/jpeg",
+    "about" : "https://www.familysearch.org/ark:/61903/1:2:WKF2-T3ZM",
+    "componentOf" : {
+      "description" : "#sd_c_1951777"
+    },
+    "resourceType" : "http://gedcomx.org/Record",
+    "created" : 1584398115958,
+    "modified" : 1587393103118,
+    "coverage" : [ {
+      "spatial" : {
+        "original" : "San Pablo, Tocuyito, Carabobo, Venezuela"
+      },
+      "temporal" : {
+        "original" : "27 de febrero de 1903"
+      },
+      "recordType" : "http://gedcomx.org/Christening"
+    } ],
+    "citations" : [ {
+      "value" : "\"Venezuela, registros parroquiales y diocesanos, 1577-1995\", database with images, <i>FamilySearch</i> (https://familysearch.org/ark:/61903/1:2:WKF2-T3ZM : 15 April 2020), Entry for María Leonides, 27 de febrero de 1903."
+    } ],
+    "sources" : [ {
+      "description" : "#sd2",
+      "descriptionId" : "sd2",
+      "qualifiers" : [ {
+        "value" : "0.02848,0.07359,0.47966,0.34125",
+        "name" : "http://gedcomx.org/RectangleRegion"
+      } ]
+    } ],
+    "titles" : [ {
+      "lang" : "en",
+      "value" : "Entry for María Leonides, \"Venezuela, Catholic Church Records, 1577-1995\""
+    } ],
+    "rights" : [ "http://familysearch.org/records/recordPermissions/CdsPrmAnyone" ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:2:WKF2-T3ZM" ]
+    },
+    "descriptor" : {
+      "resource" : "https://www.familysearch.org/service/cds/recapi/collections/1951777#rd_MM9.1.9/MMMS-2BN"
+    }
+  }, {
+    "id" : "sd_p_210048722700",
+    "about" : "https://www.familysearch.org/ark:/61903/1:1:CV31-DC2M",
+    "componentOf" : {
+      "description" : "#src_r_145452405000"
+    },
+    "resourceType" : "http://gedcomx.org/Person",
+    "citations" : [ {
+      "value" : "\"Venezuela, registros parroquiales y diocesanos, 1577-1995\", database with images, <i>FamilySearch</i> (https://familysearch.org/ark:/61903/1:1:CV31-DC2M : 15 April 2020), María Leonides, 27 de febrero de 1903."
+    } ],
+    "titles" : [ {
+      "lang" : "en",
+      "value" : "María Leonides, \"Venezuela, Catholic Church Records, 1577-1995\""
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:CV31-DC2M" ]
+    }
+  }, {
+    "id" : "sd_p_210048722800",
+    "about" : "https://www.familysearch.org/ark:/61903/1:1:CV31-DCPZ",
+    "componentOf" : {
+      "description" : "#src_r_145452405000"
+    },
+    "resourceType" : "http://gedcomx.org/Person",
+    "citations" : [ {
+      "value" : "\"Venezuela, registros parroquiales y diocesanos, 1577-1995\", database with images, <i>FamilySearch</i> (https://familysearch.org/ark:/61903/1:1:CV31-DCPZ : 15 April 2020), Juan Vitriago in entry for María Leonides, 27 de febrero de 1903."
+    } ],
+    "titles" : [ {
+      "lang" : "en",
+      "value" : "Juan Vitriago in entry for María Leonides, \"Venezuela, Catholic Church Records, 1577-1995\""
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:CV31-DCPZ" ]
+    }
+  }, {
+    "id" : "sd_p_210048722900",
+    "about" : "https://www.familysearch.org/ark:/61903/1:1:CV31-DCT2",
+    "componentOf" : {
+      "description" : "#src_r_145452405000"
+    },
+    "resourceType" : "http://gedcomx.org/Person",
+    "citations" : [ {
+      "value" : "\"Venezuela, registros parroquiales y diocesanos, 1577-1995\", database with images, <i>FamilySearch</i> (https://familysearch.org/ark:/61903/1:1:CV31-DCT2 : 15 April 2020), Alejandra Gutiérrez in entry for María Leonides, 27 de febrero de 1903."
+    } ],
+    "titles" : [ {
+      "lang" : "en",
+      "value" : "Alejandra Gutiérrez in entry for María Leonides, \"Venezuela, Catholic Church Records, 1577-1995\""
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:CV31-DCT2" ]
+    }
+  }, {
+    "id" : "sd_p_210048723000",
+    "about" : "https://www.familysearch.org/ark:/61903/1:1:CV31-DZMM",
+    "componentOf" : {
+      "description" : "#src_r_145452405000"
+    },
+    "resourceType" : "http://gedcomx.org/Person",
+    "citations" : [ {
+      "value" : "\"Venezuela, registros parroquiales y diocesanos, 1577-1995\", database with images, <i>FamilySearch</i> (https://familysearch.org/ark:/61903/1:1:CV31-DZMM : 15 April 2020), Don Vicente Lizardo in entry for María Leonides, 27 de febrero de 1903."
+    } ],
+    "titles" : [ {
+      "lang" : "en",
+      "value" : "Don Vicente Lizardo in entry for María Leonides, \"Venezuela, Catholic Church Records, 1577-1995\""
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:CV31-DZMM" ]
+    }
+  }, {
+    "id" : "sd_p_210048723100",
+    "about" : "https://www.familysearch.org/ark:/61903/1:1:CV31-DZ3Z",
+    "componentOf" : {
+      "description" : "#src_r_145452405000"
+    },
+    "resourceType" : "http://gedcomx.org/Person",
+    "citations" : [ {
+      "value" : "\"Venezuela, registros parroquiales y diocesanos, 1577-1995\", database with images, <i>FamilySearch</i> (https://familysearch.org/ark:/61903/1:1:CV31-DZ3Z : 15 April 2020), María Luisa de Lizardo in entry for María Leonides, 27 de febrero de 1903."
+    } ],
+    "titles" : [ {
+      "lang" : "en",
+      "value" : "María Luisa de Lizardo in entry for María Leonides, \"Venezuela, Catholic Church Records, 1577-1995\""
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:CV31-DZ3Z" ]
+    }
+  }, {
+    "id" : "sd_p_210048723200",
+    "about" : "https://www.familysearch.org/ark:/61903/1:1:CV31-DZW2",
+    "componentOf" : {
+      "description" : "#src_r_145452405000"
+    },
+    "resourceType" : "http://gedcomx.org/Person",
+    "citations" : [ {
+      "value" : "\"Venezuela, registros parroquiales y diocesanos, 1577-1995\", database with images, <i>FamilySearch</i> (https://familysearch.org/ark:/61903/1:1:CV31-DZW2 : 15 April 2020), Tomasa Segoria in entry for María Leonides, 27 de febrero de 1903."
+    } ],
+    "titles" : [ {
+      "lang" : "en",
+      "value" : "Tomasa Segoria in entry for María Leonides, \"Venezuela, Catholic Church Records, 1577-1995\""
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:CV31-DZW2" ]
+    }
+  }, {
+    "id" : "sd_p_210048723300",
+    "about" : "https://www.familysearch.org/ark:/61903/1:1:CV31-DZZM",
+    "componentOf" : {
+      "description" : "#src_r_145452405000"
+    },
+    "resourceType" : "http://gedcomx.org/Person",
+    "citations" : [ {
+      "value" : "\"Venezuela, registros parroquiales y diocesanos, 1577-1995\", database with images, <i>FamilySearch</i> (https://familysearch.org/ark:/61903/1:1:CV31-DZZM : 15 April 2020), Joaquín Urrutía in entry for María Leonides, 27 de febrero de 1903."
+    } ],
+    "titles" : [ {
+      "lang" : "en",
+      "value" : "Joaquín Urrutía in entry for María Leonides, \"Venezuela, Catholic Church Records, 1577-1995\""
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/1:1:CV31-DZZM" ]
+    }
+  }, {
+    "id" : "sd2",
+    "mediaType" : "image/jpeg",
+    "about" : "https://www.familysearch.org/ark:/61903/3:1:S3HY-6LW3-7RZ?cc=1951777",
+    "resourceType" : "http://gedcomx.org/DigitalArtifact",
+    "repository" : {
+      "resourceId" : "#a1"
+    },
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://www.familysearch.org/ark:/61903/3:1:S3HY-6LW3-7RZ?cc=1951777" ]
+    }
+  } ],
+  "agents" : [ {
+    "id" : "a1",
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "das.familysearch.org" ]
+    }
+  } ],
+  "places" : [ {
+    "id" : "place_1927137",
+    "identifiers" : {
+      "http://gedcomx.org/Primary" : [ "https://api.familysearch.org/authorities/v1/place/1927137" ]
+    }
+  } ],
+  "fields" : [ {
+    "type" : "http://familysearch.org/types/fields/CollectionId",
+    "values" : [ {
+      "id" : "30e537b9-4a4c-41c7-80ec-19598190550e",
+      "type" : "http://gedcomx.org/Interpreted",
+      "labelId" : "FS_COLLECTION_ID",
+      "text" : "1951777"
+    } ]
+  }, {
+    "type" : "http://familysearch.org/types/fields/DigitalFilmNumber",
+    "values" : [ {
+      "id" : "8efcef98-55ef-49f3-b853-0a8c8f8deaa7",
+      "type" : "http://gedcomx.org/Interpreted",
+      "labelId" : "FS_DIGITAL_FILM_NBR",
+      "text" : "004454295"
+    } ]
+  }, {
+    "type" : "http://familysearch.org/types/fields/ImageNumber",
+    "values" : [ {
+      "id" : "013116bf-cd28-49a0-b120-43bedc421729",
+      "type" : "http://gedcomx.org/Interpreted",
+      "labelId" : "FS_IMAGE_NBR",
+      "text" : "00009"
+    } ]
+  }, {
+    "type" : "http://familysearch.org/types/fields/RecordGroup",
+    "values" : [ {
+      "id" : "8c733507-c678-429c-a9c3-5b7868fd9e01",
+      "type" : "http://gedcomx.org/Interpreted",
+      "labelId" : "FS_RECORD_GROUP",
+      "text" : "OutputDeliveryAllRobo"
+    } ]
+  }, {
+    "type" : "http://familysearch.org/types/fields/FsDisplayType",
+    "values" : [ {
+      "id" : "1137df35-a24d-4ba2-8fa4-029021b381d0",
+      "type" : "http://gedcomx.org/Interpreted",
+      "labelId" : "FS_DISPLAY_TYPE",
+      "text" : "Person"
+    } ]
+  }, {
+    "type" : "http://familysearch.org/types/fields/ImageApid",
+    "values" : [ {
+      "id" : "2b1b1326-3598-4eab-9caa-c527bc95f76a",
+      "type" : "http://gedcomx.org/Interpreted",
+      "labelId" : "FS_IMAGE_APID",
+      "text" : "TH-267-12336-86260-5"
+    } ]
+  }, {
+    "type" : "http://familysearch.org/types/fields/ImageArk",
+    "values" : [ {
+      "id" : "d0356de5-6cff-412c-9b61-179a76ecf5b1",
+      "type" : "http://gedcomx.org/Interpreted",
+      "labelId" : "IMAGE_ARK",
+      "text" : "https://familysearch.org/ark:/61903/3:1:S3HY-6LW3-7RZ"
+    } ]
+  }, {
+    "type" : "http://familysearch.org/types/fields/SortKey",
+    "values" : [ {
+      "id" : "c1708f6b-e269-49ce-ab3b-fcc2a241f4af",
+      "attribution" : {
+        "contributor" : {
+          "resource" : "http://treatment/SortKeyTreatment/ver/1"
+        },
+        "modified" : 1586986554482
+      },
+      "type" : "http://gedcomx.org/Interpreted",
+      "labelId" : "FS_SORT_KEY",
+      "text" : "0000000004454295_00009_00000_0000145452405000"
+    } ]
+  }, {
+    "type" : "http://familysearch.org/types/fields/RecordVersion",
+    "values" : [ {
+      "type" : "http://gedcomx.org/Interpreted",
+      "labelId" : "FS_RECORD_VERSION",
+      "text" : "19"
+    } ]
+  }, {
+    "type" : "http://familysearch.org/types/fields/UserModified",
+    "values" : [ {
+      "type" : "http://gedcomx.org/Interpreted",
+      "labelId" : "FS_USER_MODIFIED",
+      "text" : "true"
+    } ]
+  }, {
+    "type" : "http://familysearch.org/types/fields/CdsBatchId",
+    "values" : [ {
+      "type" : "http://gedcomx.org/Interpreted",
+      "labelId" : "FS_CDS_BATCH_ID",
+      "text" : "52989"
+    } ]
+  }, {
+    "type" : "http://familysearch.org/types/fields/PublicationStatus",
+    "values" : [ {
+      "type" : "http://gedcomx.org/Interpreted",
+      "labelId" : "FS_PUB_STATUS",
+      "text" : "Production"
+    } ]
+  } ]
+}

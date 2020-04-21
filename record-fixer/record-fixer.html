@@ -41,7 +41,7 @@
 </head>
 <body>
 <fs-single-image-viewer id="image-viewer"
-    src="https://www.familysearch.org/dz/v1/apid:TH-1942-21131-31767-14/"
+    src="https://www.familysearch.org/dz/v1/apid:TH-267-12336-86260-5/"
     style="flex: 1;"
 ></fs-single-image-viewer>
 <div id="rel-chart"></div>
@@ -53,26 +53,6 @@
   $(document).ready(function(){
     // IMAGE VIEWER ==========================================================================
     const viewer = document.querySelector("fs-single-image-viewer");
-    viewer.overlays.setAll([
-      {
-        id: 'test-1',
-        type: 'name',
-        selectable: true,
-        x: 0.25,
-        y: 0.25,
-        width: 0.2,
-        height: 0.1
-      },
-      {
-        id: 'test-2',
-        type: 'date',
-        //selectable: true,
-        x: 0.25,
-        y: 0.75,
-        width: 0.2,
-        height: 0.1
-      }
-    ]);
 
     // REL CHART =============================================================================
     var params = window.location.search;
@@ -80,7 +60,7 @@
     var url = urlParams.get('url');
 
     if (!url) {
-      url = "../graph/samples/sample.json";
+      url = "../graph/samples/Venezuela.json";
     }
     else if (url.includes(":")) {
       var personaId = url.match(/.*1:1:(.*)/)[1];
@@ -94,6 +74,7 @@
       url: url,
       success:function(sampleGx){
         currentRelChart = buildGraph(sampleGx, true);
+        overlayBoxes(viewer, sampleGx);
       }
     });
     // $.getJSON(url, {format: "json"}, function(sampleGx){

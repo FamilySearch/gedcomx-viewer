@@ -421,43 +421,42 @@ function overlayBoxes(viewer, doc) {
     }
   }
   // overlayBoxes(doc) ============================
+  var boxes = [];
+  var markers = [];
 
   // Get an array of objects with {image: <imageArk>, rectangles: [array of Rectangle object with x1,y1,x2,y2]}
   var imageArksAndRects = getImageArks(doc);
-
   if (!isEmpty(imageArksAndRects)) {
     var imageArk = imageArksAndRects[0].image;
     var imageApid = imageArkToApid(imageArk);
     viewer.src = "https://www.familysearch.org/dz/v1/apid:" + imageApid + "/";
 
-    var boxes = [];
-    var markers = [];
-
     // Add record/article-level bounding boxes.
     addArticleRectangles(imageArksAndRects, boxes);
+  }
 
-    // Add bounding boxes for all words. (Do this before names, dates and places, so that those will be on top)
-    addNbxBoxes(boxes, markers, findNbxDocumentText(doc));
+  // Add bounding boxes for all words. (Do this before names, dates and places, so that those will be on top)
+  addNbxBoxes(boxes, markers, findNbxDocumentText(doc));
 
-    if (doc.persons) {
-      for (var p = 0; p < doc.persons.length; p++) {
-        var person = doc.persons[p];
-        addFieldBoxes(boxes, markers, person, "person");
-        addNameBoxes(boxes, markers, person.names);
-        addFactBoxes(boxes, markers, person.facts);
-        if (person.gender) {
-          addFieldBoxes(boxes, markers, person, "gender");
-        }
+  if (doc.persons) {
+    for (var p = 0; p < doc.persons.length; p++) {
+      var person = doc.persons[p];
+      addFieldBoxes(boxes, markers, person, "person");
+      addNameBoxes(boxes, markers, person.names);
+      addFactBoxes(boxes, markers, person.facts);
+      if (person.gender) {
+        addFieldBoxes(boxes, markers, person, "gender");
       }
     }
-    if (doc.relationships) {
-      for (var r = 0; r < doc.relationships.length; r++) {
-        var relationship = doc.relationships[r];
-        addFieldBoxes(boxes, markers, relationship, "relationship");
-        addFactBoxes(boxes, markers, relationship.facts);
-      }
+  }
+  if (doc.relationships) {
+    for (var r = 0; r < doc.relationships.length; r++) {
+      var relationship = doc.relationships[r];
+      addFieldBoxes(boxes, markers, relationship, "relationship");
+      addFactBoxes(boxes, markers, relationship.facts);
     }
-
+  }
+  if (boxes.length > 0 || markers.length > 0) {
     viewer.overlays.setAll(boxes);
     viewer.markers.setAll(markers);
   }
