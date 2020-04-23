@@ -41,7 +41,6 @@
 </head>
 <body>
 <fs-single-image-viewer id="image-viewer"
-    src="https://www.familysearch.org/dz/v1/apid:TH-267-12336-86260-5/"
     style="flex: 1;"
 ></fs-single-image-viewer>
 <div id="rel-chart"></div>
@@ -60,21 +59,29 @@
     var url = urlParams.get('url');
 
     if (!url) {
-      url = "../graph/samples/Venezuela.json";
+      var personId = urlParams.get('personId');
+      if (personId) {
+        url = "https://api.familysearch.org/platform/records/personas/" + personId;
+      }
+      else {
+        url = "../graph/samples/Venezuela.json";
+      }
     }
-    else if (url.includes(":")) {
-      var personaId = url.match(/.*1:1:(.*)/)[1];
-      url = "https://api.familysearch.org/platform/records/personas/" + personaId;
+
+    var sessionId = urlParams.get('access_token');
+    if (sessionId) {
+      url += "?access_token=" + sessionId;
     }
+
     $.ajax({
       beforeSend: function(request) {
-        request.setRequestHeader("Accept", "application/x-gedcomx-v1+json").setRequestHeader("SameSite", "None");
+        request.setRequestHeader("Accept", "application/x-gedcomx-v1+json");
       },
       dataType: "json",
       url: url,
-      success:function(sampleGx){
-        currentRelChart = buildGraph(sampleGx, true);
-        overlayBoxes(viewer, sampleGx);
+      success:function(gedcomx){
+        currentRelChart = buildGraph(gedcomx, true);
+        overlayBoxes(viewer, gedcomx);
       }
     });
     // $.getJSON(url, {format: "json"}, function(sampleGx){

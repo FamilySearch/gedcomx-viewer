@@ -29,6 +29,11 @@ function createOverlay(type, rectangle, id) {
 }
 
 
+/**
+ * Convert an image Ark into an APID.
+ * @param imageArk
+ * @returns Image APID
+ */
 function imageArkToApid(imageArk) {
   /**
    * Compute the checksum of the given string as a 2-digit decimal number.
@@ -156,7 +161,6 @@ function imageArkToApid(imageArk) {
   }
   return null; // unrecognized Image Ark format.
 }
-
 
 function findNbxDocumentText(doc, docId) {
   if (doc.documents) {
