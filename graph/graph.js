@@ -68,7 +68,7 @@ function redoGraph() {
  * @param ignoreUndo - Flag for whether to ignore the undo logic (set to true for undo/redo actions).
  * @returns {RelationshipChart}
  */
-function buildGraph(gx, isEditable, prevChart, ignoreUndo) {
+function buildGraph(gx, isEditable, prevChart, ignoreUndo, imgOverlayToGx) {
   try {
     var graph = new RelationshipGraph(gx);
     var $relChartDiv = $("#rel-chart");
@@ -96,7 +96,7 @@ function buildGraph(gx, isEditable, prevChart, ignoreUndo) {
         }
       });
     }
-    currentRelChart = new RelChartBuilder(graph, $relChartDiv, true, true, isEditable).buildChart(prevChart);
+    currentRelChart = new RelChartBuilder(graph, $relChartDiv, true, true, isEditable).buildChart(prevChart, imgOverlayToGx);
     $relChartDiv.width(currentRelChart.width);
     $relChartDiv.height(currentRelChart.height);
     return currentRelChart;

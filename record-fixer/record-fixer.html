@@ -9,6 +9,7 @@
   <script src="../bbox/singleImage.iife.min.js"></script>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
   <script src="../gx-util.js"></script>
+  <script src="../gx-view.js"></script>
   <script src="../gx-fix.js"></script>
   <script src="../nbx/nbx-parse.js"></script>
   <script src="../bbox/bbox.js"></script>
@@ -81,8 +82,8 @@
       dataType: "json",
       url: url,
       success:function(gedcomx){
-        currentRelChart = buildGraph(gedcomx, true);
-        overlayBoxes(viewer, gedcomx);
+        let elementMap = overlayBoxes(viewer, gedcomx);
+        currentRelChart = buildGraph(gedcomx, true, null, false, elementMap);
       }
     });
     // $.getJSON(url, {format: "json"}, function(sampleGx){

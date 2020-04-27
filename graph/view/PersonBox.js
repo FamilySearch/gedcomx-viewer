@@ -74,9 +74,10 @@ PersonBox.prototype.getPersonBoxId = function(personId) {
  * @param personAbove
  * @param personBelow
  * @param generationIndex
+ * @param relChartToGx - Map of relationship chart HTML element id to GedcomX object id it corresponds to (for coordinated highlighting).
  * @constructor
  */
-function PersonBox(personNode, relChart, personAbove, personBelow, generationIndex) {
+function PersonBox(personNode, relChart, personAbove, personBelow, generationIndex, relChartToGx) {
 
   function addNameSpans(person) {
     var html = "";
@@ -89,7 +90,8 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
           for (f = 0; f < name.nameForms.length; f++) {
             var form = name.nameForms[f];
             if (form.fullText) {
-              html += "  <span class='" + (isFirstFullName ? "fullName" : "altName") + "'>" + encode(form.fullText) + "</span>";
+              var elementId = nextId("name", relChartToGx, name);
+              html += "  <span class='" + (isFirstFullName ? "fullName" : "altName") + "' id='" + elementId + "'>" + encode(form.fullText) + "</span>";
               if (isFirstFullName) {
                 var isPrincipal = person.principal;
                 html += "<span class='" + (isPrincipal ? "isPrincipal" : "notPrincipal") + " toolTip'>" + (isPrincipal ? "*" : " ") +
@@ -139,8 +141,21 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
     return undefined;
   }
 
-  function addIfNotEmpty(value, array) {
+  /**
+   * If the given value is not empty, then add it to the given array, wrapped in a "span" element,
+   *   and with an appropriate element id.
+   * @param value
+   * @param array
+   * @param type
+   * @param gx
+   */
+  function addIfNotEmpty(value, array, type, gx) {
     if (value) {
+      value = encode(value);
+      if (type && gx) {
+        let elementId = nextId(type, relChartToGx, gx);
+        value = "<span id='" + elementId + "'>" + value + "</span>";
+      }
       array.push(value);
     }
   }
@@ -149,9 +164,13 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
   // (e.g., for a fact like "AdoptiveParent" with no value, date or place).
   function getFactInfo(fact) {
     var parts = [];
-    addIfNotEmpty(fact.value, parts);
-    addIfNotEmpty(getDate(fact), parts);
-    addIfNotEmpty(getPlace(fact), parts);
+    var factNamePrefix = getFactName(fact).toLowerCase().substr(0,3);
+    // Todo: Remove this when fact type is no longer incorrectly put into the 'value'.
+    if (fact.value && fact.value.toLowerCase() !== getFactName(fact).toLowerCase()) {
+      addIfNotEmpty(fact.value, parts, factNamePrefix + "-value", fact);
+    }
+    addIfNotEmpty(getDate(fact), parts, factNamePrefix + "-date", fact.date);
+    addIfNotEmpty(getPlace(fact), parts, factNamePrefix + "-place", fact.place);
     return parts.length === 0 ? undefined : parts.join("; ");
   }
 
@@ -162,11 +181,12 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
    * @returns HTML string for a div for this fact.
    */
   function getFactHtml(fact, qualifier) {
-    var info = getFactInfo(fact);
-    if (info) {
-      return "  <div class='fact'><span class='factType'>" + encode(getFactName(fact)) +
-          (qualifier ? " (" + encode(qualifier) + ")" : "") + (info ? ":" : "") + "</span>" +
-          (info ? " <span class='factDatePlace'>" + encode(info) + "</span>" : "") +
+    let encodedInfo = getFactInfo(fact);
+    if (encodedInfo) {
+      let factTypeId = nextId("fact", relChartToGx, fact);
+      return "  <div class='fact'><span class='factType' id='" + factTypeId + "'>" + encode(getFactName(fact)) +
+          (qualifier ? " (" + encode(qualifier) + ")" : "") + (encodedInfo ? ":" : "") + "</span>" +
+          (encodedInfo ? " <span class='factDatePlace'>" + encodedInfo + "</span>" : "") +
           "</div>\n";
     }
     return "";

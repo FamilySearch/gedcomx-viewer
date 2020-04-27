@@ -1,24 +1,49 @@
 var overlayTypeIdMap = {};
 
 /**
- * Create an overlay object suitable for sending to the image viewer.
+ * Get the next available id to use for the given type of element.
+ * Updates "overlayTypeIdMap". If a GedcomX object is provided, then the GedcomX object is updated with an id
+ *   (if it does not already have one), and the mapping from the new element to that GedcomX object's id
+ *   is added to the elementToGxMap
+ * @param typeName - Name of element type.
+ * @param elementToGxMap (Optional) - Map of (new) local HTML element ID to GedcomX object ID.
+ * @param gxObject (Optional) - GedcomX object whose ID is to be used (and added if not there), and included in the map.
+ * @returns {string}
+ */
+function nextId(typeName, elementToGxMap, gxObject) {
+  if (!typeName) {
+    typeName="?";
+  }
+  let lastIdNumber = overlayTypeIdMap[typeName];
+  let nextIdNumber = (lastIdNumber ? lastIdNumber + 1 : 1);
+  overlayTypeIdMap[typeName] = nextIdNumber;
+  let overlayId = typeName + "-" + nextIdNumber;
+
+  if (elementToGxMap && gxObject) {
+    if (!gxObject.id) {
+      gxObject.id = nextId("gx");
+    }
+    elementToGxMap[overlayId] = gxObject.id;
+  }
+
+  return overlayId;
+}
+
+/**
+ * Create an overlay object suitable for sending to the image viewer. Update the given GedcomX object with an "id" element (starting with "gx-")
+ *   if none is present.
  * @param type - Type of overlay. ("name", "date", "place". null => default)
  * @param rectangle - Rectangle object with {x1,y1,x2,y2} in fractional coordinates.
- * @param id - (Optional) id string to use.
+ * @param elementMap - Map of overlay object id to GedcomX object id that the overlay text came from.
+ * @param gxObject - GedcomX object to get an id from (set to "gx" + the next available id, if no id exists).
  * @returns {{id: *, type: *, selectable: boolean, x: (*|number|SVGAnimatedLength), y: (*|SVGAnimatedLength|number), width: number, height: number}}
+ *          Overlay object to use in image viewer.
  */
-function createOverlay(type, rectangle, id) {
-  var typeName = type ? type : "?";
-  if (!id) {
-    // If no ID is specified, use a separate 1-based counter for each type to give each box an id, e.g., "name-1" or "date-13".
-    var lastId = overlayTypeIdMap[typeName];
-    id = (lastId ? lastId + 1 : 1);
-    overlayTypeIdMap[typeName] = id;
-  }
-  id = typeName + "-" + id;
-  
+function createOverlay(type, rectangle, elementMap, gxObject) {
+  var overlayId = nextId(type, elementMap, gxObject);
+
   return {
-    id: id,
+    id: overlayId,
     type: type,
     selectable: true,
     x: rectangle.x1,
@@ -177,6 +202,15 @@ function findNbxDocumentText(doc, docId) {
   return null;
 }
 
+/**
+ * Add highlight boxes and corresponding text markers to the image viewer, as found in the given GedcomX document.
+ *   A map is returned with key = local HTML element "id" for each highlight created; and value = "id" of the GedcomX object it came from.
+ *   The GedcomX object is adorned with such ids if it did not already have them.
+ * elements are added to that map
+ * @param viewer - Javascript object for the image viewer element.
+ * @param doc - GedcomX document
+ * @return map of id of highlight in HTML document to corresponding element in GedcomX document.
+ */
 function overlayBoxes(viewer, doc) {
 
   /**
@@ -214,21 +248,21 @@ function overlayBoxes(viewer, doc) {
    * (Note that this assume that all sources with rectangles are referring to the same image.
    *  If this is not the case, then modify boxes[] to be a map of source ID -> boxes[] for that source.)
    * @param boxes - Array of boxes to add the overlay box to.
-   * @param value - Thing that may have an array of sources for it.
+   * @param gxValue - GedcomX object that may have an array of sources for it.
    * @param boxType - Class to use as the overlay type ("name", "date", "place" or null/undefined for default).
    * @param text - (Optional). Text to display as a popup for the given box.
    * @param markers - Array of markers to add text to.
    */
-  function addSourceBoxes(boxes, value, boxType, text, markers) {
-    if (value && !isEmpty(value.sources)) {
-      for (var s = 0; s < value.sources.length; s++) {
-        var sourceReference = value.sources[s];
+  function addSourceBoxes(boxes, gxValue, boxType, text, markers, elementMap) {
+    if (gxValue && !isEmpty(gxValue.sources)) {
+      for (var s = 0; s < gxValue.sources.length; s++) {
+        var sourceReference = gxValue.sources[s];
         if (!isEmpty(sourceReference.qualifiers)) {
           for (var q = 0; q < sourceReference.qualifiers.length; q++) {
             var qualifier = sourceReference.qualifiers[q];
             if (qualifier.name === "http://gedcomx.org/RectangleRegion") {
               var rectangle = new Rectangle(qualifier.value);
-              var overlay = createOverlay(boxType, rectangle);
+              var overlay = createOverlay(boxType, rectangle, elementMap, gxValue);
               boxes.push(overlay);
               if (text && markers) {
                 addMarker(markers, overlay.id, text, boxType);
@@ -247,8 +281,9 @@ function overlayBoxes(viewer, doc) {
    * @param markers - Array of markers (tooltip text that pop up below boxes) to add to.
    * @param fieldContainer - Object that may have a list of fields.
    * @param boxType - Type of overlay.
+   * @param elementMap - Map of overlay object id to GedcomX object id that the overlay text came from.
    */
-  function addFieldBoxes(boxes, markers, fieldContainer, boxType) {
+  function addFieldBoxes(boxes, markers, fieldContainer, boxType, elementMap) {
     if (!isEmpty(fieldContainer.fields)) {
       for (var f = 0; f < fieldContainer.fields.length; f++) {
         var field = fieldContainer.fields[f];
@@ -259,9 +294,9 @@ function overlayBoxes(viewer, doc) {
             if (fieldValue.text) {
               text = fieldValue.text;
             }
-            addSourceBoxes(boxes, fieldValue, boxType, text, markers);
+            addSourceBoxes(boxes, fieldValue, boxType, text, markers, elementMap);
           }
-          addSourceBoxes(boxes, field, boxType, text, markers);
+          addSourceBoxes(boxes, field, boxType, text, markers, elementMap);
         }
       }
     }
@@ -272,20 +307,21 @@ function overlayBoxes(viewer, doc) {
    * @param boxes - Array of overlay boxes to add to.
    * @param markers - Array of tooltip markers with the text that goes with each box.
    * @param names - Array of names to look in for name boxes.
+   * @param elementMap - Map of overlay object id to GedcomX object id that the overlay text came from.
    */
-  function addNameBoxes(boxes, markers, names) {
+  function addNameBoxes(boxes, markers, names, elementMap) {
     if (names) {
       for (var n = 0; n < names.length; n++) {
         var name = person.names[n];
-        addFieldBoxes(boxes, markers, name, "name");
+        addFieldBoxes(boxes, markers, name, "name", elementMap);
         if (name.nameForms) {
           for (var f = 0; f < name.nameForms.length; f++) {
             var nameForm = name.nameForms[f];
-            addFieldBoxes(boxes, markers, nameForm, "name");
+            addFieldBoxes(boxes, markers, nameForm, "name", elementMap);
             if (nameForm.parts) {
               for (var np = 0; np < nameForm.parts.length; np++) {
                 var namePart = nameForm.parts[np];
-                addFieldBoxes(boxes, markers, namePart, "name");
+                addFieldBoxes(boxes, markers, namePart, "name", elementMap);
               }
             }
           }
@@ -294,16 +330,16 @@ function overlayBoxes(viewer, doc) {
     }
   }
 
-  function addFactBoxes(boxes, markers, facts) {
+  function addFactBoxes(boxes, markers, facts, elementMap) {
     if (!isEmpty(facts)) {
       for (var f = 0; f < facts.length; f++) {
         var fact = facts[f];
-        addFieldBoxes(boxes, markers, fact, "fact");
+        addFieldBoxes(boxes, markers, fact, "fact", elementMap);
         if (fact.date) {
-          addFieldBoxes(boxes, markers, fact.date, "date");
+          addFieldBoxes(boxes, markers, fact.date, "date", elementMap);
         }
         if (fact.place) {
-          addFieldBoxes(boxes, markers, fact.place, "place");
+          addFieldBoxes(boxes, markers, fact.place, "place", elementMap);
         }
       }
     }
@@ -414,19 +450,21 @@ function overlayBoxes(viewer, doc) {
     }
   }
 
-  function addArticleRectangles(imageArksAndRects, boxes) {
+  function addArticleRectangles(imageArksAndRects, boxes, elementMap, doc) {
     // Assume single image for now.
     var rects = imageArksAndRects[0].rectangles;
     if (rects) {
       for (var r = 0; r < rects.length; r++) {
-        var overlay = createOverlay("article", rects[r]);
+        var overlay = createOverlay("article", rects[r], elementMap, doc);
         boxes.push(overlay);
       }
     }
   }
+  
   // overlayBoxes(doc) ============================
   var boxes = [];
   var markers = [];
+  var elementMap = {}; // Map of highlight HTML element id -> GedcomX object ID that the element is associated with.
 
   // Get an array of objects with {image: <imageArk>, rectangles: [array of Rectangle object with x1,y1,x2,y2]}
   var imageArksAndRects = getImageArks(doc);
@@ -436,7 +474,7 @@ function overlayBoxes(viewer, doc) {
     viewer.src = "https://www.familysearch.org/dz/v1/apid:" + imageApid + "/";
 
     // Add record/article-level bounding boxes.
-    addArticleRectangles(imageArksAndRects, boxes);
+    addArticleRectangles(imageArksAndRects, boxes, elementMap, doc);
   }
 
   // Add bounding boxes for all words. (Do this before names, dates and places, so that those will be on top)
@@ -445,23 +483,24 @@ function overlayBoxes(viewer, doc) {
   if (doc.persons) {
     for (var p = 0; p < doc.persons.length; p++) {
       var person = doc.persons[p];
-      addFieldBoxes(boxes, markers, person, "person");
-      addNameBoxes(boxes, markers, person.names);
-      addFactBoxes(boxes, markers, person.facts);
+      addFieldBoxes(boxes, markers, person, "person", elementMap);
+      addNameBoxes(boxes, markers, person.names, elementMap);
+      addFactBoxes(boxes, markers, person.facts, elementMap);
       if (person.gender) {
-        addFieldBoxes(boxes, markers, person, "gender");
+        addFieldBoxes(boxes, markers, person, "gender", elementMap);
       }
     }
   }
   if (doc.relationships) {
     for (var r = 0; r < doc.relationships.length; r++) {
       var relationship = doc.relationships[r];
-      addFieldBoxes(boxes, markers, relationship, "relationship");
-      addFactBoxes(boxes, markers, relationship.facts);
+      addFieldBoxes(boxes, markers, relationship, "relationship", elementMap);
+      addFactBoxes(boxes, markers, relationship.facts, elementMap);
     }
   }
   if (boxes.length > 0 || markers.length > 0) {
     viewer.overlays.setAll(boxes);
     viewer.markers.setAll(markers);
   }
+  return elementMap;
 }

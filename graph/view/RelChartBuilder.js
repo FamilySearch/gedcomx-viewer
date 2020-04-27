@@ -224,7 +224,7 @@ RelChartBuilder.prototype.addPersons = function() {
     if (personId) {
       this.remainingPersonIds.remove(personId);
       personNode = this.getPersonNode(personId);
-      personBox = new PersonBox(personNode, this.relChart, null, null, 0);
+      personBox = new PersonBox(personNode, this.relChart, null, null, 0, this.relGraphToGx);
       this.addRelatives(personBox, subtree++);
       // Find the first person box in this sub-graph
       topBox = null;
@@ -459,16 +459,197 @@ function RelChartBuilder(relGraph, $relChartDiv, shouldIncludeDetails, shouldCom
 }
 
 /**
+ *
+ * @param doc - GedcomX document
+ * @param relToGx - Map of relationship graph element id to the GedcomX object id that it goes with
+ * @param imgToGx - Map of image overlay element id to the GedcomX object id that it goes with
+ */
+RelChartBuilder.prototype.correlateHighlights = function(doc, relToGx, imgToGx) {
+
+  function gatherGxIdMap2(gx, parentId, gxParentMap, personId, gxPersonMap) {
+    if (gx) {
+      if (Array.isArray(gx)) {
+        for (let i = 0; i < gx.length; i++) {
+          gatherGxIdMap2(gx[i], parentId, gxParentMap, personId, gxPersonMap);
+        }
+      }
+      else {
+        if (gx.id) {
+          gxParentMap[gx.id] = parentId;
+          gxPersonMap[gx.id] = personId;
+          parentId = gx.id;
+        }
+        for (let child in gx) {
+          if (gx.hasOwnProperty(child) && typeof gx[child] == "object") {
+            gatherGxIdMap2(gx[child], parentId, gxParentMap, personId, gxPersonMap);
+          }
+        }
+      }
+    }
+  }
+
+  function gatherGxParentMap(doc, gxParentMap, gxPersonMap) {
+    if (doc.persons) {
+      for (let p = 0; p < doc.persons.length; p++) {
+        let person = doc.persons[p];
+        gatherGxIdMap2(person, doc.id, gxParentMap, person.id, gxPersonMap);
+      }
+    }
+    if (doc.relationships) {
+      for (let r = 0; r < doc.relationships.length; r++) {
+        let rel = doc.relationships[r];
+        let personId = getPersonIdFromReference(rel.person1);
+        gatherGxIdMap2(rel, doc.id, gxParentMap, personId, gxPersonMap);
+      }
+    }
+  }
+
+  // Take a map of key->value and return a map of value->[keys], i.e., value to a list of keys that mapped to that value.
+  function reverseMap(map) {
+    let reverseMap = {};
+    for (let key in map) {
+      if (map.hasOwnProperty(key)) {
+        let value = map[key];
+        let list = reverseMap[value];
+        if (!list) {
+          list = [];
+          reverseMap[value] = list;
+        }
+        list.push(key);
+      }
+    }
+    return reverseMap;
+  }
+
+  function highlight(elements, myElement, isRecord) {
+    let class1 = isRecord ? "record-highlight" : "img-highlight";
+    let class2 = isRecord ? "img-highlight" : "record-highlight";
+    if (highlightsToProcess) {
+      // Image viewer highlight elements don't exist when the graph is first being built, so wait until the first highlight is
+      //  done before triggering that.
+      for (let h = 0; h < highlightsToProcess.length; h++) {
+        let x = highlightsToProcess[h];
+        $("#" + x.imgElement).hover(
+            function() {highlight(x.relElements, x.imgElement, true);},
+            function() {unhighlight(x.relElements, x.imgElement, true);});
+      }
+      highlightsToProcess = null; // now handled, so clear it.
+    }
+    if (elements) {
+      for (let i = 0; i < elements.length; i++) {
+        $("#" + elements[i]).addClass(class1);
+      }
+      $("#" + myElement).addClass(class2);
+    }
+  }
+
+  function unhighlight(elements, myElement, isRecord) {
+    let class1 = isRecord ? "record-highlight" : "img-highlight";
+    let class2 = isRecord ? "img-highlight" : "record-highlight";
+    if (elements) {
+      for (let i = 0; i < elements.length; i++) {
+        $("#" + elements[i]).removeClass(class1);
+      }
+      $("#" + myElement).removeClass(class2);
+    }
+  }
+
+  //==============================================
+  // correlateHighlights(doc, relToGx, imgToGx)===
+  let gxParentMap = {}; // map of gx object id to parent (or ancestor) gx object id in hierarchy.
+  let gxPersonMap = {}; // map of gx object id to person it is inside of. (or the p1 of a relationship it is inside of).
+  gatherGxParentMap(doc, gxParentMap, gxPersonMap);
+  
+  let gxToImg = reverseMap(imgToGx); // map of gx object id to array of image overlay element ids that came from that object.
+  let gxToRel = reverseMap(relToGx); // map of gx object id to array of relationship graph element ids that came from that object.
+  let personToGx = reverseMap(gxPersonMap); // map of personId to list of gx object ids within that person
+  let relToImg = {}; // map of relGraph element to array of imgElements that were found to associate with it.
+
+  // For each image overlay HTML element, find the gx object it goes with; then find the corresponding list of relationship graph elements
+  //   that need to be highlighted when this image overlay element is hovered over.
+  for (let imgElement in imgToGx) {
+    if (imgToGx.hasOwnProperty(imgElement)) {
+      let gxId = imgToGx[imgElement];
+      // Since the image elements are based on fields, their gx id might be "lower" in the gx hierarchy than
+      //   their corresponding relationship graph elements.
+      // So walk up the parent chain looking for the lowest one that matches a rel chart element's gx id.
+      while (gxId && gxId !== doc.id && !gxToRel[gxId]) {
+        gxId = gxParentMap[gxId];
+      }
+      if (!gxId) {
+        console.warn("Somehow missed root of document while traversing.");
+      }
+      else {
+        let relElements = gxToRel[gxId];
+        if (!empty(relElements)) {
+          highlightsToProcess.push({imgElement: imgElement, relElements: relElements});
+          // Add this imgElement to the list of imgElements associated with each of these relElements, so
+          //  we can do highlighting in the reverse direction.
+          for (let i = 0; i < relElements.length; i++) {
+            let relElement = relElements[i];
+            let imgElements = relToImg[relElement];
+            if (!imgElements) {
+              imgElements = [];
+              relToImg[relElement] = imgElements;
+            }
+            if (!imgElements.includes(relElement)) {
+              imgElements.push(imgElement);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  for (let relElement in relToImg) {
+    if (relToImg.hasOwnProperty(relElement)) {
+      let imgElements = relToImg[relElement];
+      if (!empty(imgElements)) {
+        $("#" + relElement).hover(
+            function() {highlight(imgElements, relElement, false);},
+            function() {unhighlight(imgElements, relElement, false);});
+      }
+    }
+  }
+
+  // $("#name-23").hover(function(){
+  //   $("#name-1").addClass("grumpy");
+  //   $("#name-2").addClass("grumpy");
+  //   $("#name-3").addClass("grumpy");
+  //   $("#name-4").addClass("grumpy");
+  //   $("#name-5").addClass("grumpy");
+  //   $("#name-6").addClass("grumpy");
+  //   }, function(){
+  //   $("#name-1").removeClass("grumpy");
+  //   $("#name-2").removeClass("grumpy");
+  //   $("#name-3").removeClass("grumpy");
+  //   $("#name-4").removeClass("grumpy");
+  //   $("#name-5").removeClass("grumpy");
+  //   $("#name-6").removeClass("grumpy");
+  // });
+  // $("#name-1").hover(function(){$("#name-23").addClass("grumpy");}, function(){$("#name-23").removeClass("grumpy");});
+  // $("#name-2").hover(function(){$("#name-23").addClass("grumpy");}, function(){$("#name-23").removeClass("grumpy");});
+  // $("#name-3").hover(function(){$("#name-23").addClass("grumpy");}, function(){$("#name-23").removeClass("grumpy");});
+  // $("#name-4").hover(function(){$("#name-23").addClass("grumpy");}, function(){$("#name-23").removeClass("grumpy");});
+  // $("#name-5").hover(function(){$("#name-23").addClass("grumpy");}, function(){$("#name-23").removeClass("grumpy");});
+  // $("#name-6").hover(function(){$("#name-23").addClass("grumpy");}, function(){$("#name-23").removeClass("grumpy");});
+};
+
+var highlightsToProcess = [];
+
+/**
  * Build a relationship chart (RelChart) from this RelChartBuilder's relationship graph, starting at the given person.
  * @return RelationshipChart built from the given graph starting with the given person
  */
-RelChartBuilder.prototype.buildChart = function(prevChart) {
+RelChartBuilder.prototype.buildChart = function(prevChart, imgOverlayToGx) {
   // this.relChart.$personsDiv.empty();
   // this.relChart.$familyLinesDiv.empty();
   if (this.relChart.isEditable) {
     // this.relChart.$editControlsDiv.empty();
     this.relChart.addEditControls();
   }
+  this.imgOverlayToGx = {}; // map of image overlay HTML element id to GedcomX object id that corresponds. Can be many-to-1
+  this.relGraphToGx = {}; // map of relationship graph HTML element id to GedcomX object id that corresponds. Can be many-to-1
 
   this.addPersons();
   this.relChart.generations = this.createGenerations();
@@ -482,5 +663,8 @@ RelChartBuilder.prototype.buildChart = function(prevChart) {
   if (this.relChart.isEditable) {
     this.relChart.addGapDropZones();
   }
+
+  this.correlateHighlights(this.relChart.getGedcomX(), this.relGraphToGx, imgOverlayToGx, );
+
   return this.relChart;
 };

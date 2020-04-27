@@ -80,6 +80,23 @@
     -webkit-transition-property: visibility; /* Safari */
 }
 
+.record-highlight {
+    outline: rgba(255, 21, 5, 0.5) solid 3px;
+    z-index: 20;
+}
+.img-highlight {
+    outline: rgb(255, 21, 5) solid 6px;
+    z-index: 20;
+}
+
+.highlight-helper {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    background-color: rgba(255, 255, 0, .3);
+    z-index: 99;
+}
+
 /* Indent facts 10px; Use Fact Type: <date>; <place>. Wrap if too long using hanging indent. */
 .fact {
     padding-left: 20px;
@@ -175,4 +192,10 @@
     background-color: rgba(255, 255, 255, 0.7);
     border-radius: 4px;
     box-shadow: 0 0 3px 15px rgba(255, 255, 255, 0.7);
+}
+
+.grumpy {
+    outline-color: rgba(255, 252, 0, 1);
+    outline-width: 8px;
+    outline-style: dotted;
 }
