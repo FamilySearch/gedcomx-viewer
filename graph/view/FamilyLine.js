@@ -1,31 +1,31 @@
 
 FamilyLine.prototype.makeFamilyLineDiv = function(familyId) {
-  var html = "<div class='familyLine' id='" + familyId + "'>" +
+  let html = "<div class='familyLine' id='" + familyId + "'>" +
       "  <div class='familyLineDropZone' id='" + familyId + "-drop'></div>" +
       "</div>";
   return $.parseHTML(html);
 };
 
 FamilyLine.prototype.makePersonLineDiv = function(personLineId) {
-  var html = "<div class='personLine' id='" + personLineId + "'></div>";
+  let html = "<div class='personLine' id='" + personLineId + "'></div>";
   return $.parseHTML(html);
 };
 
 FamilyLine.prototype.addPersonLine = function(personLineId, left, top, width) {
-  var html = "<div class='personLine' id='" + personLineId + "'></div>";
-  var personLineDiv = $.parseHTML(html);
+  let html = "<div class='personLine' id='" + personLineId + "'></div>";
+  let personLineDiv = $.parseHTML(html);
   this.$familyLinesDiv.append(personLineDiv);
-  var $personLineDiv = $("#" + personLineId);
+  let $personLineDiv = $("#" + personLineId);
   $personLineDiv.css({"top": top - this.lineThickness / 2, "left": left, "width": width});
   return $personLineDiv;
 };
 
 FamilyLine.prototype.addPersonDot = function(personLineId, left, top, width) {
-  var personDotId = "dot-" + personLineId;
-  var html = "<div class='personDot' id='" + personDotId + "'></div>";
-  var personDotDiv = $.parseHTML(html);
+  let personDotId = "dot-" + personLineId;
+  let html = "<div class='personDot' id='" + personDotId + "'></div>";
+  let personDotDiv = $.parseHTML(html);
   this.$familyLinesDiv.append(personDotDiv);
-  var $personLineDot = $("#" + personDotId);
+  let $personLineDot = $("#" + personDotId);
   // Make sure 'dotHeight' and 'dotWidth' are set if this is the first child.
   if (!this.dotHeight) {
     // Get the dot size based on what graph.css said it should be.
@@ -46,17 +46,17 @@ FamilyLine.prototype.addPersonDot = function(personLineId, left, top, width) {
  * @returns {jQuery.fn.init|jQuery|HTMLElement}
  */
 FamilyLine.prototype.addChildX = function(childLineId, childBox) {
-  var childXId = "childX-" + childLineId;
-  var html = "<div class='childX' id='" + childXId + "'></div>";
-  var childXDiv = $.parseHTML(html);
+  let childXId = "childX-" + childLineId;
+  let html = "<div class='childX' id='" + childXId + "'></div>";
+  let childXDiv = $.parseHTML(html);
   this.$familyLinesDiv.append(childXDiv);
-  var $childX = $("#" + childXId);
+  let $childX = $("#" + childXId);
   if (!this.xSize) {
     // Get the image size based on what graph.css said it should be.
     this.xSize = $childX.height();
   }
   $childX.hide();
-  var familyLine = this;
+  let familyLine = this;
   $childX.click(function() {
     familyLine.removeChild(childBox);
     updateRecord(familyLine.relChart.relGraph.gx);
@@ -73,11 +73,11 @@ FamilyLine.prototype.safeWidth = function(width) {
 // Add a PersonBox to the list of children for this FamilyLine, and create a div for the line connecting that child's PersonBox to the FamilyLine.
 FamilyLine.prototype.addChild = function(childBox, isEditable) {
   if (childBox) {
-    var childLineId = this.familyNode.familyId + "-c" + this.children.length;
+    let childLineId = this.familyNode.familyId + "-c" + this.children.length;
     this.children.push(childBox);
     this.prevChildCenter.push(childBox.center);
-    var left = childBox.getRight();
-    var width = this.safeWidth(this.x - left);
+    let left = childBox.getRight();
+    let width = this.safeWidth(this.x - left);
     this.$childrenLineDivs.push(this.addPersonLine(childLineId, left, childBox.center, width));
     this.$childrenLineDots.push(this.addPersonDot(childLineId, left, childBox.center, width));
     if (isEditable) {
@@ -91,8 +91,8 @@ FamilyLine.prototype.addChild = function(childBox, isEditable) {
 FamilyLine.prototype.setFather = function(fatherBox) {
   if (fatherBox) {
     this.father = fatherBox;
-    var fatherLineId = this.familyNode.familyId + "-f";
-    var width = this.safeWidth(fatherBox.getLeft() - this.x);
+    let fatherLineId = this.familyNode.familyId + "-f";
+    let width = this.safeWidth(fatherBox.getLeft() - this.x);
     this.$fatherLineDiv = this.addPersonLine(fatherLineId, fatherBox.getLeft(), fatherBox.center - this.lineThickness/2, width);
   }
 };
@@ -100,16 +100,15 @@ FamilyLine.prototype.setFather = function(fatherBox) {
 FamilyLine.prototype.setMother = function(motherBox) {
   if (motherBox) {
     this.mother = motherBox;
-    var motherLineId = this.familyNode.familyId + "-m";
-    var width = this.safeWidth(motherBox.getLeft() - this.x);
+    let motherLineId = this.familyNode.familyId + "-m";
+    let width = this.safeWidth(motherBox.getLeft() - this.x);
     this.$motherLineDiv = this.addPersonLine(motherLineId, motherBox.getLeft(), motherBox.center - this.lineThickness/2, width);
   }
 };
 
 FamilyLine.prototype.childMoved = function() {
-  var c, childBox;
-  for (c = 0; c < this.children.length; c++) {
-    childBox = this.children[c];
+  for (let c = 0; c < this.children.length; c++) {
+    let childBox = this.children[c];
     if (childBox.center !== this.prevChildCenter[c]) {
       return true;
     }
@@ -133,9 +132,9 @@ FamilyLine.prototype.hasMoved = function() {
 // Use JQuery to move the HTML element (div) for the FamilyLine to the positions indicated
 //  by the line's "x" and the top and bottom person's "center".
 FamilyLine.prototype.setPosition = function() {
-  var top = this.topPerson.center;
-  var bottom = this.bottomPerson.center;
-  var height = 1 + bottom - top;
+  let top = this.topPerson.center;
+  let bottom = this.bottomPerson.center;
+  let height = 1 + bottom - top;
   this.$familyLineDiv.animate({"left": this.x, "top": top, "height": height}, RelationshipChart.prototype.animationSpeed);
   if (this.$familyLineDrop) { // => isEditable
     this.$familyLineDrop.animate({"height": height}, RelationshipChart.prototype.animationSpeed);
@@ -143,20 +142,18 @@ FamilyLine.prototype.setPosition = function() {
   this.prevTop = top;
   this.prevBottom = bottom;
   this.prevX = this.x;
-  var width;
 
   if (this.$fatherLineDiv) {
-    width = this.safeWidth(this.father.getLeft() - this.x);
+    let width = this.safeWidth(this.father.getLeft() - this.x);
     this.$fatherLineDiv.animate({"left": this.x, "top": this.father.center, "width": width}, RelationshipChart.prototype.animationSpeed);
   }
   if (this.$motherLineDiv) {
-    width = this.safeWidth(this.mother.getLeft() - this.x);
+    let width = this.safeWidth(this.mother.getLeft() - this.x);
     this.$motherLineDiv.animate({"left": this.x, "top": this.mother.center, "width": width}, RelationshipChart.prototype.animationSpeed);
   }
-  var c, childBox;
-  for (c = 0; c < this.children.length; c++) {
-    childBox = this.children[c];
-    width = this.safeWidth(this.x - childBox.getRight() + this.lineThickness);
+  for (let c = 0; c < this.children.length; c++) {
+    let childBox = this.children[c];
+    let width = this.safeWidth(this.x - childBox.getRight() + this.lineThickness);
     this.$childrenLineDivs[c].animate({"left": childBox.getRight(), "top": childBox.center - this.lineThickness/2, "width": width}, RelationshipChart.prototype.animationSpeed);
     this.prevChildCenter[c] = childBox.center;
     this.$childrenLineDots[c].animate({"left": childBox.getRight() + width - this.dotWidth, "top": childBox.center - this.dotHeight/2}, RelationshipChart.prototype.animationSpeed);
@@ -184,10 +181,10 @@ FamilyLine.prototype.compare = function(a, b) {
 
 // Tell whether this FamilyLine overlaps the other one.
 FamilyLine.prototype.overlaps = function(otherFamilyLine) {
-  var top = this.topPerson.center;
-  var bottom = this.bottomPerson.center;
-  var otherTop = otherFamilyLine.topPerson.center;
-  var otherBottom = otherFamilyLine.bottomPerson.center;
+  let top = this.topPerson.center;
+  let bottom = this.bottomPerson.center;
+  let otherTop = otherFamilyLine.topPerson.center;
+  let otherBottom = otherFamilyLine.bottomPerson.center;
   // The two lines overlap unless one is completely above another, meaning one's bottom is above the other's top.
   // So overlap = not((bottom above otherTop) or (otherBottom above top))
   // overlap = !((bottom < otherTop) || (otherBottom < top)). Using !(A || B) = !A && !B...
@@ -206,20 +203,17 @@ FamilyLine.prototype.overlaps = function(otherFamilyLine) {
  */
 FamilyLine.prototype.arrangeLines = function(lines) {
   // Map of lineIndex -> rightmost line that overlaps to the left of this line.
-  var pushMap = [];
+  let pushMap = [];
   // Map of lineIndex -> depth for that line.  (May be updated as new lines are introduced and "push" the others out)
-  var lineDepthMap = [];
+  let lineDepthMap = [];
   // Array of lines indexes that overlap the previous line, including the previous line, arranged from left to right.
-  var overlapList = [];
-  var lineIndex;
-  var closestLineIndex;
-  for (lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+  let overlapList = [];
+  for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
     // Look through the list of overlapping lines, and remove any that do not overlap 'line'.
     // Also keep track of what the rightmost overlapping line was.
-    closestLineIndex = undefined;
-    var overlapIndex;
-    for (overlapIndex = 0; overlapIndex < overlapList.length; overlapIndex++) {
-      var overlappingLineIndex = overlapList[overlapIndex];
+    let closestLineIndex = undefined;
+    for (let overlapIndex = 0; overlapIndex < overlapList.length; overlapIndex++) {
+      let overlappingLineIndex = overlapList[overlapIndex];
       if (lines[lineIndex].overlaps(lines[overlappingLineIndex])) {
         closestLineIndex = overlappingLineIndex;
       } else {
@@ -235,10 +229,10 @@ FamilyLine.prototype.arrangeLines = function(lines) {
     }
     // Update the depth for all lines that are pushed on by the current line, if any
     lineDepthMap[lineIndex] = 0;
-    var depth = 0;
+    let depth = 0;
     while (closestLineIndex !== undefined) {
       depth++;
-      var oldDepth = lineDepthMap[closestLineIndex];
+      let oldDepth = lineDepthMap[closestLineIndex];
       if (depth > oldDepth) {
         // The new line is causing an older line to be "pushed", so update its depth
         lineDepthMap[closestLineIndex] = depth;
@@ -251,11 +245,11 @@ FamilyLine.prototype.arrangeLines = function(lines) {
     }
   }
   // Array of lists of lines at each depth, starting at 0
-  var depthLines = [];
-  for (lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+  let depthLines = [];
+  for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
     depth = lineDepthMap[lineIndex];
     // List of lines at this depth
-    var list = depthLines[depth];
+    let list = depthLines[depth];
     if (!list) {
       list = [];
       depthLines[depth] = list;
@@ -278,18 +272,14 @@ FamilyLine.prototype.arrangeLines = function(lines) {
  * @return (ending) x-coordinate of generation boxes (=coordinate of rightmost line + lineGap).
  */
 FamilyLine.prototype.setLineX = function(generationLines, x, lineGap) {
-  var lineDepths;
-  var d, linesAtDepth;
-  var f, familyLine;
-
   if (!isEmpty(generationLines)) {
     // Array for each depth of the lines at that depth.
-    lineDepths = this.arrangeLines(generationLines);
-    for (d = 0; d < lineDepths.length; d++) {
+    let lineDepths = this.arrangeLines(generationLines);
+    for (let d = 0; d < lineDepths.length; d++) {
       // Array of FamilyLines at the given depth.
-      linesAtDepth = lineDepths[d];
-      for (f = 0; f < linesAtDepth.length; f++) {
-        familyLine = linesAtDepth[f];
+      let linesAtDepth = lineDepths[d];
+      for (let f = 0; f < linesAtDepth.length; f++) {
+        let familyLine = linesAtDepth[f];
         familyLine.x = x;
       }
       x += lineGap;
@@ -333,7 +323,7 @@ function FamilyLine(relChart, familyNode, $familyLinesDiv) {
   this.prevBottom = 0;
   this.prevChildCenter = [];
 
-  var familyLineDiv = this.makeFamilyLineDiv(familyNode.familyId);
+  let familyLineDiv = this.makeFamilyLineDiv(familyNode.familyId);
   $familyLinesDiv.append(familyLineDiv);
   this.$familyLineDiv = $("#" + familyNode.familyId);
 
@@ -351,7 +341,7 @@ function FamilyLine(relChart, familyNode, $familyLinesDiv) {
 
   if (relChart.isEditable) {
     this.$childrenX = [];
-    var thisFamilyLine = this;
+    let thisFamilyLine = this;
     this.$familyLineDiv.click(function(e) {
       thisFamilyLine.toggleFamilyLine(e);
     });

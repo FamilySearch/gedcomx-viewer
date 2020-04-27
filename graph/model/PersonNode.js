@@ -34,15 +34,13 @@ PersonNode.prototype. getFirstFullName = function(person) {
   if (!person) {
     person = this.person;
   }
-  var firstFullName = null;
-  var n, f;
-  var name, form;
+  let firstFullName = null;
   if (person.names) {
-    for (n = 0; n < person.names.length; n++) {
-      name = person.names[n];
+    for (let n = 0; n < person.names.length; n++) {
+      let name = person.names[n];
       if (name.nameForms) {
-        for (f = 0; f < name.nameForms.length; f++) {
-          form = name.nameForms[f];
+        for (let f = 0; f < name.nameForms.length; f++) {
+          let form = name.nameForms[f];
           if (form.fullText) {
             if (!firstFullName) {
               firstFullName = form.fullText;
@@ -59,7 +57,7 @@ PersonNode.prototype. getFirstFullName = function(person) {
 };
 
 PersonNode.prototype.addRelative = function(label, personNode) {
-  var relative = {};
+  let relative = {};
   relative.label = label;
   relative.personNode = personNode;
   this.relatives.push(relative);

@@ -38,36 +38,36 @@
   <script src="gx-fix.js"></script>
   <script src="gx-view.js"></script>
   <script>
-    //      var personaUrl = "https://familysearch.org/ark:/61903/1:1:XF48-HFC";
-    //      var recordUrl = "https://familysearch.org/ark:/61903/1:2:99FJ-7LXP";
-    //      var gedcomxUrl = "https://www.familysearch.org/ark:/61903/1:1:XTWB-H9T"; // marriage record
-    //      var gedcomxUrl = "https://www.familysearch.org/ark:/61903/1:1:QK2M-H538"; // obituary
+    //      let personaUrl = "https://familysearch.org/ark:/61903/1:1:XF48-HFC";
+    //      let recordUrl = "https://familysearch.org/ark:/61903/1:2:99FJ-7LXP";
+    //      let gedcomxUrl = "https://www.familysearch.org/ark:/61903/1:1:XTWB-H9T"; // marriage record
+    //      let gedcomxUrl = "https://www.familysearch.org/ark:/61903/1:1:QK2M-H538"; // obituary
 
     /**
      * The GEDCOM X editor
      *
      * @type JSONEditor
      */
-    var editor = null;
+    let editor = null;
 
     /**
      * The current selection of the GEDCOM X editor.
      *
      * @type Node
      */
-    var editorSelection = null;
+    let editorSelection = null;
 
     /**
      * The current record URL.
      *
      * @type string
      */
-    var currentUrl = null;
+    let currentUrl = null;
 
-    var sourceDocumentText = null;
-    var sourceDocumentName = null;
+    let sourceDocumentText = null;
+    let sourceDocumentName = null;
 
-    var editHooks = {};
+    let editHooks = {};
 
     /**
      * Show a record.
@@ -76,7 +76,7 @@
      * @param url The URL of the record, if applicable.
      */
     function showRecord(doc, url) {
-      var el = $("#record");
+      let el = $("#record");
       el.empty();
       el.append(buildRecordUI(doc, url, editHooks));
       currentUrl = url;
@@ -88,11 +88,11 @@
     }
 
     // Current GedcomX record object, used by the pop-up bounding box window to get access to the record and image data.
-    var currentGx;
-    var relChart;
+    let currentGx;
+    let relChart;
 
-    var imageChildWindow;
-    var entityChildWindow;
+    let imageChildWindow;
+    let entityChildWindow;
 
     /**
      *  Update a record.
@@ -117,7 +117,7 @@
 
       function getImageLink(doc) {
         // todo: Include coordinates and handle multiple images.
-        // var imageArksAndRectangles = getImageArks(doc);
+        // let imageArksAndRectangles = getImageArks(doc);
         // if (!isEmpty(imageArksAndRectangles)) {
         //   return imageArksAndRectangles[0].url;
         // }
@@ -125,7 +125,7 @@
         return getImageArks(doc) ? "bbox/bbox.html" : null;
       }
 
-      var imageLink = getImageLink(doc);
+      let imageLink = getImageLink(doc);
       if (imageLink) {
         $("#image-link").html('<a href="' + imageLink + '?currentUrl=' + currentUrl + '" target="reusable_image_viewer_tab">View image</a>');
         if (imageChildWindow && imageChildWindow.location && !imageChildWindow.closed && !imageChildWindow.location.href.endsWith(currentUrl)) {
@@ -177,7 +177,7 @@
     function setRecordSourceDocument(text, name) {
       sourceDocumentText = text;
       sourceDocumentName = name;
-      var el = $("#source-file");
+      let el = $("#source-file");
       el.empty();
       if (name) {
         el.append($("<h1/>").append($("<small/>", {"class": "text-muted"}).text(name)));
@@ -194,8 +194,8 @@
     // Update the document text in the GedcomX, in response to edits happening in the text area.
     function updateDocumentText(text) {
       sourceDocumentText = text;
-      var doc = editor.get();
-      var sourceDocument = getSourceDocument(doc);
+      let doc = editor.get();
+      let sourceDocument = getSourceDocument(doc);
       if (sourceDocument) {
         sourceDocument.text = text;
         editor.set(doc);
@@ -206,10 +206,10 @@
       if (doc.records && doc.records.length > 0) {
         doc = doc.records[0];
       }
-      var documentSourceDescription = getDocumentSourceDescription(doc);
-      var sourceDocument = getSourceDocument(doc, documentSourceDescription);
+      let documentSourceDescription = getDocumentSourceDescription(doc);
+      let sourceDocument = getSourceDocument(doc, documentSourceDescription);
       if (sourceDocument) {
-        var title = documentSourceDescription.titles && documentSourceDescription.titles.length > 0 ? documentSourceDescription.titles[0].value : null;
+        let title = documentSourceDescription.titles && documentSourceDescription.titles.length > 0 ? documentSourceDescription.titles[0].value : null;
         setRecordSourceDocument(sourceDocument.text, title, sourceDocument);
       }
     }
@@ -241,7 +241,7 @@
     }
 
     function exportGedcomx() {
-      var doc = editor.get();
+      let doc = editor.get();
 
       if (sourceDocumentText) {
         fixTextOfSourceOfSource(doc, sourceDocumentText, sourceDocumentName);
@@ -257,9 +257,9 @@
     }
 
     function getPerson(doc, pid) {
-      var person;
+      let person;
       if (doc.persons) {
-        for (var i = 0; i < doc.persons.length; i++) {
+        for (let i = 0; i < doc.persons.length; i++) {
           if (doc.persons[i].id === pid) {
             person = doc.persons[i];
             break;
@@ -270,9 +270,9 @@
     }
 
     function getRelationship(doc, rid) {
-      var relationship;
+      let relationship;
       if (doc.relationships) {
-        for (var i = 0; i < doc.relationships.length; i++) {
+        for (let i = 0; i < doc.relationships.length; i++) {
           if (doc.relationships[i].id === rid) {
             relationship = doc.relationships[i];
             break;
@@ -283,15 +283,15 @@
     }
 
     function editRecordMetadata() {
-      var doc = editor.get();
-      var sd = getSourceDescription(doc, doc.description);
+      let doc = editor.get();
+      let sd = getSourceDescription(doc, doc.description);
       if (!sd) {
         sd = {};
         sd.id = generateLocalId();
         doc.description = "#" + sd.id;
       }
 
-      var title = $("#edit-record-metadata-title").val();
+      let title = $("#edit-record-metadata-title").val();
       if (title) {
         if (!sd.titles || sd.titles.length === 0) {
           sd.titles = [];
@@ -305,12 +305,12 @@
         sd.coverage.push({});
       }
 
-      var type = $("#edit-record-metadata-type").val();
+      let type = $("#edit-record-metadata-type").val();
       if (type) {
         sd.coverage[0].recordType = "http://gedcomx.org/" + type;
       }
 
-      var date = $("#edit-record-metadata-date").val();
+      let date = $("#edit-record-metadata-date").val();
       if (date) {
         if (!sd.coverage[0].temporal) {
           sd.coverage[0].temporal = {};
@@ -318,7 +318,7 @@
         sd.coverage[0].temporal.original = date;
       }
 
-      var place = $("#edit-record-metadata-place").val();
+      let place = $("#edit-record-metadata-place").val();
       if (place) {
         if (!sd.coverage[0].spatial) {
           sd.coverage[0].spatial = {};
@@ -326,9 +326,9 @@
         sd.coverage[0].spatial.original = place;
       }
 
-      var publisher = $("#edit-record-metadata-publisher").val();
+      let publisher = $("#edit-record-metadata-publisher").val();
       if (publisher) {
-        var publisherAgent;
+        let publisherAgent;
         if (sd.publisher) {
           publisherAgent = getAgent(doc, sd.publisher.resource);
         }
@@ -395,7 +395,7 @@
     };
 
     function addPerson() {
-      var person = {};
+      let person = {};
       person.id = "p_999" + Math.floor(Math.random() * Math.floor(1000000000));
       person.extracted = true;
       person.principal = $("#new-person-principal").is(":checked");
@@ -405,16 +405,16 @@
       person.facts = [];
       person.fields = [];
 
-      var name = {};
+      let name = {};
       name.id = generateLocalId();
       name.type = null;
       name.nameForms = [];
 
-      var nameForm = {};
-      var prefixes = $("#new-person-prefixes").val();
-      var givenNames = $("#new-person-given-names").val();
-      var surnames = $("#new-person-surnames").val();
-      var suffixes = $("#new-person-suffixes").val();
+      let nameForm = {};
+      let prefixes = $("#new-person-prefixes").val();
+      let givenNames = $("#new-person-given-names").val();
+      let surnames = $("#new-person-surnames").val();
+      let suffixes = $("#new-person-suffixes").val();
       nameForm.fullText = [prefixes, givenNames, surnames, suffixes].filter(Boolean).join(" ");
       nameForm.parts = [];
 
@@ -425,7 +425,7 @@
 
       function addPart(value, type) {
         if (value) {
-          var part = {};
+          let part = {};
           part.type = "http://gedcomx.org/" + type;
           part.value = value;
           nameForm.parts.push(part);
@@ -435,7 +435,7 @@
       name.nameForms.push(nameForm);
       person.names.push(name);
 
-      var doc = editor.get();
+      let doc = editor.get();
       if (!doc.persons) {
         doc.persons = [];
       }
@@ -452,13 +452,12 @@
     };
 
     editHooks.removePerson = function (pid) {
-      var doc = editor.get();
-      var i;
-      var pidref = "#" + pid;
-      var relationships = [];
+      let doc = editor.get();
+      let pidref = "#" + pid;
+      let relationships = [];
       if (doc.relationships) {
-        for (i = 0; i < doc.relationships.length; i++) {
-          var relationship = doc.relationships[i];
+        for (let i = 0; i < doc.relationships.length; i++) {
+          let relationship = doc.relationships[i];
           if (!((relationship.person1 && relationship.person1.resource === pidref) || (relationship.person2 && relationship.person2.resource === pidref))) {
             relationships.push(relationship);
           }
@@ -467,8 +466,8 @@
       doc.relationships = relationships;
 
       if (doc.persons) {
-        for (i = 0; i < doc.persons.length; i++) {
-          var person = doc.persons[i];
+        for (let i = 0; i < doc.persons.length; i++) {
+          let person = doc.persons[i];
           if (person.id === pid) {
             doc.persons.splice(i, 1);
             updateRecord(doc);
@@ -481,20 +480,20 @@
     };
 
     function addRelationship() {
-      var doc = editor.get();
+      let doc = editor.get();
       if (!doc.relationships) {
         doc.relationships = [];
       }
 
-      var pids1 = $("#new-relationship-person-1").val();
+      let pids1 = $("#new-relationship-person-1").val();
       pids1 = pids1 || [];
-      var pids2 = $("#new-relationship-person-2").val();
+      let pids2 = $("#new-relationship-person-2").val();
       pids2 = pids2 || [];
-      for (var i = 0; i < pids1.length; i++) {
-        var pid1 = pids1[i];
-        for (var j = 0; j < pids2.length; j++) {
-          var pid2 = pids2[j];
-          var relationship = {};
+      for (let i = 0; i < pids1.length; i++) {
+        let pid1 = pids1[i];
+        for (let j = 0; j < pids2.length; j++) {
+          let pid2 = pids2[j];
+          let relationship = {};
           relationship.id = generateLocalId();
           relationship.type = $("#new-relationship-type").val();
           relationship.person1 = {};
@@ -513,9 +512,9 @@
     }
 
     function editRelationship() {
-      var rid = $("#edit-relationship-id").val();
-      var doc = editor.get();
-      var relationship = getRelationship(doc, rid);
+      let rid = $("#edit-relationship-id").val();
+      let doc = editor.get();
+      let relationship = getRelationship(doc, rid);
       if (!relationship) {
         showError("Cannot edit relationship: invalid relationship id: " + pid);
         return;
@@ -561,10 +560,10 @@
     };
 
     editHooks.removeRelationship = function (rid) {
-      var doc = editor.get();
+      let doc = editor.get();
       if (doc.relationships) {
-        for (var i = 0; i < doc.relationships.length; i++) {
-          var relationship = doc.relationships[i];
+        for (let i = 0; i < doc.relationships.length; i++) {
+          let relationship = doc.relationships[i];
           if (relationship.id === rid) {
             doc.relationships.splice(i, 1);
             updateRecord(doc);
@@ -577,8 +576,8 @@
     };
 
     editHooks.editPrincipal = function(pid) {
-      var doc = editor.get();
-      var person = getPerson(doc, pid);
+      let doc = editor.get();
+      let person = getPerson(doc, pid);
       if (!person) {
         showError("Cannot edit principal: invalid person id: " + pid);
         return;
@@ -589,8 +588,8 @@
     };
 
     editHooks.editGender = function(pid) {
-      var doc = editor.get();
-      var person = getPerson(doc, pid);
+      let doc = editor.get();
+      let person = getPerson(doc, pid);
       if (!person) {
         showError("Cannot edit gender: invalid person id: " + pid);
         return;
@@ -600,7 +599,7 @@
         person.gender = {};
       }
 
-      var type;
+      let type;
       switch (person.gender.type) {
         case "http://gedcomx.org/Male":
           type = "http://gedcomx.org/Female";
@@ -618,15 +617,15 @@
     };
 
     function addPersonName() {
-      var doc = editor.get();
+      let doc = editor.get();
 
-      var pid = $("#new-person-name-person-id").val();
+      let pid = $("#new-person-name-person-id").val();
       if (!pid) {
         showError("Cannot add name: no person id provided in the form.");
         return;
       }
 
-      var person = getPerson(doc, pid);
+      let person = getPerson(doc, pid);
       if (!person) {
         showError("Cannot add name: invalid person id: " + pid);
         return;
@@ -636,19 +635,19 @@
         person.names = [];
       }
 
-      var name = {};
+      let name = {};
       name.id = generateLocalId();
-      var nameType = $("#new-person-name-type").val();
+      let nameType = $("#new-person-name-type").val();
       if (nameType) {
         name.type = nameType;
       }
       name.nameForms = [];
-      var nameForm = {};
+      let nameForm = {};
       nameForm.parts = [];
-      var namePart;
-      var fullText;
+      let namePart;
+      let fullText;
 
-      var prefix = $("#new-person-name-prefix").val();
+      let prefix = $("#new-person-name-prefix").val();
       if (prefix) {
         fullText = prefix;
         namePart = {};
@@ -657,7 +656,7 @@
         nameForm.parts.push(namePart);
       }
 
-      var given = $("#new-person-name-given-names").val();
+      let given = $("#new-person-name-given-names").val();
       if (given) {
         fullText = fullText ? fullText + " " + given : given;
         namePart = {};
@@ -666,7 +665,7 @@
         nameForm.parts.push(namePart);
       }
 
-      var surname = $("#new-person-name-surnames").val();
+      let surname = $("#new-person-name-surnames").val();
       if (surname) {
         fullText = fullText ? fullText + " " + surname : surname;
         namePart = {};
@@ -675,7 +674,7 @@
         nameForm.parts.push(namePart);
       }
 
-      var suffix = $("#new-person-name-suffix").val();
+      let suffix = $("#new-person-name-suffix").val();
       if (suffix) {
         fullText = fullText ? fullText + " " + suffix : suffix;
         namePart = {};
@@ -695,29 +694,29 @@
     }
 
     function editPersonName() {
-      var doc = editor.get();
+      let doc = editor.get();
 
-      var pid = $("#edit-person-name-person-id").val();
+      let pid = $("#edit-person-name-person-id").val();
       if (!pid) {
         showError("Cannot edit name: no person id provided in the form.");
         return;
       }
 
-      var person = getPerson(doc, pid);
+      let person = getPerson(doc, pid);
       if (!person) {
         showError("Cannot edit name: invalid person id: " + pid);
         return;
       }
 
-      var nid = $("#edit-person-name-name-id").val();
+      let nid = $("#edit-person-name-name-id").val();
       if (!nid) {
         showError("Cannot edit name: no name id provided in the form.");
         return;
       }
 
-      var name;
+      let name;
       if (person.names) {
-        for (var i = 0; i < person.names.length; i++) {
+        for (let i = 0; i < person.names.length; i++) {
           if (person.names[i].id === nid) {
             name = person.names[i];
             break;
@@ -729,7 +728,7 @@
         return;
       }
 
-      var nameType = $("#edit-person-name-type").val();
+      let nameType = $("#edit-person-name-type").val();
       if (nameType) {
         name.type = nameType;
       }
@@ -738,12 +737,12 @@
       }
 
       name.nameForms = [];
-      var nameForm = {};
+      let nameForm = {};
       nameForm.parts = [];
-      var namePart;
-      var fullText;
+      let namePart;
+      let fullText;
 
-      var prefix = $("#edit-person-name-prefix").val();
+      let prefix = $("#edit-person-name-prefix").val();
       if (prefix) {
         fullText = prefix;
         namePart = {};
@@ -752,7 +751,7 @@
         nameForm.parts.push(namePart);
       }
 
-      var given = $("#edit-person-name-given-names").val();
+      let given = $("#edit-person-name-given-names").val();
       if (given) {
         fullText = fullText ? fullText + " " + given : given;
         namePart = {};
@@ -761,7 +760,7 @@
         nameForm.parts.push(namePart);
       }
 
-      var surname = $("#edit-person-name-surnames").val();
+      let surname = $("#edit-person-name-surnames").val();
       if (surname) {
         fullText = fullText ? fullText + " " + surname : surname;
         namePart = {};
@@ -770,7 +769,7 @@
         nameForm.parts.push(namePart);
       }
 
-      var suffix = $("#edit-person-name-suffix").val();
+      let suffix = $("#edit-person-name-suffix").val();
       if (suffix) {
         fullText = fullText ? fullText + " " + suffix : suffix;
         namePart = {};
@@ -810,15 +809,15 @@
         $("#edit-person-name-type").val("");
       }
 
-      var prefixInput = $("#edit-person-name-prefix").val("");
-      var givenInput = $("#edit-person-name-given-names").val("");
-      var surnameInput = $("#edit-person-name-surnames").val("");
-      var suffixInput = $("#edit-person-name-suffix").val("");
+      let prefixInput = $("#edit-person-name-prefix").val("");
+      let givenInput = $("#edit-person-name-given-names").val("");
+      let surnameInput = $("#edit-person-name-surnames").val("");
+      let suffixInput = $("#edit-person-name-suffix").val("");
       if (name.nameForms && name.nameForms.length > 0) {
-        var nameForm = name.nameForms[0];
+        let nameForm = name.nameForms[0];
         if (nameForm.parts) {
-          for (var i = 0; i < nameForm.parts.length; i++) {
-            var part = nameForm.parts[i];
+          for (let i = 0; i < nameForm.parts.length; i++) {
+            let part = nameForm.parts[i];
             switch (part.type) {
               case "http://gedcomx.org/Prefix":
                 prefixInput.val(part.value);
@@ -846,16 +845,16 @@
         return;
       }
 
-      var doc = editor.get();
-      var person = getPerson(doc, pid);
+      let doc = editor.get();
+      let person = getPerson(doc, pid);
       if (!person) {
         showError("Cannot remove name: invalid person id: " + pid);
         return;
       }
 
       if (person.names) {
-        for (var i = 0; i < person.names.length; i++) {
-          var name = person.names[i];
+        for (let i = 0; i < person.names.length; i++) {
+          let name = person.names[i];
           if (name.id === nid) {
             person.names.splice(i, 1);
             updateRecord(doc);
@@ -868,15 +867,15 @@
     };
 
     function addPersonFact() {
-      var doc = editor.get();
+      let doc = editor.get();
 
-      var pid = $("#new-person-fact-person-id").val();
+      let pid = $("#new-person-fact-person-id").val();
       if (!pid) {
         showError("Cannot add fact: no person id provided in the form.");
         return;
       }
 
-      var person = getPerson(doc, pid);
+      let person = getPerson(doc, pid);
       if (!person) {
         showError("Cannot add fact: invalid person id: " + pid);
         return;
@@ -886,35 +885,35 @@
         person.facts = [];
       }
 
-      var fact = {};
+      let fact = {};
       fact.id = generateLocalId();
       fact.type = $("#new-person-fact-type").val();
       fact.primary = $("#new-person-fact-primary").is(":checked");
 
-      var date = $("#new-person-fact-date").val();
+      let date = $("#new-person-fact-date").val();
       if (date) {
         fact.date = {};
         fact.date.original = date;
       }
 
-      var place = $("#new-person-fact-place").val();
+      let place = $("#new-person-fact-place").val();
       if (place) {
         fact.place = {};
         fact.place.original = place;
       }
 
-      var value = $("#new-person-fact-value").val();
+      let value = $("#new-person-fact-value").val();
       if (value) {
         fact.value = value;
       }
 
-      var age = $("#new-person-fact-age").val();
+      let age = $("#new-person-fact-age").val();
       if (age) {
         fact.qualifiers = fact.qualifiers || [];
         fact.qualifiers.push({name: "http://gedcomx.org/Age", value: age});
       }
 
-      var cause = $("#new-person-fact-cause").val();
+      let cause = $("#new-person-fact-cause").val();
       if (cause) {
         fact.qualifiers = fact.qualifiers || [];
         fact.qualifiers.push({name: "http://gedcomx.org/Cause", value: cause});
@@ -926,29 +925,29 @@
     }
 
     function editPersonFact() {
-      var doc = editor.get();
+      let doc = editor.get();
 
-      var pid = $("#edit-person-fact-person-id").val();
+      let pid = $("#edit-person-fact-person-id").val();
       if (!pid) {
         showError("Cannot edit fact: no person id provided in the form.");
         return;
       }
 
-      var person = getPerson(doc, pid);
+      let person = getPerson(doc, pid);
       if (!person) {
         showError("Cannot edit fact: invalid person id: " + pid);
         return;
       }
 
-      var fid = $("#edit-person-fact-fact-id").val();
+      let fid = $("#edit-person-fact-fact-id").val();
       if (!fid) {
         showError("Cannot edit fact: no fact id provided in the form.");
         return;
       }
 
-      var fact;
+      let fact;
       if (person.facts) {
-        for (var i = 0; i < person.facts.length; i++) {
+        for (let i = 0; i < person.facts.length; i++) {
           if (person.facts[i].id === fid) {
             fact = person.facts[i];
             break;
@@ -964,7 +963,7 @@
       fact.type = $("#edit-person-fact-type").val();
       fact.primary = $("#edit-person-fact-primary").is(":checked");
 
-      var date = $("#edit-person-fact-date").val();
+      let date = $("#edit-person-fact-date").val();
       if (date) {
         fact.date = {};
         fact.date.original = date;
@@ -973,7 +972,7 @@
         fact.date = null;
       }
 
-      var place = $("#edit-person-fact-place").val();
+      let place = $("#edit-person-fact-place").val();
       if (place) {
         fact.place = {};
         fact.place.original = place;
@@ -982,7 +981,7 @@
         fact.place = null;
       }
 
-      var value = $("#edit-person-fact-value").val();
+      let value = $("#edit-person-fact-value").val();
       if (value) {
         fact.value = value;
       }
@@ -991,13 +990,13 @@
       }
 
       fact.qualifiers = null;
-      var age = $("#edit-person-fact-age").val();
+      let age = $("#edit-person-fact-age").val();
       if (age) {
         fact.qualifiers = fact.qualifiers || [];
         fact.qualifiers.push({name: "http://gedcomx.org/Age", value: age});
       }
 
-      var cause = $("#edit-person-fact-cause").val();
+      let cause = $("#edit-person-fact-cause").val();
       if (cause) {
         fact.qualifiers = fact.qualifiers || [];
         fact.qualifiers.push({name: "http://gedcomx.org/Cause", value: cause});
@@ -1008,30 +1007,29 @@
     }
 
     function copyPersonFact() {
-      var i;
-      var doc = editor.get();
+      let doc = editor.get();
 
-      var pid = $("#copy-person-fact-person-id").val();
+      let pid = $("#copy-person-fact-person-id").val();
       if (!pid) {
         showError("Cannot copy fact: no person id provided in the form.");
         return;
       }
 
-      var person = getPerson(doc, pid);
+      let person = getPerson(doc, pid);
       if (!person) {
         showError("Cannot copy fact: invalid person id: " + pid);
         return;
       }
 
-      var fid = $("#copy-person-fact-fact-id").val();
+      let fid = $("#copy-person-fact-fact-id").val();
       if (!fid) {
         showError("Cannot copy fact: no fact id provided in the form.");
         return;
       }
 
-      var fact;
+      let fact;
       if (person.facts) {
-        for (i = 0; i < person.facts.length; i++) {
+        for (let i = 0; i < person.facts.length; i++) {
           if (person.facts[i].id === fid) {
             fact = person.facts[i];
             break;
@@ -1044,16 +1042,16 @@
         return;
       }
 
-      var targetIds = $("#copy-person-fact-target-persons").val();
-      for (i = 0; i < targetIds.length; i++) {
-        var targetPerson = getPerson(doc, targetIds[i]);
+      let targetIds = $("#copy-person-fact-target-persons").val();
+      for (let i = 0; i < targetIds.length; i++) {
+        let targetPerson = getPerson(doc, targetIds[i]);
         if (!targetPerson) {
           showError("Cannot copy fact: invalid person id selected: " + targetIds[i]);
           return;
         }
 
         targetPerson.facts = targetPerson.facts || [];
-        var clonedFact = $.extend(true, {}, fact);
+        let clonedFact = $.extend(true, {}, fact);
         clonedFact.id = generateLocalId();
         targetPerson.facts.push(clonedFact);
       }
@@ -1073,16 +1071,16 @@
         return;
       }
 
-      var doc = editor.get();
-      var person = getPerson(doc, pid);
+      let doc = editor.get();
+      let person = getPerson(doc, pid);
       if (!person) {
         showError("Cannot remove fact: invalid person id: " + pid);
         return;
       }
 
       if (person.facts) {
-        for (var i = 0; i < person.facts.length; i++) {
-          var fact = person.facts[i];
+        for (let i = 0; i < person.facts.length; i++) {
+          let fact = person.facts[i];
           if (fact.id === fid) {
             person.facts.splice(i, 1);
             updateRecord(doc);
@@ -1134,11 +1132,11 @@
         $("#edit-person-fact-value").val("");
       }
       
-      var age;
-      var cause;
+      let age;
+      let cause;
       if (fact.qualifiers) {
-        for (var i = 0; i < fact.qualifiers.length; i++) {
-          var qualifier = fact.qualifiers[i];
+        for (let i = 0; i < fact.qualifiers.length; i++) {
+          let qualifier = fact.qualifiers[i];
           switch (qualifier.name) {
             case "http://gedcomx.org/Age":
               age = qualifier.value;
@@ -1174,15 +1172,15 @@
     };
 
     function addRelationshipFact() {
-      var doc = editor.get();
+      let doc = editor.get();
 
-      var pid = $("#new-relationship-fact-relationship-id").val();
+      let pid = $("#new-relationship-fact-relationship-id").val();
       if (!pid) {
         showError("Cannot add fact: no relationship id provided in the form.");
         return;
       }
 
-      var relationship = getRelationship(doc, pid);
+      let relationship = getRelationship(doc, pid);
       if (!relationship) {
         showError("Cannot add fact: invalid relationship id: " + pid);
         return;
@@ -1192,35 +1190,35 @@
         relationship.facts = [];
       }
 
-      var fact = {};
+      let fact = {};
       fact.id = generateLocalId();
       fact.type = $("#new-relationship-fact-type").val();
       fact.primary = $("#new-relationship-fact-primary").is(":checked");
 
-      var date = $("#new-relationship-fact-date").val();
+      let date = $("#new-relationship-fact-date").val();
       if (date) {
         fact.date = {};
         fact.date.original = date;
       }
 
-      var place = $("#new-relationship-fact-place").val();
+      let place = $("#new-relationship-fact-place").val();
       if (place) {
         fact.place = {};
         fact.place.original = place;
       }
 
-      var value = $("#new-relationship-fact-value").val();
+      let value = $("#new-relationship-fact-value").val();
       if (value) {
         fact.value = value;
       }
 
-      var age = $("#new-relationship-fact-age").val();
+      let age = $("#new-relationship-fact-age").val();
       if (age) {
         fact.qualifiers = fact.qualifiers || [];
         fact.qualifiers.push({name: "http://gedcomx.org/Age", value: age});
       }
 
-      var cause = $("#new-relationship-fact-cause").val();
+      let cause = $("#new-relationship-fact-cause").val();
       if (cause) {
         fact.qualifiers = fact.qualifiers || [];
         fact.qualifiers.push({name: "http://gedcomx.org/Cause", value: cause});
@@ -1232,29 +1230,29 @@
     }
 
     function editRelationshipFact() {
-      var doc = editor.get();
+      let doc = editor.get();
 
-      var pid = $("#edit-relationship-fact-relationship-id").val();
+      let pid = $("#edit-relationship-fact-relationship-id").val();
       if (!pid) {
         showError("Cannot edit fact: no relationship id provided in the form.");
         return;
       }
 
-      var relationship = getRelationship(doc, pid);
+      let relationship = getRelationship(doc, pid);
       if (!relationship) {
         showError("Cannot edit fact: invalid relationship id: " + pid);
         return;
       }
 
-      var fid = $("#edit-relationship-fact-fact-id").val();
+      let fid = $("#edit-relationship-fact-fact-id").val();
       if (!fid) {
         showError("Cannot edit fact: no fact id provided in the form.");
         return;
       }
 
-      var fact;
+      let fact;
       if (relationship.facts) {
-        for (var i = 0; i < relationship.facts.length; i++) {
+        for (let i = 0; i < relationship.facts.length; i++) {
           if (relationship.facts[i].id === fid) {
             fact = relationship.facts[i];
             break;
@@ -1270,7 +1268,7 @@
       fact.type = $("#edit-relationship-fact-type").val();
       fact.primary = $("#edit-relationship-fact-primary").is(":checked");
 
-      var date = $("#edit-relationship-fact-date").val();
+      let date = $("#edit-relationship-fact-date").val();
       if (date) {
         fact.date = {};
         fact.date.original = date;
@@ -1279,7 +1277,7 @@
         fact.date = null;
       }
 
-      var place = $("#edit-relationship-fact-place").val();
+      let place = $("#edit-relationship-fact-place").val();
       if (place) {
         fact.place = {};
         fact.place.original = place;
@@ -1288,7 +1286,7 @@
         fact.place = null;
       }
 
-      var value = $("#edit-relationship-fact-value").val();
+      let value = $("#edit-relationship-fact-value").val();
       if (value) {
         fact.value = value;
       }
@@ -1297,13 +1295,13 @@
       }
 
       fact.qualifiers = null;
-      var age = $("#edit-relationship-fact-age").val();
+      let age = $("#edit-relationship-fact-age").val();
       if (age) {
         fact.qualifiers = fact.qualifiers || [];
         fact.qualifiers.push({name: "http://gedcomx.org/Age", value: age});
       }
 
-      var cause = $("#edit-relationship-fact-cause").val();
+      let cause = $("#edit-relationship-fact-cause").val();
       if (cause) {
         fact.qualifiers = fact.qualifiers || [];
         fact.qualifiers.push({name: "http://gedcomx.org/Cause", value: cause});
@@ -1324,16 +1322,16 @@
         return;
       }
 
-      var doc = editor.get();
-      var relationship = getRelationship(doc, rid);
+      let doc = editor.get();
+      let relationship = getRelationship(doc, rid);
       if (!relationship) {
         showError("Cannot remove fact: invalid relationship id: " + rid);
         return;
       }
 
       if (relationship.facts) {
-        for (var i = 0; i < relationship.facts.length; i++) {
-          var fact = relationship.facts[i];
+        for (let i = 0; i < relationship.facts.length; i++) {
+          let fact = relationship.facts[i];
           if (fact.id === fid) {
             relationship.facts.splice(i, 1);
             updateRecord(doc);
@@ -1385,11 +1383,11 @@
         $("#edit-relationship-fact-value").val("");
       }
       
-      var age;
-      var cause;
+      let age;
+      let cause;
       if (fact.qualifiers) {
-        for (var i = 0; i < fact.qualifiers.length; i++) {
-          var qualifier = fact.qualifiers[i];
+        for (let i = 0; i < fact.qualifiers.length; i++) {
+          let qualifier = fact.qualifiers[i];
           switch (qualifier.name) {
             case "http://gedcomx.org/Age":
               age = qualifier.value;
@@ -1426,11 +1424,11 @@
     function uploadGedcomx(files) {
       setRecordSourceDocument(null);
 
-      for (var i = 0, f; f = files[i]; i++) {
-        var reader = new FileReader();
+      for (let i = 0, f; f = files[i]; i++) {
+        let reader = new FileReader();
         reader.onload = (function(file) {
           return function(e) {
-            var doc;
+            let doc;
             try {
               doc = JSON.parse(e.target.result);
             }
@@ -1452,8 +1450,8 @@
     }
 
     function uploadSource(files) {
-      for (var i = 0, f; f = files[i]; i++) {
-        var reader = new FileReader();
+      for (let i = 0, f; f = files[i]; i++) {
+        let reader = new FileReader();
         reader.onload = (function(file) {
           return function(e) {
             setRecordSourceDocument(e.target.result, file.name);
@@ -1470,7 +1468,7 @@
       editor = new JSONEditor(document.getElementById("gx-editor"), {
         modes: ["tree", "code"],
         onChange: function() {
-          var doc = editor.get();
+          let doc = editor.get();
           updateRecord(doc, null, true);
         },
         onError: function(error) {
@@ -1508,7 +1506,7 @@
       $("#fetch-gx").click(function () {
         setRecordSourceDocument(null);
 
-        var gedcomxUrl = $("#record-url").val();
+        let gedcomxUrl = $("#record-url").val();
         $.ajax({
            type: "GET",
            dataType: "json",
@@ -1528,7 +1526,7 @@
            }
          });
 
-        var sourceUrl = $("#source-url").val();
+        let sourceUrl = $("#source-url").val();
         if (sourceUrl) {
           $.ajax({
              type: "GET",
@@ -1552,7 +1550,7 @@
       $("#paste-gx").click(function() {
         setRecordSourceDocument(null);
 
-        var doc;
+        let doc;
         try {
           doc = JSON.parse($("#pasted-gx").val());
         }
@@ -1565,14 +1563,14 @@
         updateRecord(doc);
         loadSourceDocument(doc);
 
-        var src = $("#pasted-source").val();
+        let src = $("#pasted-source").val();
         if (src) {
           setRecordSourceDocument(src);
         }
       });
 
       $("#download-gx").click(function() {
-        var gx = exportGedcomx();
+        let gx = exportGedcomx();
         this.href = "data:text/plain;charset=UTF-8," + encodeURIComponent(gx);
       });
       
@@ -1591,14 +1589,14 @@
       });
 
       $("#record").on("drop", function(je) {
-        var e = je.originalEvent;
+        let e = je.originalEvent;
         e.preventDefault();
         e.stopPropagation();
         $(this).removeClass("dragging");
-        var files;
+        let files;
         if (e.dataTransfer.items) {
           files = [];
-          for (var i = 0; i < e.dataTransfer.items.length; i++) {
+          for (let i = 0; i < e.dataTransfer.items.length; i++) {
             files.push(e.dataTransfer.items[i].getAsFile());
           }
         }
@@ -1607,12 +1605,12 @@
         }
         uploadGedcomx(files);
       }).on("dragover", function(je) {
-        var e = je.originalEvent;
+        let e = je.originalEvent;
         e.preventDefault();
         e.stopPropagation();
         $(this).addClass("dragging");
       }).on("dragleave", function(je) {
-        var e = je.originalEvent;
+        let e = je.originalEvent;
         e.preventDefault();
         e.stopPropagation();
         $(this).removeClass("dragging");
@@ -1625,14 +1623,14 @@
       });
 
       $("#source-file").on("drop", function(je) {
-        var e = je.originalEvent;
+        let e = je.originalEvent;
         e.preventDefault();
         e.stopPropagation();
         $(this).removeClass("dragging");
-        var files;
+        let files;
         if (e.dataTransfer.items) {
           files = [];
-          for (var i = 0; i < e.dataTransfer.items.length; i++) {
+          for (let i = 0; i < e.dataTransfer.items.length; i++) {
             files.push(e.dataTransfer.items[i].getAsFile());
           }
         }
@@ -1641,12 +1639,12 @@
         }
         uploadSource(files);
       }).on("dragover", function(je) {
-        var e = je.originalEvent;
+        let e = je.originalEvent;
         e.preventDefault();
         e.stopPropagation();
         $(this).addClass("dragging");
       }).on("dragleave", function(je) {
-        var e = je.originalEvent;
+        let e = je.originalEvent;
         e.preventDefault();
         e.stopPropagation();
         $(this).removeClass("dragging");

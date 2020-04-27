@@ -22,10 +22,10 @@
 
 <script>
   $(document).ready(function(){
-    var nbxText = null;
+    let nbxText = null;
     if (window.opener && window.opener.currentGx) {
       window.opener.entityChildWindow = document;
-      var doc = window.opener.currentGx;
+      let doc = window.opener.currentGx;
       doc = fixGedcomx(doc);
       nbxText = findNbxDocumentText(doc, "relexPostRules");
       if (!nbxText) {
@@ -39,12 +39,9 @@
     else {
       nbxText = getSample();
     }
-    var nbx = parseNbx(nbxText);
-    var nbxHtml = gxToHtml(nbx);
+    let nbx = parseNbx(nbxText);
+    let nbxHtml = gxToHtml(nbx);
     $("#nbx-div").html(nbxHtml);
-    window.ondrop(function(e){
-      alert("Dropped!");
-    });
   });
 </script>
 </body>

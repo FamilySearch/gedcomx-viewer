@@ -10,7 +10,7 @@ function encode(s) {
   return $('<div/>').text(s).html();
 }
 
-var overlayTypeIdMap = {};
+let overlayTypeIdMap = {};
 
 /**
  * Get the next available id to use for the given type of element.
@@ -65,10 +65,10 @@ function parseType(typeUri) {
  */
 function getAgent(doc, ref) {
   if (ref && ref.startsWith("#")) {
-    var id = ref.substr(1);
+    let id = ref.substr(1);
     if (doc.agents) {
-      for (var i = 0; i < doc.agents.length; i++) {
-        var agent = doc.agents[i];
+      for (let i = 0; i < doc.agents.length; i++) {
+        let agent = doc.agents[i];
         if (agent.id === id) {
           return agent;
         }
@@ -85,7 +85,7 @@ function getAgent(doc, ref) {
  * @returns {*}
  */
 function getSourceDescription(doc, sourceIdOrUrl) {
-  var source = null;
+  let source = null;
 
   if (doc && sourceIdOrUrl) {
     if (sourceIdOrUrl.charAt(0) === '#') {
@@ -93,8 +93,8 @@ function getSourceDescription(doc, sourceIdOrUrl) {
     }
 
     if (doc.sourceDescriptions) {
-      for (var i = 0; i < doc.sourceDescriptions.length; i++) {
-        var srcDesc = doc.sourceDescriptions[i];
+      for (let i = 0; i < doc.sourceDescriptions.length; i++) {
+        let srcDesc = doc.sourceDescriptions[i];
         if (srcDesc.about === sourceIdOrUrl || srcDesc.id === sourceIdOrUrl) {
           source = srcDesc;
           break;
@@ -107,9 +107,9 @@ function getSourceDescription(doc, sourceIdOrUrl) {
 
 // Find the source description of the 'source' for the record, i.e., for the 'document' that contains the original text.
 function getDocumentSourceDescription(doc) {
-  var recordSourceDescription = getSourceDescription(doc, doc.description);
+  let recordSourceDescription = getSourceDescription(doc, doc.description);
 
-  var documentSourceDescription;
+  let documentSourceDescription;
   if (recordSourceDescription && recordSourceDescription.sources && recordSourceDescription.sources.length > 0) {
     documentSourceDescription = getSourceDescription(doc, recordSourceDescription.sources[0].description);
   }
@@ -121,12 +121,12 @@ function getSourceDocument(doc, documentSourceDescription) {
   if (!documentSourceDescription) {
     documentSourceDescription = getDocumentSourceDescription(doc);
   }
-  var document;
+  let document;
   if (documentSourceDescription && documentSourceDescription.about) {
-    var sourceDocumentId = documentSourceDescription.about.substr(1);
+    let sourceDocumentId = documentSourceDescription.about.substr(1);
     if (doc.documents) {
-      for (var i = 0; i < doc.documents.length; i++) {
-        var candidate = doc.documents[i];
+      for (let i = 0; i < doc.documents.length; i++) {
+        let candidate = doc.documents[i];
         if (sourceDocumentId === candidate.id) {
           document = candidate;
           break;
@@ -148,7 +148,7 @@ function getSourceDocument(doc, documentSourceDescription) {
 function Rectangle(x1OrRectangle, y1, x2, y2) {
   if (!y1) {
     // Parse a string of the form "x1,y1,x2,y2".
-    var parts = x1OrRectangle.split(",");
+    let parts = x1OrRectangle.split(",");
     this.x1 = parts[0];
     this.y1 = parts[1];
     this.x2 = parts[2];
@@ -184,20 +184,20 @@ function getImageArks(doc) {
   function findImageArksAndRectangles(sd, imageArks) {
     if (sd && imageArks.length === 0) {
       if (!isEmpty(sd.sources)) {
-        for (var s = 0; s < sd.sources.length; s++) {
-          var source = sd.sources[s];
-          var rectangles = [];
+        for (let s = 0; s < sd.sources.length; s++) {
+          let source = sd.sources[s];
+          let rectangles = [];
           if (source.qualifiers) {
-            for (var q = 0; q < source.qualifiers.length; q++) {
-              var qualifier = source.qualifiers[q];
+            for (let q = 0; q < source.qualifiers.length; q++) {
+              let qualifier = source.qualifiers[q];
               if (qualifier.name === "http://gedcomx.org/RectangleRegion") {
                 rectangles.push(new Rectangle(source.qualifiers[q].value));
               }
             }
           }
-          var nextSd = getSourceDescription(doc, source.description);
+          let nextSd = getSourceDescription(doc, source.description);
           if (isImage(nextSd)) {
-            var arkAndRectangles = {image: nextSd.about};
+            let arkAndRectangles = {image: nextSd.about};
             if (!isEmpty(rectangles)) {
               arkAndRectangles.rectangles = rectangles;
             }
@@ -212,10 +212,10 @@ function getImageArks(doc) {
   }
 
   // Array of objects, one for each source image found. Each object has {ark: <URL>, coordinates: array of objects with {x1,y1,x2,y2})
-  var imageArks = [];
+  let imageArks = [];
   // Get the "main" SourceDescription for this GedcomX document (i.e., for this Record).
-  var mainSd = getSourceDescription(doc, doc.description);
-  var sd = mainSd;
+  let mainSd = getSourceDescription(doc, doc.description);
+  let sd = mainSd;
   while (sd && !isRecord(sd) && sd.componentOf) {
     sd = getSourceDescription(doc, sd.componentOf.description);
   }

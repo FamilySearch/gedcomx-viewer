@@ -29,18 +29,16 @@
   <div id="rel-chart"></div>
 
   <script>
-    var currentRelChart;
-
     $(document).ready(function(){
-      var params = window.location.search;
-      var urlParams = new URLSearchParams(params);
-      var url = urlParams.get('url');
+      let params = window.location.search;
+      let urlParams = new URLSearchParams(params);
+      let url = urlParams.get('url');
 
       if (!url) {
         url = "samples/sample.json";
       }
       else if (url.includes(":")) {
-        var personaId = url.match(/.*1:1:(.*)/)[1];
+        let personaId = url.match(/.*1:1:(.*)/)[1];
         url = "https://api.familysearch.org/platform/records/personas/" + personaId + "?access_token=b4d8bde4-8fe6-49b2-83cd-dcddabca0e25-prod";
       }
       $.ajax({

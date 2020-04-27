@@ -24,8 +24,6 @@
   <script src="../graph/model/FamilyNode.js"></script>
   <script src="../graph/model/RelationshipGraph.js"></script>
 
-  <script src="../gx-util.js"></script>
-  <script src="../gx-fix.js"></script>
   <script src="../graph/view/Generation.js"></script>
   <script src="../graph/view/LinkedHashSet.js"></script>
   <script src="../graph/view/IntegerByRef.js"></script>
@@ -49,19 +47,17 @@
 
 
 <script type="text/javascript">
-  var currentRelChart;
-
   $(document).ready(function(){
     // IMAGE VIEWER ==========================================================================
     const viewer = document.querySelector("fs-single-image-viewer");
 
     // REL CHART =============================================================================
-    var params = window.location.search;
-    var urlParams = new URLSearchParams(params);
-    var url = urlParams.get('url');
+    let params = window.location.search;
+    let urlParams = new URLSearchParams(params);
+    let url = urlParams.get('url');
 
     if (!url) {
-      var personId = urlParams.get('personId');
+      let personId = urlParams.get('personId');
       if (personId) {
         url = "https://api.familysearch.org/platform/records/personas/" + personId;
       }
@@ -70,7 +66,7 @@
       }
     }
 
-    var sessionId = urlParams.get('access_token');
+    let sessionId = urlParams.get('access_token');
     if (sessionId) {
       url += "?access_token=" + sessionId;
     }

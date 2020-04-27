@@ -21,8 +21,7 @@ function FamilyNode(familyId, fatherNode, motherNode, coupleRelationship) {
 }
 
 FamilyNode.prototype.findChildIndex = function(personNode) {
-  var c;
-  for (c = 0; c < this.children.length; c++) {
+  for (let c = 0; c < this.children.length; c++) {
     if (this.children[c] === personNode) {
       return c;
     }
@@ -31,7 +30,7 @@ FamilyNode.prototype.findChildIndex = function(personNode) {
 };
 
 FamilyNode.prototype.addChild = function(childNode, fatherRel, motherRel) {
-  var index = addToArrayIfNotThere(childNode, this.children);
+  let index = addToArrayIfNotThere(childNode, this.children);
   if (this.father) {
     this.fatherRels[index] = fatherRel;
   }
@@ -52,8 +51,8 @@ FamilyNode.prototype.getSpouse = function(personNode) {
 };
 
 function makeFamilyId(fatherNode, motherNode) {
-  var fatherId = fatherNode ? fatherNode.personId : "none";
-  var motherId = motherNode ? motherNode.personId : "none";
+  let fatherId = fatherNode ? fatherNode.personId : "none";
+  let motherId = motherNode ? motherNode.personId : "none";
   return fatherId + "-n-" + motherId;
 }
 

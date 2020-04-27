@@ -4,17 +4,15 @@
  */
 
 RelChartBuilder.prototype.resetRemainingPersons = function() {
-  var p;
-  for (p = 0; p < this.relChart.relGraph.personNodes.length; p++) {
+  for (let p = 0; p < this.relChart.relGraph.personNodes.length; p++) {
     this.remainingPersonIds.add(this.relChart.relGraph.personNodes[p].personId);
   }
 };
 
 // Get the next remaining person who is a principal person in the relGraph, if any. Otherwise, get the next remaining person.
 RelChartBuilder.prototype.getNextRemainingPerson = function() {
-  // var p, personNode;
-  // for (p = 0; p < this.relChart.relGraph.principals.length; p++) {
-  //   personNode = this.relChart.relGraph.principals[p];
+  // for (let p = 0; p < this.relChart.relGraph.principals.length; p++) {
+  //   let personNode = this.relChart.relGraph.principals[p];
   //   if (this.remainingPersonIds.contains(personNode.personId)) {
   //     return personNode.personId;
   //   }
@@ -29,7 +27,7 @@ RelChartBuilder.prototype.getNextRemainingPerson = function() {
  * @return true if the family has only one person (or zero); false if the family has multiple people
  */
 RelChartBuilder.prototype.familyHasOnlyOnePerson = function(familyNode) {
-  var numPersons = 0;
+  let numPersons = 0;
   if (familyNode.father) {
     numPersons++;
   }
@@ -51,31 +49,23 @@ RelChartBuilder.prototype.familyHasOnlyOnePerson = function(familyNode) {
  */
 RelChartBuilder.prototype.addSpouses = function(personBox, subtree, needsRelativesQueue) {
   // Add spouse above or below, and insert children in between
-  var personNode = personBox.personNode;
-  var spouseFamilies = personNode.spouseFamilies;
-  var f;
-  var spouseFamily;
-  var spouseFamilyLine;
-  var spouse; // PersonNode
-  var spouseBox;
-  var direction;
-  var children;
-  var c, childBox;
+  let personNode = personBox.personNode;
+  let spouseFamilies = personNode.spouseFamilies;
 
   if (!isEmpty(spouseFamilies)) {
-    for (f = 0; f < spouseFamilies.length; f++) {
-      spouseFamily = spouseFamilies[f];
+    for (let f = 0; f < spouseFamilies.length; f++) {
+      let spouseFamily = spouseFamilies[f];
       if (this.familyHasOnlyOnePerson(spouseFamily)) {
         continue; // don't bother creating family lines that will not connect anyone
       }
       if (!this.relChart.familyLineMap[spouseFamily.familyId]) {
-        spouseFamilyLine = new FamilyLine(this.relChart, spouseFamily, this.relChart.$familyLinesDiv);
+        let spouseFamilyLine = new FamilyLine(this.relChart, spouseFamily, this.relChart.$familyLinesDiv);
         this.relChart.familyLineMap[spouseFamily.familyId] = spouseFamilyLine;
         this.relChart.familyLines.push(spouseFamilyLine);
         personBox.spouseLines.push(spouseFamilyLine);
-        spouse = spouseFamily.getSpouse(personNode);
-        direction = personNode.gender === GENDER_CODE_MALE ? this.BELOW : this.ABOVE;
-        spouseBox = this.insert(direction, personBox, spouse, personBox.generationIndex, spouseFamilyLine, null, needsRelativesQueue, subtree);
+        let spouse = spouseFamily.getSpouse(personNode);
+        let direction = personNode.gender === GENDER_CODE_MALE ? this.BELOW : this.ABOVE;
+        let spouseBox = this.insert(direction, personBox, spouse, personBox.generationIndex, spouseFamilyLine, null, needsRelativesQueue, subtree);
         if (personNode.gender === GENDER_CODE_MALE) {
           spouseFamilyLine.setFather(personBox);
           spouseFamilyLine.setMother(spouseBox);
@@ -84,25 +74,25 @@ RelChartBuilder.prototype.addSpouses = function(personBox, subtree, needsRelativ
           spouseFamilyLine.setFather(spouseBox);
           spouseFamilyLine.setMother(personBox);
         }
-        children = spouseFamily.children;
+        let children = spouseFamily.children;
         if (children) {
           if (personNode.gender === GENDER_CODE_MALE) {
             // Insert children below the person (i.e., the father), from last to first
-            var childBoxes = [];
-            for (c = children.length - 1; c >= 0; c--) {
-              childBox = this.insert(direction, personBox, children[c], personBox.generationIndex - 1, null, spouseFamilyLine, needsRelativesQueue, subtree);
+            let childBoxes = [];
+            for (let c = children.length - 1; c >= 0; c--) {
+              let childBox = this.insert(direction, personBox, children[c], personBox.generationIndex - 1, null, spouseFamilyLine, needsRelativesQueue, subtree);
               childBoxes.push(childBox);
             }
             // Reverse the list of children and then add them all to the spouse family line so they'll be in the right order
             childBoxes.reverse();
-            for (c = 0; c < childBoxes.length; c++) {
+            for (let c = 0; c < childBoxes.length; c++) {
               spouseFamilyLine.addChild(childBoxes[c], this.relChart.isEditable);
             }
           }
           else {
             // Insert children above the person (i.e., the mother), from first to last
-            for (c = 0; c < spouseFamily.children.length; c++) {
-              childBox = this.insert(direction, personBox, spouseFamily.children[c], personBox.generationIndex - 1, null, spouseFamilyLine, needsRelativesQueue, subtree);
+            for (let c = 0; c < spouseFamily.children.length; c++) {
+              let childBox = this.insert(direction, personBox, spouseFamily.children[c], personBox.generationIndex - 1, null, spouseFamilyLine, needsRelativesQueue, subtree);
               spouseFamilyLine.addChild(childBox, this.relChart.isEditable);
             }
           }
@@ -121,38 +111,33 @@ RelChartBuilder.prototype.addSpouses = function(personBox, subtree, needsRelativ
 RelChartBuilder.prototype.addParents = function(personBox, subtree, needsRelativesQueue) {
 
   // Add parents above and below, and then older siblings above and younger siblings below
-  var personNode = personBox.personNode;
-  var parentFamilies = personNode.parentFamilies;
-  var f, parentFamily;
-  var parentFamilyLine;
-  var fatherBox, motherBox; // PersonBoxes
-  var children, c, child;
-  var siblingBox, youngerSiblingBoxes;
-  var personPosition;
+  let personNode = personBox.personNode;
+  let parentFamilies = personNode.parentFamilies;
   if (parentFamilies) {
-    for (f = 0; f < parentFamilies.length; f++) {
-      parentFamily = parentFamilies[f];
+    for (let f = 0; f < parentFamilies.length; f++) {
+      let parentFamily = parentFamilies[f];
       if (this.familyHasOnlyOnePerson(parentFamily)) {
         // skip "empty" families that don't relate multiple people together.
         continue;
       }
       if (!this.relChart.familyLineMap[parentFamily.familyId]) {
-        parentFamilyLine = new FamilyLine(this.relChart, parentFamily, this.relChart.$familyLinesDiv);
+        let parentFamilyLine = new FamilyLine(this.relChart, parentFamily, this.relChart.$familyLinesDiv);
         this.relChart.familyLineMap[parentFamily.familyId] = parentFamilyLine;
         this.relChart.familyLines.push(parentFamilyLine);
         personBox.parentLines.push(parentFamilyLine);
-        fatherBox = this.insert(this.ABOVE, personBox, parentFamily.father, personBox.generationIndex + 1, parentFamilyLine, null, needsRelativesQueue, subtree);
-        motherBox = this.insert(this.BELOW, personBox, parentFamily.mother, personBox.generationIndex + 1, parentFamilyLine, null, needsRelativesQueue, subtree);
+        let fatherBox = this.insert(this.ABOVE, personBox, parentFamily.father, personBox.generationIndex + 1, parentFamilyLine, null, needsRelativesQueue, subtree);
+        let motherBox = this.insert(this.BELOW, personBox, parentFamily.mother, personBox.generationIndex + 1, parentFamilyLine, null, needsRelativesQueue, subtree);
         parentFamilyLine.setFather(fatherBox);
         parentFamilyLine.setMother(motherBox);
-        children = parentFamily.children;
+        let children = parentFamily.children;
         if (children) {
-          personPosition = 0;
+          let personPosition = 0;
           // Add older siblings from oldest to youngest
+          let child;
           do {
             child = children[personPosition++];
             if (child !== personNode) {
-              siblingBox = this.insert(this.ABOVE, personBox, child, personBox.generationIndex, null, parentFamilyLine, needsRelativesQueue, subtree);
+              let siblingBox = this.insert(this.ABOVE, personBox, child, personBox.generationIndex, null, parentFamilyLine, needsRelativesQueue, subtree);
               parentFamilyLine.addChild(siblingBox, this.relChart.isEditable);
             }
           } while (personPosition < children.length && child !== personNode);
@@ -161,17 +146,17 @@ RelChartBuilder.prototype.addParents = function(personBox, subtree, needsRelativ
           parentFamilyLine.addChild(personBox, this.relChart.isEditable);
 
           // Insert younger siblings below the person from youngest to oldest
-          youngerSiblingBoxes = [];
-          for (c = children.length - 1; c >= personPosition; c--) {
-            child = children[c];
+          let youngerSiblingBoxes = [];
+          for (let c = children.length - 1; c >= personPosition; c--) {
+            let child = children[c];
             if (child === personNode) {
               throw "Error: person appears in child list twice.";
             }
-            siblingBox = this.insert(this.BELOW, personBox, child, personBox.generationIndex, null, parentFamilyLine, needsRelativesQueue, subtree);
+            let siblingBox = this.insert(this.BELOW, personBox, child, personBox.generationIndex, null, parentFamilyLine, needsRelativesQueue, subtree);
             youngerSiblingBoxes.push(siblingBox);
           }
           // Add younger siblings to the family line from oldest to youngest so that the child list is in order
-          for (c = youngerSiblingBoxes.length - 1; c >= 0; c--) {
+          for (let c = youngerSiblingBoxes.length - 1; c >= 0; c--) {
             parentFamilyLine.addChild(youngerSiblingBoxes[c], this.relChart.isEditable);
           }
         }
@@ -185,7 +170,7 @@ RelChartBuilder.prototype.addRelatives = function(personBox, subtree) {
   //   to the chart in the order of how closely related they are to the "main" person.  That way, if a person
   //   appears in the chart multiple times, their first ("main") appearance (which will then include their relatives)
   //   will be the one that is more closely related to the main person.
-  var needsRelativesQueue = [];                                        
+  let needsRelativesQueue = [];
   do {
     personBox.subtree = subtree;
 
@@ -197,7 +182,7 @@ RelChartBuilder.prototype.addRelatives = function(personBox, subtree) {
 };
 
 RelChartBuilder.prototype.getPersonNode = function(personId) {
-  var personNode = this.relChart.relGraph.personNodeMap[personId];
+  let personNode = this.relChart.relGraph.personNodeMap[personId];
   if (!personNode && personId) {
     throw "Could not find personNode for personId '" + personId + "'";
   }
@@ -211,11 +196,9 @@ RelChartBuilder.prototype.getPersonNode = function(personId) {
  */
 RelChartBuilder.prototype.addPersons = function() {
   // Create person boxes for everyone
-  var personId, personNode; // PersonNode
-  var previousBottom = null; // bottom box of previous disconnected sub-graph, if any
-  var subtree = 1;
-  var personBox;
-  var topBox;
+  let personId;
+  let previousBottom = null; // bottom box of previous disconnected sub-graph, if any
+  let subtree = 1;
 
   this.resetRemainingPersons();
   do {
@@ -223,11 +206,11 @@ RelChartBuilder.prototype.addPersons = function() {
     personId = this.getNextRemainingPerson();
     if (personId) {
       this.remainingPersonIds.remove(personId);
-      personNode = this.getPersonNode(personId);
-      personBox = new PersonBox(personNode, this.relChart, null, null, 0, this.relGraphToGx);
+      let personNode = this.getPersonNode(personId);
+      let personBox = new PersonBox(personNode, this.relChart, null, null, 0, this.relGraphToGx);
       this.addRelatives(personBox, subtree++);
       // Find the first person box in this sub-graph
-      topBox = null;
+      let topBox = null;
       while (personBox) {
         topBox = personBox;
         personBox = topBox.above;
@@ -260,20 +243,20 @@ RelChartBuilder.prototype.createGenerations = function(relChart) {
    */
   function shiftGenerations(personBoxes) {
     // Map of subtree index to minimum generationIndex in that subtree.
-    var minGeneration = {};
-    for (var p = 0; p < personBoxes.length; p++) {
-      var personBox = personBoxes[p];
-      var generationIndex = personBox.generationIndex;
-      var minGenerationIndex = minGeneration[personBox.subtree];
+    let minGeneration = {};
+    for (let p = 0; p < personBoxes.length; p++) {
+      let personBox = personBoxes[p];
+      let generationIndex = personBox.generationIndex;
+      let minGenerationIndex = minGeneration[personBox.subtree];
       if (minGenerationIndex === undefined || personBox.generationIndex < minGenerationIndex) {
-        var subtree = personBox.subtree;
+        let subtree = personBox.subtree;
         minGeneration[subtree] = generationIndex;
       }
     }
 
     // Shift the generationIndex of all person boxes in each subtree so that each subtree begins at generation 0.
-    var maxGeneration = 0;
-    for (p = 0; p < personBoxes.length; p++) {
+    let maxGeneration = 0;
+    for (let p = 0; p < personBoxes.length; p++) {
       personBox = personBoxes[p];
       minGenerationIndex = minGeneration[personBox.subtree];
       personBox.generationIndex -= minGenerationIndex;
@@ -283,8 +266,8 @@ RelChartBuilder.prototype.createGenerations = function(relChart) {
     }
 
     // Create the array of Generation objects
-    var generations = [];
-    for (var g = 0; g <= maxGeneration; g++) {
+    let generations = [];
+    for (let g = 0; g <= maxGeneration; g++) {
       generations[g] = new Generation(g, relChart);
     }
     return generations;
@@ -292,10 +275,10 @@ RelChartBuilder.prototype.createGenerations = function(relChart) {
 
   // Add each person box to the generation list that it is part of, and set its global position number.
   function addPersonsToGenerations(personBoxes, generations) {
-    var globalPosition = 0;
+    let globalPosition = 0;
 
-    for (var p = 0; p < personBoxes.length; p++) {
-      var personBox = personBoxes[p];
+    for (let p = 0; p < personBoxes.length; p++) {
+      let personBox = personBoxes[p];
       personBox.order = globalPosition++; // set the global order of this person
       personBox.generation = generations[personBox.generationIndex];
       personBox.generation.genPersons.push(personBox);
@@ -304,17 +287,12 @@ RelChartBuilder.prototype.createGenerations = function(relChart) {
 
   function setGenerationPositions(generations) {
     // Set the genAbove/genBelow for each person within each generation
-    var g, generation;
-    var aboveInGen;
-    var generationPosition;
-    var p, personBox;
-
-    for (g = 0; g < generations.length; g++) {
-      generation = generations[g];
-      aboveInGen = null;
-      generationPosition = 0;
-      for (p = 0; p < generation.genPersons.length; p++) {
-        personBox = generation.genPersons[p];
+    for (let g = 0; g < generations.length; g++) {
+      let generation = generations[g];
+      let aboveInGen = null;
+      let generationPosition = 0;
+      for (let p = 0; p < generation.genPersons.length; p++) {
+        let personBox = generation.genPersons[p];
         if (aboveInGen) {
           aboveInGen.genBelow = personBox;
           personBox.genAbove = aboveInGen;
@@ -330,7 +308,7 @@ RelChartBuilder.prototype.createGenerations = function(relChart) {
 
   // Shift the generationIndex of the personBoxes within each subtree so that each subtree begins at generation 0.
   //
-  var generations = shiftGenerations(this.relChart.personBoxes);
+  let generations = shiftGenerations(this.relChart.personBoxes);
 
   // Add PersonBoxes to each generation, and set their global positions.
   addPersonsToGenerations(this.relChart.personBoxes, generations);
@@ -347,12 +325,11 @@ RelChartBuilder.prototype.createGenerations = function(relChart) {
  */
 RelChartBuilder.prototype.setFamilyLineTopBottoms = function() {
   // For each FamilyLine, set the top person (to father or first child) and bottom person (to mother or last child).
-  var f, familyLine;
-  for (f = 0; f < this.relChart.familyLines.length; f++) {
-    familyLine = this.relChart.familyLines[f];
+  for (let f = 0; f < this.relChart.familyLines.length; f++) {
+    let familyLine = this.relChart.familyLines[f];
     familyLine.topPerson = familyLine.father ? familyLine.father : familyLine.children[0];
     familyLine.bottomPerson = familyLine.mother ? familyLine.mother : familyLine.children[familyLine.children.length - 1];
-    var height = Math.max(familyLine.bottomPerson.center - familyLine.topPerson.center, 1);
+    let height = Math.max(familyLine.bottomPerson.center - familyLine.topPerson.center, 1);
     familyLine.$familyLineDiv.css({top: familyLine.topPerson.center, height: height});
     if (familyLine.$familyLineDrop) { // => isEditable
       familyLine.$familyLineDrop.css({height: height});
@@ -378,7 +355,7 @@ RelChartBuilder.prototype.insert = function(isAbove, origPersonBox, newPersonNod
   if (!newPersonNode) {
     return null;
   }
-  var newPersonBox = isAbove ?
+  let newPersonBox = isAbove ?
       this.insertAbove(origPersonBox, newPersonNode, generationIndex) :
       this.insertBelow(origPersonBox, newPersonNode, generationIndex);
   newPersonBox.subtree = subtree;
@@ -411,7 +388,7 @@ RelChartBuilder.prototype.insert = function(isAbove, origPersonBox, newPersonNod
  * @return PersonBox that was created
  */
 RelChartBuilder.prototype.insertAbove = function(origPerson, newPerson, generationIndex) {
-  var newPersonBox = new PersonBox(newPerson, this.relChart, origPerson.above, origPerson, generationIndex, this.relGraphToGx);
+  let newPersonBox = new PersonBox(newPerson, this.relChart, origPerson.above, origPerson, generationIndex, this.relGraphToGx);
   origPerson.above = newPersonBox;
   if (newPersonBox.above) {
     newPersonBox.above.below = newPersonBox;
@@ -429,7 +406,7 @@ RelChartBuilder.prototype.insertAbove = function(origPerson, newPerson, generati
  * @return PersonBox that was created
  */
 RelChartBuilder.prototype.insertBelow = function(origPerson, newPerson, generationIndex) {
-  var newPersonBox = new PersonBox(newPerson, this.relChart, origPerson, origPerson.below, generationIndex, this.relGraphToGx);
+  let newPersonBox = new PersonBox(newPerson, this.relChart, origPerson, origPerson.below, generationIndex, this.relGraphToGx);
   origPerson.below = newPersonBox;
   if (newPersonBox.below) {
     newPersonBox.below.above = newPersonBox;
@@ -613,7 +590,7 @@ RelChartBuilder.prototype.correlateHighlights = function(doc, relToGx, imgToGx) 
   }
 };
 
-var highlightsToProcess = [];
+let highlightsToProcess = [];
 
 /**
  * Build a relationship chart (RelChart) from this RelChartBuilder's relationship graph, starting at the given person.

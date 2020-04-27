@@ -9,7 +9,7 @@
  *          Overlay object to use in image viewer.
  */
 function createOverlay(type, rectangle, elementMap, gxObject) {
-  var overlayId = nextId(type, elementMap, gxObject);
+  let overlayId = nextId(type, elementMap, gxObject);
 
   return {
     id: overlayId,
@@ -35,10 +35,10 @@ function imageArkToApid(imageArk) {
    * @return 2-digit checksum.
    */
   function computeChecksum(inString) {
-    var MOD_ADLER = 65521;
-    var a = 1;
-    var b = 0;
-    for (var i = 0; i < inString.length; i++) {
+    let MOD_ADLER = 65521;
+    let a = 1;
+    let b = 0;
+    for (let i = 0; i < inString.length; i++) {
       a = (a + inString.charAt(i).charCodeAt()) % MOD_ADLER;
       b = (b + a) % MOD_ADLER;
     }
@@ -51,13 +51,13 @@ function imageArkToApid(imageArk) {
    * @returns Number.
    */
   function decode(encodedString) {
-    var result = 0;
-    var alphabet = "M9S3Q7W4HCZ8D6XFNJVK2LGP5RTYB1";
-    var numberBase = alphabet.length;
+    let result = 0;
+    let alphabet = "M9S3Q7W4HCZ8D6XFNJVK2LGP5RTYB1";
+    let numberBase = alphabet.length;
 
-    for (var i = 0; i < encodedString.length; i++) {
-      var ch = encodedString.charAt(i);
-      var nextVal = alphabet.indexOf(ch);
+    for (let i = 0; i < encodedString.length; i++) {
+      let ch = encodedString.charAt(i);
+      let nextVal = alphabet.indexOf(ch);
       if (-1 !== nextVal) { // ignore dashes.
         result *= numberBase;
         result += nextVal;
@@ -117,14 +117,14 @@ function imageArkToApid(imageArk) {
     }
 
     // Get the length of the first two numbers (the third number is whatever is left after those)
-    var len1 = decode(encodedThApid.substring(0, 1));
-    var len2 = decode(encodedThApid.substring(1, 2));
+    let len1 = decode(encodedThApid.substring(0, 1));
+    let len2 = decode(encodedThApid.substring(1, 2));
     // Get the three JEncoded trigit ranges, and decode each into a number.
-    var v1 = decode(encodedThApid.substring(2, 2 + len1));
-    var v2 = decode(encodedThApid.substring(2 + len1, 2 + len1 + len2));
-    var v3 = decode(encodedThApid.substring(2 + len1 + len2));
-    var s = "TH-" + v1 + "-" + v2 + "-" + v3 + "-";
-    var checksum = computeChecksum(s);
+    let v1 = decode(encodedThApid.substring(2, 2 + len1));
+    let v2 = decode(encodedThApid.substring(2 + len1, 2 + len1 + len2));
+    let v3 = decode(encodedThApid.substring(2 + len1 + len2));
+    let s = "TH-" + v1 + "-" + v2 + "-" + v3 + "-";
+    let checksum = computeChecksum(s);
     return s + checksum;
   }
 
@@ -138,15 +138,15 @@ function imageArkToApid(imageArk) {
    */
   function decodeDgsApid(encodedDgsApid) {
     encodedDgsApid = removeDashes(encodedDgsApid);
-    var len1 = decode(encodedDgsApid.substring(0, 1));
-    var dgs = decode(encodedDgsApid.substring(1, 1 + len1));
-    var img = decode(encodedDgsApid.substring(1 + len1));
+    let len1 = decode(encodedDgsApid.substring(0, 1));
+    let dgs = decode(encodedDgsApid.substring(1, 1 + len1));
+    let img = decode(encodedDgsApid.substring(1 + len1));
     return "DGS-" + dgs.toString().padStart(9, '0') + "_" + img.toString().padStart(5, '0');
   }
 
-  var noParams = imageArk.replace(/\?.*/, ""); // Remove any query parameters
-  var name = noParams.replace(/.*\//, ""); // Strip off everything before the "3:..."
-  var jEncodedValue = name.replace(/.*:/, "");
+  let noParams = imageArk.replace(/\?.*/, ""); // Remove any query parameters
+  let name = noParams.replace(/.*\//, ""); // Strip off everything before the "3:..."
+  let jEncodedValue = name.replace(/.*:/, "");
   if (name.startsWith("3:1:")) {
     return decodeThApid(jEncodedValue);
   }
@@ -161,8 +161,8 @@ function findNbxDocumentText(doc, docId) {
     if (!docId) {
       docId = "nbx";
     }
-    for (var d = 0; d < doc.documents.length; d++) {
-      var document = doc.documents[d];
+    for (let d = 0; d < doc.documents.length; d++) {
+      let document = doc.documents[d];
       if (document.id === docId) {
         return document.text;
       }
@@ -190,17 +190,17 @@ function overlayBoxes(viewer, doc) {
    * @returns JQuery object for the new span element.
    */
   function makeMarkerSpan(text, markerId, boxType) {
-    var html = "<span class='marker-" + (boxType ? boxType : "default") + "' id='" + markerId + "'>" + encode(text) + "</span>";
+    let html = "<span class='marker-" + (boxType ? boxType : "default") + "' id='" + markerId + "'>" + encode(text) + "</span>";
     return $.parseHTML(html);
   }
 
   function addMarker(markers, overlayId, text, boxType) {
-    var $markers = $("#markers");
+    let $markers = $("#markers");
 
-    var markerId = "m_" + overlayId;
+    let markerId = "m_" + overlayId;
     $markers.append(makeMarkerSpan(text, markerId, boxType));
-    var markerNode = document.getElementById(markerId); //$("#" + markerId)[0];
-    var marker = {
+    let markerNode = document.getElementById(markerId); //$("#" + markerId)[0];
+    let marker = {
       id : markerId,
       followOverlayId: overlayId,
       hideWhenInactive: true,
@@ -224,14 +224,14 @@ function overlayBoxes(viewer, doc) {
    */
   function addSourceBoxes(boxes, gxValue, boxType, text, markers, elementMap) {
     if (gxValue && !isEmpty(gxValue.sources)) {
-      for (var s = 0; s < gxValue.sources.length; s++) {
-        var sourceReference = gxValue.sources[s];
+      for (let s = 0; s < gxValue.sources.length; s++) {
+        let sourceReference = gxValue.sources[s];
         if (!isEmpty(sourceReference.qualifiers)) {
-          for (var q = 0; q < sourceReference.qualifiers.length; q++) {
-            var qualifier = sourceReference.qualifiers[q];
+          for (let q = 0; q < sourceReference.qualifiers.length; q++) {
+            let qualifier = sourceReference.qualifiers[q];
             if (qualifier.name === "http://gedcomx.org/RectangleRegion") {
-              var rectangle = new Rectangle(qualifier.value);
-              var overlay = createOverlay(boxType, rectangle, elementMap, gxValue);
+              let rectangle = new Rectangle(qualifier.value);
+              let overlay = createOverlay(boxType, rectangle, elementMap, gxValue);
               boxes.push(overlay);
               if (text && markers) {
                 addMarker(markers, overlay.id, text, boxType);
@@ -254,12 +254,12 @@ function overlayBoxes(viewer, doc) {
    */
   function addFieldBoxes(boxes, markers, fieldContainer, boxType, elementMap) {
     if (!isEmpty(fieldContainer.fields)) {
-      for (var f = 0; f < fieldContainer.fields.length; f++) {
-        var field = fieldContainer.fields[f];
+      for (let f = 0; f < fieldContainer.fields.length; f++) {
+        let field = fieldContainer.fields[f];
         if (field.values) {
-          var text = null;
-          for (var v = 0; v < field.values.length; v++) {
-            var fieldValue = field.values[v];
+          let text = null;
+          for (let v = 0; v < field.values.length; v++) {
+            let fieldValue = field.values[v];
             if (fieldValue.text) {
               text = fieldValue.text;
             }
@@ -280,16 +280,16 @@ function overlayBoxes(viewer, doc) {
    */
   function addNameBoxes(boxes, markers, names, elementMap) {
     if (names) {
-      for (var n = 0; n < names.length; n++) {
-        var name = person.names[n];
+      for (let n = 0; n < names.length; n++) {
+        let name = names[n];
         addFieldBoxes(boxes, markers, name, "name", elementMap);
         if (name.nameForms) {
-          for (var f = 0; f < name.nameForms.length; f++) {
-            var nameForm = name.nameForms[f];
+          for (let f = 0; f < name.nameForms.length; f++) {
+            let nameForm = name.nameForms[f];
             addFieldBoxes(boxes, markers, nameForm, "name", elementMap);
             if (nameForm.parts) {
-              for (var np = 0; np < nameForm.parts.length; np++) {
-                var namePart = nameForm.parts[np];
+              for (let np = 0; np < nameForm.parts.length; np++) {
+                let namePart = nameForm.parts[np];
                 addFieldBoxes(boxes, markers, namePart, "name", elementMap);
               }
             }
@@ -301,8 +301,8 @@ function overlayBoxes(viewer, doc) {
 
   function addFactBoxes(boxes, markers, facts, elementMap) {
     if (!isEmpty(facts)) {
-      for (var f = 0; f < facts.length; f++) {
-        var fact = facts[f];
+      for (let f = 0; f < facts.length; f++) {
+        let fact = facts[f];
         addFieldBoxes(boxes, markers, fact, "fact", elementMap);
         if (fact.date) {
           addFieldBoxes(boxes, markers, fact.date, "date", elementMap);
@@ -317,8 +317,8 @@ function overlayBoxes(viewer, doc) {
   // NBX bounding box [x,y,w,h] parsing...
   // Find the metadata string in the given array of {tag:, content:} with the given tag.
   function findMetadata(metadata, tag) {
-    for (var m = 0; m < metadata.length; m++) {
-      var meta = metadata[m];
+    for (let m = 0; m < metadata.length; m++) {
+      let meta = metadata[m];
       if (meta.tag === tag) {
         return meta.content;
       }
@@ -328,7 +328,7 @@ function overlayBoxes(viewer, doc) {
 
   // Parse "[10,20:30,40] " (using pixel coordinates) into {x1,y1,x2,y2}, using fractional coordinates.
   function parseRect(rectString, imgWidth, imgHeight) {
-    var parts = rectString.match(/\[(\d+),(\d+):(\d+),(\d+)] */);
+    let parts = rectString.match(/\[(\d+),(\d+):(\d+),(\d+)] */);
     return {
       x1: parts[1] / imgWidth,
       y1: parts[2] / imgHeight,
@@ -345,22 +345,20 @@ function overlayBoxes(viewer, doc) {
    * @param rectangles - Array of "[x1,y1:x2,y2] " found in the text.
    */
   function findTextForEachRectangle(text, rectangles) {
-    var textStrings = [];
-    var rectText;
+    let textStrings = [];
     if (!isEmpty(rectangles)) {
-      var len = text.length;
-      var r = 0;
+      let len = text.length;
+      let r = 0;
       // Start at the text that is just past the next rectangle.
-      var textPos = text.indexOf(rectangles[r]) + rectangles[r].length;
-      var nextRectPos;
+      let textPos = text.indexOf(rectangles[r]) + rectangles[r].length;
 
       while (textPos >= 0 && textPos < len) {
         r++;
-        nextRectPos = r < rectangles.length ? text.indexOf(rectangles[r], textPos) : len;
+        let nextRectPos = r < rectangles.length ? text.indexOf(rectangles[r], textPos) : len;
         if (nextRectPos < 0) {
           throw "Could not find expected rectangle " + r + ": " + rectangles[r];
         }
-        rectText = text.substring(textPos, nextRectPos).trim();
+        let rectText = text.substring(textPos, nextRectPos).trim();
         // If we want newlines to break strings, we can remove everything up until the first newline in the middle of this string.
         textStrings.push(rectText);
         textPos = r < rectangles.length ? nextRectPos + rectangles[r].length : len;
@@ -391,24 +389,24 @@ function overlayBoxes(viewer, doc) {
            type : <typeOfEntity>
            text : <text of entity> (may include rectangles "[x1,y1:x2,y2] " followed by text for that rectangle).
      */
-    var nbx = parseNbx(nbxText);
+    let nbx = parseNbx(nbxText);
 
-    var imgSizeArr = findMetadata(nbx.metadata, "IMGSIZE");
-    var imgSize = imgSizeArr[0].text.split(",");
-    var imgWidth = imgSize[0];
-    var imgHeight = imgSize[1];
+    let imgSizeArr = findMetadata(nbx.metadata, "IMGSIZE");
+    let imgSize = imgSizeArr[0].text.split(",");
+    let imgWidth = imgSize[0];
+    let imgHeight = imgSize[1];
 
-    for (var t = 0; t < nbx.sbody.length; t++) {
-      var tag = nbx.sbody[t];
+    for (let t = 0; t < nbx.sbody.length; t++) {
+      let tag = nbx.sbody[t];
       if (tag.rectangles) {
         //todo. So far there won't be any here.
       }
       if (tag.text) {
-        var rectStrings = tag.text.match(/\[\d+,\d+:\d+,\d+] /g);
-        var textStrings = findTextForEachRectangle(tag.text, rectStrings);
+        let rectStrings = tag.text.match(/\[\d+,\d+:\d+,\d+] /g);
+        let textStrings = findTextForEachRectangle(tag.text, rectStrings);
         if (!isEmpty(rectStrings)) {
-          for (var r = 0; r < rectStrings.length; r++) {
-            var overlay = createOverlay(null, parseRect(rectStrings[r], imgWidth, imgHeight));
+          for (let r = 0; r < rectStrings.length; r++) {
+            let overlay = createOverlay(null, parseRect(rectStrings[r], imgWidth, imgHeight));
             boxes.push(overlay);
             if (textStrings[r] && textStrings[r].length > 0) {
               addMarker(markers, overlay.id, textStrings[r], null);
@@ -421,25 +419,25 @@ function overlayBoxes(viewer, doc) {
 
   function addArticleRectangles(imageArksAndRects, boxes, elementMap, doc) {
     // Assume single image for now.
-    var rects = imageArksAndRects[0].rectangles;
+    let rects = imageArksAndRects[0].rectangles;
     if (rects) {
-      for (var r = 0; r < rects.length; r++) {
-        var overlay = createOverlay("article", rects[r], elementMap, doc);
+      for (let r = 0; r < rects.length; r++) {
+        let overlay = createOverlay("article", rects[r], elementMap, doc);
         boxes.push(overlay);
       }
     }
   }
   
   // overlayBoxes(doc) ============================
-  var boxes = [];
-  var markers = [];
-  var elementMap = {}; // Map of highlight HTML element id -> GedcomX object ID that the element is associated with.
+  let boxes = [];
+  let markers = [];
+  let elementMap = {}; // Map of highlight HTML element id -> GedcomX object ID that the element is associated with.
 
   // Get an array of objects with {image: <imageArk>, rectangles: [array of Rectangle object with x1,y1,x2,y2]}
-  var imageArksAndRects = getImageArks(doc);
+  let imageArksAndRects = getImageArks(doc);
   if (!isEmpty(imageArksAndRects)) {
-    var imageArk = imageArksAndRects[0].image;
-    var imageApid = imageArkToApid(imageArk);
+    let imageArk = imageArksAndRects[0].image;
+    let imageApid = imageArkToApid(imageArk);
     viewer.src = "https://www.familysearch.org/dz/v1/apid:" + imageApid + "/";
 
     // Add record/article-level bounding boxes.
@@ -450,8 +448,8 @@ function overlayBoxes(viewer, doc) {
   addNbxBoxes(boxes, markers, findNbxDocumentText(doc));
 
   if (doc.persons) {
-    for (var p = 0; p < doc.persons.length; p++) {
-      var person = doc.persons[p];
+    for (let p = 0; p < doc.persons.length; p++) {
+      let person = doc.persons[p];
       addFieldBoxes(boxes, markers, person, "person", elementMap);
       addNameBoxes(boxes, markers, person.names, elementMap);
       addFactBoxes(boxes, markers, person.facts, elementMap);
@@ -461,8 +459,8 @@ function overlayBoxes(viewer, doc) {
     }
   }
   if (doc.relationships) {
-    for (var r = 0; r < doc.relationships.length; r++) {
-      var relationship = doc.relationships[r];
+    for (let r = 0; r < doc.relationships.length; r++) {
+      let relationship = doc.relationships[r];
       addFieldBoxes(boxes, markers, relationship, "relationship", elementMap);
       addFactBoxes(boxes, markers, relationship.facts, elementMap);
     }

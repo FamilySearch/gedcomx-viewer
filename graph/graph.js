@@ -1,5 +1,5 @@
-var GX_COUPLE = "http://gedcomx.org/Couple";
-var GX_PARENT_CHILD = "http://gedcomx.org/ParentChild";
+const GX_COUPLE = "http://gedcomx.org/Couple";
+const GX_PARENT_CHILD = "http://gedcomx.org/ParentChild";
 
 /*
    Take a Gedcomx document of a record (or a portion of a tree), and create a RelatioshipGraph, with
@@ -39,23 +39,23 @@ var GX_PARENT_CHILD = "http://gedcomx.org/ParentChild";
 
 // Array of previous copies of the GedcomX before a set of changes was made.
 // [0] is the original GedcomX. Each time the graph is built, a copy of the latest GedcomX is added to the array (if isEditable is true).
-var gedcomxChangeHistory = [];
+let gedcomxChangeHistory = [];
 // Position in gedcomxChangeHistory. Normally gedcomxChangePosition = gedcomxChangeHistory.length.
 // But if 'undo' has been done, it can be earlier. If 'redo' is done before any further changes, then it advances again.
 // If a change is made when this position is not at the end, then all following elements are removed.
-var gedcomxChangePosition = 0;
-var currentRelChart;
+let gedcomxChangePosition = 0;
+let currentRelChart;
 
 function undoGraph() {
   if (gedcomxChangePosition > 1) {
-    var gx = gedcomxChangeHistory[--gedcomxChangePosition - 1];
+    let gx = gedcomxChangeHistory[--gedcomxChangePosition - 1];
     buildGraph(gx, true, currentRelChart, true);
   }
 }
 
 function redoGraph() {
   if (gedcomxChangePosition < gedcomxChangeHistory.length) {
-    var gx = gedcomxChangeHistory[gedcomxChangePosition++];
+    let gx = gedcomxChangeHistory[gedcomxChangePosition++];
     buildGraph(gx, true, currentRelChart, true);
   }
 }
@@ -70,8 +70,8 @@ function redoGraph() {
  */
 function buildGraph(gx, isEditable, prevChart, ignoreUndo, imgOverlayToGx) {
   try {
-    var graph = new RelationshipGraph(gx);
-    var $relChartDiv = $("#rel-chart");
+    let graph = new RelationshipGraph(gx);
+    let $relChartDiv = $("#rel-chart");
     if (isEditable && !ignoreUndo) {
       gedcomxChangeHistory[gedcomxChangePosition++] = JSON.parse(JSON.stringify(gx));
       if (gedcomxChangePosition < gedcomxChangeHistory.length) {

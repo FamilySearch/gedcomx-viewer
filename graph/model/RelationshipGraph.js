@@ -14,10 +14,8 @@
 
 function addPersonNodes(graph) {
   if (graph.gx.persons) {
-    var p;
-    var personNode;
-    for (p = 0; p < graph.gx.persons.length; p++) {
-      personNode = new PersonNode(graph.gx.persons[p]);
+    for (let p = 0; p < graph.gx.persons.length; p++) {
+      let personNode = new PersonNode(graph.gx.persons[p]);
       graph.personNodes[p] = personNode;
       graph.personNodeMap[personNode.personId] = personNode;
       if (graph.gx.persons[p].principal) {
@@ -35,7 +33,7 @@ function getPersonIdFromReference(ref) {
     }
     else {
       // Remove "?" and anything after it.
-      var noParams = ref.resource.replace(/\?.*/, "");
+      let noParams = ref.resource.replace(/\?.*/, "");
       // Strip everything up to last "/", and then up to last ":" to go from "https://familysearch.org/ark:/61903/1:1:XXXX-YYY" to "1:1:XXXX-YYY" to "XXXX-YYY".
       // Also handle "https://familysearch.org/platform/records/personas/XXXX-YYY" (i.e., no "1:1:").
       return noParams.replace(/.*\//, "").replace(/.*:/, "");
@@ -46,7 +44,7 @@ function getPersonIdFromReference(ref) {
 
 // Create a new FamilyNode and add it to the graph (i.e., to its array of familyNodes[] and to its familyMap).
 function addFamily(graph, familyId, fatherNode, motherNode, coupleRelationship) {
-  var familyNode = new FamilyNode(familyId, fatherNode, motherNode, coupleRelationship);
+  let familyNode = new FamilyNode(familyId, fatherNode, motherNode, coupleRelationship);
   graph.familyNodes.push(familyNode);
   graph.familyNodeMap[familyNode.familyId] = familyNode;
   return familyNode;
@@ -54,8 +52,8 @@ function addFamily(graph, familyId, fatherNode, motherNode, coupleRelationship) 
 
 // Tell whether the genders of the father and mother need to be swapped.
 function wrongGender(father, mother) {
-  var guy = father ? father.gender : GENDER_CODE_UNKNOWN;
-  var gal = mother ? mother.gender : GENDER_CODE_UNKNOWN;
+  let guy = father ? father.gender : GENDER_CODE_UNKNOWN;
+  let gal = mother ? mother.gender : GENDER_CODE_UNKNOWN;
   return (guy !== GENDER_CODE_MALE && gal === GENDER_CODE_MALE) ||
       (guy === GENDER_CODE_FEMALE && gal !== GENDER_CODE_FEMALE);
 }
@@ -65,20 +63,16 @@ function wrongGender(father, mother) {
  */
 function addCouples(graph) {
   if (graph.gx.relationships) {
-    var r;
-    var rel;
-    var pid1, pid2;
-    var fatherNode, motherNode, temp;
-    for (r = 0; r < graph.gx.relationships.length; r++) {
-      rel = graph.gx.relationships[r];
+    for (let r = 0; r < graph.gx.relationships.length; r++) {
+      let rel = graph.gx.relationships[r];
       if (rel.type === GX_COUPLE) {
-        pid1 = getPersonIdFromReference(rel.person1);
-        pid2 = getPersonIdFromReference(rel.person2);
-        fatherNode = graph.personNodeMap[pid1];
-        motherNode = graph.personNodeMap[pid2];
+        let pid1 = getPersonIdFromReference(rel.person1);
+        let pid2 = getPersonIdFromReference(rel.person2);
+        let fatherNode = graph.personNodeMap[pid1];
+        let motherNode = graph.personNodeMap[pid2];
         if (wrongGender(fatherNode, motherNode)) {
           // Swap persons to make p1 the father and p2 the mother, if possible.
-          temp = fatherNode;
+          let temp = fatherNode;
           fatherNode = motherNode;
           motherNode = temp;
         }
@@ -90,21 +84,16 @@ function addCouples(graph) {
 
 // Get a map of personId -> list of objects that contain parentId (of one of that person's parents) and parentChildRelationship (from the GedcomX) for that parent.
 function getParentMap(graph) {
-  var parentMap = {};
-  var r;
-  var rel;
-  var parentId, childId;
-  var parentIds;
-  var parentIdAndRel;
+  let parentMap = {};
 
   if (graph.gx.relationships) {
-    for (r = 0; r < graph.gx.relationships.length; r++) {
-      rel = graph.gx.relationships[r];
+    for (let r = 0; r < graph.gx.relationships.length; r++) {
+      let rel = graph.gx.relationships[r];
       if (rel.type === GX_PARENT_CHILD) {
-        parentId = getPersonIdFromReference(rel.person1);
-        childId = getPersonIdFromReference(rel.person2);
-        parentIds = parentMap[childId];
-        parentIdAndRel = {
+        let parentId = getPersonIdFromReference(rel.person1);
+        let childId = getPersonIdFromReference(rel.person2);
+        let parentIds = parentMap[childId];
+        let parentIdAndRel = {
           parentId: parentId,
           parentChildRelationship: rel
         };
@@ -124,8 +113,7 @@ function getParentMap(graph) {
 
 // Modify the given array by removing the first occurrence of the given value, if any.
 function removeFromArray(value, array) {
-  var i;
-  for (i = 0; i < array.length; i++) {
+  for (let i = 0; i < array.length; i++) {
     if (array[i] === value) {
       array.splice(i, 1);
       return;
@@ -136,34 +124,26 @@ function removeFromArray(value, array) {
 // Add children to the existing FamilyNodes in the graph.
 function addChildren(graph) {
   // get a map of childId -> array of parent IDs.
-  var parentMap = getParentMap(graph);
-  var personIndex, parent1, parent2, parent;
-  var childNode;
-  var parentIdsAndRels;      // Array of objects with {personId, parentChildRelationship}
-  var unusedParentIdsAndRels;
-  var fatherNode, motherNode; // PersonNode
-  var fatherRel, motherRel; // GedcomX ParentChildRelationships
-  var temp;
-  var familyId;
-  var familyNode;
+  let parentMap = getParentMap(graph);
 
-  for (personIndex = 0; personIndex < graph.personNodes.length; personIndex++) {
+  for (let personIndex = 0; personIndex < graph.personNodes.length; personIndex++) {
     // For each person, get their list of parents. For each parent, see if there is a FamilyNode with that parent and any other in the list.
     // If so, add this person as a child to that family, and remove both parents from the list.
     // If not, find or create a single-parent family with that parent and add this child to it.
-    childNode = graph.personNodes[personIndex];
-    parentIdsAndRels = parentMap[childNode.personId];
+    let childNode = graph.personNodes[personIndex];
+    // Array of objects with {personId, parentChildRelationship}
+    let parentIdsAndRels = parentMap[childNode.personId];
     if (parentIdsAndRels && parentIdsAndRels.length > 0) {
-      unusedParentIdsAndRels = parentIdsAndRels.slice();
-      for (parent1 = 0; parent1 < parentIdsAndRels.length; parent1++) {
-        for (parent2 = parent1 + 1; parent2 < parentIdsAndRels.length; parent2++) {
-          fatherNode = graph.getPerson(parentIdsAndRels[parent1].parentId);
-          motherNode = graph.getPerson(parentIdsAndRels[parent2].parentId);
-          fatherRel = parentIdsAndRels[parent1].parentChildRelationship;
-          motherRel = parentIdsAndRels[parent2].parentChildRelationship;
+      let unusedParentIdsAndRels = parentIdsAndRels.slice();
+      for (let parent1 = 0; parent1 < parentIdsAndRels.length; parent1++) {
+        for (let parent2 = parent1 + 1; parent2 < parentIdsAndRels.length; parent2++) {
+          let fatherNode = graph.getPerson(parentIdsAndRels[parent1].parentId);
+          let motherNode = graph.getPerson(parentIdsAndRels[parent2].parentId);
+          let fatherRel = parentIdsAndRels[parent1].parentChildRelationship;
+          let motherRel = parentIdsAndRels[parent2].parentChildRelationship;
           if (wrongGender(fatherNode, motherNode)) {
             // Swap persons to make p1 the father and p2 the mother, if possible.
-            temp = fatherNode;
+            let temp = fatherNode;
             fatherNode = motherNode;
             motherNode = temp;
             temp = fatherRel;
@@ -171,8 +151,8 @@ function addChildren(graph) {
             motherRel = temp;
           }
 
-          familyId = makeFamilyId(fatherNode, motherNode);
-          familyNode = graph.getFamily(familyId);
+          let familyId = makeFamilyId(fatherNode, motherNode);
+          let familyNode = graph.getFamily(familyId);
           if (!familyNode) {
             familyId = makeFamilyId(motherNode, fatherNode); // in case genders were unknown or the same, try swapping to see if that couple exists.
             familyNode = graph.getFamily(familyId);
@@ -185,19 +165,19 @@ function addChildren(graph) {
         }
       }
       // If any parents were not part of a couple, create a single-parent family for them.
-      for (parent = 0; parent < unusedParentIdsAndRels.length; parent++) {
-        fatherNode = graph.personNodeMap[unusedParentIdsAndRels[parent].parentId];
-        motherNode = null;
-        fatherRel = unusedParentIdsAndRels[parent].parentChildRelationship;
-        motherRel = null;
+      for (let parent = 0; parent < unusedParentIdsAndRels.length; parent++) {
+        let fatherNode = graph.personNodeMap[unusedParentIdsAndRels[parent].parentId];
+        let motherNode = null;
+        let fatherRel = unusedParentIdsAndRels[parent].parentChildRelationship;
+        let motherRel = null;
         if (wrongGender(fatherNode, motherNode)) {
           motherNode = fatherNode;
           fatherNode = null;
           motherRel = fatherRel;
           fatherRel = null;
         }
-        familyId = makeFamilyId(fatherNode, motherNode);
-        familyNode = graph.getFamily(familyId);
+        let familyId = makeFamilyId(fatherNode, motherNode);
+        let familyNode = graph.getFamily(familyId);
         if (!familyNode) {
           familyNode = addFamily(graph, familyId, fatherNode, motherNode); // single parent, so no couple relationship
         }
@@ -208,12 +188,8 @@ function addChildren(graph) {
 }
 
 function addFamiliesToPersonNodes(graph) {
-  var f;
-  var familyNode;
-  var c;
-
-  for (f = 0; f < graph.familyNodes.length; f++) {
-    familyNode = graph.familyNodes[f];
+  for (let f = 0; f < graph.familyNodes.length; f++) {
+    let familyNode = graph.familyNodes[f];
     if (familyNode.father) {
       familyNode.father.addSpouseFamily(familyNode);
     }
@@ -221,7 +197,7 @@ function addFamiliesToPersonNodes(graph) {
       familyNode.mother.addSpouseFamily(familyNode);
     }
     if (familyNode.children) {
-      for (c = 0; c < familyNode.children.length; c++) {
+      for (let c = 0; c < familyNode.children.length; c++) {
         familyNode.children[c].addParentFamily(familyNode);
       }
     }
@@ -254,8 +230,8 @@ function getRelativeLabelFromRelationship(relationshipUri, relativeGender, isRev
     "http://familysearch.org/types/relationships/SiblingInLaw": ["Brother-in-law", "Sister-in-law", "Sibling-in-Law"],
     "http://familysearch.org/types/relationships/StepSibling": ["Stepbrother", "Stepsister", "Stepsibling"]
   };
-  var genderSpecific = relTypeMap[relationshipUri];
-  var relativeLabel;
+  let genderSpecific = relTypeMap[relationshipUri];
+  let relativeLabel;
   if (genderSpecific && genderSpecific.length > 3) {
     relativeLabel = getRelativeLabel(relativeGender, genderSpecific[0], genderSpecific[1], genderSpecific[2], isReverse, genderSpecific[3], genderSpecific[4], genderSpecific[5]);
   }
@@ -295,17 +271,16 @@ function getRelativeLabel(gender, maleType, femaleType, neutralType, isReverse, 
 
 function addOtherRelationshipsToPersonNodes(graph) {
   if (graph.gx.relationships) {
-    var r;
-    for (r = 0; r < graph.gx.relationships.length; r++) {
-      var rel = graph.gx.relationships[r];
+    for (let r = 0; r < graph.gx.relationships.length; r++) {
+      let rel = graph.gx.relationships[r];
       if (rel.type !== GX_COUPLE  && rel.type !== GX_PARENT_CHILD) {
         // Other relationship type: We will not use it to display the relationship graph, but do want to include it as a "relative" in the PersonBox.
-        var pid1 = getPersonIdFromReference(rel.person1);
-        var pid2 = getPersonIdFromReference(rel.person2);
-        var personNode1 = graph.personNodeMap[pid1];
-        var personNode2 = graph.personNodeMap[pid2];
-        var gender1 = personNode1.person.gender ? personNode1.person.gender.type : null;
-        var gender2 = personNode2.person.gender ? personNode2.person.gender.type : null;
+        let pid1 = getPersonIdFromReference(rel.person1);
+        let pid2 = getPersonIdFromReference(rel.person2);
+        let personNode1 = graph.personNodeMap[pid1];
+        let personNode2 = graph.personNodeMap[pid2];
+        let gender1 = personNode1.person.gender ? personNode1.person.gender.type : null;
+        let gender2 = personNode2.person.gender ? personNode2.person.gender.type : null;
         personNode1.addRelative(getRelativeLabelFromRelationship(rel.type, gender2, true), personNode2);
         personNode2.addRelative(getRelativeLabelFromRelationship(rel.type, gender1, false), personNode1);
       }
@@ -329,7 +304,7 @@ RelationshipGraph.prototype.getFamily = function(familyId) {
 };
 
 RelationshipGraph.prototype.removeFamilyNode = function(familyNode) {
-  var index = this.familyNodes.indexOf(familyNode);
+  let index = this.familyNodes.indexOf(familyNode);
   if (index >= 0) {
     this.familyNodes.splice(index, 1);
   }

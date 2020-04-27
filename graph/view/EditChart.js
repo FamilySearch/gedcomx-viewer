@@ -21,7 +21,7 @@ RelationshipChart.prototype.hideFamilyControls = function() {
   this.$fatherPlus.hide();
   this.$motherPlus.hide();
   if (this.selectedFamilyLine && !isEmpty(this.selectedFamilyLine.$childrenX)) {
-    for (var c = 0; c < this.selectedFamilyLine.$childrenX.length; c++) {
+    for (let c = 0; c < this.selectedFamilyLine.$childrenX.length; c++) {
       this.selectedFamilyLine.$childrenX[c].hide();
     }
   }
@@ -45,13 +45,13 @@ RelationshipChart.prototype.makeControl = function(divId, imgClass, $containerDi
   if (!$containerDiv) {
     $containerDiv = this.$editControlsDiv;
   }
-  var html = '<div id="' + divId + '" class="' + imgClass + '"></div>';
-  var controlDiv = $.parseHTML(html);
+  let html = '<div id="' + divId + '" class="' + imgClass + '"></div>';
+  let controlDiv = $.parseHTML(html);
   $containerDiv.append(controlDiv);
-  var $control = $("#" + divId);
+  let $control = $("#" + divId);
   $control.hide();
   $control.draggable({revert: true, scope : "personDropScope"});
-  var relChart = this; // todo: Is this needed? Or can we use "this" in the method?
+  let relChart = this; // todo: Is this needed? Or can we use "this" in the method?
   $control.click(function(event) {
     event.stopPropagation();
     if (divId === "fatherX") {
@@ -83,7 +83,7 @@ const GX_PART_SUFFIX  = "http://gedcomx.org/Suffix";
  */
 RelationshipChart.prototype.findPerson = function(gx, pid) {
   if (gx.persons) {
-    for (var p = 0; p < gx.persons.length; p++) {
+    for (let p = 0; p < gx.persons.length; p++) {
       if (gx.persons[p].id === pid) {
         return gx.persons[p];
       }
@@ -736,7 +736,7 @@ RelationshipChart.prototype.mergePersonList = function(personIdsToMerge) {
  * @return object with familyId and childIndex, like {familyId: "parent1Id-parent2Id", childIndex: "3"}
  */
 PersonBox.prototype.parseChildXId = function(childXId) {
-  var parts = childXId.match(/childX-(.*)-c([0-9]*)/);
+  let parts = childXId.match(/childX-(.*)-c([0-9]*)/);
   return {familyId: parts[1], childIndex: parts[2]};
 };
 
@@ -747,12 +747,12 @@ PersonBox.prototype.parseChildXId = function(childXId) {
  * @param boxId2 - personBoxId of "dropped" PersonBox, to be merged into the first one.
  */
 RelationshipChart.prototype.getPersonIdsToMerge = function(boxId1, boxId2) {
-  var personIds = [];
+  let personIds = [];
   personIds.push(this.personBoxMap[boxId1].personNode.personId);
   personIds.push(this.personBoxMap[boxId2].personNode.personId);
-  for (var p = 0; p < this.selectedPersonBoxes.length; p++) {
-    var personBox = this.selectedPersonBoxes[p];
-    var personId = personBox.personNode.personId;
+  for (let p = 0; p < this.selectedPersonBoxes.length; p++) {
+    let personBox = this.selectedPersonBoxes[p];
+    let personId = personBox.personNode.personId;
     if (!personIds.includes(personId)) {
       personIds.push(personId);
     }
@@ -761,9 +761,9 @@ RelationshipChart.prototype.getPersonIdsToMerge = function(boxId1, boxId2) {
 };
 
 RelationshipChart.prototype.getMergeMessage = function(personIdsToMerge) {
-  var message = "Merge the following people together?\n";
-  for (var p = 0; p < personIdsToMerge.length; p++) {
-    var personNode = this.relGraph.personNodeMap[personIdsToMerge[p]];
+  let message = "Merge the following people together?\n";
+  for (let p = 0; p < personIdsToMerge.length; p++) {
+    let personNode = this.relGraph.personNodeMap[personIdsToMerge[p]];
     message += "  " + (p + 1) + ") " + personNode.getFirstFullName() + "\n";
   }
   message += "(Data from all these people will be combined into the first one)";
@@ -776,14 +776,14 @@ RelationshipChart.prototype.getMergeMessage = function(personIdsToMerge) {
  * @param ui - UI object that has the div id of the dropped person if e doesn't have it.
  */
 PersonBox.prototype.personDrop = function(e, ui) {
-  var droppedPersonBox = this; // = relChart.personBoxMap[e.target.id];
-  var targetId = e.originalEvent.target.id;
+  let droppedPersonBox = this; // = relChart.personBoxMap[e.target.id];
+  let targetId = e.originalEvent.target.id;
   if (!targetId) {
     targetId = ui.draggable.attr("id");
   }
 
   if (targetId.startsWith("box_") && targetId.indexOf("Plus") < 0) {
-    var personIdsToMerge = this.relChart.getPersonIdsToMerge(droppedPersonBox.personBoxId, targetId);
+    let personIdsToMerge = this.relChart.getPersonIdsToMerge(droppedPersonBox.personBoxId, targetId);
     if (targetId !== droppedPersonBox.personBoxId && confirm(this.relChart.getMergeMessage(personIdsToMerge))) {
       this.relChart.mergePersonList(personIdsToMerge);
     }
@@ -792,9 +792,9 @@ PersonBox.prototype.personDrop = function(e, ui) {
     }
   }
   else {
-    var plus = targetId.replace(/.*-/, ""); // The div ID of the plus (or 'x') that was dropped on this person.
+    let plus = targetId.replace(/.*-/, ""); // The div ID of the plus (or 'x') that was dropped on this person.
     if (plus.startsWith("childX")) {
-      var oldFamilyIdInfo = this.parseChildXId(plus);
+      let oldFamilyIdInfo = this.parseChildXId(plus);
       this.relChart.selectedFamilyLine.changeChildParent(oldFamilyIdInfo.childIndex, droppedPersonBox);
     }
     else if (plus === "motherPlus" || plus === "fatherPlus" || plus === "fatherX" || plus === "motherX") {
@@ -810,11 +810,11 @@ PersonBox.prototype.personDrop = function(e, ui) {
       }
     }
     else {
-      var draggedPersonBoxId = e.originalEvent.target.id.replace(/-.*/, "");
-      for (var s = 0; s < this.relChart.selectedPersonBoxes.length; s++) {
-        var sourcePersonBox = this.relChart.selectedPersonBoxes[s];
-        var sourcePersonId = sourcePersonBox.personNode.personId;
-        var droppedPersonId = droppedPersonBox.personNode.personId;
+      let draggedPersonBoxId = e.originalEvent.target.id.replace(/-.*/, "");
+      for (let s = 0; s < this.relChart.selectedPersonBoxes.length; s++) {
+        let sourcePersonBox = this.relChart.selectedPersonBoxes[s];
+        let sourcePersonId = sourcePersonBox.personNode.personId;
+        let droppedPersonId = droppedPersonBox.personNode.personId;
         switch (plus) {
           case "personParentPlus":
             // Add all selected persons as children of the parent dropped on.
@@ -831,8 +831,8 @@ PersonBox.prototype.personDrop = function(e, ui) {
             // Don't make all selected persons be spouses of the person dropped on--that would be unlikely to make sense.
             // Instead, ignore who is selected and only pay attention to whose spouse '+' was dragged.
             if (sourcePersonBox.personBoxId === draggedPersonBoxId) {
-              var sourcePersonNode = sourcePersonBox.personNode;
-              var droppedPersonNode = droppedPersonBox.personNode;
+              let sourcePersonNode = sourcePersonBox.personNode;
+              let droppedPersonNode = droppedPersonBox.personNode;
               if (wrongGender(sourcePersonNode, droppedPersonNode)) {
                 this.relChart.ensureRelationship(GX_COUPLE, droppedPersonId, sourcePersonId);
               }
@@ -859,14 +859,14 @@ PersonBox.prototype.personDrop = function(e, ui) {
  * @param e - Drop event. The dropped element's id is in e.originalEvent.target.id
  */
 FamilyLine.prototype.familyDrop = function(e) {
-  var plus = e.originalEvent.target.id.replace(/.*-/, "");
-  var sourcePersonId;
+  let plus = e.originalEvent.target.id.replace(/.*-/, "");
+  let sourcePersonId;
   if (plus === "personSpousePlus" || plus === "personChildPlus") {
     // A person's spouse or child "plus" has been dropped on this family line,
     // so we're saying "this person is the parent or spouse in this family".
     // So add or replace the appropriate parent (based on gender).
     if (this.relChart.selectedPersonBoxes.length === 1) { // If multiple persons selected, avoid ambiguity by doing nothing.
-      var personBox = this.relChart.selectedPersonBoxes[0];
+      let personBox = this.relChart.selectedPersonBoxes[0];
       if (personBox.personNode.gender === "M") {//!this.father) {
         this.changeFather(personBox);
       }
@@ -880,7 +880,7 @@ FamilyLine.prototype.familyDrop = function(e) {
   }
   else {
     if (plus === "personParentPlus") {
-      for (var s = 0; s < this.relChart.selectedPersonBoxes.length; s++) {
+      for (let s = 0; s < this.relChart.selectedPersonBoxes.length; s++) {
         sourcePersonId = this.relChart.selectedPersonBoxes[s].personNode.personId;
         if (this.father) {
           this.relChart.ensureRelationship(GX_PARENT_CHILD, this.father.personNode.personId, sourcePersonId);
@@ -891,13 +891,13 @@ FamilyLine.prototype.familyDrop = function(e) {
       }
     }
     else {
-      var oldFamilyIdInfo = PersonBox.prototype.parseChildXId(e.originalEvent.target.id);
-      var oldFamilyId = oldFamilyIdInfo.familyId;
+      let oldFamilyIdInfo = PersonBox.prototype.parseChildXId(e.originalEvent.target.id);
+      let oldFamilyId = oldFamilyIdInfo.familyId;
       if (oldFamilyId === this.familyId) {
         return; // Dropped '+' on same family the child was already in, so do nothing.
       }
-      var oldFamilyLine = this.relChart.familyLineMap[oldFamilyId];
-      var childBox = oldFamilyLine.children[oldFamilyIdInfo.childIndex];
+      let oldFamilyLine = this.relChart.familyLineMap[oldFamilyId];
+      let childBox = oldFamilyLine.children[oldFamilyIdInfo.childIndex];
       oldFamilyLine.removeChild(childBox);
       sourcePersonId = childBox.personNode.personId;
       if (this.father) {
@@ -921,17 +921,17 @@ FamilyLine.prototype.familyDrop = function(e) {
  * @param belowSubtree - Index of the subtree that will end up below, above which the people are being inserted.
  */
 RelationshipChart.prototype.moveSubtree = function(movingSubtree, belowSubtree) {
-  var persons = this.relGraph.gx.persons;
+  let persons = this.relGraph.gx.persons;
 
   // 1. Get the index in the GedcomX persons[] array of the first person in the 'belowSubtree'.
   // 2. For persons after that who are in the 'movingSubtree', (a) remove them from the array, and then (b) insert them at the 'insertPos'.
-  var insertPos = null;
-  var movingPersons = [];
+  let insertPos = null;
+  let movingPersons = [];
 
-  for (var p = 0; p < persons.length; p++) {
-    var person = persons[p];
-    var personBoxId = PersonBox.prototype.getPersonBoxId(persons[p].id);
-    var subtreeIndex = this.personBoxMap[personBoxId].subtree;
+  for (let p = 0; p < persons.length; p++) {
+    let person = persons[p];
+    let personBoxId = PersonBox.prototype.getPersonBoxId(persons[p].id);
+    let subtreeIndex = this.personBoxMap[personBoxId].subtree;
     if (insertPos === null && subtreeIndex === belowSubtree) {
       insertPos = p;
     }
@@ -956,8 +956,8 @@ RelationshipChart.prototype.moveSubtree = function(movingSubtree, belowSubtree) 
  */
 RelationshipChart.prototype.aboveInGeneration = function(aboveBox, belowBox) {
   if (aboveBox && belowBox && aboveBox.generation === belowBox.generation) {
-    var aboveGenIndex = aboveBox.generation.genPersons.indexOf(aboveBox);
-    var belowGenIndex = belowBox.generation.genPersons.indexOf(belowBox);
+    let aboveGenIndex = aboveBox.generation.genPersons.indexOf(aboveBox);
+    let belowGenIndex = belowBox.generation.genPersons.indexOf(belowBox);
     return aboveGenIndex < belowGenIndex;
   }
   return false;
@@ -971,7 +971,7 @@ RelationshipChart.prototype.aboveInGeneration = function(aboveBox, belowBox) {
  * @return FamilyLine that has both of these children PersonBoxes in it, or null if none in common.
  */
 RelationshipChart.prototype.sameParentFamily = function(childBox1, childBox2) {
-  for (var f = 0; f < childBox1.parentLines.length; f++) {
+  for (let f = 0; f < childBox1.parentLines.length; f++) {
     if (childBox2.parentLines.includes(childBox1.parentLines[f])) {
       return childBox1.parentLines[f];
     }
@@ -988,7 +988,7 @@ RelationshipChart.prototype.sameParentFamily = function(childBox1, childBox2) {
 FamilyLine.prototype.moveAbove = function(array, aboveElement, belowElement) {
   if (array && aboveElement) {
     array.splice(array.indexOf(aboveElement), 1);
-    var insertPosition = belowElement ? array.indexOf(belowElement) : array.length;
+    let insertPosition = belowElement ? array.indexOf(belowElement) : array.length;
     array.splice(insertPosition, 0, aboveElement);
   }
 };
@@ -1002,12 +1002,12 @@ FamilyLine.prototype.moveAbove = function(array, aboveElement, belowElement) {
  */
 FamilyLine.prototype.moveChildUp = function(above, below) {
   // Move 'above' just before 'below' in the person array.
-  var gx = this.getGedcomX();
+  let gx = this.getGedcomX();
   this.moveAbove(gx.persons, above.personNode.person, below.personNode.person);
 
   // Move parent-child relationships for the 'above' child above those of the 'below' child.
-  var aboveChildIndex = this.children.indexOf(above);
-  var belowChildIndex = this.children.indexOf(below);
+  let aboveChildIndex = this.children.indexOf(above);
+  let belowChildIndex = this.children.indexOf(below);
   this.moveAbove(gx.relationships, this.familyNode.fatherRels[aboveChildIndex], this.familyNode.fatherRels[belowChildIndex]);
   this.moveAbove(gx.relationships, this.familyNode.motherRels[aboveChildIndex], this.familyNode.motherRels[belowChildIndex]);
 };
@@ -1021,7 +1021,7 @@ FamilyLine.prototype.moveChildUp = function(above, below) {
 FamilyLine.prototype.moveBelow = function(array, aboveElement, belowElement) {
   if (array && belowElement) {
     array.splice(array.indexOf(aboveElement), 1);
-    var insertPosition = belowElement ? array.indexOf(belowElement) + 1 : 0;
+    let insertPosition = belowElement ? array.indexOf(belowElement) + 1 : 0;
     array.splice(insertPosition, 0, aboveElement);
   }
 };
@@ -1035,12 +1035,12 @@ FamilyLine.prototype.moveBelow = function(array, aboveElement, belowElement) {
  */
 FamilyLine.prototype.moveChildDown = function(above, below) {
   // Move 'above' just before 'below' in the person array.
-  var gx = this.getGedcomX();
+  let gx = this.getGedcomX();
   this.moveBelow(gx.persons, above.personNode.person, below.personNode.person);
 
   // Move parent-child relationships for the 'above' child above those of the 'below' child.
-  var aboveChildIndex = this.children.indexOf(above);
-  var belowChildIndex = this.children.indexOf(below);
+  let aboveChildIndex = this.children.indexOf(above);
+  let belowChildIndex = this.children.indexOf(below);
   this.moveBelow(gx.relationships, this.familyNode.fatherRels[aboveChildIndex], this.familyNode.fatherRels[belowChildIndex]);
   this.moveBelow(gx.relationships, this.familyNode.motherRels[aboveChildIndex], this.familyNode.motherRels[belowChildIndex]);
 };
@@ -1055,10 +1055,10 @@ FamilyLine.prototype.moveChildDown = function(above, below) {
  * @returns {Array} subtree indexes that should be moved.
  */
 RelationshipChart.prototype.getSelectedSubtrees = function(selectedPersonBoxes, droppedPersonBox) {
-  var selectedSubtrees = [];
+  let selectedSubtrees = [];
   if (selectedPersonBoxes && selectedPersonBoxes.length > 1 && selectedPersonBoxes.includes(droppedPersonBox)) {
-    for (var s = 0; s < selectedPersonBoxes.length; s++) {
-      var subtree = selectedPersonBoxes[s].subtree;
+    for (let s = 0; s < selectedPersonBoxes.length; s++) {
+      let subtree = selectedPersonBoxes[s].subtree;
       if (!selectedSubtrees.includes(subtree)) {
         selectedSubtrees.push(subtree);
       }
@@ -1087,27 +1087,25 @@ RelationshipChart.prototype.getSelectedSubtrees = function(selectedPersonBoxes, 
  * @param newLeft - left (in pixels) of where the draggedPersonBox was dropped.
  */
 RelationshipChart.prototype.gapDrop = function(generationIndex, personIndex, draggedPersonBox, newTop, newLeft) {
-  var generation = this.generations[generationIndex];
-  var above = personIndex > 0 ? generation.genPersons[personIndex - 1] : null; // PersonBox above the dropped-on gap (if any)
-  var below = personIndex < generation.genPersons.length ? generation.genPersons[personIndex] : null; // PersonBox below the dropped-on-gap
-  var dropped = draggedPersonBox;
-  var changed = false;
-  var commonFamily = null;
-  var selectedSubtrees; // Array of subtree indexes when moving people above/below subtrees.
-  var s;
+  let generation = this.generations[generationIndex];
+  let above = personIndex > 0 ? generation.genPersons[personIndex - 1] : null; // PersonBox above the dropped-on gap (if any)
+  let below = personIndex < generation.genPersons.length ? generation.genPersons[personIndex] : null; // PersonBox below the dropped-on-gap
+  let dropped = draggedPersonBox;
+  let changed = false;
+  let commonFamily = null;
 
   if (below && dropped.subtree > below.subtree) {
     // If a person in subtree X is dragged above a person in subtree Y, move everyone in X just above the persons in Y.
-    selectedSubtrees = this.getSelectedSubtrees(this.selectedPersonBoxes, dropped);
-    for (s = 0; s < selectedSubtrees.length; s++) {
+    let selectedSubtrees = this.getSelectedSubtrees(this.selectedPersonBoxes, dropped);
+    for (let s = 0; s < selectedSubtrees.length; s++) {
       this.moveSubtree(selectedSubtrees[s], below.subtree);
     }
     changed = true;
   }
   else if (above && dropped.subtree < above.subtree) {
     // If a person in subtree X is dragged below a person in subtree Y, move everyone in X between the persons in Y and Y + 1.
-    selectedSubtrees = this.getSelectedSubtrees(this.selectedPersonBoxes, dropped);
-    for (s = 0; s < selectedSubtrees.length; s++) {
+    let selectedSubtrees = this.getSelectedSubtrees(this.selectedPersonBoxes, dropped);
+    for (let s = 0; s < selectedSubtrees.length; s++) {
       this.moveSubtree(selectedSubtrees[s], above.subtree + 1);
     }
     changed = true;
@@ -1145,16 +1143,16 @@ RelationshipChart.prototype.gapDrop = function(generationIndex, personIndex, dra
  * @param height
  */
 RelationshipChart.prototype.addGapDropZone = function(generationIndex, personIndex, top, left, width, height) {
-  var divId = "gen-" + generationIndex + "-above-p-" + personIndex;
-  var html = '<div id="' + divId + '" class="gapDrop"></div>';
-  var controlDiv = $.parseHTML(html);
+  let divId = "gen-" + generationIndex + "-above-p-" + personIndex;
+  let html = '<div id="' + divId + '" class="gapDrop"></div>';
+  let controlDiv = $.parseHTML(html);
   this.$editControlsDiv.append(controlDiv);
-  var relChart = this;
-  var $control = $("#" + divId);
+  let relChart = this;
+  let $control = $("#" + divId);
   $control.css({left: left, top: top, width: width, height: height});
   $control.droppable({
     hoverClass: "gapDropHover", scope: "personDropScope", "tolerance": "pointer", drop: function(e, ui) {
-      var draggedPersonBoxId = e.originalEvent.target.id;
+      let draggedPersonBoxId = e.originalEvent.target.id;
       if (!draggedPersonBoxId) {
         draggedPersonBoxId = ui.draggable.attr("id");
       }
@@ -1169,20 +1167,20 @@ RelationshipChart.prototype.addGapDropZone = function(generationIndex, personInd
  *   in order to support drag & drop of person boxes for reordering of persons in the relationship graph.
  */
 RelationshipChart.prototype.addGapDropZones = function() {
-  for (var g = 0; g < this.generations.length; g++) {
-    var generation = this.generations[g];
-    var prevPersonBox = null;
-    for (var p = 0; p < generation.genPersons.length; p++) {
-      var personBox = generation.genPersons[p];
-      var top = (p === 0) ? 0 : prevPersonBox.getBottom();
-      var height = Math.max(10, personBox.getTop() - top);
-      var left = personBox.getLeft();
-      var width = this.generationWidth;
+  for (let g = 0; g < this.generations.length; g++) {
+    let generation = this.generations[g];
+    let prevPersonBox = null;
+    for (let p = 0; p < generation.genPersons.length; p++) {
+      let personBox = generation.genPersons[p];
+      let top = (p === 0) ? 0 : prevPersonBox.getBottom();
+      let height = Math.max(10, personBox.getTop() - top);
+      let left = personBox.getLeft();
+      let width = this.generationWidth;
       this.addGapDropZone(g, p, top, left, width, height);
       prevPersonBox = personBox;
     }
     if (prevPersonBox) {
-      this.addGapDropZone(g, p, prevPersonBox.getBottom(), prevPersonBox.getLeft(), this.generationWidth, 30);
+      this.addGapDropZone(g, generation.genPersons.length, prevPersonBox.getBottom(), prevPersonBox.getLeft(), this.generationWidth, 30);
     }
   }
 };
@@ -1204,8 +1202,8 @@ PersonBox.prototype.selectPerson = function() {
 
   // Set the '+' controls: child at center of left side; parent at center of right side;
   //    and spouse in center of top (if female or unknown) or bottom (if male).
-  var d = this.relChart.editControlSize / 2;
-  var centerX = (this.getLeft() + this.getRight()) / 2;
+  let d = this.relChart.editControlSize / 2;
+  let centerX = (this.getLeft() + this.getRight()) / 2;
   this.relChart.positionFamilyControl(this.$childPlus, this.getLeft() - d, this.getCenter() - d);
   this.relChart.positionFamilyControl(this.$parentPlus, this.getRight() - d, this.getCenter() - d);
   this.relChart.positionFamilyControl(this.$spousePlus, centerX - d, this.personNode.gender === 'F' ? this.getTop() - d : this.getBottom() - d);
@@ -1225,8 +1223,7 @@ PersonBox.prototype.isSelected = function() {
  */
 PersonBox.prototype.clickPerson = function(event) {
   this.relChart.clearSelectedFamilyLine();
-  var personBox = this;
-  var selected = this.relChart.selectedPersonBoxes;
+  let selected = this.relChart.selectedPersonBoxes;
 
   if (selected.length === 1 && selected[0] === this) {
     // Clicked the only selected person, so whether or not shift or cmd/ctrl are used, deselect the person.
@@ -1246,19 +1243,18 @@ PersonBox.prototype.clickPerson = function(event) {
     //   then select all of the people in that generation that are between them.
     // Otherwise, deselect everyone, and select just the newly-clicked person.
     if (selected.length > 0) {
-      var lastSelected = selected[selected.length - 1];
+      let lastSelected = selected[selected.length - 1];
       if (lastSelected.generation === this.generation) {
         // Shift-clicked on someone in same generation as the latest selected person, so select everyone between them.
         // (Don't select the last-selected one, because it's already selected; and don't select the clicked one,
         // because that will be done "last").
-        var g;
         if (this.genOrder > lastSelected.genOrder) {
-          for (g = lastSelected.genOrder + 1; g < this.genOrder; g++) {
+          for (let g = lastSelected.genOrder + 1; g < this.genOrder; g++) {
             this.generation.genPersons[g].selectPerson();
           }
         }
         else {
-          for (g = this.genOrder + 1; g < lastSelected.genOrder; g++) {
+          for (let g = this.genOrder + 1; g < lastSelected.genOrder; g++) {
             this.generation.genPersons[g].selectPerson();
           }
         }
@@ -1285,9 +1281,9 @@ PersonBox.prototype.clickPerson = function(event) {
 
 // Toggle whether the given familyId is selected.
 FamilyLine.prototype.toggleFamilyLine = function(event) {
-  var relChart = this.relChart;
+  let relChart = this.relChart;
   relChart.clearSelectedPerson();
-  var familyLine = this;
+  let familyLine = this;
   if (relChart.selectedFamilyLine === this) {
     // Deselect family line.
     familyLine.$familyLineDiv.removeAttr("chosen");
@@ -1302,13 +1298,13 @@ FamilyLine.prototype.toggleFamilyLine = function(event) {
     familyLine.$familyLineDiv.attr("chosen", "yep");
     relChart.selectedFamilyLine = familyLine;
     // Set the + or x controls at the top and bottom of the family line.
-    var x = familyLine.x + familyLine.lineThickness;
-    var d = relChart.editControlSize / 2;
+    let x = familyLine.x + familyLine.lineThickness;
+    let d = relChart.editControlSize / 2;
     relChart.positionFamilyControl(familyLine.father ? relChart.$fatherX : relChart.$fatherPlus, x, familyLine.getTop() + 1 - d);
     relChart.positionFamilyControl(familyLine.mother ? relChart.$motherX : relChart.$motherPlus, x, familyLine.getBottom() - d + familyLine.lineThickness);
 
     if (!isEmpty(familyLine.$childrenX)) {
-      for (var c = 0; c < familyLine.$childrenX.length; c++) {
+      for (let c = 0; c < familyLine.$childrenX.length; c++) {
         familyLine.$childrenX[c].show();
       }
     }
@@ -1361,16 +1357,15 @@ FamilyLine.prototype.getGedcomX = function() {
  * @param parentRels - fatherRels or motherRels for the family.
  */
 FamilyLine.prototype.removeParent = function(parentNode, spouseNode, parentRels) {
-  var doc = this.getGedcomX();
-  var familyNode = this.familyNode;
+  let doc = this.getGedcomX();
+  let familyNode = this.familyNode;
   if (spouseNode) {
     // Remove couple relationship between father and mother.
-    var index = doc.relationships.indexOf(familyNode.coupleRel);
+    let index = doc.relationships.indexOf(familyNode.coupleRel);
     doc.relationships.splice(index, 1);
   }
   // Remove this family from the parentNode's list of spouseFamilies so it won't get in the way when we look for remaining spouseFamilies with the same child.
-  var s;
-  for (s = 0; s < parentNode.spouseFamilies.length; s++) {
+  for (let s = 0; s < parentNode.spouseFamilies.length; s++) {
     if (parentNode.spouseFamilies[s] === familyNode) {
       parentNode.spouseFamilies.splice(s, 1);
       break;
@@ -1380,13 +1375,13 @@ FamilyLine.prototype.removeParent = function(parentNode, spouseNode, parentRels)
   //  UNLESS there's another family with this parent in it (i.e., with another spouse)
   //  that has this same child, in which case that relationship is kept.
   if (familyNode.children) {
-    for (var c = 0; c < familyNode.children.length; c++) {
-      var childId = familyNode.children[c].personId;
-      var foundParentWithOtherSpouse = false;
+    for (let c = 0; c < familyNode.children.length; c++) {
+      let childId = familyNode.children[c].personId;
+      let foundParentWithOtherSpouse = false;
       for (s = 0; s < parentNode.spouseFamilies.length && !foundParentWithOtherSpouse; s++) {
-        var otherSpouseFamily = parentNode.spouseFamilies[s];
+        let otherSpouseFamily = parentNode.spouseFamilies[s];
         if (otherSpouseFamily.children) {
-          for (var c2 = 0; c2 < otherSpouseFamily.children.length; c2++) {
+          for (let c2 = 0; c2 < otherSpouseFamily.children.length; c2++) {
             if (otherSpouseFamily.children[c2].personId === childId) {
               foundParentWithOtherSpouse = true;
               break;
@@ -1407,7 +1402,7 @@ FamilyLine.prototype.updateParents = function(fatherBox, motherBox) {
   this.father = fatherBox;
   this.mother = motherBox;
   if (fatherBox || motherBox) {
-    var newFamilyId = makeFamilyId(fatherBox ? fatherBox.personNode : null, motherBox ? motherBox.personNode : null);
+    let newFamilyId = makeFamilyId(fatherBox ? fatherBox.personNode : null, motherBox ? motherBox.personNode : null);
     if (!this.relChart.familyLineMap[newFamilyId]) {
       // We're creating a new family line out of this one. So update this one so that the new chart will re-use its position.
       this.familyId = newFamilyId;
@@ -1431,28 +1426,28 @@ FamilyLine.prototype.removeMother = function() {
 // Remove the given parentChildRel from the array of relationships unless there is still a parentFamily of this box's personNode that includes it.
 PersonNode.prototype.removeParentChildRelationshipIfOnlyOne = function(isFather, parentChildRel, relationships) {
   if (parentChildRel) {
-    var parentFamilies = this.parentFamilies;
-    for (var p = 0; p < parentFamilies.length; p++) {
-      var parentFamily = parentFamilies[p];
-      var childIndex = parentFamily.children.indexOf(this);
-      var parentRel = isFather ? parentFamily.fatherRels[childIndex] : parentFamily.motherRels[childIndex];
+    let parentFamilies = this.parentFamilies;
+    for (let p = 0; p < parentFamilies.length; p++) {
+      let parentFamily = parentFamilies[p];
+      let childIndex = parentFamily.children.indexOf(this);
+      let parentRel = isFather ? parentFamily.fatherRels[childIndex] : parentFamily.motherRels[childIndex];
       if (parentRel === parentChildRel) {
         return; // There is still another parent family of this child that has this parent-child relationship.
       }
     }
     // Did not find any parent family of this person that still had the given parent-child relationship in it, so remove it from the GedcomX.
-    var relIndex = relationships.indexOf(parentChildRel);
+    let relIndex = relationships.indexOf(parentChildRel);
     relationships.splice(relIndex, 1);
   }
 };
 
 // Remove the given child from the family. Delete the parent-child relationships from the GedcomX (unless still needed for another parent family of this same child).
 FamilyLine.prototype.removeChild = function(childBox) {
-  var doc = this.getGedcomX();
-  var childIndex = this.children.indexOf(childBox);
-  var familyNode = this.familyNode;
-  var fatherRel = !isEmpty(familyNode.fatherRels) ? familyNode.fatherRels[childIndex] : null;
-  var motherRel = !isEmpty(familyNode.motherRels) ? familyNode.motherRels[childIndex] : null;
+  let doc = this.getGedcomX();
+  let childIndex = this.children.indexOf(childBox);
+  let familyNode = this.familyNode;
+  let fatherRel = !isEmpty(familyNode.fatherRels) ? familyNode.fatherRels[childIndex] : null;
+  let motherRel = !isEmpty(familyNode.motherRels) ? familyNode.motherRels[childIndex] : null;
 
   // These updates fix up the relationship graph, which is unnecessary if we're going to rebuild it from scratch.
   familyNode.children.splice(childIndex, 1);
@@ -1480,12 +1475,12 @@ FamilyLine.prototype.changeMother = function(motherBox) {
     // Remove the existing mother from the family, if any.
     this.removeMother();
   }
-  var fatherNode = this.father ? this.father.personNode : null;
-  var fatherId = fatherNode ? fatherNode.personId : null;
-  var motherId = motherBox.personNode.personId;
-  var familyId = makeFamilyId(fatherNode, motherBox.personNode);
+  let fatherNode = this.father ? this.father.personNode : null;
+  let fatherId = fatherNode ? fatherNode.personId : null;
+  let motherId = motherBox.personNode.personId;
+  let familyId = makeFamilyId(fatherNode, motherBox.personNode);
   // See if there's already a family with this couple. If so, merge this family with that one.
-  var existingFamilyLine = this.relChart.familyLineMap[familyId];
+  let existingFamilyLine = this.relChart.familyLineMap[familyId];
   if (!existingFamilyLine) {
     // Create the missing couple relationship between the father and mother.
     this.relChart.ensureRelationship(GX_COUPLE, fatherId, motherId);
@@ -1504,12 +1499,12 @@ FamilyLine.prototype.changeFather = function(fatherBox) {
     // Remove the existing mother from the family, if any.
     this.removeFather();
   }
-  var motherNode = this.mother ? this.mother.personNode : null;
-  var motherId = motherNode ? motherNode.personId : null;
-  var fatherId = fatherBox.personNode.personId;
-  var familyId = makeFamilyId(fatherBox.personNode, motherNode);
+  let motherNode = this.mother ? this.mother.personNode : null;
+  let motherId = motherNode ? motherNode.personId : null;
+  let fatherId = fatherBox.personNode.personId;
+  let familyId = makeFamilyId(fatherBox.personNode, motherNode);
   // See if there's already a family with this couple. If so, merge this family with that one.
-  var existingFamilyLine = this.relChart.familyLineMap[familyId];
+  let existingFamilyLine = this.relChart.familyLineMap[familyId];
   if (!existingFamilyLine) {
     // Create the missing couple relationship between the father and mother.
     this.relChart.ensureRelationship(GX_COUPLE, fatherId, motherId);
@@ -1524,8 +1519,8 @@ FamilyLine.prototype.changeFather = function(fatherBox) {
 
 // Remove the given child from this family and add 'parentBox' as a parent of them.
 FamilyLine.prototype.changeChildParent = function(childIndex, parentBox) {
-  var childPersonId = this.children[childIndex].personNode.personId;
-  var parentPersonId = parentBox.personNode.personId;
+  let childPersonId = this.children[childIndex].personNode.personId;
+  let parentPersonId = parentBox.personNode.personId;
   this.removeChild(this.children[childIndex]);
   this.relChart.ensureRelationship(GX_PARENT_CHILD, parentPersonId, childPersonId);
 };
@@ -1537,12 +1532,12 @@ FamilyLine.prototype.changeChildParent = function(childIndex, parentBox) {
  * @param personId2 - JEncoded person ID of the second person.
  */
 RelationshipChart.prototype.addRelationship = function(relType, personId1, personId2) {
-  var doc = this.relGraph.gx;
+  let doc = this.relGraph.gx;
   if (!doc.relationships) {
     doc.relationships = [];
   }
-  var relationship = {};
-  var prefix = (relType === GX_PARENT_CHILD ? "r-pc" : (relType === GX_COUPLE ? "r-c" : "r-" + relType));
+  let relationship = {};
+  let prefix = (relType === GX_PARENT_CHILD ? "r-pc" : (relType === GX_COUPLE ? "r-c" : "r-" + relType));
   relationship.id = prefix + "-" + personId1 + "-" + personId2;
   relationship.type = relType;
   relationship.person1 = {resource :"#" + personId1, resourceId : personId1};
@@ -1553,7 +1548,7 @@ RelationshipChart.prototype.addRelationship = function(relType, personId1, perso
 
 RelationshipChart.prototype.sameId = function(personRef1, personId2) {
   if (personRef1 && personId2) {
-    var personId1 = getPersonIdFromReference(personRef1);
+    let personId1 = getPersonIdFromReference(personRef1);
     return personId1 === personId2;
   }
 };
@@ -1566,11 +1561,11 @@ RelationshipChart.prototype.sameId = function(personRef1, personId2) {
  * @param personId2 - JEncoded person ID of the second person.
  */
 RelationshipChart.prototype.ensureRelationship = function(relType, personId1, personId2) {
-  var doc = this.relGraph.gx;
+  let doc = this.relGraph.gx;
   if (personId1 && personId2) {
     if (doc.relationships) {
-      for (var r = 0; r < doc.relationships.length; r++) {
-        var rel = doc.relationships[r];
+      for (let r = 0; r < doc.relationships.length; r++) {
+        let rel = doc.relationships[r];
         if (rel.type === relType && this.sameId(rel.person1, personId1) && this.sameId(rel.person2, personId2)) {
           return; // Relationship already exists.
         }
@@ -1588,8 +1583,8 @@ RelationshipChart.prototype.ensureRelationship = function(relType, personId1, pe
  */
 RelationshipChart.prototype.ensureRelationships = function(relType, person1Id, person2Nodes) {
   if (person2Nodes) {
-    for (var c = 0; c < person2Nodes.length; c++) {
-      var person2Id = person2Nodes[c].personNode.personId;
+    for (let c = 0; c < person2Nodes.length; c++) {
+      let person2Id = person2Nodes[c].personNode.personId;
       this.ensureRelationship(relType, person1Id, person2Id);
     }
   }
@@ -1606,7 +1601,7 @@ RelationshipChart.prototype.removeFamily = function(familyLine) {
   }
   this.familyLines.splice(this.familyLines.indexOf(familyLine), 1);
 
-  var familyNode = familyLine.familyNode;
+  let familyNode = familyLine.familyNode;
   delete this.familyLineMap[familyNode.familyId];
   this.relGraph.removeFamilyNode(familyNode);
 };

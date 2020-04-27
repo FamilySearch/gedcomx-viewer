@@ -33,8 +33,7 @@ function BumpGroup() {
 
 ChartCompressor.prototype.clear = function(object) {
   if (object) {
-    var key;
-    for (key in object) {
+    for (let key in object) {
       if (object.hasOwnProperty(key)) {
         delete object[key];
       }
@@ -63,7 +62,7 @@ ChartCompressor.prototype.checkBump = function(personBox, otherBox, bumpedSet, m
     // There is nobody there, or the person is already part of this group, so just return
     return false;
   }
-  var extraSpace;
+  let extraSpace;
   if (personBox.generation === otherBox.generation) {
     // Persons are in the same generation, so compare the bottom of one (+ vertical gap) to the top of the other.
     extraSpace = otherBox.getTop() - personBox.getBelow() - this.relChart.verticalGap - this.relChart.subtreeGap(personBox, otherBox);
@@ -100,29 +99,26 @@ ChartCompressor.prototype.checkBump = function(personBox, otherBox, bumpedSet, m
  * @return minMove, the number of pixels that can be moved before someone in bumpGroup hits someone else.
  */
 ChartCompressor.prototype.tryBump = function(bumpGroup, bumpedSet) {
-  var g, groupie; // PersonBox that is a member of the BumpGroup being moved.
-  var inFront;
-  var f, familyLine;
-  var removeSet = new LinkedHashSet(); // set of person IDs to remove from group.front. (Wait to avoid modifying group while iterating through it).
-  var minMove = new IntegerByRef(-1);
+  let removeSet = new LinkedHashSet(); // set of person IDs to remove from group.front. (Wait to avoid modifying group while iterating through it).
+  let minMove = new IntegerByRef(-1);
 
-  for (g = 0; g < bumpGroup.frontBoxIds.getSize(); g++) {
-    var groupPersonId = bumpGroup.frontBoxIds.values[g];
-    groupie = this.relChart.personBoxMap[groupPersonId];
+  for (let g = 0; g < bumpGroup.frontBoxIds.getSize(); g++) {
+    let groupPersonId = bumpGroup.frontBoxIds.values[g];
+    let groupie = this.relChart.personBoxMap[groupPersonId];
 
     // Look to see how far this person can move down before violating a constraint
 
     // Flag for whether this person should be in the "front" of its group, i.e., set this to true if
     //   this person could possibly bump into someone below that is not part of this group.
-    inFront = false;
+    let inFront = false;
 
     // Check for bumping into a person below in the same generation
     inFront |= this.checkBump(groupie, groupie.genBelow, bumpedSet, minMove, bumpGroup);
 
     // Check for a father bumping into oldest child in previous generation
     if (!isEmpty(groupie.spouseLines)) {
-      for (f = 0; f < groupie.spouseLines.length; f++) {
-        familyLine = groupie.spouseLines[f];
+      for (let f = 0; f < groupie.spouseLines.length; f++) {
+        let familyLine = groupie.spouseLines[f];
         if (groupie === familyLine.father && !isEmpty(familyLine.children)) {
           inFront |= this.checkBump(groupie, familyLine.children[0], bumpedSet, minMove, bumpGroup);
         }
@@ -130,8 +126,8 @@ ChartCompressor.prototype.tryBump = function(bumpGroup, bumpedSet) {
     }
     // Check for a child bumping into mother in next generation
     if (!isEmpty(groupie.parentLines)) {
-      for (f = 0; f < groupie.parentLines.length; f++) {
-        familyLine = groupie.parentLines[f];
+      for (let f = 0; f < groupie.parentLines.length; f++) {
+        let familyLine = groupie.parentLines[f];
         if (groupie === familyLine.children[familyLine.children.length - 1]) {
           inFront |= this.checkBump(groupie, familyLine.mother, bumpedSet, minMove, bumpGroup);
         }
@@ -152,26 +148,22 @@ ChartCompressor.prototype.tryBump = function(bumpGroup, bumpedSet) {
 ChartCompressor.prototype.moveHusbandsDown = function(personBoxes) {
   // Look to see if any husbands can be moved down.
   // Start at the bottom so that if someone is moved down, someone else might be able to be moved down, too.
-  var reverseList = personBoxes.slice().reverse(); // copy the array and reverse it.
-  var p, personBox;
-  var f, familyLine;
-  var y, minY;
-  var isFather;
+  let reverseList = personBoxes.slice().reverse(); // copy the array and reverse it.
 
-  for (p = 0; p < reverseList.length; p++) {
-    personBox = reverseList[p];
+  for (let p = 0; p < reverseList.length; p++) {
+    let personBox = reverseList[p];
     if (!isEmpty(personBox.spouseLines)) {
-      minY = null; // minimum y that the center of personBox could be moved down to without violating a constraint.
-      isFather = false;
+      let minY = null; // minimum y that the center of personBox could be moved down to without violating a constraint.
+      let isFather = false;
 
       // Check for a father bumping into oldest child in previous generation
-      for (f = 0; f < personBox.spouseLines.length; f++) {
-        familyLine = personBox.spouseLines[f];
+      for (let f = 0; f < personBox.spouseLines.length; f++) {
+        let familyLine = personBox.spouseLines[f];
         if (personBox === familyLine.father) {
           isFather = true;
           if (!isEmpty(familyLine.children)) {
             // This person has children, so see where the highest one is.
-            y = familyLine.children[0].getCenter() - this.relChart.generationGap;
+            let y = familyLine.children[0].getCenter() - this.relChart.generationGap;
             if (!minY || y < minY) {
               minY = y;
             }
@@ -182,10 +174,10 @@ ChartCompressor.prototype.moveHusbandsDown = function(personBoxes) {
       if (isFather) { // Person was a father, so might get moved down, so check remaining constraints.
         // See where the highest constraint is on "mother below"
         if (!isEmpty(personBox.parentLines)) {
-          for (f = 0; f < personBox.parentLines.length; f++) {
-            familyLine = personBox.parentLines[f];
+          for (let f = 0; f < personBox.parentLines.length; f++) {
+            let familyLine = personBox.parentLines[f];
             if (familyLine.mother) {
-              y = familyLine.mother.getCenter() - this.relChart.generationGap;
+              let y = familyLine.mother.getCenter() - this.relChart.generationGap;
               if (!minY || y < minY) {
                 minY = y;
               }
@@ -195,7 +187,7 @@ ChartCompressor.prototype.moveHusbandsDown = function(personBoxes) {
 
         // See where next person in the same generation is
         if (personBox.genBelow) {
-          y = personBox.genBelow.getTop() - this.relChart.verticalGap - (personBox.getBelow() - personBox.getCenter());
+          let y = personBox.genBelow.getTop() - this.relChart.verticalGap - (personBox.getBelow() - personBox.getCenter());
           if (!minY || y < minY) {
             minY = y;
           }
@@ -211,7 +203,7 @@ ChartCompressor.prototype.moveHusbandsDown = function(personBoxes) {
 
 ChartCompressor.prototype.checkPersonPosition = function(personBox, otherBox, message) {
   if (otherBox) {
-    var extraSpace;
+    let extraSpace;
     if (personBox.generation === otherBox.generation) {
       // Persons are in the same generation, so compare the bottom of one (+ vertical gap) to the top of the other.
       extraSpace = otherBox.getTop() - personBox.getBelow() - this.relChart.verticalGap;
@@ -228,8 +220,6 @@ ChartCompressor.prototype.checkPersonPosition = function(personBox, otherBox, me
 };
 
 ChartCompressor.prototype.checkFamilyLinePositions = function(familyLine) {
-  var i, childBox;
-
   if (familyLine.father && familyLine.topPerson !== familyLine.father) {
     throw "Error: Father isn't top person in family line";
   }
@@ -237,8 +227,8 @@ ChartCompressor.prototype.checkFamilyLinePositions = function(familyLine) {
     throw "Error: Mother isn't bottom person in family line";
   }
   if (familyLine.children) {
-    for (i = 1; i < familyLine.children.length; i++) {
-      childBox = familyLine.children[i];
+    for (let i = 1; i < familyLine.children.length; i++) {
+      let childBox = familyLine.children[i];
       if (childBox.getCenter() < familyLine.children[i - 1].getCenter()) {
         throw "Error: Children out of order in family line";
       }
@@ -253,17 +243,15 @@ ChartCompressor.prototype.checkFamilyLinePositions = function(familyLine) {
 };
 
 ChartCompressor.prototype.checkPositions = function(personBoxes) {
-  var p, personBox;
-  var f, familyLine;
-  for (p = 0; p < personBoxes.length; p++) {
-    personBox = personBoxes[p];
+  for (let p = 0; p < personBoxes.length; p++) {
+    let personBox = personBoxes[p];
     // Check for bumping into a person below in the same generation
     this.checkPersonPosition(personBox, personBox.genBelow, "gen below");
 
     // Check for a father bumping into oldest child in previous generation
     if (personBox.spouseLines) {
-      for (f = 0; f < personBox.spouseLines.length; f++) {
-        familyLine = personBox.spouseLines[f];
+      for (let f = 0; f < personBox.spouseLines.length; f++) {
+        let familyLine = personBox.spouseLines[f];
         if (personBox === familyLine.father && !isEmpty(familyLine.children)) {
           this.checkPersonPosition(personBox, familyLine.children[0], "father to oldest child");
         }
@@ -272,8 +260,8 @@ ChartCompressor.prototype.checkPositions = function(personBoxes) {
     }
     // Check for a child bumping into mother in next generation
     if (!isEmpty(personBox.parentLines)) {
-      for (f = 0; f < personBox.parentLines.length; f++) {
-        familyLine = personBox.parentLines[f];
+      for (let f = 0; f < personBox.parentLines.length; f++) {
+        let familyLine = personBox.parentLines[f];
         if (personBox === familyLine.children[familyLine.children.length - 1]) {
           this.checkPersonPosition(personBox, familyLine.mother, "youngest child to mother");
           this.checkFamilyLinePositions(familyLine);
@@ -288,22 +276,20 @@ ChartCompressor.prototype.checkPositions = function(personBoxes) {
  * @param personBoxes - list of person boxes to translate
  */
 ChartCompressor.prototype.translateVertical = function(personBoxes) {
-  var minY = null;
-  var p, personBox;
-  var dy;
+  let minY = null;
 
-  for (p = 0; p < personBoxes.length; p++) {
-    personBox = personBoxes[p];
+  for (let p = 0; p < personBoxes.length; p++) {
+    let personBox = personBoxes[p];
     if (!minY || personBox.top < minY) {
       minY = personBox.top;
     }
   }
 
   if (minY) {
-    dy = 4 - minY;
+    let dy = 4 - minY;
 
-    for (p = 0; p < personBoxes.length; p++) {
-      personBox = personBoxes[p];
+    for (let p = 0; p < personBoxes.length; p++) {
+      let personBox = personBoxes[p];
       personBox.move(dy);
     }
   }
@@ -311,7 +297,7 @@ ChartCompressor.prototype.translateVertical = function(personBoxes) {
 
 ChartCompressor.prototype.pushPeopleDown = function(personBoxes) {
   // Map of personBox.personBoxId to the BumpGroup that that PersonBox become part of.
-  var bumpGroupMap = {};
+  let bumpGroupMap = {};
 
   // Go through the list of persons.  Move each person down as far as possible until a constraint is violated,
   //   starting with the top person.  When it "bumps into" other people, add those people to the "group" and
@@ -319,46 +305,42 @@ ChartCompressor.prototype.pushPeopleDown = function(personBoxes) {
   //   all the people are in the group, or the group is not bumping into anyone else.
   // When the group bumps into a person that is already part of another group, then the two groups merge,
   //   and the process continues.
-  var p, personBox;
-  var bumpGroup, groupie, g;
-
-  for (p = 0; p < personBoxes.length; p++) {
-    personBox = personBoxes[p];
+  for (let p = 0; p < personBoxes.length; p++) {
+    let personBox = personBoxes[p];
     if (bumpGroupMap[personBox.personBoxId]) {
       // This person is already part of a group, so skip it.
       continue;
     }
-    bumpGroup = new BumpGroup();
+    let bumpGroup = new BumpGroup();
     bumpGroup.add(personBox.personBoxId); // add the top person
+    let bumpedSet;
 
     do {
       // LinkedHashSet of personBoxIds that are all bumped into at the same distance of 'minMove'
-      var bumpedSet = new LinkedHashSet();
+      bumpedSet = new LinkedHashSet();
 
       // Try moving everyone in "bumpGroup" (which is just the current personBox the first time through)
       //   down until at least one person in the group bumps into someone at a distance of 'minMove'.
       // 'bumpedSet' is filled with the persons who are bumped into.
       // 'bumpGroup' is modified so that its 'front' no longer contains people who can no longer bump into anyone and thus don't need to be checked for collisions.
-      var minMove = this.tryBump(bumpGroup, bumpedSet);
+      let minMove = this.tryBump(bumpGroup, bumpedSet);
 
       if (minMove > 0) {
         // Move all the PersonBoxes in the group up or down by minMove.
-        for (g = 0; g < bumpGroup.personBoxIds.values.length; g++) {
-          groupie = this.relChart.personBoxMap[bumpGroup.personBoxIds.values[g]];
+        for (let g = 0; g < bumpGroup.personBoxIds.values.length; g++) {
+          let groupie = this.relChart.personBoxMap[bumpGroup.personBoxIds.values[g]];
           groupie.move(minMove);
         }
       }
 
       if (minMove >= 0) {
-        var bumpedPersonBoxId;
-        var b;
-        for (b = 0; b < bumpedSet.values.length; b++) {
+        let bumpedPersonBoxId;
+        for (let b = 0; b < bumpedSet.values.length; b++) {
           bumpedPersonBoxId = bumpedSet.values[b];
-          var otherBumpGroup = bumpGroupMap[bumpedPersonBoxId];
+          let otherBumpGroup = bumpGroupMap[bumpedPersonBoxId];
           if (otherBumpGroup) {
-            var i;
             // The person box we bumped into was part of an earlier group, so lump all those into this group now.
-            for (i = 0; i < otherBumpGroup.personBoxIds.length; i++) {
+            for (let i = 0; i < otherBumpGroup.personBoxIds.length; i++) {
               // Remove them from the map, because we will add them all back in when the entire group is added.
               delete bumpGroupMap[otherBumpGroup.personBoxIds[i]];
             }
@@ -372,16 +354,15 @@ ChartCompressor.prototype.pushPeopleDown = function(personBoxes) {
     } while (!bumpedSet.isEmpty() && bumpGroup.getSize() < personBoxes.length);
 
     // At this point, the 'bumpGroup' has nobody left to push on, so put it into the group map
-    for (g = 0; g < bumpGroup.personBoxIds.values.length; g++) {
-      var pid = bumpGroup.personBoxIds.values[g];
+    for (let g = 0; g < bumpGroup.personBoxIds.values.length; g++) {
+      let pid = bumpGroup.personBoxIds.values[g];
       bumpGroupMap[pid] = bumpGroup;
     }
   }
 
   // Make sure everyone ended up in the bumpGroupMap.
-  var numHandled = 0;
-  var personBoxId;
-  for (personBoxId in bumpGroupMap) {
+  let numHandled = 0;
+  for (let personBoxId in bumpGroupMap) {
     if (bumpGroupMap.hasOwnProperty(personBoxId)) {
       numHandled++;
     }

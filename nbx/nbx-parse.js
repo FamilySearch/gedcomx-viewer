@@ -79,30 +79,26 @@
  */
 
 function parseNbx(file) {
-  var nbx = {};
-  var pos = 0; // position in file[]
-  var offset = 0; // 'offset' to use in IDs. Doesn't count sub-tags (ENAMEX, etc.), and only counts cr-lf as 1.
-  var len = file.length;
-  var stack = [];
+  let nbx = {};
+  const len = file.length;
   nbx.metadata = [];
   nbx.sbody = [];
   nbx.relex = [];
-  var c;
-  var tag;
-  var content;
-  var relexRegex = /RELEX TYPE="([^"]*)"_STID="([0-9]*)"_ENDID="([0-9]*)"_STTOKEN="([^"]*)"_ENDTOKEN="([^"]*)">/g;
-  var entityRegex = /<([^ ]*) TYPE="([^"]*)">([^<]*)<([^>]*)>/g;
-  var regexResults;
-  var end;
+  const relexRegex = /RELEX TYPE="([^"]*)"_STID="([0-9]*)"_ENDID="([0-9]*)"_STTOKEN="([^"]*)"_ENDTOKEN="([^"]*)">/g;
+  const entityRegex = /<([^ ]*) TYPE="([^"]*)">([^<]*)<([^>]*)>/g;
+
+  // These two are used within parseUntil, so leave them as "var", or else encapsulate in an object or something so parseUntil can update them.
+  var pos = 0; // position in file[]
+  var offset = 0; // 'offset' to use in IDs. Doesn't count sub-tags (ENAMEX, etc.), and only counts cr-lf as 1.
 
   // Read from file[pos] up until the given closing tag is found.
+  // Note: Updates both 'pos' and 'offset'.
   function parseUntil(tag) {
-    var content = [];
-    var endTag = "</" + tag + ">";
-    var end = file.indexOf(endTag, pos);
-    var next;
+    let content = [];
+    let endTag = "</" + tag + ">";
+    let end = file.indexOf(endTag, pos);
     while (pos < end) {
-      next = file.indexOf("<", pos);
+      let next = file.indexOf("<", pos);
       if (next > pos) {
         // There's some text before the next closing tag or entity tag.
         content.push({text: file.slice(pos, next), offset: offset});
@@ -113,7 +109,7 @@ function parseNbx(file) {
         // There's an entity tag, so parse that, but DON'T increment "offset".
         // <ENAMEX TYPE="LOCALE.notgpe">Atlantic</ENAMEX>
         entityRegex.lastIndex = pos;
-        regexResults = entityRegex.exec(file);
+        let regexResults = entityRegex.exec(file);
         content.push({tag: regexResults[1], type: regexResults[2], text: regexResults[3], offset: offset});
         offset += regexResults[3].length;
         if (regexResults[4] !== ("/" + regexResults[1])) {
@@ -122,32 +118,33 @@ function parseNbx(file) {
         pos = entityRegex.lastIndex;
       }
     }
-    offset += endTag.length;
     pos += endTag.length;
+    offset += endTag.length;
     return content;
   }
 
   while (pos < len) {
-    c = file[pos++];
+    let c = file[pos++];
     if (c === '<') {
       if (file.startsWith("RELEX ", pos)) {
         relexRegex.lastIndex = pos;
-        regexResults = relexRegex.exec(file);
+        let regexResults = relexRegex.exec(file);
         nbx.relex.push({type: regexResults[1], startOffset: regexResults[2], endOffset: regexResults[3], startToken: regexResults[4], endToken: regexResults[5]});
         pos = relexRegex.lastIndex;
       }
       else {
-        end = file.indexOf('>', pos);
-        if (file.indexOf(' ', pos) < end) {
-          // Unexpected attribute...???
+        let end = file.indexOf('>', pos);
+        let spacePos = file.indexOf(' ', pos);
+        if (spacePos >= 0 && spacePos < end) {
+          // there's a space between the "<" and the ">", which seems to indicate an attribute, which we weren't expecting.
           console.log("Error: Found unexpected attribute for tag: " + file.slice(pos));
         }
-        tag = file.slice(pos, end);
+        let tag = file.slice(pos, end);
         offset += 2 + tag.length; // < + TAG + >
         pos = end + 1;
         // Skip <p/>, <br/>, <NBX>, <SART>, </NBX>, </SART>
         if (tag !== 'p/' && tag !== 'br/' && tag !== 'NBX' && tag !== 'SART' && tag[0] !== '/') {
-          content = parseUntil(tag);
+          let content = parseUntil(tag);
           if (tag === "SBODY") {
             nbx.sbody = content;
           }

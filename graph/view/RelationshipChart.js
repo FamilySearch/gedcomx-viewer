@@ -6,13 +6,12 @@ RelationshipChart.prototype.animationSpeed = 1000;
 
 // Tell whether personBox1 has a spouse that is not personBox2, or vice-versa
 RelationshipChart.prototype.hasDifferentSpouse = function(personBox1, personBox2) {
-  var f, spouseFamily;
   if (personBox1 && personBox2) {
-    var person1 = personBox1.personNode;
-    var person2 = personBox2.personNode;
+    let person1 = personBox1.personNode;
+    let person2 = personBox2.personNode;
     if (!isEmpty(person1.spouseFamilies)) {
-      for (f = 0; f < person1.spouseFamilies.length; f++) {
-        spouseFamily = person1.spouseFamilies[f];
+      for (let f = 0; f < person1.spouseFamilies.length; f++) {
+        let spouseFamily = person1.spouseFamilies[f];
         if (spouseFamily.getSpouse(person1) === person2) {
           return false;
         }
@@ -20,8 +19,8 @@ RelationshipChart.prototype.hasDifferentSpouse = function(personBox1, personBox2
       return true;
     }
     else if (!isEmpty(person2.spouseFamilies)) {
-      for (f = 0; f < person2.spouseFamilies.length; f++) {
-        spouseFamily = person2.spouseFamilies[f];
+      for (let f = 0; f < person2.spouseFamilies.length; f++) {
+        let spouseFamily = person2.spouseFamilies[f];
         if (spouseFamily.getSpouse(person2) === person1) {
           return false;
         }
@@ -57,19 +56,17 @@ RelationshipChart.prototype.subtreeGap = function(above, below) {
  */
 RelationshipChart.prototype.makeGenerationLinesList = function(familyLines) {
   // Create a map of Generation -> set of family lines in that generation
-  var generationLinesList = []; // FamilyLines in each generation: [generation#][]
-  var f, familyLine;
-  var generationNumber;
-  for (generationNumber = 0; generationNumber < this.generations.length; generationNumber++) {
+  let generationLinesList = []; // FamilyLines in each generation: [generation#][]
+  for (let generationNumber = 0; generationNumber < this.generations.length; generationNumber++) {
     generationLinesList[generationNumber] = [];
   }
-  for (f = 0; f < familyLines.length; f++) {
-    familyLine = familyLines[f];
-    generationNumber = familyLine.getParentGenerationIndex();
+  for (let f = 0; f < familyLines.length; f++) {
+    let familyLine = familyLines[f];
+    let generationNumber = familyLine.getParentGenerationIndex();
     generationLinesList[generationNumber].push(familyLine);
   }
   // Sort the lines in each generation's list by the top coordinate.
-  for (generationNumber = 0; generationNumber < this.generations.length; generationNumber++) {
+  for (let generationNumber = 0; generationNumber < this.generations.length; generationNumber++) {
     generationLinesList[generationNumber].sort(FamilyLine.prototype.compare);
   }
   return generationLinesList;
@@ -77,11 +74,9 @@ RelationshipChart.prototype.makeGenerationLinesList = function(familyLines) {
 
 // Cause HTML elements to move to their new positions.
 RelationshipChart.prototype.setPositions = function() {
-  var p, personBox;
-  var f, familyLine;
-  var bottom = 0;
-  for (p = 0; p < this.personBoxes.length; p++) {
-    personBox = this.personBoxes[p];
+  let bottom = 0;
+  for (let p = 0; p < this.personBoxes.length; p++) {
+    let personBox = this.personBoxes[p];
     if (personBox.hasMoved()) {
       personBox.setPosition();
     }
@@ -89,8 +84,8 @@ RelationshipChart.prototype.setPositions = function() {
       bottom = personBox.getBelow();
     }
   }
-  for (f = 0; f < this.familyLines.length; f++) {
-    familyLine = this.familyLines[f];
+  for (let f = 0; f < this.familyLines.length; f++) {
+    let familyLine = this.familyLines[f];
     if (familyLine.hasMoved()) {
       familyLine.setPosition();
     }
@@ -103,15 +98,14 @@ RelationshipChart.prototype.getGedcomX = function() {
 };
 
 RelationshipChart.prototype.calculatePositions = function() {
-  var y = 0;
-  var prevBox = null;
-  var p, personBox;
-  var bottom;
+  let y = 0;
+  let prevBox = null;
+  let bottom;
 
   this.prevHeight = this.height;
 
-  for (p = 0; p < this.personBoxes.length; p++) {
-    personBox = this.personBoxes[p];
+  for (let p = 0; p < this.personBoxes.length; p++) {
+    let personBox = this.personBoxes[p];
     personBox.setPreviousPosition();
     y += this.verticalGap + this.subtreeGap(prevBox, personBox);
     personBox.top = y;
@@ -129,7 +123,7 @@ RelationshipChart.prototype.calculatePositions = function() {
 
   // Get the new bottom of the graph
   y = 0;
-  for (p = 0; p < this.personBoxes.length; p++) {
+  for (let p = 0; p < this.personBoxes.length; p++) {
     bottom = this.personBoxes[p].getBelow();
     if (bottom > y) {
       y = bottom;
@@ -137,11 +131,10 @@ RelationshipChart.prototype.calculatePositions = function() {
   }
   this.height = y + 4;
 
-  var generationLinesList = this.makeGenerationLinesList(this.familyLines);
+  let generationLinesList = this.makeGenerationLinesList(this.familyLines);
 
-  var x = 4; // pad by 4 just so the first line isn't right up against the edge of the screen.
-  var g;
-  for (g = 0; g < this.generations.length; g++) {
+  let x = 4; // pad by 4 just so the first line isn't right up against the edge of the screen.
+  for (let g = 0; g < this.generations.length; g++) {
     // Set the x-coordinate of each familyLine for the given generation. Return the resulting x-coordinate, which may have increased
     //   if there are overlapping lines within the same generation.
     x = FamilyLine.prototype.setLineX(generationLinesList[g], x, this.lineGap);
@@ -161,30 +154,28 @@ RelationshipChart.prototype.calculatePositions = function() {
  * @param prevRelChart
  */
 RelationshipChart.prototype.setPreviousPositions = function(prevRelChart) {
-  var p;
-  var newPersons = new LinkedHashSet();
-  for (p = 0; p < this.personBoxes.length; p++) {
-    var personBox = this.personBoxes[p];
-    var prevPersonBox = prevRelChart.personBoxMap[personBox.personBoxId];
+  let newPersons = new LinkedHashSet();
+  for (let p = 0; p < this.personBoxes.length; p++) {
+    let personBox = this.personBoxes[p];
+    let prevPersonBox = prevRelChart.personBoxMap[personBox.personBoxId];
     if (prevPersonBox) {
-      var prevLeft = prevPersonBox.prevLeft ? prevPersonBox.prevLeft : prevPersonBox.getLeft();
+      let prevLeft = prevPersonBox.prevLeft ? prevPersonBox.prevLeft : prevPersonBox.getLeft();
       personBox.$personDiv.css({left: prevLeft, top: prevPersonBox.getTop()});
     }
     else {
       newPersons.add(personBox.personNode.personId);
     }
   }
-  var f;
-  for (f = 0; f < this.familyLines.length; f++) {
-    var familyLine = this.familyLines[f];
-    var prevFamilyLine = prevRelChart.familyLineMap[familyLine.familyNode.familyId];
+  for (let f = 0; f < this.familyLines.length; f++) {
+    let familyLine = this.familyLines[f];
+    let prevFamilyLine = prevRelChart.familyLineMap[familyLine.familyNode.familyId];
     if (prevFamilyLine) {
-      var height = 1 + prevFamilyLine.bottomPerson.center - prevFamilyLine.topPerson.center;
+      let height = 1 + prevFamilyLine.bottomPerson.center - prevFamilyLine.topPerson.center;
       familyLine.$familyLineDiv.css({left: prevFamilyLine.x + "px", top: prevFamilyLine.topPerson.center + "px", height: height + "px"});
       if (familyLine.$familyLineDrop) { // => isEditable
         familyLine.$familyLineDrop.css({height: height + "px"});
       }
-      var width;
+      let width;
       if (familyLine.$fatherLineDiv) {
         width = prevFamilyLine.safeWidth(prevFamilyLine.father.getLeft() - prevFamilyLine.x);
         familyLine.$fatherLineDiv.css({"left": prevFamilyLine.x, "top": prevFamilyLine.father.center + "px", "width": width + "px"});
@@ -193,10 +184,9 @@ RelationshipChart.prototype.setPreviousPositions = function(prevRelChart) {
         width = prevFamilyLine.safeWidth(prevFamilyLine.mother.getLeft() - prevFamilyLine.x);
         familyLine.$motherLineDiv.css({"left": prevFamilyLine.x, "top": prevFamilyLine.mother.center + "px", "width": width + "px"});
       }
-      var c;
-      for (c = 0;  c < familyLine.children.length; c++) {
-        var childPersonBox = familyLine.children[c];
-        var prevChildBox = prevRelChart.personBoxMap[childPersonBox.personBoxId];
+      for (let c = 0;  c < familyLine.children.length; c++) {
+        let childPersonBox = familyLine.children[c];
+        let prevChildBox = prevRelChart.personBoxMap[childPersonBox.personBoxId];
         if (prevChildBox) {
           width = prevFamilyLine.safeWidth(prevFamilyLine.x - prevChildBox.getRight());
           familyLine.$childrenLineDivs[c].css({"left": prevChildBox.getRight(), "top": prevChildBox.center, "width": width});
@@ -251,7 +241,7 @@ function RelationshipChart(relGraph, $relChartDiv, shouldIncludeDetails, shouldC
   this.chartCompressor = new ChartCompressor(this);
 
   if (isEditable) {
-    var relChart = this;
+    let relChart = this;
     $relChartDiv.click(function(){
       relChart.clearSelections();
     });

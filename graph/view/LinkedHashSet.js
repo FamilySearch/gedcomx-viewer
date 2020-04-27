@@ -12,7 +12,7 @@ LinkedHashSet.prototype.add = function(value) {
 LinkedHashSet.prototype.remove = function(value) {
   if (this.map[value]) {
     delete this.map[value];
-    var index = this.values.indexOf(value);
+    let index = this.values.indexOf(value);
     if (index > -1) {
       this.values.splice(index, 1);
     }
@@ -23,15 +23,13 @@ LinkedHashSet.prototype.remove = function(value) {
 };
 
 LinkedHashSet.prototype.removeAll = function(other) {
-  var i;
-  for (i = 0; i < other.values.length; i++) {
+  for (let i = 0; i < other.values.length; i++) {
     this.remove(other.values[i]);
   }
 };
 
 LinkedHashSet.prototype.addAll = function(other) {
-  var i;
-  for (i = 0; i < other.values.length; i++) {
+  for (let i = 0; i < other.values.length; i++) {
     this.add(other.values[i]);
   }
 };

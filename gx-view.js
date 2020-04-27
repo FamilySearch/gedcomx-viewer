@@ -8,7 +8,7 @@ function empty(s) {
 
 function card(sectionName, sectionContent, level, addHook, editHook) {
   level = level || 2;
-  var title = $("<h" + level + "/>", {class: "card-title card-header"}).append(span().text(sectionName));
+  let title = $("<h" + level + "/>", {class: "card-title card-header"}).append(span().text(sectionName));
   if (addHook) {
     title = title.append(addButton(addHook));
   }
@@ -22,8 +22,8 @@ function card(sectionName, sectionContent, level, addHook, editHook) {
 }
 
 function dl(items, attrs) {
-  var list = $("<dl/>", attrs).addClass("row");
-  for (var key in items) {
+  let list = $("<dl/>", attrs).addClass("row");
+  for (let key in items) {
     if (items.hasOwnProperty(key)) {
       list.append($("<dt/>", {class: "col-3 text-nowrap"}).text(key)).append($("<dd/>", {class: "col-9 text-nowrap"}).text(items[key]));
     }
@@ -60,7 +60,7 @@ function removeButton(hook) {
 ////////////////////
 
 function getGenderString(person) {
-  var gender = "Gender?";
+  let gender = "Gender?";
 
   if (person && person.gender && person.gender.type) {
     switch (person.gender.type) {
@@ -82,18 +82,17 @@ function getBestNameValue(person) {
     return null;
   }
 
-  var name = person.names[0];
+  let name = person.names[0];
   if (!name.nameForms || !name.nameForms.length) {
     return null;
   }
-  var nameForm = name.nameForms[0];
+  let nameForm = name.nameForms[0];
   return formName(nameForm.fullText);
 
   function formName(nameString) {
     if (!nameString && nameForm.parts && nameForm.parts.length > 0) {
-      var i;
       nameString = "";
-      for (i = 0; i < nameForm.parts.length; i++) {
+      for (let i = 0; i < nameForm.parts.length; i++) {
         if (i > 0) {
           nameString += " ";
         }
@@ -111,28 +110,28 @@ function getBestNameValue(person) {
 
 function buildRecordUI(doc, url, editHooks) {
   editHooks = editHooks || {};
-  var record = div({ id: "record"});
+  let record = div({ id: "record"});
   record.append($("<h1/>").append(span().text("Record ")));
 
   if (isSour(doc)) {
     record.append($("<h4/>", {class: "alert alert-warning", role:"alert"}).append(span({class: "oi oi-warning mr-2"})).append(span().text("Record is sour!")));
   }
 
-  var recordMetadata = {};
+  let recordMetadata = {};
 
   if (url) {
     recordMetadata.URL = url;
   }
 
   if (doc.description) {
-    var sd = getSourceDescription(doc, doc.description);
+    let sd = getSourceDescription(doc, doc.description);
     if (sd) {
       if (sd.titles) {
         recordMetadata.Title = sd.titles[0].value;
       }
 
       if (sd.coverage && sd.coverage.length > 0) {
-        var coverage = sd.coverage[0];
+        let coverage = sd.coverage[0];
         recordMetadata.Type = parseType(coverage.recordType);
         if (coverage.temporal) {
           recordMetadata.Date = coverage.temporal.original;
@@ -143,7 +142,7 @@ function buildRecordUI(doc, url, editHooks) {
       }
 
       if (sd.publisher) {
-        var publisher = getAgent(doc, sd.publisher.resource);
+        let publisher = getAgent(doc, sd.publisher.resource);
         if (publisher && publisher.names && publisher.names.length > 0) {
           recordMetadata.Publisher = publisher.names[0].value;
         }
@@ -151,21 +150,20 @@ function buildRecordUI(doc, url, editHooks) {
     }
   }
 
-  var hookToEditRecordMetadata = null;
+  let hookToEditRecordMetadata = null;
   if (editHooks.editRecordMetadata) {
     hookToEditRecordMetadata = function() {editHooks.editRecordMetadata(recordMetadata)};
   }
 
   record.append(card("Metadata", dl(recordMetadata), 5, null, hookToEditRecordMetadata));
 
-  var i;
   // Map of local person id (p_1234567) to index (1, 2, 3...)
-  var idMap = {};
-  var path = "";
+  let idMap = {};
+  let path = "";
 
   if (doc.persons) {
     // Create a short 1-based person index for viewing.
-    for (i = 0; i < doc.persons.length; i++) {
+    for (let i = 0; i < doc.persons.length; i++) {
       idMap[doc.persons[i].id] = i + 1;
     }
 
@@ -183,8 +181,8 @@ function buildRecordUI(doc, url, editHooks) {
 
 function isSour(doc) {
   if (doc.fields) {
-    for (var i = 0; i < doc.fields.length; i++) {
-      var field = doc.fields[i];
+    for (let i = 0; i < doc.fields.length; i++) {
+      let field = doc.fields[i];
       if (field.type === "http://familysearch.org/types/fields/FsVisStatus") {
         if (field.values && field.values.length > 0 && field.values[0].text === "restricted") {
           return true;
@@ -196,19 +194,18 @@ function isSour(doc) {
 }
 
 function buildPersonsUI(doc, idMap, path, editHooks) {
-  var i;
-  var persons = div({id: "persons"});
+  let persons = div({id: "persons"});
   path = path + ".persons";
-  for (i = 0; i < doc.persons.length; i++) {
+  for (let i = 0; i < doc.persons.length; i++) {
     persons.append(buildPersonUI(doc, doc.persons[i], idMap, path + '[' + i + "]", editHooks));
   }
   return persons;
 }
 
 function buildPersonUI(doc, person, idMap, path, editHooks) {
-  var personCard = div({ class: "person card m-3", id: encode(person.id)} );
-  var personCardBody = div({class: "card-body p-0"}).appendTo(personCard);
-  var personCardTitle =  $("<h3/>", {class: "card-title card-header"}).appendTo(personCardBody);
+  let personCard = div({ class: "person card m-3", id: encode(person.id)} );
+  let personCardBody = div({class: "card-body p-0"}).appendTo(personCard);
+  let personCardTitle =  $("<h3/>", {class: "card-title card-header"}).appendTo(personCardBody);
 
   buildPersonIdBadge(person, idMap).appendTo(personCardTitle);
 
@@ -222,17 +219,17 @@ function buildPersonUI(doc, person, idMap, path, editHooks) {
     removeButton(function() { editHooks.removePerson(person.id) }).appendTo(personCardTitle);
   }
 
-  var identifier = getIdentifier(person);
+  let identifier = getIdentifier(person);
   if (identifier) {
     div({class: "card-text m-2", "json-node-path" : path + ".identifiers"}).append(dl({"Identifier": identifier})).appendTo(personCardBody);
   }
 
-  var personCardBodyContent = div({class:"row"});
+  let personCardBodyContent = div({class:"row"});
   div({class: "container"}).append(personCardBodyContent).appendTo(personCardBody);
 
   if (person.names && person.names.length > 0) {
-    var names = buildNamesUI(person, path, editHooks);
-    var addNameHook = null;
+    let names = buildNamesUI(person, path, editHooks);
+    let addNameHook = null;
     if (editHooks.addName) {
       addNameHook = function () { editHooks.addName(person.id); };
     }
@@ -243,8 +240,8 @@ function buildPersonUI(doc, person, idMap, path, editHooks) {
   }
 
   if (person.facts && person.facts.length > 0) {
-    var facts = buildFactsUI(person, person.facts, path + ".facts", editHooks);
-    var addFactHook = null;
+    let facts = buildFactsUI(person, person.facts, path + ".facts", editHooks);
+    let addFactHook = null;
     if (editHooks.addPersonFact) {
       addFactHook = function () { editHooks.addPersonFact(person.id); };
     }
@@ -256,12 +253,12 @@ function buildPersonUI(doc, person, idMap, path, editHooks) {
 
   if (person.fields) {
     //hide fields for now
-    //var fields = buildFieldsUI(person.fields, path + ".fields");
+    //let fields = buildFieldsUI(person.fields, path + ".fields");
     //personCardBodyContent.append(div({class: "col"}).append(card("Fields", fields, 5)));
   }
 
-  var relatives = buildRelativesUI(doc, person, idMap, editHooks);
-  var addRelativeHook = null;
+  let relatives = buildRelativesUI(doc, person, idMap, editHooks);
+  let addRelativeHook = null;
   if (editHooks.addRelationship) {
     addRelativeHook = function() { editHooks.addRelationship(person.id) }
   }
@@ -271,9 +268,9 @@ function buildPersonUI(doc, person, idMap, path, editHooks) {
 }
 
 function buildGenderBadge(person, path, editHooks) {
-  var genderString = getGenderString(person);
-  var genderClass = genderString ? genderString.charAt(0) === 'M' ? "gender-male" : genderString.charAt(0) === 'F' ? "gender-female" : "gender-unknown" : "gender-unknown";
-  var genderBadge = span({ class: "gender badge badge-pill badge-secondary " + genderClass }).append(span({ "json-node-path": path + ".gender" }).text(genderString));
+  let genderString = getGenderString(person);
+  let genderClass = genderString ? genderString.charAt(0) === 'M' ? "gender-male" : genderString.charAt(0) === 'F' ? "gender-female" : "gender-unknown" : "gender-unknown";
+  let genderBadge = span({ class: "gender badge badge-pill badge-secondary " + genderClass }).append(span({ "json-node-path": path + ".gender" }).text(genderString));
   if (editHooks.editGender) {
     span({class: "trigger oi oi-loop-circular ml-1"}).click(function() { editHooks.editGender(person.id); }).appendTo(genderBadge);
   }
@@ -281,7 +278,7 @@ function buildGenderBadge(person, path, editHooks) {
 }
 
 function buildPrincipalBadge(person, path, editHooks) {
-  var principalUI;
+  let principalUI;
   if (person.principal) {
     principalUI = span({class: "principal badge badge-pill badge-primary"}).append(span({"json-node-path": path + ".principal"}).text("Principal"));
   }
@@ -297,28 +294,28 @@ function buildPrincipalBadge(person, path, editHooks) {
 }
 
 function buildPersonIdBadge(person, idMap) {
-  var localId = idMap[person.id];
+  let localId = idMap[person.id];
   return span({class: "local-pid badge badge-pill badge-info"}).append(span({class: "oi oi-person", title: "person", "aria-hidden": "true"})).append($("<small/>").text(localId));
 }
 
 function buildNamesUI(person, path, editHooks) {
-  var n = div({class: "names"});
+  let n = div({class: "names"});
   path = path + ".names";
-  for (var i = 0; i < person.names.length; i++) {
+  for (let i = 0; i < person.names.length; i++) {
     n.append(buildNameUI(person, person.names[i], path + "[" + i + "]", editHooks));
   }
   return n;
 }
 
 function buildNameUI(person, name, path, editHooks) {
-  var n = div({ class: "name text-nowrap"});
+  let n = div({ class: "name text-nowrap"});
 
   if (name.nameForms) {
     path = path + ".nameForms";
-    for (var i = 0; i < name.nameForms.length; i++) {
-      var nameForm = name.nameForms[i];
-      var nameFormPath = path + '[' + i + ']';
-      var fullText = $("<h5/>", {class: "name-form", "json-node-path" : nameFormPath + ".fullText"}).append(span().html(empty(nameForm.fullText) ? "(Empty)" : nameForm.fullText));
+    for (let i = 0; i < name.nameForms.length; i++) {
+      let nameForm = name.nameForms[i];
+      let nameFormPath = path + '[' + i + ']';
+      let fullText = $("<h5/>", {class: "name-form", "json-node-path" : nameFormPath + ".fullText"}).append(span().html(empty(nameForm.fullText) ? "(Empty)" : nameForm.fullText));
 
       if (nameForm.lang) {
         fullText.append(span({class: "lang badge badge-dark", "json-node-path" : nameFormPath + ".lang"}).text(nameForm.lang));
@@ -348,14 +345,13 @@ function buildNameUI(person, name, path, editHooks) {
 }
 
 function buildNamePartsUI(parts, path) {
-  var i, part;
-  var fs = $("<table/>", {class: "name-parts table table-sm"});
+  let fs = $("<table/>", {class: "name-parts table table-sm"});
   $("<thead/>").append($("<tr/>").append($("<th>Part Type</th>")).append($("<th>Part Value</th>"))).appendTo(fs);
-  var body = $("<tbody/>").appendTo(fs);
-  for (i = 0; i < parts.length; i++) {
-    var partPath = path + '[' + i + ']';
-    part = parts[i];
-    var f = $("<tr/>").appendTo(body);
+  let body = $("<tbody/>").appendTo(fs);
+  for (let i = 0; i < parts.length; i++) {
+    let partPath = path + '[' + i + ']';
+    let part = parts[i];
+    let f = $("<tr/>").appendTo(body);
     f.append($("<td/>", {class: "name-part-type text-nowrap", "json-node-path" : partPath + ".type"}).text(parseType(part.type)));
     f.append($("<td/>", {class: "name-part-value text-nowrap", "json-node-path" : partPath + ".value"}).text(part.value ? part.value : ""));
   }
@@ -363,22 +359,21 @@ function buildNamePartsUI(parts, path) {
 }
 
 function buildFactsUI(subject, facts, path, editHooks, isRelationship) {
-  var i, j;
-  var factsUI = $("<table/>", {class: "facts table table-sm"});
-  var valueNeeded = false;
-  var ageNeeded = false;
-  var causeNeeded = false;
-  var removeFactFn = isRelationship ? editHooks.removeRelationshipFact : editHooks.removePersonFact;
-  var editFactFn = isRelationship ? editHooks.editRelationshipFact : editHooks.editPersonFact;
-  var copyFactFn = isRelationship ? null : editHooks.copyPersonFact;
+  let factsUI = $("<table/>", {class: "facts table table-sm"});
+  let valueNeeded = false;
+  let ageNeeded = false;
+  let causeNeeded = false;
+  let removeFactFn = isRelationship ? editHooks.removeRelationshipFact : editHooks.removePersonFact;
+  let editFactFn = isRelationship ? editHooks.editRelationshipFact : editHooks.editPersonFact;
+  let copyFactFn = isRelationship ? null : editHooks.copyPersonFact;
 
-  for (i = 0; i < facts.length; i++) {
+  for (let i = 0; i < facts.length; i++) {
     if (facts[i].value) {
       valueNeeded = true;
     }
 
     if (facts[i].qualifiers) {
-      for (j = 0; j < facts[i].qualifiers.length; j++) {
+      for (let j = 0; j < facts[i].qualifiers.length; j++) {
         if (facts[i].qualifiers[j].name === "http://gedcomx.org/Age") {
           ageNeeded = true;
         }
@@ -389,7 +384,7 @@ function buildFactsUI(subject, facts, path, editHooks, isRelationship) {
     }
   }
 
-  var row = $("<tr/>").append($("<th>Type</th>")).append($("<th>Date</th>")).append($("<th>Place</th>"));
+  let row = $("<tr/>").append($("<th>Type</th>")).append($("<th>Date</th>")).append($("<th>Place</th>"));
   if (valueNeeded) {
     row.append($("<th>Value</th>"));
   }
@@ -404,11 +399,11 @@ function buildFactsUI(subject, facts, path, editHooks, isRelationship) {
   }
   $("<thead/>").append(row).appendTo(factsUI);
 
-  var body = $("<tbody/>").appendTo(factsUI);
-  for (i = 0; i < facts.length; i++) {
-    var factPath = path + '[' + i + ']';
-    var fact = facts[i];
-    var f = $("<tr/>");
+  let body = $("<tbody/>").appendTo(factsUI);
+  for (let i = 0; i < facts.length; i++) {
+    let factPath = path + '[' + i + ']';
+    let fact = facts[i];
+    let f = $("<tr/>");
 
     if (fact.primary) {
       f.append($("<td/>", {class: "fact-type text-nowrap", "json-node-path" : factPath + ".type"}).append(span().text(parseType(fact.type) + " ")).append(span({class: "oi oi-star"})));
@@ -423,7 +418,7 @@ function buildFactsUI(subject, facts, path, editHooks, isRelationship) {
     }
     if (ageNeeded) {
       if (fact.qualifiers) {
-        for (j = 0; j < fact.qualifiers.length; j++) {
+        for (let j = 0; j < fact.qualifiers.length; j++) {
           if (fact.qualifiers[j].name === "http://gedcomx.org/Age") {
             f.append($("<td/>", {class: "fact-age text-nowrap", "json-node-path": factPath + ".qualifiers[" + j + "]"}).text(fact.qualifiers[j].value));
             break;
@@ -436,7 +431,7 @@ function buildFactsUI(subject, facts, path, editHooks, isRelationship) {
     }
     if (causeNeeded) {
       if (fact.qualifiers) {
-        for (j = 0; j < fact.qualifiers.length; j++) {
+        for (let j = 0; j < fact.qualifiers.length; j++) {
           if (fact.qualifiers[j].name === "http://gedcomx.org/Cause") {
             f.append($("<td/>", {class: "fact-cause text-nowrap", "json-node-path": factPath + ".qualifiers[" + j + "]"}).text(fact.qualifiers[j].value));
             break;
@@ -449,7 +444,7 @@ function buildFactsUI(subject, facts, path, editHooks, isRelationship) {
     }
 
     if (removeFactFn || editFactFn || copyFactFn) {
-      var editCell = $("<td/>", {class: "text-nowrap"});
+      let editCell = $("<td/>", {class: "text-nowrap"});
 
       if (editFactFn) {
         editCell.append(editFactButton(subject, fact, editFactFn));
@@ -491,23 +486,22 @@ function removeFactButton(subject, fact, removeFactFn) {
 
 // Get the HTML for the list of a person's relatives.
 function buildRelativesUI(doc, person, idMap, editHooks) {
-  var relativesDiv = div({class: "relatives"});
-  var i;
-  var hasRelatives = false;
+  let relativesDiv = div({class: "relatives"});
+  let hasRelatives = false;
 
   if (doc.relationships) {
-    for (i = 0; i < doc.relationships.length; i++) {
-      var relationship = doc.relationships[i];
-      var ref1 = relationship.person1 ? relationship.person1.resource ? relationship.person1.resource : "" : "";
-      var ref2 = relationship.person2 ? relationship.person2.resource ? relationship.person2.resource : "" : "";
-      var isP1 = ref1.endsWith(person.id);
-      var isP2 = ref2.endsWith(person.id);
+    for (let i = 0; i < doc.relationships.length; i++) {
+      let relationship = doc.relationships[i];
+      let ref1 = relationship.person1 ? relationship.person1.resource ? relationship.person1.resource : "" : "";
+      let ref2 = relationship.person2 ? relationship.person2.resource ? relationship.person2.resource : "" : "";
+      let isP1 = ref1.endsWith(person.id);
+      let isP2 = ref2.endsWith(person.id);
       if (isP1 || isP2) {
         hasRelatives = true;
-        var relative = findPersonByRef(doc, isP1 ? ref2 : ref1);
+        let relative = findPersonByRef(doc, isP1 ? ref2 : ref1);
         if (relative) {
-          var gender = relative.gender ? relative.gender.type : null;
-          var relativeLabel = getRelativeLabelFromRelationship(relationship.type, gender, isP1);
+          let gender = relative.gender ? relative.gender.type : null;
+          let relativeLabel = getRelativeLabelFromRelationship(relationship.type, gender, isP1);
           relativesDiv.append(buildRelativeUI(relationship, relative, relativeLabel, idMap, ".relationships[" + i + "]", editHooks));
         }
       }
@@ -522,8 +516,8 @@ function buildRelativesUI(doc, person, idMap, editHooks) {
 }
 
 function buildRelativeUI(relationship, relative, relativeLabel, idMap, path, editHooks) {
-  var relativeId = relative.id;
-  var relativeTitle = $("<h5/>", {class: "relative text-nowrap"});
+  let relativeId = relative.id;
+  let relativeTitle = $("<h5/>", {class: "relative text-nowrap"});
   buildPersonIdBadge(relative, idMap).appendTo(relativeTitle);
   $("<a/>", { "class" : "link-unstyled", "href" : '#' + relativeId}).html(getBestNameValue(relative)).appendTo(relativeTitle);
   if (relativeLabel) {
@@ -535,7 +529,7 @@ function buildRelativeUI(relationship, relative, relativeLabel, idMap, path, edi
   if (editHooks.removeRelationship) {
     relativeTitle.append(removeButton(function() {editHooks.removeRelationship(relationship.id)}));
   }
-  var relativeUI = div().append(relativeTitle);
+  let relativeUI = div().append(relativeTitle);
   if (relationship.facts) {
     relativeUI.append(buildRelativeFactsUI(relationship));
   }
@@ -543,11 +537,10 @@ function buildRelativeUI(relationship, relative, relativeLabel, idMap, path, edi
 }
 
 function buildRelativeFactsUI(rel) {
-  var i;
-  var facts = {};
+  let facts = {};
   if (rel && rel.facts) {
-    for (i = 0; i < rel.facts.length; i++) {
-      var fact = rel.facts[i];
+    for (let i = 0; i < rel.facts.length; i++) {
+      let fact = rel.facts[i];
       facts[parseType(fact.type)] = (fact.date ? fact.date.original + " " : "") + (fact.place ? fact.place.original + " " : "") + (fact.value ? "(" + fact.value + ")" : "");
     }
   }
@@ -555,21 +548,21 @@ function buildRelativeFactsUI(rel) {
 }
 
 function buildRelationshipsUI(doc, idMap, path, editHooks) {
-  var i;
-  var relationships = div({id: "relationships"});
+  let i;
+  let relationships = div({id: "relationships"});
   path = path + ".relationships";
-  for (i = 0; i < doc.relationships.length; i++) {
+  for (let i = 0; i < doc.relationships.length; i++) {
     relationships.append(buildRelationshipUI(doc, doc.relationships[i], idMap, path + '[' + i + "]", editHooks));
   }
   return relationships;
 }
 
 function buildRelationshipUI(doc, relationship, idMap, path, editHooks) {
-  var relationshipCard = div({ class: "relationship card m-3", id: encode(relationship.id)} );
-  var relationshipCardBody = div({class: "card-body p-0"}).appendTo(relationshipCard);
-  var relationshipCardTitle =  $("<h5/>", {class: "card-title card-header"}).appendTo(relationshipCardBody);
+  let relationshipCard = div({ class: "relationship card m-3", id: encode(relationship.id)} );
+  let relationshipCardBody = div({class: "card-body p-0"}).appendTo(relationshipCard);
+  let relationshipCardTitle =  $("<h5/>", {class: "card-title card-header"}).appendTo(relationshipCardBody);
 
-  var person1 = relationship.person1 ? findPersonByRef(doc, relationship.person1.resource) : null;
+  let person1 = relationship.person1 ? findPersonByRef(doc, relationship.person1.resource) : null;
   if (person1) {
     buildPersonIdBadge(person1, idMap).appendTo(relationshipCardTitle);
     span({class: "relationship-person1 text-nowrap", "json-node-path" : path + ".person1"}).html(getBestNameValue(person1) + " &larr;").appendTo(relationshipCardTitle);
@@ -580,7 +573,7 @@ function buildRelationshipUI(doc, relationship, idMap, path, editHooks) {
 
   relationshipCardTitle.append(span({class: "relationship-type badge badge-secondary", "json-node-path" : path + ".type"}).text(parseType(relationship.type)));
 
-  var person2 = relationship.person2 ? findPersonByRef(doc, relationship.person2.resource) : null;
+  let person2 = relationship.person2 ? findPersonByRef(doc, relationship.person2.resource) : null;
   if (person2) {
     span({class: "relationship-person2 text-nowrap mr-1", "json-node-path" : path + ".person2"}).html("&rarr; " + getBestNameValue(person2)).appendTo(relationshipCardTitle);
     buildPersonIdBadge(person2, idMap).appendTo(relationshipCardTitle);
@@ -597,17 +590,17 @@ function buildRelationshipUI(doc, relationship, idMap, path, editHooks) {
     removeButton(function() { editHooks.removeRelationship(relationship.id) }).appendTo(relationshipCardTitle);
   }
 
-  var identifier = getIdentifier(relationship);
+  let identifier = getIdentifier(relationship);
   if (identifier) {
     div({class: "card-text m-2", "json-node-path" : path + ".identifiers"}).append(dl({"Identifier": identifier})).appendTo(relationshipCardBody);
   }
 
-  var relationshipCardBodyContent = div({class:"row p-2"});
+  let relationshipCardBodyContent = div({class:"row p-2"});
   div({class: "container"}).append(relationshipCardBodyContent).appendTo(relationshipCardBody);
 
   if (relationship.facts && relationship.facts.length > 0) {
-    var facts = buildFactsUI(relationship, relationship.facts, path + ".facts", editHooks, true);
-    var addFactHook = null;
+    let facts = buildFactsUI(relationship, relationship.facts, path + ".facts", editHooks, true);
+    let addFactHook = null;
     if (editHooks.addRelationshipFact) {
       addFactHook = function () { editHooks.addRelationshipFact(relationship.id); };
     }
@@ -619,7 +612,7 @@ function buildRelationshipUI(doc, relationship, idMap, path, editHooks) {
 
   if (relationship.fields) {
     //hide fields for now
-    //var fields = buildFieldsUI(relationship.fields, path + ".fields");
+    //let fields = buildFieldsUI(relationship.fields, path + ".fields");
     //relationshipCardBodyContent.append(div({class: "col"}).append(card("Fields", fields, 5)));
   }
 
@@ -633,8 +626,8 @@ function findPersonByRef(doc, id) {
     }
 
     if (doc.persons) {
-      for (var i = 0; i < doc.persons.length; i++) {
-        var person = doc.persons[i];
+      for (let i = 0; i < doc.persons.length; i++) {
+        let person = doc.persons[i];
         if (person.id === id) {
           return person;
         }
@@ -645,13 +638,13 @@ function findPersonByRef(doc, id) {
 }
 
 function getIdentifier(object) {
-  var id = null;
+  let id = null;
   if (object.identifiers) {
     id = getFirst(object.identifiers["http://gedcomx.org/Persistent"]);
     if (id === null) {
       id = getFirst(object.identifiers["http://gedcomx.org/Primary"]);
       if (id === null) {
-        for (var idType in object.identifiers) {
+        for (let idType in object.identifiers) {
           if (object.identifiers.hasOwnProperty(idType)) {
             id = getFirst(object.identifiers[idType]);
             if (id !== null) {

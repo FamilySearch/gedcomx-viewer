@@ -56,7 +56,7 @@ PersonBox.prototype.getPersonId = function() {
 
 // Remove the given parent FamilyLine from the parentLines array.
 PersonBox.prototype.removeParentFamilyLine = function(parentFamilyLine) {
-  var index = this.parentLines.indexOf(parentFamilyLine);
+  let index = this.parentLines.indexOf(parentFamilyLine);
   if (index < 0) {
     throw "Failed to find parent family line.";
   }
@@ -80,20 +80,19 @@ PersonBox.prototype.getPersonBoxId = function(personId) {
 function PersonBox(personNode, relChart, personAbove, personBelow, generationIndex, relChartToGx) {
 
   function addNameSpans(person) {
-    var html = "";
-    var n, f;
-    var isFirstFullName = true;
+    let html = "";
+    let isFirstFullName = true;
     if (person.names) {
-      for (n = 0; n < person.names.length; n++) {
-        var name = person.names[n];
+      for (let n = 0; n < person.names.length; n++) {
+        let name = person.names[n];
         if (name.nameForms) {
-          for (f = 0; f < name.nameForms.length; f++) {
-            var form = name.nameForms[f];
+          for (let f = 0; f < name.nameForms.length; f++) {
+            let form = name.nameForms[f];
             if (form.fullText) {
-              var elementId = nextId("name", relChartToGx, name);
+              let elementId = nextId("name", relChartToGx, name);
               html += "  <span class='" + (isFirstFullName ? "fullName" : "altName") + "' id='" + elementId + "'>" + encode(form.fullText) + "</span>";
               if (isFirstFullName) {
-                var isPrincipal = person.principal;
+                let isPrincipal = person.principal;
                 html += "<span class='" + (isPrincipal ? "isPrincipal" : "notPrincipal") + " toolTip'>" + (isPrincipal ? "*" : " ") +
                     "<span class='toolTipText'>" + (isPrincipal ? "Principal" : "Not principal") + "</span></span>";
               }
@@ -163,8 +162,8 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
   // Get string containing a semi-colon separated list of the value, date and place, if any. Return 'undefined' if none of those exist
   // (e.g., for a fact like "AdoptiveParent" with no value, date or place).
   function getFactInfo(fact) {
-    var parts = [];
-    var factNamePrefix = getFactName(fact).toLowerCase().substr(0,3);
+    let parts = [];
+    let factNamePrefix = getFactName(fact).toLowerCase().substr(0,3);
     // Todo: Remove this when fact type is no longer incorrectly put into the 'value'.
     if (fact.value && fact.value.toLowerCase() !== getFactName(fact).toLowerCase()) {
       addIfNotEmpty(fact.value, parts, factNamePrefix + "-value", fact);
@@ -193,12 +192,11 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
   }
 
   function getFactsHtml(factsContainer, prefix) {
-    var html = "";
+    let html = "";
     if (factsContainer) {
-      var facts = factsContainer.facts;
+      let facts = factsContainer.facts;
       if (facts) {
-        var f;
-        for (f = 0; f < facts.length; f++) {
+        for (let f = 0; f < facts.length; f++) {
           html += getFactHtml(facts[f], prefix);
         }
       }
@@ -214,11 +212,10 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
    */
   function hasMultipleParents(parentFamilies, countFathers) {
     if (parentFamilies && parentFamilies.length > 1) {
-      var firstParentId = null;
-      var p;
-      for (p = 0; p < parentFamilies.length; p++) {
-        var parentFamilyNode = parentFamilies[p];
-        var parentNode = countFathers ? parentFamilyNode.father : parentFamilyNode.mother;
+      let firstParentId = null;
+      for (let p = 0; p < parentFamilies.length; p++) {
+        let parentFamilyNode = parentFamilies[p];
+        let parentNode = countFathers ? parentFamilyNode.father : parentFamilyNode.mother;
         if (parentNode) {
           if (!firstParentId) {
             firstParentId = parentNode.personId;
@@ -234,11 +231,10 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
 
   function hasMultipleSpouses(personNode, spouseFamilies) {
     if (spouseFamilies && spouseFamilies.length > 1) {
-      var f;
-      var firstSpouseId = null;
-      for (f = 0; f < spouseFamilies.length; f++) {
-        var spouseFamily = spouseFamilies[f];
-        var spouseNode = spouseFamily.getSpouse(personNode);
+      let firstSpouseId = null;
+      for (let f = 0; f < spouseFamilies.length; f++) {
+        let spouseFamily = spouseFamilies[f];
+        let spouseNode = spouseFamily.getSpouse(personNode);
         if (spouseNode) {
           if (!firstSpouseId) {
             firstSpouseId = spouseNode.personId;
@@ -261,33 +257,31 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
   }
 
   function addFactDivs(personNode) {
-    var html = getFactsHtml(personNode.person);
+    let html = getFactsHtml(personNode.person);
 
     // Add marriage and other couple facts for spouse families.
-    var s;
     if (!isEmpty(personNode.spouseFamilies)) {
-      var multipleSpouses = hasMultipleSpouses(personNode, personNode.spouseFamilies);
-      for (s = 0; s < personNode.spouseFamilies.length; s++) {
-        var spouseFamilyNode = personNode.spouseFamilies[s];
+      let multipleSpouses = hasMultipleSpouses(personNode, personNode.spouseFamilies);
+      for (let s = 0; s < personNode.spouseFamilies.length; s++) {
+        let spouseFamilyNode = personNode.spouseFamilies[s];
         //  Only show couple facts on the father, since they would be redundant on the mother.
         //  A spouse FamilyNode that does not have both a father and a mother will not have a couple relationship with it, and will thus have no facts.
         if (spouseFamilyNode.father === personNode) {
-          var spouseName = spouseFamilyNode.mother ? spouseFamilyNode.mother.name : null;
+          let spouseName = spouseFamilyNode.mother ? spouseFamilyNode.mother.name : null;
           html += getFactsHtml(spouseFamilyNode.coupleRel, multipleSpouses ? spouseName : null);
         }
       }
     }
     // Add adoption or other such parent-child facts for parent families. Include (father), (mother) after fact type.
-    var p; // parent family index
     if (!isEmpty(personNode.parentFamilies)) {
-      var multipleFathers = hasMultipleFathers(personNode.parentFamilies);
-      var multipleMothers = hasMultipleMothers(personNode.parentFamilies);
-      for (p = 0; p < personNode.parentFamilies.length; p++) {
-        var parentFamilyNode = personNode.parentFamilies[p];
+      let multipleFathers = hasMultipleFathers(personNode.parentFamilies);
+      let multipleMothers = hasMultipleMothers(personNode.parentFamilies);
+      for (let p = 0; p < personNode.parentFamilies.length; p++) {
+        let parentFamilyNode = personNode.parentFamilies[p];
         // Find the index of this person in the list of children.
-        var c = parentFamilyNode.findChildIndex(personNode);
-        var fatherRel = parentFamilyNode.fatherRels[c];
-        var motherRel = parentFamilyNode.motherRels[c];
+        let c = parentFamilyNode.findChildIndex(personNode);
+        let fatherRel = parentFamilyNode.fatherRels[c];
+        let motherRel = parentFamilyNode.motherRels[c];
         html += getFactsHtml(fatherRel, "father" + (multipleFathers && parentFamilyNode.father ? " - " + parentFamilyNode.father.name : ""));
         html += getFactsHtml(motherRel, "mother" + (multipleMothers && parentFamilyNode.mother ? " - " + parentFamilyNode.mother.name : ""));
       }
@@ -296,12 +290,11 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
   }
 
   function addRelativeDivs(person) {
-    var r;
-    var html = "";
-    for (r = 0; r < person.relatives.length; r++) {
-      var relative = person.relatives[r];
-      var relativeLabel = relative.label;
-      var relativeName = relative.personNode.getFirstFullName();
+    let html = "";
+    for (let r = 0; r < person.relatives.length; r++) {
+      let relative = person.relatives[r];
+      let relativeLabel = relative.label;
+      let relativeName = relative.personNode.getFirstFullName();
       html += "  <div class='relative'><span class='relativeType'>" + encode(relativeLabel) + ":" + "</span>" +
               "<span class='relativeName'>" + encode(relativeName) + "</span></div>\n";
     }
@@ -337,13 +330,13 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
    @param shouldDisplayIds - Flag for whether to include person IDs.
    */
   function makePersonDiv(personNode, personBoxId, duplicateOfBox, shouldDisplayIds) {
-    var html = "<div class='personNode gender-" + personNode.gender + (duplicateOfBox ? " duplicate" : "") +
+    let html = "<div class='personNode gender-" + personNode.gender + (duplicateOfBox ? " duplicate" : "") +
         (personNode.person.principal ? " principalPerson" : "") +
         "' id='" + personBoxId + "'>\n";
-    var imageFile = PersonBox.prototype.genderImageMap[personNode.gender];
+    let imageFile = PersonBox.prototype.genderImageMap[personNode.gender];
     // Use CDN to deliver these to avoid problems with different relative paths for different consumers.
     html += "<img id='" + getGenderDivId(personBoxId) + "' src='https://cdn.jsdelivr.net/gh/FamilySearch/gedcomx-viewer@master/graph/images/" + imageFile + "' class='gender-image'>";
-    var person = personNode.person;
+    let person = personNode.person;
     html += addNameSpans(person);
     if (shouldDisplayIds) {
       html += addIdDiv(person);
@@ -380,14 +373,14 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
   //  then note what PersonBox it is a duplicate of, and modify its personBoxId with "_dup<number>"
   this.duplicateOf = relChart.personBoxMap[this.personBoxId];
   if (this.duplicateOf) {
-    var dupCount = relChart.personDupCount[personNode.personId];
+    let dupCount = relChart.personDupCount[personNode.personId];
     dupCount = (dupCount ? dupCount : 0) + 1;
     relChart.personDupCount[personNode.personId] = dupCount;
     this.personBoxId += "_dup" + dupCount;
   }
   relChart.personBoxMap[this.personBoxId] = this;
 
-  var personDiv = makePersonDiv(personNode, this.personBoxId, this.duplicateOf, relChart.shouldDisplayIds);
+  let personDiv = makePersonDiv(personNode, this.personBoxId, this.duplicateOf, relChart.shouldDisplayIds);
   relChart.$personsDiv.append(personDiv);
   this.$personDiv = $("#" + this.personBoxId);
   // $("#" + getGenderDivId(this.personBoxId)).click(function(e){
@@ -408,7 +401,7 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
   this.prevLeft = null; // A PersonBox derives its left from its Generation. But if a PersonBox is dragged, we remember where it got dropped so animation looks good.
 
   if (relChart.isEditable) {
-    var personBox = this;
+    let personBox = this;
     this.$childPlus = relChart.makeControl(this.personBoxId + "-personChildPlus", "relPlus personChildPlus");
     this.$spousePlus = relChart.makeControl(this.personBoxId + "-personSpousePlus", "relPlus personSpousePlus");
     this.$parentPlus = relChart.makeControl(this.personBoxId + "-personParentPlus", "relPlus personParentPlus");
