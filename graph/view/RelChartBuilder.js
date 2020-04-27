@@ -411,7 +411,7 @@ RelChartBuilder.prototype.insert = function(isAbove, origPersonBox, newPersonNod
  * @return PersonBox that was created
  */
 RelChartBuilder.prototype.insertAbove = function(origPerson, newPerson, generationIndex) {
-  var newPersonBox = new PersonBox(newPerson, this.relChart, origPerson.above, origPerson, generationIndex, this.shouldIncludeDetails);
+  var newPersonBox = new PersonBox(newPerson, this.relChart, origPerson.above, origPerson, generationIndex, this.relGraphToGx);
   origPerson.above = newPersonBox;
   if (newPersonBox.above) {
     newPersonBox.above.below = newPersonBox;
@@ -429,7 +429,7 @@ RelChartBuilder.prototype.insertAbove = function(origPerson, newPerson, generati
  * @return PersonBox that was created
  */
 RelChartBuilder.prototype.insertBelow = function(origPerson, newPerson, generationIndex) {
-  var newPersonBox = new PersonBox(newPerson, this.relChart, origPerson, origPerson.below, generationIndex, this.shouldIncludeDetails);
+  var newPersonBox = new PersonBox(newPerson, this.relChart, origPerson, origPerson.below, generationIndex, this.relGraphToGx);
   origPerson.below = newPersonBox;
   if (newPersonBox.below) {
     newPersonBox.below.above = newPersonBox;
