@@ -611,28 +611,6 @@ RelChartBuilder.prototype.correlateHighlights = function(doc, relToGx, imgToGx) 
       }
     }
   }
-
-  // $("#name-23").hover(function(){
-  //   $("#name-1").addClass("grumpy");
-  //   $("#name-2").addClass("grumpy");
-  //   $("#name-3").addClass("grumpy");
-  //   $("#name-4").addClass("grumpy");
-  //   $("#name-5").addClass("grumpy");
-  //   $("#name-6").addClass("grumpy");
-  //   }, function(){
-  //   $("#name-1").removeClass("grumpy");
-  //   $("#name-2").removeClass("grumpy");
-  //   $("#name-3").removeClass("grumpy");
-  //   $("#name-4").removeClass("grumpy");
-  //   $("#name-5").removeClass("grumpy");
-  //   $("#name-6").removeClass("grumpy");
-  // });
-  // $("#name-1").hover(function(){$("#name-23").addClass("grumpy");}, function(){$("#name-23").removeClass("grumpy");});
-  // $("#name-2").hover(function(){$("#name-23").addClass("grumpy");}, function(){$("#name-23").removeClass("grumpy");});
-  // $("#name-3").hover(function(){$("#name-23").addClass("grumpy");}, function(){$("#name-23").removeClass("grumpy");});
-  // $("#name-4").hover(function(){$("#name-23").addClass("grumpy");}, function(){$("#name-23").removeClass("grumpy");});
-  // $("#name-5").hover(function(){$("#name-23").addClass("grumpy");}, function(){$("#name-23").removeClass("grumpy");});
-  // $("#name-6").hover(function(){$("#name-23").addClass("grumpy");}, function(){$("#name-23").removeClass("grumpy");});
 };
 
 var highlightsToProcess = [];
@@ -648,7 +626,6 @@ RelChartBuilder.prototype.buildChart = function(prevChart, imgOverlayToGx) {
     // this.relChart.$editControlsDiv.empty();
     this.relChart.addEditControls();
   }
-  this.imgOverlayToGx = {}; // map of image overlay HTML element id to GedcomX object id that corresponds. Can be many-to-1
   this.relGraphToGx = {}; // map of relationship graph HTML element id to GedcomX object id that corresponds. Can be many-to-1
 
   this.addPersons();
@@ -664,7 +641,9 @@ RelChartBuilder.prototype.buildChart = function(prevChart, imgOverlayToGx) {
     this.relChart.addGapDropZones();
   }
 
-  this.correlateHighlights(this.relChart.getGedcomX(), this.relGraphToGx, imgOverlayToGx, );
+  if (imgOverlayToGx) {
+    this.correlateHighlights(this.relChart.getGedcomX(), this.relGraphToGx, imgOverlayToGx);
+  }
 
   return this.relChart;
 };

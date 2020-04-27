@@ -10,6 +10,37 @@ function encode(s) {
   return $('<div/>').text(s).html();
 }
 
+var overlayTypeIdMap = {};
+
+/**
+ * Get the next available id to use for the given type of element.
+ * Updates "overlayTypeIdMap". If a GedcomX object is provided, then the GedcomX object is updated with an id
+ *   (if it does not already have one), and the mapping from the new element to that GedcomX object's id
+ *   is added to the elementToGxMap
+ * @param typeName - Name of element type.
+ * @param elementToGxMap (Optional) - Map of (new) local HTML element ID to GedcomX object ID.
+ * @param gxObject (Optional) - GedcomX object whose ID is to be used (and added if not there), and included in the map.
+ * @returns {string}
+ */
+function nextId(typeName, elementToGxMap, gxObject) {
+  if (!typeName) {
+    typeName="?";
+  }
+  let lastIdNumber = overlayTypeIdMap[typeName];
+  let nextIdNumber = (lastIdNumber ? lastIdNumber + 1 : 1);
+  overlayTypeIdMap[typeName] = nextIdNumber;
+  let overlayId = typeName + "-" + nextIdNumber;
+
+  if (elementToGxMap && gxObject) {
+    if (!gxObject.id) {
+      gxObject.id = nextId("gx");
+    }
+    elementToGxMap[overlayId] = gxObject.id;
+  }
+
+  return overlayId;
+}
+
 /**
  * Parse a type URI (e.g., "http://gedcomx.org/Male" or "http://familysearch.org/types/relationships/AuntOrUncle")
  *   and return a displayable string from it (e.g., "Male" or "Aunt Or Uncle").
