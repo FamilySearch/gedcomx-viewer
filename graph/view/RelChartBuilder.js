@@ -521,36 +521,36 @@ RelChartBuilder.prototype.correlateHighlights = function(doc, relToGx, imgToGx) 
     return reverseMap;
   }
 
-  function highlight(elements, myElement, isRecord) {
-    let class1 = isRecord ? "record-highlight" : "img-highlight";
-    let class2 = isRecord ? "img-highlight" : "record-highlight";
+  function highlight(elements, myElement, elementsClass, myClass) {
     if (highlightsToProcess) {
       // Image viewer highlight elements don't exist when the graph is first being built, so wait until the first highlight is
       //  done before triggering that.
       for (let h = 0; h < highlightsToProcess.length; h++) {
         let x = highlightsToProcess[h];
         $("#" + x.imgElement).hover(
-            function() {highlight(x.relElements, x.imgElement, true);},
-            function() {unhighlight(x.relElements, x.imgElement, true);});
+            function() {highlight(x.relElements, x.imgElement, "record-highlight", null);},
+            function() {unhighlight(x.relElements, x.imgElement, "record-highlight", null);});
       }
       highlightsToProcess = null; // now handled, so clear it.
     }
     if (elements) {
       for (let i = 0; i < elements.length; i++) {
-        $("#" + elements[i]).addClass(class1);
+        $("#" + elements[i]).addClass(elementsClass);
       }
-      $("#" + myElement).addClass(class2);
+      if (myClass) {
+        $("#" + myElement).addClass(myClass);
+      }
     }
   }
 
-  function unhighlight(elements, myElement, isRecord) {
-    let class1 = isRecord ? "record-highlight" : "img-highlight";
-    let class2 = isRecord ? "img-highlight" : "record-highlight";
+  function unhighlight(elements, myElement, elementsClass, myClass) {
     if (elements) {
       for (let i = 0; i < elements.length; i++) {
-        $("#" + elements[i]).removeClass(class1);
+        $("#" + elements[i]).removeClass(elementsClass);
       }
-      $("#" + myElement).removeClass(class2);
+      if (myClass) {
+        $("#" + myElement).removeClass(myClass);
+      }
     }
   }
 
@@ -606,8 +606,8 @@ RelChartBuilder.prototype.correlateHighlights = function(doc, relToGx, imgToGx) 
       let imgElements = relToImg[relElement];
       if (!empty(imgElements)) {
         $("#" + relElement).hover(
-            function() {highlight(imgElements, relElement, false);},
-            function() {unhighlight(imgElements, relElement, false);});
+            function() {highlight(imgElements, relElement, "img-highlight", "record-highlight");},
+            function() {unhighlight(imgElements, relElement, "img-highlight", "record-highlight");});
       }
     }
   }
