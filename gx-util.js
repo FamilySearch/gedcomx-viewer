@@ -10,6 +10,139 @@ function encode(s) {
   return $('<div/>').text(s).html();
 }
 
+/**
+ * Convert an image Ark into an APID.
+ * @param imageArk
+ * @returns Image APID
+ */
+function imageArkToApid(imageArk) {
+  /**
+   * Compute the checksum of the given string as a 2-digit decimal number.
+   * @param inString - StringBuilder containing the string to checksum.
+   * @return 2-digit checksum.
+   */
+  function computeChecksum(inString) {
+    let MOD_ADLER = 65521;
+    let a = 1;
+    let b = 0;
+    for (let i = 0; i < inString.length; i++) {
+      a = (a + inString.charAt(i).charCodeAt()) % MOD_ADLER;
+      b = (b + a) % MOD_ADLER;
+    }
+    return (b ^ a) % 100;
+  }
+
+  /**
+   * Decode a J-Encoded String
+   * @param encodedString - J-Encoded string (XXXX-YYYY-XZ)
+   * @returns Number.
+   */
+  function decode(encodedString) {
+    let result = 0;
+    let alphabet = "M9S3Q7W4HCZ8D6XFNJVK2LGP5RTYB1";
+    let numberBase = alphabet.length;
+
+    for (let i = 0; i < encodedString.length; i++) {
+      let ch = encodedString.charAt(i);
+      let nextVal = alphabet.indexOf(ch);
+      if (-1 !== nextVal) { // ignore dashes.
+        result *= numberBase;
+        result += nextVal;
+      }
+    }
+    return result;
+  }
+
+  function removeDashes(s) {
+    return s.replace(/-/g, "");
+  }
+
+  /**
+   * Decode a J-ENCODED value into a TH- style APID.
+   * @param encodedThApid
+   * @returns {string}
+   */
+  function decodeThApid(encodedThApid) {
+    // Remove dashes
+    encodedThApid = removeDashes(encodedThApid);
+
+    if (encodedThApid.startsWith("939K8X3")) {
+      // Special cases: Apids that are in production but do not have the proper checksum.  These 2 are missing the last digit
+      if (encodedThApid === "939K8X3P6N") {
+        return "TH-1-17444-102106-8";   // Algorithm returns TH-1-17444-102106-86
+      }
+      if (encodedThApid === "939K8X3P6J") {
+        return "TH-1-17444-102107-8";   // Algorithm returns TH-1-17444-102107-89
+      }
+      if (encodedThApid === "939K8X3GFV") {
+        return "TH-1-17444-101268-6";
+      }
+      if (encodedThApid === "939K8X3LZY") {
+        return "TH-1-17444-100227-9";
+      }
+      if (encodedThApid === "939K8X3L5K") {
+        return "TH-1-17444-100639-7";
+      }
+      if (encodedThApid === "939K8X3GDD") {
+        return "TH-1-17444-101172-9";
+      }
+      if (encodedThApid === "939K8X3GDX") {
+        return "TH-1-17444-101174-7";
+      }
+      if (encodedThApid === "939K8X3GDN") {
+        return "TH-1-17444-101176-6";
+      }
+      if (encodedThApid === "939K8X3P6T") {
+        return "TH-1-17444-102116-8";
+      }
+      if (encodedThApid === "939K8X3P5Z") {
+        return "TH-1-17444-102430-9";
+      }
+      if (encodedThApid === "939K8X3P5B") {
+        return "TH-1-17444-102448-5";
+      }
+    }
+
+    // Get the length of the first two numbers (the third number is whatever is left after those)
+    let len1 = decode(encodedThApid.substring(0, 1));
+    let len2 = decode(encodedThApid.substring(1, 2));
+    // Get the three JEncoded trigit ranges, and decode each into a number.
+    let v1 = decode(encodedThApid.substring(2, 2 + len1));
+    let v2 = decode(encodedThApid.substring(2 + len1, 2 + len1 + len2));
+    let v3 = decode(encodedThApid.substring(2 + len1 + len2));
+    let s = "TH-" + v1 + "-" + v2 + "-" + v3 + "-";
+    let checksum = computeChecksum(s);
+    return s + checksum;
+  }
+
+  /**
+   * Decode a DGS-style APID that has been encoded via 'encodeDgsApid'.
+   * The encoded string (after dashes are removed) has one JEncoded 'trigit' that indicates how many
+   * characters are used by the DGS#.
+   * This is followed by that many characters for the DGS# and the rest are the image number.
+   * @param encodedDgsApid - Encoded "DGS-" style APID.
+   * @return DGS-style APID, of the form "DGS-999999999_55555"
+   */
+  function decodeDgsApid(encodedDgsApid) {
+    encodedDgsApid = removeDashes(encodedDgsApid);
+    let len1 = decode(encodedDgsApid.substring(0, 1));
+    let dgs = decode(encodedDgsApid.substring(1, 1 + len1));
+    let img = decode(encodedDgsApid.substring(1 + len1));
+    return "DGS-" + dgs.toString().padStart(9, '0') + "_" + img.toString().padStart(5, '0');
+  }
+
+  let noParams = imageArk.replace(/\?.*/, ""); // Remove any query parameters
+  let name = noParams.replace(/.*\//, ""); // Strip off everything before the "3:..."
+  let jEncodedValue = name.replace(/.*:/, "");
+  if (name.startsWith("3:1:")) {
+    return decodeThApid(jEncodedValue);
+  }
+  else if (name.startsWith("3:2:")) {
+    return decodeDgsApid(jEncodedValue);
+  }
+  return null; // unrecognized Image Ark format.
+}
+
 let overlayTypeIdMap = {};
 
 /**
