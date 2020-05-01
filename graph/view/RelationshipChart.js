@@ -248,6 +248,4 @@ function RelationshipChart(relGraph, $relChartDiv, shouldIncludeDetails, shouldC
     this.selectedFamilyLine = null;
     this.selectedPersonBoxes = [];
   }
-  $relChartDiv.draggable();
-
 }

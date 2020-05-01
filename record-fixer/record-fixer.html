@@ -79,7 +79,7 @@
       url: url,
       success:function(gedcomx){
         let elementMap = overlayBoxes(viewer, gedcomx);
-        currentRelChart = buildGraph(gedcomx, true, null, false, elementMap);
+        currentRelChart = buildGraph(gedcomx, true, null, false, elementMap, true);
       }
     });
     // $.getJSON(url, {format: "json"}, function(sampleGx){
@@ -98,7 +98,7 @@
    * @param doc - GedcomX document to rebuild the chart with.
    */
   function updateRecord(doc) {
-    currentRelChart = buildGraph(doc, true, currentRelChart);
+    currentRelChart = buildGraph(doc, true, currentRelChart, false);
   }
 
 </script>

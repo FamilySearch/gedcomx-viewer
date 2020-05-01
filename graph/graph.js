@@ -66,9 +66,14 @@ function redoGraph() {
  * @param isEditable - Flag for whether to include edit controls (requires JQuery UI dependency)
  * @param prevChart - Previous RelationshipChart object to use to get initial positions for corresponding PersonBox and FamilyLine elements.
  * @param ignoreUndo - Flag for whether to ignore the undo logic (set to true for undo/redo actions).
+ * @param imgOverlayToGx - Map of DOM element ID of an image overlay rectangle to the id of the GedcomX element that it goes with. Ignored if null.
+ * @param isDraggable - Flag for whether the rel chart should be draggable.
  * @returns {RelationshipChart}
  */
-function buildGraph(gx, isEditable, prevChart, ignoreUndo, imgOverlayToGx) {
+function buildGraph(gx, isEditable, prevChart, ignoreUndo, imgOverlayToGx, isDraggable) {
+  if (!imgOverlayToGx && prevChart) {
+    imgOverlayToGx = prevChart.imgOverlayToGx; // in case this is non-null.
+  }
   try {
     let graph = new RelationshipGraph(gx);
     let $relChartDiv = $("#rel-chart");
@@ -99,6 +104,9 @@ function buildGraph(gx, isEditable, prevChart, ignoreUndo, imgOverlayToGx) {
     currentRelChart = new RelChartBuilder(graph, $relChartDiv, true, true, isEditable).buildChart(prevChart, imgOverlayToGx);
     $relChartDiv.width(currentRelChart.width);
     $relChartDiv.height(currentRelChart.height);
+    if (isDraggable) {
+      $relChartDiv.draggable();
+    }
     return currentRelChart;
   }
   catch (err) {

@@ -499,7 +499,7 @@ RelChartBuilder.prototype.correlateHighlights = function(doc, relToGx, imgToGx) 
   }
 
   function highlight(elements, myElement, elementsClass, myClass) {
-    if (highlightsToProcess) {
+    if (!isEmpty(highlightsToProcess)) {
       // Image viewer highlight elements don't exist when the graph is first being built, so wait until the first highlight is
       //  done before triggering that.
       for (let h = 0; h < highlightsToProcess.length; h++) {
@@ -508,7 +508,7 @@ RelChartBuilder.prototype.correlateHighlights = function(doc, relToGx, imgToGx) 
             function() {highlight(x.relElements, x.imgElement, "record-highlight", null);},
             function() {unhighlight(x.relElements, x.imgElement, "record-highlight", null);});
       }
-      highlightsToProcess = null; // now handled, so clear it.
+      highlightsToProcess = []; // now handled, so clear it.
     }
     if (elements) {
       for (let i = 0; i < elements.length; i++) {
@@ -620,6 +620,7 @@ RelChartBuilder.prototype.buildChart = function(prevChart, imgOverlayToGx) {
 
   if (imgOverlayToGx) {
     this.correlateHighlights(this.relChart.getGedcomX(), this.relGraphToGx, imgOverlayToGx);
+    this.relChart.imgOverlayToGx = imgOverlayToGx; // remember this so it's available in 'prevRelChart' when an update happens.
   }
 
   return this.relChart;
