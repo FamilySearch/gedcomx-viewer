@@ -204,6 +204,23 @@ function addFamiliesToPersonNodes(graph) {
   }
 }
 
+RelationshipGraph.prototype.relTypeMap = {
+  "Couple": ["Husband", "Wife", "Spouse"],
+  "ParentChild": ["Father", "Mother", "Parent", "Son", "Daughter", "Child"],
+  "StepParentChild": ["Stepfather", "Stepmother", "Stepparent", "Stepson", "Stepdaughter", "Stepchild"],
+  "ParentChildInLaw": ["Father-in-law", "Mother-in-law", "Parent-in-law", "Son-in-law", "Daughter-in-law", "Child-in-law"],
+  "SurrogateParentChild": ["Surrogate father", "Surrogate mother", "Surrogate parent", "Surrogate son", "Surrogate daughter", "Surrogate child"],
+  "AuntOrUncle": ["Uncle", "Aunt", "Aunt Or Uncle", "Nephew", "Niece", "Niece Or Nephew"],
+  "Godparent": ["Godfather", "Godmother", "Godparent", "Godson", "Goddaughter", "Godchild"],
+  "Sibling": ["Brother", "Sister", "Sibling"],
+  "Fiance": ["Fiancé", "Fiancée", "Fiancé"], // female Fiancée has an extra "e"
+  "Grandparent": ["Grandfather", "Grandmother", "Grandparent", "Grandson", "Granddaughter", "Grandchild"],
+  "GreatGrandparent": ["Great-grandfather", "Great-grandmother", "Great-grandparent", "Great-grandson", "Great-granddaughter", "Great-grandchild"],
+  "SiblingInLaw": ["Brother-in-law", "Sister-in-law", "Sibling-in-Law"],
+  "StepSibling": ["Stepbrother", "Stepsister", "Stepsibling"],
+  "AncestorDescendant": ["Ancestor", "Ancestor", "Ancestor", "Descendant", "Descendant", "Descendant"]
+};
+
 /**
  * Get the label for the given relationship URI, given the relative's gender, and whether the relative is P1 or not.
  *   In a "Grandparent" relationship, "P1 is the Grandparent of P2", so the default behavior is to return Grandparent, Grandfather or Grandmother,
@@ -215,22 +232,8 @@ function addFamiliesToPersonNodes(graph) {
  * @returns Label for the reltationship. (e.g., "Grandson")
  */
 function getRelativeLabelFromRelationship(relationshipUri, relativeGender, isReverse) {
-  const relTypeMap = {
-    "http://gedcomx.org/Couple": ["Husband", "Wife", "Spouse"],
-    "http://gedcomx.org/ParentChild": ["Father", "Mother", "Parent", "Son", "Daughter", "Child"],
-    "http://familysearch.org/types/relationships/StepParentChild": ["Stepfather", "Stepmother", "Stepparent", "Stepson", "Stepdaughter", "Stepchild"],
-    "http://familysearch.org/types/relationships/ParentChildInLaw": ["Father-in-law", "Mother-in-law", "Parent-in-law", "Son-in-law", "Daughter-in-law", "Child-in-law"],
-    "http://familysearch.org/types/relationships/SurrogateParentChild": ["Surrogate father", "Surrogate mother", "Surrogate parent", "Surrogate son", "Surrogate daughter", "Surrogate child"],
-    "http://familysearch.org/types/relationships/AuntOrUncle": ["Uncle", "Aunt", "Aunt Or Uncle", "Nephew", "Niece", "Niece Or Nephew"],
-    "http://familysearch.org/types/relationships/Godparent": ["Godfather", "Godmother", "Godparent", "Godson", "Goddaughter", "Godchild"],
-    "http://familysearch.org/types/relationships/Sibling": ["Brother", "Sister", "Sibling"],
-    "http://familysearch.org/types/relationships/Fiance": ["Fiancé", "Fiancée", "Fiancé"], // female Fiancée has an extra "e"
-    "http://familysearch.org/types/relationships/Grandparent": ["Grandfather", "Grandmother", "Grandparent", "Grandson", "Granddaughter", "Grandchild"],
-    "http://familysearch.org/types/relationships/GreatGrandparent": ["Great-grandfather", "Great-grandmother", "Great-grandparent", "Great-grandson", "Great-granddaughter", "Great-grandchild"],
-    "http://familysearch.org/types/relationships/SiblingInLaw": ["Brother-in-law", "Sister-in-law", "Sibling-in-Law"],
-    "http://familysearch.org/types/relationships/StepSibling": ["Stepbrother", "Stepsister", "Stepsibling"]
-  };
-  let genderSpecific = relTypeMap[relationshipUri];
+  let relationshipName = relationshipUri.replace(/.*\//, ""); // strip everything until final "/" to get base name of the relationship
+  let genderSpecific = RelationshipGraph.prototype.relTypeMap[relationshipName];
   let relativeLabel;
   if (genderSpecific && genderSpecific.length > 3) {
     relativeLabel = getRelativeLabel(relativeGender, genderSpecific[0], genderSpecific[1], genderSpecific[2], isReverse, genderSpecific[3], genderSpecific[4], genderSpecific[5]);
