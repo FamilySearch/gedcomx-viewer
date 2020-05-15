@@ -39,6 +39,7 @@
   <link rel="stylesheet" type="text/css" href="record-fixer.css">
 </head>
 <body>
+<!-- See the image viewer documentation at https://github.com/fs-webdev/image-viewer/blob/master/API.md -->
 <fs-single-image-viewer id="image-viewer"
     style="flex: 1;"
 ></fs-single-image-viewer>
@@ -50,7 +51,7 @@
   $(document).ready(function(){
     // IMAGE VIEWER ==========================================================================
     const viewer = document.querySelector("fs-single-image-viewer");
-
+    viewer.minZoom = 0.2;
     // REL CHART =============================================================================
     let params = window.location.search;
     let urlParams = new URLSearchParams(params);
