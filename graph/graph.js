@@ -86,16 +86,24 @@ function buildGraph(gx, isEditable, prevChart, ignoreUndo, imgOverlayToGx, isDra
     }
     if (!currentRelChart) {
       $(document).keydown(function (e) {
+        let key = String.fromCharCode(e.which || e.keyCode);  // These are deprecated, but I couldn't figure out what else I was supposed to use
         if (e.ctrlKey || e.metaKey) {
           // Handle ctrl/cmd keypress
-          if ((e.which === 90 && e.shiftKey) || e.which === 89) {
+          if ((key === 'Z' && e.shiftKey) || key === 'Y') {
             // Ctrl/Cmd-shift Z or Cmd-Y => Redo
             redoGraph();
             e.stopPropagation();
           }
-          else if (e.which === 90) {
+          else if (key === 'Z') { // lower-case z, no shift
             // Ctrl/Cmd-Z => Undo
             undoGraph();
+            e.stopPropagation();
+          }
+        }
+        else if (key === 'R') {
+          if (currentRelChart) {
+            let gx = currentRelChart.getGedcomX();
+            removeRedundantRelationships(gx);
             e.stopPropagation();
           }
         }
