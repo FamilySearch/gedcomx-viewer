@@ -50,9 +50,8 @@ FamilyNode.prototype.getSpouse = function(personNode) {
   return null;
 };
 
-function makeFamilyId(fatherNode, motherNode) {
+function makeFamilyId(chartId, fatherNode, motherNode) {
   let fatherId = fatherNode ? fatherNode.personId : "none";
   let motherId = motherNode ? motherNode.personId : "none";
-  return fatherId + "-n-" + motherId;
+  return `${chartId}-${fatherId}-n-${motherId}`;
 }
-

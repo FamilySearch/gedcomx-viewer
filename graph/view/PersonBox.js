@@ -63,8 +63,8 @@ PersonBox.prototype.removeParentFamilyLine = function(parentFamilyLine) {
   this.parentLines.splice(index, 1);
 };
 
-PersonBox.prototype.getPersonBoxId = function(personId) {
-  return "box_" + personId;
+PersonBox.prototype.getPersonBoxId = function(personId, chartId) {
+  return `box_${personId}-${chartId}`;
 };
 
 /**
@@ -367,7 +367,7 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
 
   // The personBoxId is used to identify each PersonBox. The personId is not used alone because a person can sometimes appear more than once in a chart
   //   if they are related more than one way.
-  this.personBoxId = this.getPersonBoxId(personNode.personId);
+  this.personBoxId = this.getPersonBoxId(personNode.personId, this.relChart.chartId);
 
   // If this PersonBox is not the first appearance of this PersonNode in the chart (e.g., due to being related multiple ways),
   //  then note what PersonBox it is a duplicate of, and modify its personBoxId with "_dup<number>"
@@ -402,9 +402,9 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
 
   if (relChart.isEditable) {
     let personBox = this;
-    this.$childPlus = relChart.makeControl(this.personBoxId + "-personChildPlus", "relPlus personChildPlus");
-    this.$spousePlus = relChart.makeControl(this.personBoxId + "-personSpousePlus", "relPlus personSpousePlus");
-    this.$parentPlus = relChart.makeControl(this.personBoxId + "-personParentPlus", "relPlus personParentPlus");
+    this.$childPlus = relChart.makeControl(`${this.personBoxId}-personChildPlus`, "relPlus personChildPlus");
+    this.$spousePlus = relChart.makeControl(`${this.personBoxId}-personSpousePlus`, "relPlus personSpousePlus");
+    this.$parentPlus = relChart.makeControl(`${this.personBoxId}-personParentPlus`, "relPlus personParentPlus");
     this.$personDiv.click(function(e) {
       personBox.clickPerson(e);
     });

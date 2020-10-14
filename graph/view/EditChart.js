@@ -7,7 +7,6 @@
 // EDIT CONTROLS ==============================
 RelationshipChart.prototype.addEditControls = function() {
   // Edit controls
-  this.$editControlsDiv = $("#editControls");
   this.$fatherX = this.makeControl("fatherX", "relX");
   this.$motherX = this.makeControl("motherX", "relX");
   this.$fatherPlus = this.makeControl("fatherPlus", RelationshipChart.prototype.REL_PLUS);
@@ -45,10 +44,10 @@ RelationshipChart.prototype.makeControl = function(divId, imgClass, $containerDi
   if (!$containerDiv) {
     $containerDiv = this.$editControlsDiv;
   }
-  let html = '<div id="' + divId + '" class="' + imgClass + '"></div>';
+  let html = `<div id="${this.chartId}-${divId}" class="${imgClass}"></div>`;
   let controlDiv = $.parseHTML(html);
   $containerDiv.append(controlDiv);
-  let $control = $("#" + divId);
+  let $control = $(`#${this.chartId}-${divId}`);
   $control.hide();
   $control.draggable({revert: true, scope : "personDropScope"});
   let relChart = this; // todo: Is this needed? Or can we use "this" in the method?
@@ -491,7 +490,7 @@ RelationshipChart.prototype.mergeName = function(name1, name2) {
       }
     }
   }
-  
+
   //== mergeName(name1, name2) ==
   name1.fields = this.mergeFields(name1.fields, name2.fields);
   if (isEmpty(name1.nameForms)) {
@@ -1143,12 +1142,12 @@ RelationshipChart.prototype.gapDrop = function(generationIndex, personIndex, dra
  * @param height
  */
 RelationshipChart.prototype.addGapDropZone = function(generationIndex, personIndex, top, left, width, height) {
-  let divId = "gen-" + generationIndex + "-above-p-" + personIndex;
-  let html = '<div id="' + divId + '" class="gapDrop"></div>';
+  let divId = `${this.chartId}-gen-${generationIndex}-above-p-${personIndex}`;
+  let html = `<div id="${divId}" class="gapDrop"></div>`;
   let controlDiv = $.parseHTML(html);
   this.$editControlsDiv.append(controlDiv);
   let relChart = this;
-  let $control = $("#" + divId);
+  let $control = $(`#${divId}`);
   $control.css({left: left, top: top, width: width, height: height});
   $control.droppable({
     hoverClass: "gapDropHover", scope: "personDropScope", "tolerance": "pointer", drop: function(e, ui) {
@@ -1402,7 +1401,7 @@ FamilyLine.prototype.updateParents = function(fatherBox, motherBox) {
   this.father = fatherBox;
   this.mother = motherBox;
   if (fatherBox || motherBox) {
-    let newFamilyId = makeFamilyId(fatherBox ? fatherBox.personNode : null, motherBox ? motherBox.personNode : null);
+    let newFamilyId = makeFamilyId(this.relChart.chartId, fatherBox ? fatherBox.personNode : null, motherBox ? motherBox.personNode : null);
     if (!this.relChart.familyLineMap[newFamilyId]) {
       // We're creating a new family line out of this one. So update this one so that the new chart will re-use its position.
       this.familyId = newFamilyId;
@@ -1478,7 +1477,7 @@ FamilyLine.prototype.changeMother = function(motherBox) {
   let fatherNode = this.father ? this.father.personNode : null;
   let fatherId = fatherNode ? fatherNode.personId : null;
   let motherId = motherBox.personNode.personId;
-  let familyId = makeFamilyId(fatherNode, motherBox.personNode);
+  let familyId = makeFamilyId(this.relChart.chartId, fatherNode, motherBox.personNode);
   // See if there's already a family with this couple. If so, merge this family with that one.
   let existingFamilyLine = this.relChart.familyLineMap[familyId];
   if (!existingFamilyLine) {
@@ -1494,7 +1493,7 @@ FamilyLine.prototype.changeMother = function(motherBox) {
 };
 
 // Set the person in the given fatherBox to be the father of this family, updating the underlying GedcomX as needed. Update record.
-FamilyLine.prototype.changeFather = function(fatherBox) {
+FamilyLine.prototype.changeFather = function(chartId, fatherBox) {
   if (this.father) {
     // Remove the existing mother from the family, if any.
     this.removeFather();
@@ -1502,7 +1501,7 @@ FamilyLine.prototype.changeFather = function(fatherBox) {
   let motherNode = this.mother ? this.mother.personNode : null;
   let motherId = motherNode ? motherNode.personId : null;
   let fatherId = fatherBox.personNode.personId;
-  let familyId = makeFamilyId(fatherBox.personNode, motherNode);
+  let familyId = makeFamilyId(this.relChart.chartId, fatherBox.personNode, motherNode);
   // See if there's already a family with this couple. If so, merge this family with that one.
   let existingFamilyLine = this.relChart.familyLineMap[familyId];
   if (!existingFamilyLine) {

@@ -76,7 +76,7 @@ function addCouples(graph) {
           fatherNode = motherNode;
           motherNode = temp;
         }
-        addFamily(graph, makeFamilyId(fatherNode, motherNode), fatherNode, motherNode, rel);
+        addFamily(graph, makeFamilyId(graph.chartId, fatherNode, motherNode), fatherNode, motherNode, rel);
       }
     }
   }
@@ -151,10 +151,10 @@ function addChildren(graph) {
             motherRel = temp;
           }
 
-          let familyId = makeFamilyId(fatherNode, motherNode);
+          let familyId = makeFamilyId(graph.chartId, fatherNode, motherNode);
           let familyNode = graph.getFamily(familyId);
           if (!familyNode) {
-            familyId = makeFamilyId(motherNode, fatherNode); // in case genders were unknown or the same, try swapping to see if that couple exists.
+            familyId = makeFamilyId(graph.chartId, motherNode, fatherNode); // in case genders were unknown or the same, try swapping to see if that couple exists.
             familyNode = graph.getFamily(familyId);
           }
           if (familyNode) {
@@ -176,7 +176,7 @@ function addChildren(graph) {
           motherRel = fatherRel;
           fatherRel = null;
         }
-        let familyId = makeFamilyId(fatherNode, motherNode);
+        let familyId = makeFamilyId(graph.chartId, fatherNode, motherNode);
         let familyNode = graph.getFamily(familyId);
         if (!familyNode) {
           familyNode = addFamily(graph, familyId, fatherNode, motherNode); // single parent, so no couple relationship
@@ -315,8 +315,9 @@ RelationshipGraph.prototype.removeFamilyNode = function(familyNode) {
 };
 
 /*** Constructor ***/
-function RelationshipGraph(gx) {
+function RelationshipGraph(gx, chartId) {
   this.gx = gx; // GedcomX document (record or portion of a tree).
+  this.chartId = chartId;
   this.personNodes = []; // array of PersonNode
   this.familyNodes = []; // array of FamilyNode
   this.personNodeMap = {}; // map of personId to PersonNode
@@ -325,5 +326,3 @@ function RelationshipGraph(gx) {
   addPersonNodes(this);
   addFamilyNodes(this);
 }
-
-
