@@ -207,22 +207,17 @@ RelationshipChart.prototype.setPreviousPositions = function(prevRelChart) {
  * @param shouldIncludeDetails - Flag for whether to include person facts (false => just display names)
  * @param shouldCompress - Flag for whether to do vertical compression (false => each person on own line)
  * @param isEditable - Flag for whether to include edit controls (false => view only)
- * @param chartId - String that uniquely identifies this chart on the page. Needed when multiple charts are being rendered on the same page.
  * @constructor
  */
-function RelationshipChart(relGraph, $relChartDiv, shouldIncludeDetails, shouldCompress, isEditable, chartId) {
-  if (!chartId) {
-    chartId = 'relChart1';
-  }
-
+function RelationshipChart(relGraph, $relChartDiv, shouldIncludeDetails, shouldCompress, isEditable) {
   this.relGraph = relGraph;
   this.isEditable = isEditable;
-  this.chartId = chartId;
+  this.chartId = this.relGraph.chartId;
   $relChartDiv.empty();
-  $relChartDiv.append($.parseHTML(`<div id='personNodes-${chartId}'></div>\n<div id='familyLines-${chartId}'></div>\n<div id='editControls-${chartId}'></div>`));
-  this.$personsDiv = $(`#personNodes-${chartId}`);
-  this.$familyLinesDiv = $(`#familyLines-${chartId}`);
-  this.$editControlsDiv = $(`#editControls-${chartId}`);
+  $relChartDiv.append($.parseHTML(`<div id='personNodes-${this.chartId}'></div>\n<div id='familyLines-${this.chartId}'></div>\n<div id='editControls-${this.chartId}'></div>`));
+  this.$personsDiv = $(`#personNodes-${this.chartId}`);
+  this.$familyLinesDiv = $(`#familyLines-${this.chartId}`);
+  this.$editControlsDiv = $(`#editControls-${this.chartId}`);
   this.personBoxes = []; // array of all PersonBoxes in the relationship chart, positioned top to bottom
   this.generations = []; // array of Generations that the persons are in, left to right
   this.familyLines = []; // array of family lines

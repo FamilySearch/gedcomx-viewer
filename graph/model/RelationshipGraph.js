@@ -316,6 +316,10 @@ RelationshipGraph.prototype.removeFamilyNode = function(familyNode) {
 
 /*** Constructor ***/
 function RelationshipGraph(gx, chartId) {
+  if (!chartId) {
+    chartId = RelationshipGraph.nextGraphId++;
+  }
+
   this.gx = gx; // GedcomX document (record or portion of a tree).
   this.chartId = chartId;
   this.personNodes = []; // array of PersonNode
@@ -326,3 +330,5 @@ function RelationshipGraph(gx, chartId) {
   addPersonNodes(this);
   addFamilyNodes(this);
 }
+
+RelationshipGraph.nextGraphId = 1;

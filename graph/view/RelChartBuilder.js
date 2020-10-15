@@ -422,11 +422,10 @@ RelChartBuilder.prototype.insertBelow = function(origPerson, newPerson, generati
  * @param shouldIncludeDetails - Whether to include alternate names and facts in the chart initially.
  * @param shouldCompress - Whether to do collapsing initially.
  * @param isEditable - Flag for whether to include GedcomX editing functionality.
- * @param chartId - String that uniquely identifies this chart on the page. Needed when multiple charts are being rendered on the same page.
  */
-function RelChartBuilder(relGraph, $relChartDiv, shouldIncludeDetails, shouldCompress, isEditable, chartId) {
+function RelChartBuilder(relGraph, $relChartDiv, shouldIncludeDetails, shouldCompress, isEditable) {
   // Create a chart with PersonBoxes created, but no FamilyLines or Generations yet.
-  this.relChart = new RelationshipChart(relGraph, $relChartDiv, shouldIncludeDetails, shouldCompress, isEditable, chartId);
+  this.relChart = new RelationshipChart(relGraph, $relChartDiv, shouldIncludeDetails, shouldCompress, isEditable);
   this.ABOVE = true;
   this.BELOW = false;
   // Set of personIds remaining to be added to the chart.
