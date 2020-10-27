@@ -75,7 +75,7 @@ function buildGraph(gx, isEditable, prevChart, ignoreUndo, imgOverlayToGx, isDra
     imgOverlayToGx = prevChart.imgOverlayToGx; // in case this is non-null.
   }
   try {
-    let graph = new RelationshipGraph(gx);
+    let graph = new RelationshipGraph(gx, prevChart ? prevChart.chartId : null);
     let $relChartDiv = $("#rel-chart");
     if (isEditable && !ignoreUndo) {
       gedcomxChangeHistory[gedcomxChangePosition++] = JSON.parse(JSON.stringify(gx));

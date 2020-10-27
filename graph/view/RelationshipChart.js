@@ -2,8 +2,6 @@
   RelationshipChart: Represents a graphical display of a relationship graph, including PersonBox and FamilyLine objects and their positions.
  */
 
-RelationshipChart.prototype.animationSpeed = 1000;
-
 // Tell whether personBox1 has a spouse that is not personBox2, or vice-versa
 RelationshipChart.prototype.hasDifferentSpouse = function(personBox1, personBox2) {
   if (personBox1 && personBox2) {
@@ -30,6 +28,10 @@ RelationshipChart.prototype.hasDifferentSpouse = function(personBox1, personBox2
   }
   return false;
 };
+
+RelationshipChart.prototype.getAnimationSpeed = function() {
+  return this.animationSpeed;
+}
 
 RelationshipChart.prototype.hasRelatives = function(personBox) {
   return !isEmpty(personBox.parentLines) || !isEmpty(personBox.spouseLines);
@@ -236,6 +238,7 @@ function RelationshipChart(relGraph, $relChartDiv, shouldIncludeDetails, shouldC
   this.shouldIncludeDetails = shouldIncludeDetails;
   this.shouldCompress = shouldCompress;
   this.shouldDisplayIds = false;
+  this.animationSpeed = 0;
 
   this.width = 0; // overall size of chart
   this.height = 0;

@@ -22,7 +22,7 @@ PersonBox.prototype.hasMoved = function() {
 
 PersonBox.prototype.setPosition = function() {
   this.setPreviousPosition();
-  this.$personDiv.animate({top: this.getTop(), left: this.getLeft()}, RelationshipChart.prototype.animationSpeed);
+  this.$personDiv.animate({top: this.getTop(), left: this.getLeft()}, this.relChart.getAnimationSpeed());
 };
 
 PersonBox.prototype.getLeft = function() {

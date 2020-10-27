@@ -44,9 +44,10 @@ function findNbxDocumentText(doc, docId) {
  * elements are added to that map
  * @param viewer - Javascript object for the image viewer element.
  * @param doc - GedcomX document
+ * @param sessionId - Session id to use in deep zoom tile requests.
  * @return map of id of highlight in HTML document to corresponding element in GedcomX document.
  */
-function overlayBoxes(viewer, doc) {
+function overlayBoxes(viewer, doc, sessionId) {
 
   /**
    * Create a "span" element to serve as a tooltip "marker", so that when you hover over a box, you can see what text is associated with that box.
@@ -304,7 +305,8 @@ function overlayBoxes(viewer, doc) {
   if (!isEmpty(imageArksAndRects)) {
     let imageArk = imageArksAndRects[0].image;
     let imageApid = imageArkToApid(imageArk);
-    viewer.src = "https://www.familysearch.org/dz/v1/apid:" + imageApid + "/";
+    viewer.src = "https://www.familysearch.org/dz/v1/apid:" + imageApid + "/" +
+        (sessionId == null ? "" : "?access_token=" + sessionId);
 
     // Add record/article-level bounding boxes.
     addArticleRectangles(imageArksAndRects, boxes, elementMap, doc);

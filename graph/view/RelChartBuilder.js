@@ -604,7 +604,7 @@ RelChartBuilder.prototype.buildChart = function(prevChart, imgOverlayToGx) {
     this.relChart.addEditControls();
   }
   this.relGraphToGx = {}; // map of relationship graph HTML element id to GedcomX object id that corresponds. Can be many-to-1
-
+  this.relChart.animationSpeed = prevChart ? 1000 : 0;
   this.addPersons();
   this.relChart.generations = this.createGenerations();
   this.setFamilyLineTopBottoms();

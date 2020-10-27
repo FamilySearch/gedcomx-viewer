@@ -135,9 +135,9 @@ FamilyLine.prototype.setPosition = function() {
   let top = this.topPerson.center;
   let bottom = this.bottomPerson.center;
   let height = 1 + bottom - top;
-  this.$familyLineDiv.animate({"left": this.x, "top": top, "height": height}, RelationshipChart.prototype.animationSpeed);
+  this.$familyLineDiv.animate({"left": this.x, "top": top, "height": height}, this.relChart.getAnimationSpeed());
   if (this.$familyLineDrop) { // => isEditable
-    this.$familyLineDrop.animate({"height": height}, RelationshipChart.prototype.animationSpeed);
+    this.$familyLineDrop.animate({"height": height}, this.relChart.getAnimationSpeed());
   }
   this.prevTop = top;
   this.prevBottom = bottom;
@@ -145,20 +145,20 @@ FamilyLine.prototype.setPosition = function() {
 
   if (this.$fatherLineDiv) {
     let width = this.safeWidth(this.father.getLeft() - this.x);
-    this.$fatherLineDiv.animate({"left": this.x, "top": this.father.center, "width": width}, RelationshipChart.prototype.animationSpeed);
+    this.$fatherLineDiv.animate({"left": this.x, "top": this.father.center, "width": width}, this.relChart.getAnimationSpeed());
   }
   if (this.$motherLineDiv) {
     let width = this.safeWidth(this.mother.getLeft() - this.x);
-    this.$motherLineDiv.animate({"left": this.x, "top": this.mother.center, "width": width}, RelationshipChart.prototype.animationSpeed);
+    this.$motherLineDiv.animate({"left": this.x, "top": this.mother.center, "width": width}, this.relChart.getAnimationSpeed());
   }
   for (let c = 0; c < this.children.length; c++) {
     let childBox = this.children[c];
     let width = this.safeWidth(this.x - childBox.getRight() + this.lineThickness);
-    this.$childrenLineDivs[c].animate({"left": childBox.getRight(), "top": childBox.center - this.lineThickness/2, "width": width}, RelationshipChart.prototype.animationSpeed);
+    this.$childrenLineDivs[c].animate({"left": childBox.getRight(), "top": childBox.center - this.lineThickness/2, "width": width}, this.relChart.getAnimationSpeed());
     this.prevChildCenter[c] = childBox.center;
-    this.$childrenLineDots[c].animate({"left": childBox.getRight() + width - this.dotWidth, "top": childBox.center - this.dotHeight/2}, RelationshipChart.prototype.animationSpeed);
+    this.$childrenLineDots[c].animate({"left": childBox.getRight() + width - this.dotWidth, "top": childBox.center - this.dotHeight/2}, this.relChart.getAnimationSpeed());
     if (this.$childrenX) { // => isEditable
-      this.$childrenX[c].animate({"left": this.x - this.xSize, "top": childBox.center - this.xSize/2}, RelationshipChart.prototype.animationSpeed);
+      this.$childrenX[c].animate({"left": this.x - this.xSize, "top": childBox.center - this.xSize/2}, this.relChart.getAnimationSpeed());
     }
   }
 };
