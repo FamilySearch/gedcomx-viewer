@@ -79,7 +79,7 @@
       dataType: "json",
       url: url,
       success:function(gedcomx){
-        let elementMap = overlayBoxes(viewer, gedcomx);
+        let elementMap = overlayBoxes(viewer, gedcomx, sessionId);
         currentRelChart = buildGraph(gedcomx, true, null, false, elementMap, true);
       }
     });
