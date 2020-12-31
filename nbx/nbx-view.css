@@ -1,83 +1,95 @@
-#metadata {
+#nbx-metadata {
     float: right;
 }
-.metadata {
+
+.nbx-metadata {
     font-size: x-small;
     font-family: sans-serif;
 }
-.text:hover {
+
+.nbx-text:hover {
     color: #7211bb;
 }
 
-pre {
+#nbx-table pre {
     margin-bottom: 0;
     margin-top: 0;
 }
-.meta  pre {
+
+.nbx-meta  pre {
     font-family: sans-serif;
 }
-.sbody  pre {
+
+.nbx-sbody  pre {
     font-family: serif;
 }
 
-.text {
+.nbx-text {
     background-color: #fffcde;
     margin: 2px;
 }
 
-.label {
+.nbx-label {
 
 }
 
-table {
+#nbx-table table {
     display: inline-block;
     padding: 0;
     vertical-align: bottom;
     border-spacing: 0;
     border-collapse: collapse;
 }
-td {
+
+#nbx-table td {
     vertical-align: bottom;
     padding: 0;
     border-spacing: 0;
 }
-tr {
+
+#nbx-table tr {
     vertical-align: bottom;
 }
-.meta > td,th {
+
+.nbx-meta > td,th {
     padding: 2px;
     border: 1px solid #e0e0f2;
 }
-.meta:nth-child(odd), th {
+
+.nbx-meta:nth-child(odd), th {
   background-color: #fff8eb;
 }
 
-.ENAMEX, .TIMEX, .NUMEX {
+.nbx-ENAMEX, .nbx-TIMEX, .nbx-NUMEX {
     font-size: xx-small;
     font-family: sans-serif;
     text-align: center;
     background-color: aliceblue;
     border-top: 1px solid lightblue;
     border-left: 1px solid lightblue;
-    border-right: 1px solid lightblue;}
+    border-right: 1px solid lightblue;
+}
 
-ul {
+#nbx-table ul {
     list-style: none;
     margin: 0;
     padding: 0;
 }
-li {
+
+#nbx-table li {
     display: inline-block;
+    margin-bottom: 20px;
 }
 
-.RELEX-even, .RELEX-odd {
+.nbx-RELEX-even, .nbx-RELEX-odd {
     font-size: x-small;
     font-family: sans-serif;
     border-top: 1px solid #eaf1e3;
     border-left: 1px solid #eaf1e3;
     border-right: 1px solid #eaf1e3;
 }
-.ref-even, .ref-odd {
+
+.nbx-ref-even, .nbx-ref-odd {
     font-size: x-small;
     font-family: sans-serif;
     padding-left: 5px;
@@ -85,18 +97,23 @@ li {
     border-right: 1px solid #eaf1e3;
     border-bottom: 1px solid #eaf1e3;
 }
-.RELEX-even {
+
+.nbx-RELEX-even {
     background-color: #eefdd8;
 }
-.ref-even {
+
+.nbx-ref-even {
     background-color: #f2ffe8;
 }
-.RELEX-odd {
+
+.nbx-RELEX-odd {
     background-color: #f9fdf2;
 }
-.ref-odd {
+
+.nbx-ref-odd {
     background-color: #fdfff8;
 }
-.highlight {
+
+.nbx-highlight {
     background-color: #f1eb27;
 }

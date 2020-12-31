@@ -91,12 +91,12 @@ function parseNbx(file) {
   var pos = 0; // position in file[]
   var offset = 0; // 'offset' to use in IDs. Doesn't count sub-tags (ENAMEX, etc.), and only counts cr-lf as 1.
 
-  // Read from file[pos] up until the given closing tag is found.
+  // Read from file[pos] up until the given closing tag is found, or the given endOffset is reached (if any).
   // Note: Updates both 'pos' and 'offset'.
-  function parseUntil(tag) {
+  function parseUntil(tag, endOffset) {
     let content = [];
     let endTag = "</" + tag + ">";
-    let end = file.indexOf(endTag, pos);
+    let end = endOffset ? endOffset : file.indexOf(endTag, pos);
     while (pos < end) {
       let next = file.indexOf("<", pos);
       if (next > pos) {
@@ -118,11 +118,21 @@ function parseNbx(file) {
         pos = entityRegex.lastIndex;
       }
     }
-    pos += endTag.length;
-    offset += endTag.length;
+    if (!endOffset) {
+      pos += endTag.length;
+      offset += endTag.length;
+    }
     return content;
   }
 
+  if (file.indexOf("<SBODY>") < 0) {
+    // No "<SBODY>" tag, so assume everything up to first <RELEX" (if any) is the body.
+    let firstRelex = file.indexOf("<RELEX");
+    if (firstRelex < 0) {
+      firstRelex = end;
+    }
+    nbx.sbody = parseUntil(null, firstRelex);
+  }
   while (pos < len) {
     let c = file[pos++];
     if (c === '<') {
@@ -162,6 +172,59 @@ function parseNbx(file) {
   return nbx;
 }
 
+// function getSample() {
+//   return "<NBX>\n<UNQ>007336622_00772_TXT</UNQ>\n<IMID>007336622_00772</IMID>\n<APID>TH-1961-34988-22535-12</APID>\n<IMGSIZE>3272,4327</IMGSIZE>\n<SBODY>Surrogate's Court, Allegany County, New York.\n  In the Matter of\nthe proof and Probate of \nThe Last Will and Testament\n  of\nGeorge Albert Hawley Deceased.\n\nI, Caroline A. Hawley\nof the Village of Canaseraga one of the\nheirs next of kin of George Albert Hawley\nlate of the village of Canaseraga County of Allegany,\nNew York, deceased, being of full age, do hereby waive the issue and service on me of a citation in the above\nentitled proceeding; I appear in person herein, and consent that an order or decree may be made and entered\nin said proceeding accordingly.\n  Dated this 15th day of August 1911\n\nSTATE OF NEW YORK\nALLEGANY COUNTY.  SS.\n\nCaroline A Hawley\n\n  On this 15th day of August 1911, before me personally\ncame Caroline A Hawley to me known to be the\nperson described in and who executed the foregoing instrument, and acknowledged the execution hereof.\n\n  V A Zimmer\n  Justice of the Peace\n\nSTATE OF NEW YORK\nALLEGANY COUNTY.  SS.\n\nJ. A. Lowry\nof the village of Canaseraga being duly sworn,\ndeposes and says, that he is well acquainted with Caroline A Hawley\nthe person mentioned in the foregoing waiver, and her manner and style of handwriting, having often\nseen her write, and that deponent verily believes that the signature purporting to be the signature\nof the aforesaid person signed to the said instrument, is the true and genuine handwriting and signature\nof the above named person.\n\nSworn to before me, this 15th\nday of August 1911\n\nV A Zimmer\n\nJ. A. Lowry\n</SBODY>\n</NBX>\n";
+// }
+
 function getSample() {
-  return "<NBX>\n<UNQ>007336622_00772_TXT</UNQ>\n<IMID>007336622_00772</IMID>\n<APID>TH-1961-34988-22535-12</APID>\n<IMGSIZE>3272,4327</IMGSIZE>\n<SBODY>Surrogate's Court, Allegany County, New York.\n  In the Matter of\nthe proof and Probate of \nThe Last Will and Testament\n  of\nGeorge Albert Hawley Deceased.\n\nI, Caroline A. Hawley\nof the Village of Canaseraga one of the\nheirs next of kin of George Albert Hawley\nlate of the village of Canaseraga County of Allegany,\nNew York, deceased, being of full age, do hereby waive the issue and service on me of a citation in the above\nentitled proceeding; I appear in person herein, and consent that an order or decree may be made and entered\nin said proceeding accordingly.\n  Dated this 15th day of August 1911\n\nSTATE OF NEW YORK\nALLEGANY COUNTY.  SS.\n\nCaroline A Hawley\n\n  On this 15th day of August 1911, before me personally\ncame Caroline A Hawley to me known to be the\nperson described in and who executed the foregoing instrument, and acknowledged the execution hereof.\n\n  V A Zimmer\n  Justice of the Peace\n\nSTATE OF NEW YORK\nALLEGANY COUNTY.  SS.\n\nJ. A. Lowry\nof the village of Canaseraga being duly sworn,\ndeposes and says, that he is well acquainted with Caroline A Hawley\nthe person mentioned in the foregoing waiver, and her manner and style of handwriting, having often\nseen her write, and that deponent verily believes that the signature purporting to be the signature\nof the aforesaid person signed to the said instrument, is the true and genuine handwriting and signature\nof the above named person.\n\nSworn to before me, this 15th\nday of August 1911\n\nV A Zimmer\n\nJ. A. Lowry\n</SBODY>\n</NBX>\n";
+  return "✍\n" +
+      "En <TIMEX TYPE=\"DATE\">nueve de Agosto de mil setecientos ochenta y tres</TIMEX> <ENAMEX TYPE=\"COREF\">Yo</ENAMEX> el <ENAMEX TYPE=\"TITLE\">Padre</ENAMEX>\n" +
+      "<ENAMEX TYPE=\"PERSON\">Pedro Joseph Carranza</ENAMEX> <ENAMEX TYPE=\"OCCUPATION\">teniente de Cura</ENAMEX> hize los Exorcismos puse el Santo óleo, y Crisma y <ENAMEX TYPE=\"EVENT.rel\">Bauticé</ENAMEX> Solemnemente a una <ENAMEX TYPE=\"COREF.gen\">Niña</ENAMEX>\n" +
+      "que <ENAMEX TYPE=\"EVENT.rel\">nació</ENAMEX> a <TIMEX TYPE=\"DATE.non\">tres de este presente mes</TIMEX> a <ENAMEX TYPE=\"COREF\">quien</ENAMEX> puse por nombre\n" +
+      "⌨ <ENAMEX TYPE=\"PERSON\">María</ENAMEX> <ENAMEX TYPE=\"FAMILYMEMBER\">hija legítima</ENAMEX> de <ENAMEX TYPE=\"PERSON\">Bernardino Abigif</ENAMEX>, y de <ENAMEX TYPE=\"PERSON\">Catharina Zay</ENAMEX>: E\n" +
+      "fue <ENAMEX TYPE=\"COREF\">su</ENAMEX> <ENAMEX TYPE=\"NONFAMILY\">madrina</ENAMEX> <ENAMEX TYPE=\"PERSON\">Petrona tum</ENAMEX> <ENAMEX TYPE=\"ITE.org\">Indios</ENAMEX> de <ENAMEX TYPE=\"COREF.loc\">este Pueblo</ENAMEX> a <ENAMEX TYPE=\"COREF\">quien</ENAMEX> advertí\n" +
+      "el parentesco espiritual que con la <ENAMEX TYPE=\"FAMILYMEMBER\">Niña</ENAMEX>, y <ENAMEX TYPE=\"COREF\">sus</ENAMEX> <ENAMEX TYPE=\"FAMILYMEMBER\">Padres</ENAMEX> contrajo y la\n" +
+      "obligación de enseñarle la Doctrina <ENAMEX TYPE=\"PERSON\">Christiana</ENAMEX> y lo firmé ↔\n" +
+      "⌨⌨derecho <ENAMEX TYPE=\"PERSON\">Joel Carranza</ENAMEX>\n" +
+      "\n" +
+      "<RELEX TYPE=\"E1:HAS_STDATE\"_STID=\"157\"_ENDID=\"5\"_STTOKEN=\"Bauticé\"_ENDTOKEN=\"nueve de Agosto de mil setecientos ochenta y tres\">\n" +
+      "<RELEX TYPE=\"E1:HAS_STDATE\"_STID=\"193\"_ENDID=\"201\"_STTOKEN=\"nació\"_ENDTOKEN=\"tres de este presente mes\">\n" +
+      "<RELEX TYPE=\"R01:HAS_FATHER\"_STID=\"253\"_ENDID=\"276\"_STTOKEN=\"María\"_ENDTOKEN=\"Bernardino Abigif\">\n" +
+      "<RELEX TYPE=\"R02:HAS_MOTHER\"_STID=\"253\"_ENDID=\"300\"_STTOKEN=\"María\"_ENDTOKEN=\"Catharina Zay\">\n" +
+      "<RELEX TYPE=\"R40:IS_SAME_AS\"_STID=\"229\"_ENDID=\"253\"_STTOKEN=\"quien\"_ENDTOKEN=\"María\">\n" +
+      "<RELEX TYPE=\"R40:IS_SAME_AS\"_STID=\"229\"_ENDID=\"321\"_STTOKEN=\"quien\"_ENDTOKEN=\"su\">\n" +
+      "<RELEX TYPE=\"R40:IS_SAME_AS\"_STID=\"253\"_ENDID=\"321\"_STTOKEN=\"María\"_ENDTOKEN=\"su\">\n" +
+      "<RELEX TYPE=\"R40:IS_SAME_AS\"_STID=\"321\"_ENDID=\"55\"_STTOKEN=\"su\"_ENDTOKEN=\"Yo\">\n" +
+      "<RELEX TYPE=\"R40:IS_SAME_AS\"_STID=\"368\"_ENDID=\"253\"_STTOKEN=\"quien\"_ENDTOKEN=\"María\">\n" +
+      "<RELEX TYPE=\"R40:IS_SAME_AS\"_STID=\"55\"_ENDID=\"229\"_STTOKEN=\"Yo\"_ENDTOKEN=\"quien\">\n" +
+      "<RELEX TYPE=\"R40:IS_SAME_AS\"_STID=\"55\"_ENDID=\"253\"_STTOKEN=\"Yo\"_ENDTOKEN=\"María\">\n" +
+      "<RELEX TYPE=\"S=2+\"_STID=\"276\"_ENDID=\"276\"_STTOKEN=\"Bernardino Abigif\"_ENDTOKEN=\"Bernardino Abigif\">\n" +
+      "<RELEX TYPE=\"S=2+\"_STID=\"300\"_ENDID=\"300\"_STTOKEN=\"Catharina Zay\"_ENDTOKEN=\"Catharina Zay\">\n" +
+      "<RELEX TYPE=\"S=2+\"_STID=\"332\"_ENDID=\"332\"_STTOKEN=\"Petrona tum\"_ENDTOKEN=\"Petrona tum\">\n" +
+      "<RELEX TYPE=\"S=2+\"_STID=\"521\"_ENDID=\"521\"_STTOKEN=\"Joel Carranza\"_ENDTOKEN=\"Joel Carranza\">\n" +
+      "<RELEX TYPE=\"S=3+\"_STID=\"67\"_ENDID=\"67\"_STTOKEN=\"Pedro Joseph Carranza\"_ENDTOKEN=\"Pedro Joseph Carranza\">\n" +
+      "<RELEX TYPE=\"Z:HASFAMMEMLST\"_STID=\"229\"_ENDID=\"324\"_STTOKEN=\"quien\"_ENDTOKEN=\"madrina\">\n" +
+      "<RELEX TYPE=\"Z:HASFAMMEMLST\"_STID=\"253\"_ENDID=\"324\"_STTOKEN=\"María\"_ENDTOKEN=\"madrina\">\n" +
+      "<RELEX TYPE=\"Z:HASFAMMEMLST\"_STID=\"253\"_ENDID=\"430\"_STTOKEN=\"María\"_ENDTOKEN=\"Padres\">\n" +
+      "<RELEX TYPE=\"Z:HASFAMMEMLST\"_STID=\"276\"_ENDID=\"259\"_STTOKEN=\"Bernardino Abigif\"_ENDTOKEN=\"hija legítima\">\n" +
+      "<RELEX TYPE=\"Z:HASFAMMEMLST\"_STID=\"300\"_ENDID=\"259\"_STTOKEN=\"Catharina Zay\"_ENDTOKEN=\"hija legítima\">\n" +
+      "<RELEX TYPE=\"Z:HASFAMMEMLST\"_STID=\"321\"_ENDID=\"324\"_STTOKEN=\"su\"_ENDTOKEN=\"madrina\">\n" +
+      "<RELEX TYPE=\"Z:HASFAMMEMLST\"_STID=\"426\"_ENDID=\"430\"_STTOKEN=\"sus\"_ENDTOKEN=\"Padres\">\n" +
+      "<RELEX TYPE=\"Z:HAS_EVENT\"_STID=\"253\"_ENDID=\"157\"_STTOKEN=\"María\"_ENDTOKEN=\"Bauticé\">\n" +
+      "<RELEX TYPE=\"Z:HAS_EVENT\"_STID=\"253\"_ENDID=\"193\"_STTOKEN=\"María\"_ENDTOKEN=\"nació\">\n" +
+      "<RELEX TYPE=\"Z:IS_FEM_FOR\"_STID=\"@GENDER\"_ENDID=\"253\"_STTOKEN=\"@GENDER\"_ENDTOKEN=\"María\">\n" +
+      "<RELEX TYPE=\"Z:IS_FEM_FOR\"_STID=\"@GENDER\"_ENDID=\"300\"_STTOKEN=\"@GENDER\"_ENDTOKEN=\"Catharina Zay\">\n" +
+      "<RELEX TYPE=\"Z:IS_FEM_FOR\"_STID=\"@GENDER\"_ENDID=\"332\"_STTOKEN=\"@GENDER\"_ENDTOKEN=\"Petrona tum\">\n" +
+      "<RELEX TYPE=\"Z:IS_FEM_FOR\"_STID=\"@GENDER\"_ENDID=\"487\"_STTOKEN=\"@GENDER\"_ENDTOKEN=\"Christiana\">\n" +
+      "<RELEX TYPE=\"Z:IS_MALE_FOR\"_STID=\"@GENDER\"_ENDID=\"276\"_STTOKEN=\"@GENDER\"_ENDTOKEN=\"Bernardino Abigif\">\n" +
+      "<RELEX TYPE=\"Z:IS_MALE_FOR\"_STID=\"@GENDER\"_ENDID=\"521\"_STTOKEN=\"@GENDER\"_ENDTOKEN=\"Joel Carranza\">\n" +
+      "<RELEX TYPE=\"Z:IS_MALE_FOR\"_STID=\"@GENDER\"_ENDID=\"67\"_STTOKEN=\"@GENDER\"_ENDTOKEN=\"Pedro Joseph Carranza\">\n" +
+      "<RELEX TYPE=\"Z:IS_PRINCIPAL\"_STID=\"253\"_ENDID=\"253\"_STTOKEN=\"María\"_ENDTOKEN=\"María\">\n" +
+      "<RELEX TYPE=\"Z:MEMBER_OF\"_STID=\"229\"_ENDID=\"259\"_STTOKEN=\"quien\"_ENDTOKEN=\"hija legítima\">\n" +
+      "<RELEX TYPE=\"Z:MEMBER_OF\"_STID=\"253\"_ENDID=\"259\"_STTOKEN=\"María\"_ENDTOKEN=\"hija legítima\">\n" +
+      "<RELEX TYPE=\"Z:MEMBER_OF\"_STID=\"332\"_ENDID=\"324\"_STTOKEN=\"Petrona tum\"_ENDTOKEN=\"madrina\">\n" +
+      "<RELEX TYPE=\"Z:MEMBER_OF\"_STID=\"368\"_ENDID=\"324\"_STTOKEN=\"quien\"_ENDTOKEN=\"madrina\">\n" +
+      "<RELEX TYPE=\"Z:OCCUPATION_OF\"_STID=\"55\"_ENDID=\"89\"_STTOKEN=\"Yo\"_ENDTOKEN=\"teniente de Cura\">\n" +
+      "<RELEX TYPE=\"Z:OCCUPATION_OF\"_STID=\"67\"_ENDID=\"89\"_STTOKEN=\"Pedro Joseph Carranza\"_ENDTOKEN=\"teniente de Cura\">\n" +
+      "<RELEX TYPE=\"Z:TITLE_OF\"_STID=\"67\"_ENDID=\"61\"_STTOKEN=\"Pedro Joseph Carranza\"_ENDTOKEN=\"Padre\">";
 }

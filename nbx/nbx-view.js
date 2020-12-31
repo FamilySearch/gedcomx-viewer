@@ -24,9 +24,14 @@ function textObjectArrayHtml(content, relexMap) {
     if (isList) {
       html += "<li>";
     }
-    let text = textObject.text.replace(/ *[\n] */g, " ");
     if (textObject.tag === undefined) {
-      html += "<span class='text'>" + encode(text) + "</span>";
+      let lines = textObject.text.split("\n");
+      for (let line = 0; line < lines.length; line++) {
+        if (line > 0) {
+          html += isList ? "</ul><ul>" : "<br/>";
+        }
+        html += "<span class='nbx-text'>" + encode(lines[line]) + "</span>";
+      }
     }
     else {
       // Tagged element => entity with an offset as its id.
@@ -36,16 +41,20 @@ function textObjectArrayHtml(content, relexMap) {
         for (let r = 0; r < relations.length; r++) {
           let relation = relations[r];
           let odd = r % 2 === 0 ? "even" : "odd";
-          html += "<tr class='RELEX-" + odd + "'><td>" + encode(relation.type) + "</td></tr>";
+          html += "<tr class='nbx-RELEX-" + odd + "'><td>" + encode(relation.type) + "</td></tr>";
           if (relation.endOffset !== relation.startOffset) {
-            html += "<tr><td class='ref-" + odd + " ref-" + getId(relation.endOffset) + "'>" + encode(relation.endToken) + "</td></tr>";
+            html += "<tr><td class='nbx-ref-" + odd + " nbx-ref-" + getId(relation.endOffset) + "'>" + encode(relation.endToken) + "</td></tr>";
           }
         }
       }
 
-      html +="<tr><td class='" + textObject.tag + "'>" + encode(textObject.type) + "</td></tr>" +
-             "<tr><td class='ref-" + getId(textObject.offset) + " text' id='" + getId(textObject.offset) + "'>" + encode(text) + "</td></tr>" +
+      let text = textObject.text.replace(/ *[\n] */g, " ");
+      html +="<tr><td class='nbx-" + textObject.tag + "'>" + encode(textObject.type) + "</td></tr>" +
+             "<tr><td class='nbx-ref-" + getId(textObject.offset) + " nbx-text' id='" + getId(textObject.offset) + "'>" + encode(text) + "</td></tr>" +
            "</table>";
+      if (textObject.text.includes("\n")) {
+        html += isList ? "</ul><ul>" : "<br/>";
+      }
     }
     if (isList) {
       html += "</li>";
@@ -83,7 +92,7 @@ function textObjectArrayHtml(content, relexMap) {
 
    Takes an array of text-object and displays them as text with entity tags above, and relation(s) above that.
  */
-function gxToHtml(nbx) {
+function nbxToHtml(nbx) {
   // Take a list of relex objects with a 'startOffset' field, and create a map of startOffset -> array of relex objects with that start offset.
   // Format of relex object is type, startOffset, endOffset, startToken, endToken.
   function makeRelexMap(relex) {
@@ -103,7 +112,7 @@ function gxToHtml(nbx) {
   let relexMap = makeRelexMap(nbx.relex);
 
   let html = "  <div id='metadata'><h4>Metadata</h4>\n" +
-      "  <table class='metadata'>\n" +
+      "  <table class='nbx-metadata'>\n" +
       "    <tr><th>Label</th><th>Value</th></tr>\n";
 
   // Add metadata table rows
@@ -111,13 +120,13 @@ function gxToHtml(nbx) {
   for (let i = 0; i < len; i++) {
     let meta = nbx.metadata[i];
     // Add the tag
-    html += "    <tr class='meta'><td class='label'>" + encode(meta.tag) + "</td><td class='value'>";
+    html += "    <tr class='nbx-meta'><td class='nbx-label'>" + encode(meta.tag) + "</td><td class='nbx-value'>";
     html += textObjectArrayHtml(meta.content, relexMap);
     html += "</td></tr>\n";
   }
   html += "  </table>\n  </div>\n\n";
 
-  html += "  <div id='sbody'><h4>  Source Body</h4>\n\n  <div class='sbody'>";
+  html += "  <div id='sbody'><h4>  Source Body</h4>\n\n  <div class='nbx-sbody'>";
   html += textObjectArrayHtml(nbx.sbody, relexMap);
   html += "  </div>\n  </div>\n";
 
@@ -127,12 +136,13 @@ function gxToHtml(nbx) {
     let id = getId(nbx.relex[i].endOffset);
     if (alreadyUsed[id] === undefined) {
       alreadyUsed[id] = true;
-      html += '$(".ref-' + id + '").hover(function(){\n' +
-          // '        $("#' + id + '").toggleClass("highlight");\n' +
-          '        $(".ref-' + id + '").toggleClass("highlight");\n' +
+      html += '$(".nbx-ref-' + id + '").hover(function(){\n' +
+          '        $(".nbx-ref-' + id + '").toggleClass("nbx-highlight");\n' +
           '      });\n';
     }
   }
   html += "</script>\n";
+
+  html = "<div id='nbx-table'>" + html + "</div>";
   return html;
 }

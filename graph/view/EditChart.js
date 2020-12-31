@@ -780,6 +780,8 @@ PersonBox.prototype.personDrop = function(e, ui) {
   if (!targetId) {
     targetId = ui.draggable.attr("id");
   }
+  // Remove initial chart#: 1-box_... => box_...
+  targetId = targetId.replace(/^[0-9]*-/,"");
 
   if (targetId.startsWith("box_") && targetId.indexOf("Plus") < 0) {
     let personIdsToMerge = this.relChart.getPersonIdsToMerge(droppedPersonBox.personBoxId, targetId);
@@ -809,7 +811,13 @@ PersonBox.prototype.personDrop = function(e, ui) {
       }
     }
     else {
-      let draggedPersonBoxId = e.originalEvent.target.id.replace(/-.*/, "");
+      // Remove final plus type: box_p1-1-personSpousePlus => box_p9-1
+      let draggedPersonBoxId = targetId.replace(/-[^-]*$/, "");
+      let draggedPersonBox = this.relChart.personBoxMap[draggedPersonBoxId];
+      if (!draggedPersonBox) {
+        console.print("Curious...");
+      }
+      let draggedPersonId = draggedPersonBox ? draggedPersonBox.getPersonId() : null;
       for (let s = 0; s < this.relChart.selectedPersonBoxes.length; s++) {
         let sourcePersonBox = this.relChart.selectedPersonBoxes[s];
         let sourcePersonId = sourcePersonBox.personNode.personId;
@@ -829,7 +837,7 @@ PersonBox.prototype.personDrop = function(e, ui) {
           case "personSpousePlus":
             // Don't make all selected persons be spouses of the person dropped on--that would be unlikely to make sense.
             // Instead, ignore who is selected and only pay attention to whose spouse '+' was dragged.
-            if (sourcePersonBox.personBoxId === draggedPersonBoxId) {
+            if (sourcePersonId === draggedPersonId) {
               let sourcePersonNode = sourcePersonBox.personNode;
               let droppedPersonNode = droppedPersonBox.personNode;
               if (wrongGender(sourcePersonNode, droppedPersonNode)) {
