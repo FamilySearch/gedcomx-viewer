@@ -1,5 +1,5 @@
 function getId(offset) {
-  return "f" + offset;
+  return "nbx-f" + offset;
 }
 
 /**
@@ -43,14 +43,14 @@ function textObjectArrayHtml(content, relexMap) {
           let odd = r % 2 === 0 ? "even" : "odd";
           html += "<tr class='nbx-RELEX-" + odd + "'><td>" + encode(relation.type) + "</td></tr>";
           if (relation.endOffset !== relation.startOffset) {
-            html += "<tr><td class='nbx-ref-" + odd + " nbx-ref-" + getId(relation.endOffset) + "'>" + encode(relation.endToken) + "</td></tr>";
+            html += "<tr><td class='nbx-ref-" + odd + " ref-" + getId(relation.endOffset) + "'>" + encode(relation.endToken) + "</td></tr>";
           }
         }
       }
 
       let text = textObject.text.replace(/ *[\n] */g, " ");
       html +="<tr><td class='nbx-" + textObject.tag + "'>" + encode(textObject.type) + "</td></tr>" +
-             "<tr><td class='nbx-ref-" + getId(textObject.offset) + " nbx-text' id='" + getId(textObject.offset) + "'>" + encode(text) + "</td></tr>" +
+             "<tr><td class='ref-" + getId(textObject.offset) + " nbx-text' id='" + getId(textObject.offset) + "'>" + encode(text) + "</td></tr>" +
            "</table>";
       if (textObject.text.includes("\n")) {
         html += isList ? "</ul><ul>" : "<br/>";
@@ -111,7 +111,7 @@ function nbxToHtml(nbx) {
 
   let relexMap = makeRelexMap(nbx.relex);
 
-  let html = "  <div id='metadata'><h4>Metadata</h4>\n" +
+  let html = "  <div id='nbx-metadata'><h4>Metadata</h4>\n" +
       "  <table class='nbx-metadata'>\n" +
       "    <tr><th>Label</th><th>Value</th></tr>\n";
 
@@ -126,7 +126,7 @@ function nbxToHtml(nbx) {
   }
   html += "  </table>\n  </div>\n\n";
 
-  html += "  <div id='sbody'><h4>  Source Body</h4>\n\n  <div class='nbx-sbody'>";
+  html += "  <div id='nbx-sbody'><h4>  Source Body</h4>\n\n  <div class='nbx-sbody'>";
   html += textObjectArrayHtml(nbx.sbody, relexMap);
   html += "  </div>\n  </div>\n";
 
@@ -136,8 +136,8 @@ function nbxToHtml(nbx) {
     let id = getId(nbx.relex[i].endOffset);
     if (alreadyUsed[id] === undefined) {
       alreadyUsed[id] = true;
-      html += '$(".nbx-ref-' + id + '").hover(function(){\n' +
-          '        $(".nbx-ref-' + id + '").toggleClass("nbx-highlight");\n' +
+      html += '$(".ref-' + id + '").hover(function(){\n' +
+          '        $(".ref-' + id + '").toggleClass("nbx-highlight");\n' +
           '      });\n';
     }
   }
