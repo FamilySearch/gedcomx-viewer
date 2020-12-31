@@ -129,7 +129,7 @@ function parseNbx(file) {
     // No "<SBODY>" tag, so assume everything up to first <RELEX" (if any) is the body.
     let firstRelex = file.indexOf("<RELEX");
     if (firstRelex < 0) {
-      firstRelex = end;
+      firstRelex = len;
     }
     nbx.sbody = parseUntil(null, firstRelex);
   }
