@@ -307,7 +307,7 @@ function Rectangle(x1OrRectangle, y1, x2, y2) {
  */
 function getImageArks(doc) {
   function isImage(sd) {
-    return sd && sd.resourceType && sd.resourceType === "http://gedcomx.org/DigitalArtifact" || sd.resourceType === "http://gedcomx.org/Image";
+    return sd && sd.resourceType && (sd.resourceType === "http://gedcomx.org/DigitalArtifact" || sd.resourceType === "http://gedcomx.org/Image");
   }
 
   function isRecord(sd) {
