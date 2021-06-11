@@ -94,9 +94,7 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
                 html += "<span class='" + (isPrincipal ? "isPrincipal" : "notPrincipal") + " toolTip'>" + (isPrincipal ? "*" : " ") +
                     "<span class='toolTipText'>" + (isPrincipal ? "Principal" : "Not principal") + "</span></span>";
               }
-              // if (relChart.includeConfidence && name.confidence) {
-              //   html += " <span class=confidence>[" + extractConfidence(name.confidence) + "%]</span>";
-              // }
+              html += getConfidenceSpan(name.confidence);
               html += "<br/>\n";
 
               if (isFirstFullName) {
@@ -114,8 +112,15 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
     return html;
   }
 
-  function extractConfidence(confidenceUri) {
-    return confidenceUrl.replace(/.*\//, "");
+  // Return an HTML span with the given confidence in it, if any; otherwise, return the empty string.
+  function getConfidenceSpan(confidenceUri) {
+    if (relChart.includeConfidence && confidenceUri) {
+      let confidenceValue = confidenceUri.replace(/.*\//, "");
+      if (confidenceValue) {
+        return "<span class=confidence> [" + encode(confidenceValue) + "%]</span>"
+      }
+    }
+    return "";
   }
 
   // Get the 'type' of the fact, strip off the URI path up to the last slash (/),
@@ -148,17 +153,17 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
   /**
    * If the given value is not empty, then add it to the given array, wrapped in a "span" element,
    *   and with an appropriate element id.
-   * @param value
-   * @param array
-   * @param type
-   * @param gx
+   * @param value - Text value to display (if any)
+   * @param array - Array to add HTML to for eventual display, if not empty
+   * @param type - Type of value (used for generating the element id)
+   * @param gx - GedcomX object (e.g., Date or Place) being added.
    */
   function addIfNotEmpty(value, array, type, gx) {
     if (value) {
       value = encode(value);
       if (type && gx) {
         let elementId = nextId(type, relChartToGx, gx);
-        value = "<span id='" + elementId + "'>" + value + "</span>";
+        value = "<span id='" + elementId + "'>" + value + "</span>" + getConfidenceSpan(gx.confidence);
       }
       array.push(value);
     }

@@ -108,6 +108,11 @@
     font-size: 70%;
 }
 
+.confidence {
+    color: #8ca08c;
+    font-size: 80%;
+}
+
 .factDatePlace,.relativeName {
     font-size: 70%;
 }
