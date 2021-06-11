@@ -23,14 +23,14 @@ LinkedHashSet.prototype.remove = function(value) {
 };
 
 LinkedHashSet.prototype.removeAll = function(other) {
-  for (let i = 0; i < other.values.length; i++) {
-    this.remove(other.values[i]);
+  for (let value of other.values) {
+    this.remove(value);
   }
 };
 
 LinkedHashSet.prototype.addAll = function(other) {
-  for (let i = 0; i < other.values.length; i++) {
-    this.add(other.values[i]);
+  for (let value of other.values) {
+    this.add(value);
   }
 };
 

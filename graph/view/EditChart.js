@@ -20,8 +20,8 @@ RelationshipChart.prototype.hideFamilyControls = function() {
   this.$fatherPlus.hide();
   this.$motherPlus.hide();
   if (this.selectedFamilyLine && !isEmpty(this.selectedFamilyLine.$childrenX)) {
-    for (let c = 0; c < this.selectedFamilyLine.$childrenX.length; c++) {
-      this.selectedFamilyLine.$childrenX[c].hide();
+    for (let childX of this.selectedFamilyLine.$childrenX) {
+      childX.hide();
     }
   }
 };
@@ -82,9 +82,9 @@ const GX_PART_SUFFIX  = "http://gedcomx.org/Suffix";
  */
 RelationshipChart.prototype.findPerson = function(gx, pid) {
   if (gx.persons) {
-    for (let p = 0; p < gx.persons.length; p++) {
-      if (gx.persons[p].id === pid) {
-        return gx.persons[p];
+    for (let person of gx.persons) {
+      if (person.id === pid) {
+        return person;
       }
     }
   }
@@ -189,11 +189,9 @@ RelationshipChart.prototype.mergeFields = function(fields1, fields2) {
     return fields2;
   }
   // Both field arrays have at least one Field in them, so add all entries in fields2 to fields1.
-  for (let f2 = 0; f2 < fields2.length; f2++) {
-    let field2 = fields2[f2];
+  for (let field2 of fields2) {
     let isDuplicate = false;
-    for (let f1 = 0; f1 < fields1.length; f1++) {
-      let field1 = fields1[f1];
+    for (let field1 of fields1) {
       if (this.isDuplicateField(field1, field2)) {
         isDuplicate = true;
         break;
@@ -247,14 +245,14 @@ RelationshipChart.prototype.mergeNamePart = function(part1, part2) {
   function getPieces(s) {
     const patt1 = /[A-Za-z.'"-()]+( |$)/g;
     const patt2 = /[^.]+([.]|$)/g;
-    let result = s.match(patt1);
+    let results = s.match(patt1);
     let p = [];
-    for (let i = 0; i < result.length; i++) {
-      let piece = result[i].trim();
+    for (let result of results) {
+      let piece = result.trim();
       let subparts = piece.match(patt2);
       if (subparts) {
-        for (let j = 0; j < subparts.length; j++) {
-          p.push(subparts[j]);
+        for (let subpart of subparts) {
+          p.push(subpart);
         }
       }
       else {
@@ -287,11 +285,9 @@ RelationshipChart.prototype.mergeNamePart = function(part1, part2) {
    * @param pieces2 - Second "subset" strings.
    */
   function containsAllPieces(pieces1, pieces2) {
-    for (let p2 = 0; p2 < pieces2.length; p2++) {
-      let piece2 = pieces2[p2];
+    for (let piece2 of pieces2) {
       let containsPiece = false;
-      for (let p1 = 0; p1 < pieces1.length; p1++) {
-        let piece1 = pieces1[p1];
+      for (let piece1 of pieces1) {
         if (piece1.startsWith(piece2)) { // equal or subset
           containsPiece = true;
           break;
@@ -320,8 +316,8 @@ RelationshipChart.prototype.mergeNamePart = function(part1, part2) {
       // Remove from pieces2 and normPieces2 any elements where normPieces2 is contained within normPieces1
       for (let p2 = 0; p2 < normPieces2.length; p2++) {
         let foundPiece = false;
-        for (let p1 = 0; p1 < normPieces1.length; p1++) {
-          if (normPieces1[p1].startsWith(normPieces2[p2])) {
+        for (let normPiece1 of normPieces1) {
+          if (normPiece1.startsWith(normPieces2[p2])) {
             foundPiece = true;
             break;
           }
@@ -381,11 +377,11 @@ RelationshipChart.prototype.mergeNameForm = function(form1, form2) {
   function isSurnameFirst(parts) {
     if (parts) {
       let sawSurname = false;
-      for (let p = 0; p < parts.length; p++) {
-        if (parts.type === GX_PART_GIVEN) {
+      for (let part of parts) {
+        if (part.type === GX_PART_GIVEN) {
           return sawSurname;
         }
-        if (parts.type === GX_PART_SURNAME) {
+        if (part.type === GX_PART_SURNAME) {
           sawSurname = true;
         }
       }
@@ -402,8 +398,7 @@ RelationshipChart.prototype.mergeNameForm = function(form1, form2) {
   else if (!isEmpty(form2.parts)) {
     let remainingParts2 = form2.parts ? form2.parts.slice(0) : [];
     let surnameFirst = isSurnameFirst(form2.parts);
-    for (let p1 = 0; p1 < form1.parts.length; p1++) {
-      let part1 = form1.parts[p1];
+    for (let part1 of form1.parts) {
       for (let p2 = 0; p2 < remainingParts2.length; p2++) {
         let part2 = remainingParts2[p2];
         if (part1.type === part2.type) {
@@ -415,8 +410,7 @@ RelationshipChart.prototype.mergeNameForm = function(form1, form2) {
     if (remainingParts2.length > 0) {
       // There are remaining name parts in form2, and no corresponding part of the same type in form1.
       // So insert them into form1's array of name parts.
-      for (let p2 = 0; p2 < remainingParts2.length; p2++) {
-        let part2 = remainingParts2[p2];
+      for (let part2 of remainingParts2) {
         if (part2.type === GX_PART_PREFIX) {
           form1.parts.splice(0, 0, part2);
         }
@@ -446,8 +440,7 @@ RelationshipChart.prototype.mergeNameForm = function(form1, form2) {
  * @param mustBeSameLang
  */
 RelationshipChart.prototype.mergeSameLangNameForms = function(nameForms1, remainingForms2, mustBeSameLang) {
-  for (let f = 0; f < nameForms1.length; f++) {
-    let nameForm1 = nameForms1[f];
+  for (let nameForm1 of nameForms1) {
     for (let f2 = 0; f2 < remainingForms2.length; f2++) {
       let nameForm2 = remainingForms2[f2];
       let lang1 = nameForm1.lang ? nameForm1.lang : "x-Latn";
@@ -467,8 +460,7 @@ RelationshipChart.prototype.mergeName = function(name1, name2) {
    * @param nameForms - Array of name forms to process.
    */
   function consolidateNameParts(nameForms) {
-    for (let f = 0; f < nameForms.length; f++) {
-      let form = nameForms[f];
+    for (let form of nameForms) {
       // Map of part type to index of first occurance of that part type.
       let partIndexMap = {};
       if (form.parts) {
@@ -508,8 +500,7 @@ RelationshipChart.prototype.mergeName = function(name1, name2) {
 }; // mergeName
 
 RelationshipChart.prototype.mergeSameTypeNames = function(names1, remainingNames2, mustBeSameType) {
-  for (let n1 = 0; n1 < names1.length; n1++) {
-    let name1 = names1[n1];
+  for (let name1 of names1) {
     for (let n2 = 0; n2 < remainingNames2.length; n2++) {
       let name2 = remainingNames2[n2];
       if (name1.type === name2.type || ((!name1.type || !name2.type) && !mustBeSameType)) {
@@ -523,12 +514,11 @@ RelationshipChart.prototype.mergeSameTypeNames = function(names1, remainingNames
 
 RelationshipChart.prototype.rebuildFullName = function(name) {
   if (name.nameForms) {
-    for (let f = 0; f < name.nameForms.length; f++) {
-      let nameForm = name.nameForms[f];
+    for (let nameForm of name.nameForms) {
       if (nameForm.parts) {
         let pieces = [];
-        for (let p = 0; p < nameForm.parts.length; p++) {
-          pieces.push(nameForm.parts[p].value);
+        for (let part of nameForm.parts) {
+          pieces.push(part.value);
         }
         nameForm.fullText = pieces.join(" ");
       }
@@ -567,8 +557,8 @@ RelationshipChart.prototype.mergeNames = function(names1, names2) {
       names1 = names1.concat(remainingNames2);
     }
   }
-  for (let n = 0; n < names1.length; n++) {
-    this.rebuildFullName(names1[n]);
+  for (let name1 of names1) {
+    this.rebuildFullName(name1);
   }
   return names1;
 };
@@ -607,10 +597,8 @@ RelationshipChart.prototype.mergeFacts = function(facts1, facts2) {
         && fact1.value === fact2.value;
   }
 
-  for (let f2 = 0; f2 < facts2.length; f2++) {
-    let fact2 = facts2[f2];
-    for (let f1 = 0; f1 < facts1.length; f1++) {
-      let fact1 = facts1[f1];
+  for (let fact2 of facts2) {
+    for (let fact1 of facts1) {
       if (sameFact(fact1, fact2)) {
         fact1.fields = this.mergeFields(fact1.fields, fact2.fields);
         if (fact1.date && fact2.date) {
@@ -749,8 +737,7 @@ RelationshipChart.prototype.getPersonIdsToMerge = function(boxId1, boxId2) {
   let personIds = [];
   personIds.push(this.personBoxMap[boxId1].personNode.personId);
   personIds.push(this.personBoxMap[boxId2].personNode.personId);
-  for (let p = 0; p < this.selectedPersonBoxes.length; p++) {
-    let personBox = this.selectedPersonBoxes[p];
+  for (let personBox of this.selectedPersonBoxes) {
     let personId = personBox.personNode.personId;
     if (!personIds.includes(personId)) {
       personIds.push(personId);
@@ -818,8 +805,7 @@ PersonBox.prototype.personDrop = function(e, ui) {
         console.print("Curious...");
       }
       let draggedPersonId = draggedPersonBox ? draggedPersonBox.getPersonId() : null;
-      for (let s = 0; s < this.relChart.selectedPersonBoxes.length; s++) {
-        let sourcePersonBox = this.relChart.selectedPersonBoxes[s];
+      for (let sourcePersonBox of this.relChart.selectedPersonBoxes) {
         let sourcePersonId = sourcePersonBox.personNode.personId;
         let droppedPersonId = droppedPersonBox.personNode.personId;
         switch (plus) {
@@ -887,8 +873,8 @@ FamilyLine.prototype.familyDrop = function(e) {
   }
   else {
     if (plus === "personParentPlus") {
-      for (let s = 0; s < this.relChart.selectedPersonBoxes.length; s++) {
-        sourcePersonId = this.relChart.selectedPersonBoxes[s].personNode.personId;
+      for (let selectedPersonBox of this.relChart.selectedPersonBoxes) {
+        sourcePersonId = selectedPersonBox.personNode.personId;
         if (this.father) {
           this.relChart.ensureRelationship(GX_PARENT_CHILD, this.father.personNode.personId, sourcePersonId);
         }
@@ -950,8 +936,8 @@ RelationshipChart.prototype.moveSubtree = function(movingSubtree, belowSubtree) 
   if (insertPos === null) {
     insertPos = persons.length;
   }
-  for (p = 0; p < movingPersons.length; p++) {
-    persons.splice(insertPos++, 0, movingPersons[p]);
+  for (let movingPerson of movingPersons) {
+    persons.splice(insertPos++, 0, movingPerson);
   }
 };
 
@@ -978,9 +964,9 @@ RelationshipChart.prototype.aboveInGeneration = function(aboveBox, belowBox) {
  * @return FamilyLine that has both of these children PersonBoxes in it, or null if none in common.
  */
 RelationshipChart.prototype.sameParentFamily = function(childBox1, childBox2) {
-  for (let f = 0; f < childBox1.parentLines.length; f++) {
-    if (childBox2.parentLines.includes(childBox1.parentLines[f])) {
-      return childBox1.parentLines[f];
+  for (let parentLine of childBox1.parentLines) {
+    if (childBox2.parentLines.includes(parentLine)) {
+      return parentLine;
     }
   }
   return null;
@@ -1064,8 +1050,8 @@ FamilyLine.prototype.moveChildDown = function(above, below) {
 RelationshipChart.prototype.getSelectedSubtrees = function(selectedPersonBoxes, droppedPersonBox) {
   let selectedSubtrees = [];
   if (selectedPersonBoxes && selectedPersonBoxes.length > 1 && selectedPersonBoxes.includes(droppedPersonBox)) {
-    for (let s = 0; s < selectedPersonBoxes.length; s++) {
-      let subtree = selectedPersonBoxes[s].subtree;
+    for (let selectedPersonBox of selectedPersonBoxes) {
+      let subtree = selectedPersonBox.subtree;
       if (!selectedSubtrees.includes(subtree)) {
         selectedSubtrees.push(subtree);
       }
@@ -1104,16 +1090,16 @@ RelationshipChart.prototype.gapDrop = function(generationIndex, personIndex, dra
   if (below && dropped.subtree > below.subtree) {
     // If a person in subtree X is dragged above a person in subtree Y, move everyone in X just above the persons in Y.
     let selectedSubtrees = this.getSelectedSubtrees(this.selectedPersonBoxes, dropped);
-    for (let s = 0; s < selectedSubtrees.length; s++) {
-      this.moveSubtree(selectedSubtrees[s], below.subtree);
+    for (let selectedSubtree of selectedSubtrees) {
+      this.moveSubtree(selectedSubtree, below.subtree);
     }
     changed = true;
   }
   else if (above && dropped.subtree < above.subtree) {
     // If a person in subtree X is dragged below a person in subtree Y, move everyone in X between the persons in Y and Y + 1.
     let selectedSubtrees = this.getSelectedSubtrees(this.selectedPersonBoxes, dropped);
-    for (let s = 0; s < selectedSubtrees.length; s++) {
-      this.moveSubtree(selectedSubtrees[s], above.subtree + 1);
+    for (let selectedSubtree of selectedSubtrees) {
+      this.moveSubtree(selectedSubtree, above.subtree + 1);
     }
     changed = true;
   }
@@ -1311,8 +1297,8 @@ FamilyLine.prototype.toggleFamilyLine = function(event) {
     relChart.positionFamilyControl(familyLine.mother ? relChart.$motherX : relChart.$motherPlus, x, familyLine.getBottom() - d + familyLine.lineThickness);
 
     if (!isEmpty(familyLine.$childrenX)) {
-      for (let c = 0; c < familyLine.$childrenX.length; c++) {
-        familyLine.$childrenX[c].show();
+      for (let childX of familyLine.$childrenX) {
+        childX.show();
       }
     }
   }
@@ -1385,11 +1371,11 @@ FamilyLine.prototype.removeParent = function(parentNode, spouseNode, parentRels)
     for (let c = 0; c < familyNode.children.length; c++) {
       let childId = familyNode.children[c].personId;
       let foundParentWithOtherSpouse = false;
-      for (s = 0; s < parentNode.spouseFamilies.length && !foundParentWithOtherSpouse; s++) {
+      for (let s = 0; s < parentNode.spouseFamilies.length && !foundParentWithOtherSpouse; s++) {
         let otherSpouseFamily = parentNode.spouseFamilies[s];
         if (otherSpouseFamily.children) {
-          for (let c2 = 0; c2 < otherSpouseFamily.children.length; c2++) {
-            if (otherSpouseFamily.children[c2].personId === childId) {
+          for (let otherSpouseFamilyChild of otherSpouseFamily.children) {
+            if (otherSpouseFamilyChild.personId === childId) {
               foundParentWithOtherSpouse = true;
               break;
             }
@@ -1434,8 +1420,7 @@ FamilyLine.prototype.removeMother = function() {
 PersonNode.prototype.removeParentChildRelationshipIfOnlyOne = function(isFather, parentChildRel, relationships) {
   if (parentChildRel) {
     let parentFamilies = this.parentFamilies;
-    for (let p = 0; p < parentFamilies.length; p++) {
-      let parentFamily = parentFamilies[p];
+    for (let parentFamily of parentFamilies) {
       let childIndex = parentFamily.children.indexOf(this);
       let parentRel = isFather ? parentFamily.fatherRels[childIndex] : parentFamily.motherRels[childIndex];
       if (parentRel === parentChildRel) {
@@ -1571,8 +1556,7 @@ RelationshipChart.prototype.ensureRelationship = function(relType, personId1, pe
   let doc = this.relGraph.gx;
   if (personId1 && personId2) {
     if (doc.relationships) {
-      for (let r = 0; r < doc.relationships.length; r++) {
-        let rel = doc.relationships[r];
+      for (let rel of doc.relationships) {
         if (rel.type === relType && this.sameId(rel.person1, personId1) && this.sameId(rel.person2, personId2)) {
           return; // Relationship already exists.
         }
@@ -1590,8 +1574,8 @@ RelationshipChart.prototype.ensureRelationship = function(relType, personId1, pe
  */
 RelationshipChart.prototype.ensureRelationships = function(relType, person1Id, person2Nodes) {
   if (person2Nodes) {
-    for (let c = 0; c < person2Nodes.length; c++) {
-      let person2Id = person2Nodes[c].personNode.personId;
+    for (let person2Node of person2Nodes) {
+      let person2Id = person2Node.personNode.personId;
       this.ensureRelationship(relType, person1Id, person2Id);
     }
   }

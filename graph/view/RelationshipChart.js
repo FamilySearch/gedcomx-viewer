@@ -8,8 +8,7 @@ RelationshipChart.prototype.hasDifferentSpouse = function(personBox1, personBox2
     let person1 = personBox1.personNode;
     let person2 = personBox2.personNode;
     if (!isEmpty(person1.spouseFamilies)) {
-      for (let f = 0; f < person1.spouseFamilies.length; f++) {
-        let spouseFamily = person1.spouseFamilies[f];
+      for (let spouseFamily of person1.spouseFamilies) {
         if (spouseFamily.getSpouse(person1) === person2) {
           return false;
         }
@@ -17,8 +16,7 @@ RelationshipChart.prototype.hasDifferentSpouse = function(personBox1, personBox2
       return true;
     }
     else if (!isEmpty(person2.spouseFamilies)) {
-      for (let f = 0; f < person2.spouseFamilies.length; f++) {
-        let spouseFamily = person2.spouseFamilies[f];
+      for (let spouseFamily of person2.spouseFamilies) {
         if (spouseFamily.getSpouse(person2) === person1) {
           return false;
         }
@@ -62,8 +60,7 @@ RelationshipChart.prototype.makeGenerationLinesList = function(familyLines) {
   for (let generationNumber = 0; generationNumber < this.generations.length; generationNumber++) {
     generationLinesList[generationNumber] = [];
   }
-  for (let f = 0; f < familyLines.length; f++) {
-    let familyLine = familyLines[f];
+  for (let familyLine of familyLines) {
     let generationNumber = familyLine.getParentGenerationIndex();
     generationLinesList[generationNumber].push(familyLine);
   }
@@ -77,8 +74,7 @@ RelationshipChart.prototype.makeGenerationLinesList = function(familyLines) {
 // Cause HTML elements to move to their new positions.
 RelationshipChart.prototype.setPositions = function() {
   let bottom = 0;
-  for (let p = 0; p < this.personBoxes.length; p++) {
-    let personBox = this.personBoxes[p];
+  for (let personBox of this.personBoxes) {
     if (personBox.hasMoved()) {
       personBox.setPosition();
     }
@@ -86,8 +82,7 @@ RelationshipChart.prototype.setPositions = function() {
       bottom = personBox.getBelow();
     }
   }
-  for (let f = 0; f < this.familyLines.length; f++) {
-    let familyLine = this.familyLines[f];
+  for (let familyLine of this.familyLines) {
     if (familyLine.hasMoved()) {
       familyLine.setPosition();
     }
@@ -106,8 +101,7 @@ RelationshipChart.prototype.calculatePositions = function() {
 
   this.prevHeight = this.height;
 
-  for (let p = 0; p < this.personBoxes.length; p++) {
-    let personBox = this.personBoxes[p];
+  for (let personBox of this.personBoxes) {
     personBox.setPreviousPosition();
     y += this.verticalGap + this.subtreeGap(prevBox, personBox);
     personBox.top = y;
@@ -125,8 +119,8 @@ RelationshipChart.prototype.calculatePositions = function() {
 
   // Get the new bottom of the graph
   y = 0;
-  for (let p = 0; p < this.personBoxes.length; p++) {
-    bottom = this.personBoxes[p].getBelow();
+  for (let personBox of this.personBoxes) {
+    bottom = personBox.getBelow();
     if (bottom > y) {
       y = bottom;
     }
@@ -157,8 +151,7 @@ RelationshipChart.prototype.calculatePositions = function() {
  */
 RelationshipChart.prototype.setPreviousPositions = function(prevRelChart) {
   let newPersons = new LinkedHashSet();
-  for (let p = 0; p < this.personBoxes.length; p++) {
-    let personBox = this.personBoxes[p];
+  for (personBox of this.personBoxes) {
     let prevPersonBox = prevRelChart.personBoxMap[personBox.personBoxId];
     if (prevPersonBox) {
       let prevLeft = prevPersonBox.prevLeft ? prevPersonBox.prevLeft : prevPersonBox.getLeft();
@@ -168,8 +161,7 @@ RelationshipChart.prototype.setPreviousPositions = function(prevRelChart) {
       newPersons.add(personBox.personNode.personId);
     }
   }
-  for (let f = 0; f < this.familyLines.length; f++) {
-    let familyLine = this.familyLines[f];
+  for (familyLine of this.familyLines) {
     let prevFamilyLine = prevRelChart.familyLineMap[familyLine.familyNode.familyId];
     if (prevFamilyLine) {
       let height = 1 + prevFamilyLine.bottomPerson.center - prevFamilyLine.topPerson.center;
@@ -244,6 +236,7 @@ function RelationshipChart(relGraph, $relChartDiv, shouldIncludeDetails, shouldC
   this.height = 0;
   this.prevHeight = 0; // height of chart before last update
   this.chartCompressor = new ChartCompressor(this);
+  this.includeConfidence = true;
 
   if (isEditable) {
     let relChart = this;

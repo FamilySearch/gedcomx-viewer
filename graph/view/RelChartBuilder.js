@@ -4,8 +4,8 @@
  */
 
 RelChartBuilder.prototype.resetRemainingPersons = function() {
-  for (let p = 0; p < this.relChart.relGraph.personNodes.length; p++) {
-    this.remainingPersonIds.add(this.relChart.relGraph.personNodes[p].personId);
+  for (let personNode of this.relChart.relGraph.personNodes) {
+    this.remainingPersonIds.add(personNode.personId);
   }
 };
 
@@ -53,8 +53,7 @@ RelChartBuilder.prototype.addSpouses = function(personBox, subtree, needsRelativ
   let spouseFamilies = personNode.spouseFamilies;
 
   if (!isEmpty(spouseFamilies)) {
-    for (let f = 0; f < spouseFamilies.length; f++) {
-      let spouseFamily = spouseFamilies[f];
+    for (let spouseFamily of spouseFamilies) {
       if (this.familyHasOnlyOnePerson(spouseFamily)) {
         continue; // don't bother creating family lines that will not connect anyone
       }
@@ -114,8 +113,7 @@ RelChartBuilder.prototype.addParents = function(personBox, subtree, needsRelativ
   let personNode = personBox.personNode;
   let parentFamilies = personNode.parentFamilies;
   if (parentFamilies) {
-    for (let f = 0; f < parentFamilies.length; f++) {
-      let parentFamily = parentFamilies[f];
+    for (let parentFamily of parentFamilies) {
       if (this.familyHasOnlyOnePerson(parentFamily)) {
         // skip "empty" families that don't relate multiple people together.
         continue;
@@ -148,8 +146,8 @@ RelChartBuilder.prototype.addParents = function(personBox, subtree, needsRelativ
           // Insert younger siblings below the person from youngest to oldest
           let youngerSiblingBoxes = [];
           for (let c = children.length - 1; c >= personPosition; c--) {
-            let child = children[c];
-            if (child === personNode) {
+            let youngerChild = children[c];
+            if (youngerChild === personNode) {
               throw "Error: person appears in child list twice.";
             }
             let siblingBox = this.insert(this.BELOW, personBox, child, personBox.generationIndex, null, parentFamilyLine, needsRelativesQueue, subtree);
@@ -244,8 +242,7 @@ RelChartBuilder.prototype.createGenerations = function(relChart) {
   function shiftGenerations(personBoxes) {
     // Map of subtree index to minimum generationIndex in that subtree.
     let minGeneration = {};
-    for (let p = 0; p < personBoxes.length; p++) {
-      let personBox = personBoxes[p];
+    for (let personBox of personBoxes) {
       let generationIndex = personBox.generationIndex;
       let minGenerationIndex = minGeneration[personBox.subtree];
       if (minGenerationIndex === undefined || personBox.generationIndex < minGenerationIndex) {
@@ -256,10 +253,8 @@ RelChartBuilder.prototype.createGenerations = function(relChart) {
 
     // Shift the generationIndex of all person boxes in each subtree so that each subtree begins at generation 0.
     let maxGeneration = 0;
-    for (let p = 0; p < personBoxes.length; p++) {
-      personBox = personBoxes[p];
-      minGenerationIndex = minGeneration[personBox.subtree];
-      personBox.generationIndex -= minGenerationIndex;
+    for (let personBox of personBoxes) {
+      personBox.generationIndex -= minGeneration[personBox.subtree];
       if (personBox.generationIndex > maxGeneration) {
         maxGeneration = personBox.generationIndex;
       }
@@ -277,8 +272,7 @@ RelChartBuilder.prototype.createGenerations = function(relChart) {
   function addPersonsToGenerations(personBoxes, generations) {
     let globalPosition = 0;
 
-    for (let p = 0; p < personBoxes.length; p++) {
-      let personBox = personBoxes[p];
+    for (let personBox of personBoxes) {
       personBox.order = globalPosition++; // set the global order of this person
       personBox.generation = generations[personBox.generationIndex];
       personBox.generation.genPersons.push(personBox);
@@ -287,12 +281,10 @@ RelChartBuilder.prototype.createGenerations = function(relChart) {
 
   function setGenerationPositions(generations) {
     // Set the genAbove/genBelow for each person within each generation
-    for (let g = 0; g < generations.length; g++) {
-      let generation = generations[g];
+    for (let generation of generations) {
       let aboveInGen = null;
       let generationPosition = 0;
-      for (let p = 0; p < generation.genPersons.length; p++) {
-        let personBox = generation.genPersons[p];
+      for (let personBox of generation.genPersons) {
         if (aboveInGen) {
           aboveInGen.genBelow = personBox;
           personBox.genAbove = aboveInGen;
@@ -325,8 +317,7 @@ RelChartBuilder.prototype.createGenerations = function(relChart) {
  */
 RelChartBuilder.prototype.setFamilyLineTopBottoms = function() {
   // For each FamilyLine, set the top person (to father or first child) and bottom person (to mother or last child).
-  for (let f = 0; f < this.relChart.familyLines.length; f++) {
-    let familyLine = this.relChart.familyLines[f];
+  for (let familyLine of this.relChart.familyLines) {
     familyLine.topPerson = familyLine.father ? familyLine.father : familyLine.children[0];
     familyLine.bottomPerson = familyLine.mother ? familyLine.mother : familyLine.children[familyLine.children.length - 1];
     let height = Math.max(familyLine.bottomPerson.center - familyLine.topPerson.center, 1);
@@ -446,8 +437,8 @@ RelChartBuilder.prototype.correlateHighlights = function(doc, relToGx, imgToGx) 
   function gatherGxIdMap2(gx, parentId, gxParentMap, personId, gxPersonMap) {
     if (gx) {
       if (Array.isArray(gx)) {
-        for (let i = 0; i < gx.length; i++) {
-          gatherGxIdMap2(gx[i], parentId, gxParentMap, personId, gxPersonMap);
+        for (let gxDoc of gx) {
+          gatherGxIdMap2(gxDoc, parentId, gxParentMap, personId, gxPersonMap);
         }
       }
       else {
@@ -467,14 +458,12 @@ RelChartBuilder.prototype.correlateHighlights = function(doc, relToGx, imgToGx) 
 
   function gatherGxParentMap(doc, gxParentMap, gxPersonMap) {
     if (doc.persons) {
-      for (let p = 0; p < doc.persons.length; p++) {
-        let person = doc.persons[p];
+      for (let person of doc.persons) {
         gatherGxIdMap2(person, doc.id, gxParentMap, person.id, gxPersonMap);
       }
     }
     if (doc.relationships) {
-      for (let r = 0; r < doc.relationships.length; r++) {
-        let rel = doc.relationships[r];
+      for (let rel of doc.relationships) {
         let personId = getPersonIdFromReference(rel.person1);
         gatherGxIdMap2(rel, doc.id, gxParentMap, personId, gxPersonMap);
       }
@@ -483,36 +472,35 @@ RelChartBuilder.prototype.correlateHighlights = function(doc, relToGx, imgToGx) 
 
   // Take a map of key->value and return a map of value->[keys], i.e., value to a list of keys that mapped to that value.
   function reverseMap(map) {
-    let reverseMap = {};
+    let reversedMap = {};
     for (let key in map) {
       if (map.hasOwnProperty(key)) {
         let value = map[key];
-        let list = reverseMap[value];
+        let list = reversedMap[value];
         if (!list) {
           list = [];
-          reverseMap[value] = list;
+          reversedMap[value] = list;
         }
         list.push(key);
       }
     }
-    return reverseMap;
+    return reversedMap;
   }
 
   function highlight(elements, myElement, elementsClass, myClass) {
     if (!isEmpty(highlightsToProcess)) {
       // Image viewer highlight elements don't exist when the graph is first being built, so wait until the first highlight is
       //  done before triggering that.
-      for (let h = 0; h < highlightsToProcess.length; h++) {
-        let x = highlightsToProcess[h];
-        $("#" + x.imgElement).hover(
-            function() {highlight(x.relElements, x.imgElement, "record-highlight", null);},
-            function() {unhighlight(x.relElements, x.imgElement, "record-highlight", null);});
+      for (let highlight of highlightsToProcess) {
+        $("#" + highlight.imgElement).hover(
+            function() {highlight(highlight.relElements, highlight.imgElement, "record-highlight", null);},
+            function() {unhighlight(highlight.relElements, highlight.imgElement, "record-highlight", null);});
       }
       highlightsToProcess = []; // now handled, so clear it.
     }
     if (elements) {
-      for (let i = 0; i < elements.length; i++) {
-        $("#" + elements[i]).addClass(elementsClass);
+      for (let element of elements) {
+        $("#" + element).addClass(elementsClass);
       }
       if (myClass) {
         $("#" + myElement).addClass(myClass);
@@ -522,8 +510,8 @@ RelChartBuilder.prototype.correlateHighlights = function(doc, relToGx, imgToGx) 
 
   function unhighlight(elements, myElement, elementsClass, myClass) {
     if (elements) {
-      for (let i = 0; i < elements.length; i++) {
-        $("#" + elements[i]).removeClass(elementsClass);
+      for (let element of elements) {
+        $("#" + element).removeClass(elementsClass);
       }
       if (myClass) {
         $("#" + myElement).removeClass(myClass);
@@ -562,8 +550,7 @@ RelChartBuilder.prototype.correlateHighlights = function(doc, relToGx, imgToGx) 
           highlightsToProcess.push({imgElement: imgElement, relElements: relElements});
           // Add this imgElement to the list of imgElements associated with each of these relElements, so
           //  we can do highlighting in the reverse direction.
-          for (let i = 0; i < relElements.length; i++) {
-            let relElement = relElements[i];
+          for (let relElement of relElements) {
             let imgElements = relToImg[relElement];
             if (!imgElements) {
               imgElements = [];

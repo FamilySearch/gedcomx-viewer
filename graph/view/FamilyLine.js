@@ -275,11 +275,9 @@ FamilyLine.prototype.setLineX = function(generationLines, x, lineGap) {
   if (!isEmpty(generationLines)) {
     // Array for each depth of the lines at that depth.
     let lineDepths = this.arrangeLines(generationLines);
-    for (let d = 0; d < lineDepths.length; d++) {
+    for (let linesAtDepth of lineDepths) {
       // Array of FamilyLines at the given depth.
-      let linesAtDepth = lineDepths[d];
-      for (let f = 0; f < linesAtDepth.length; f++) {
-        let familyLine = linesAtDepth[f];
+      for (let familyLine of linesAtDepth) {
         familyLine.x = x;
       }
       x += lineGap;

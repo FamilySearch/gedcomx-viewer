@@ -83,11 +83,9 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
     let html = "";
     let isFirstFullName = true;
     if (person.names) {
-      for (let n = 0; n < person.names.length; n++) {
-        let name = person.names[n];
+      for (let name of person.names) {
         if (name.nameForms) {
-          for (let f = 0; f < name.nameForms.length; f++) {
-            let form = name.nameForms[f];
+          for (let form of name.nameForms) {
             if (form.fullText) {
               let elementId = nextId("name", relChartToGx, name);
               html += "  <span class='" + (isFirstFullName ? "fullName" : "altName") + "' id='" + elementId + "'>" + encode(form.fullText) + "</span>";
@@ -96,6 +94,9 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
                 html += "<span class='" + (isPrincipal ? "isPrincipal" : "notPrincipal") + " toolTip'>" + (isPrincipal ? "*" : " ") +
                     "<span class='toolTipText'>" + (isPrincipal ? "Principal" : "Not principal") + "</span></span>";
               }
+              // if (relChart.includeConfidence && name.confidence) {
+              //   html += " <span class=confidence>[" + extractConfidence(name.confidence) + "%]</span>";
+              // }
               html += "<br/>\n";
 
               if (isFirstFullName) {
@@ -111,6 +112,10 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
       html += "  <span class='fullName main Name'>" + encode("?") + "</span>\n";
     }
     return html;
+  }
+
+  function extractConfidence(confidenceUri) {
+    return confidenceUrl.replace(/.*\//, "");
   }
 
   // Get the 'type' of the fact, strip off the URI path up to the last slash (/),
@@ -196,8 +201,8 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
     if (factsContainer) {
       let facts = factsContainer.facts;
       if (facts) {
-        for (let f = 0; f < facts.length; f++) {
-          html += getFactHtml(facts[f], prefix);
+        for (let fact of facts) {
+          html += getFactHtml(fact, prefix);
         }
       }
     }
@@ -213,8 +218,7 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
   function hasMultipleParents(parentFamilies, countFathers) {
     if (parentFamilies && parentFamilies.length > 1) {
       let firstParentId = null;
-      for (let p = 0; p < parentFamilies.length; p++) {
-        let parentFamilyNode = parentFamilies[p];
+      for (let parentFamilyNode of parentFamilies) {
         let parentNode = countFathers ? parentFamilyNode.father : parentFamilyNode.mother;
         if (parentNode) {
           if (!firstParentId) {
@@ -232,8 +236,7 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
   function hasMultipleSpouses(personNode, spouseFamilies) {
     if (spouseFamilies && spouseFamilies.length > 1) {
       let firstSpouseId = null;
-      for (let f = 0; f < spouseFamilies.length; f++) {
-        let spouseFamily = spouseFamilies[f];
+      for (let spouseFamily of spouseFamilies) {
         let spouseNode = spouseFamily.getSpouse(personNode);
         if (spouseNode) {
           if (!firstSpouseId) {
@@ -262,8 +265,7 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
     // Add marriage and other couple facts for spouse families.
     if (!isEmpty(personNode.spouseFamilies)) {
       let multipleSpouses = hasMultipleSpouses(personNode, personNode.spouseFamilies);
-      for (let s = 0; s < personNode.spouseFamilies.length; s++) {
-        let spouseFamilyNode = personNode.spouseFamilies[s];
+      for (let spouseFamilyNode of personNode.spouseFamilies) {
         //  Only show couple facts on the father, since they would be redundant on the mother.
         //  A spouse FamilyNode that does not have both a father and a mother will not have a couple relationship with it, and will thus have no facts.
         if (spouseFamilyNode.father === personNode) {
@@ -276,8 +278,7 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
     if (!isEmpty(personNode.parentFamilies)) {
       let multipleFathers = hasMultipleFathers(personNode.parentFamilies);
       let multipleMothers = hasMultipleMothers(personNode.parentFamilies);
-      for (let p = 0; p < personNode.parentFamilies.length; p++) {
-        let parentFamilyNode = personNode.parentFamilies[p];
+      for (let parentFamilyNode of  personNode.parentFamilies) {
         // Find the index of this person in the list of children.
         let c = parentFamilyNode.findChildIndex(personNode);
         let fatherRel = parentFamilyNode.fatherRels[c];
@@ -291,8 +292,7 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
 
   function addRelativeDivs(person) {
     let html = "";
-    for (let r = 0; r < person.relatives.length; r++) {
-      let relative = person.relatives[r];
+    for (let relative of person.relatives) {
       let relativeLabel = relative.label;
       let relativeName = relative.personNode.getFirstFullName();
       html += "  <div class='relative'><span class='relativeType'>" + encode(relativeLabel) + ":" + "</span>" +
