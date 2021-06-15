@@ -247,7 +247,7 @@ FamilyLine.prototype.arrangeLines = function(lines) {
   // Array of lists of lines at each depth, starting at 0
   let depthLines = [];
   for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
-    depth = lineDepthMap[lineIndex];
+    let depth = lineDepthMap[lineIndex];
     // List of lines at this depth
     let list = depthLines[depth];
     if (!list) {
@@ -343,7 +343,7 @@ function FamilyLine(relChart, familyNode, $familyLinesDiv) {
     this.$familyLineDiv.click(function(e) {
       thisFamilyLine.toggleFamilyLine(e);
     });
-    // Allow a person box to be able to receive a drag & drop event.
+    // Allow a family line to be able to receive a drag & drop event.
     this.$familyLineDrop = $("#" + familyNode.familyId + "-drop");
     this.$familyLineDrop.droppable({
       hoverClass: "familyDropHover",

@@ -150,7 +150,7 @@ RelChartBuilder.prototype.addParents = function(personBox, subtree, needsRelativ
             if (youngerChild === personNode) {
               throw "Error: person appears in child list twice.";
             }
-            let siblingBox = this.insert(this.BELOW, personBox, child, personBox.generationIndex, null, parentFamilyLine, needsRelativesQueue, subtree);
+            let siblingBox = this.insert(this.BELOW, personBox, youngerChild, personBox.generationIndex, null, parentFamilyLine, needsRelativesQueue, subtree);
             youngerSiblingBoxes.push(siblingBox);
           }
           // Add younger siblings to the family line from oldest to youngest so that the child list is in order
@@ -410,13 +410,11 @@ RelChartBuilder.prototype.insertBelow = function(origPerson, newPerson, generati
  *   Adds all of the persons from the relationship graph to 'remaining', beginning with the first person flagged as primary, or else the first person.
  * @param relGraph - relationship graph to build a chart for
  * @param $relChartDiv - JQuery object for the div that the chart goes in.
- * @param shouldIncludeDetails - Whether to include alternate names and facts in the chart initially.
- * @param shouldCompress - Whether to do collapsing initially.
- * @param isEditable - Flag for whether to include GedcomX editing functionality.
+ * @param chartOptions - ChartOptions object (see ChartOptions.js)
  */
-function RelChartBuilder(relGraph, $relChartDiv, shouldIncludeDetails, shouldCompress, isEditable) {
+function RelChartBuilder(relGraph, $relChartDiv, chartOptions) {
   // Create a chart with PersonBoxes created, but no FamilyLines or Generations yet.
-  this.relChart = new RelationshipChart(relGraph, $relChartDiv, shouldIncludeDetails, shouldCompress, isEditable);
+  this.relChart = new RelationshipChart(relGraph, $relChartDiv, chartOptions);
   this.ABOVE = true;
   this.BELOW = false;
   // Set of personIds remaining to be added to the chart.
@@ -434,11 +432,11 @@ function RelChartBuilder(relGraph, $relChartDiv, shouldIncludeDetails, shouldCom
  */
 RelChartBuilder.prototype.correlateHighlights = function(doc, relToGx, imgToGx) {
 
-  function gatherGxIdMap2(gx, parentId, gxParentMap, personId, gxPersonMap) {
+  function gatherGxIdMap2(gx, parentId, personId) {
     if (gx) {
       if (Array.isArray(gx)) {
         for (let gxDoc of gx) {
-          gatherGxIdMap2(gxDoc, parentId, gxParentMap, personId, gxPersonMap);
+          gatherGxIdMap2(gxDoc, parentId, personId);
         }
       }
       else {
@@ -449,23 +447,23 @@ RelChartBuilder.prototype.correlateHighlights = function(doc, relToGx, imgToGx) 
         }
         for (let child in gx) {
           if (gx.hasOwnProperty(child) && typeof gx[child] == "object") {
-            gatherGxIdMap2(gx[child], parentId, gxParentMap, personId, gxPersonMap);
+            gatherGxIdMap2(gx[child], parentId, personId);
           }
         }
       }
     }
   }
 
-  function gatherGxParentMap(doc, gxParentMap, gxPersonMap) {
-    if (doc.persons) {
-      for (let person of doc.persons) {
-        gatherGxIdMap2(person, doc.id, gxParentMap, person.id, gxPersonMap);
+  function gatherGxParentMap(gxDoc) {
+    if (gxDoc.persons) {
+      for (let person of gxDoc.persons) {
+        gatherGxIdMap2(person, gxDoc.id, person.id);
       }
     }
-    if (doc.relationships) {
-      for (let rel of doc.relationships) {
+    if (gxDoc.relationships) {
+      for (let rel of gxDoc.relationships) {
         let personId = getPersonIdFromReference(rel.person1);
-        gatherGxIdMap2(rel, doc.id, gxParentMap, personId, gxPersonMap);
+        gatherGxIdMap2(rel, gxDoc.id, personId);
       }
     }
   }
@@ -491,10 +489,10 @@ RelChartBuilder.prototype.correlateHighlights = function(doc, relToGx, imgToGx) 
     if (!isEmpty(highlightsToProcess)) {
       // Image viewer highlight elements don't exist when the graph is first being built, so wait until the first highlight is
       //  done before triggering that.
-      for (let highlight of highlightsToProcess) {
-        $("#" + highlight.imgElement).hover(
-            function() {highlight(highlight.relElements, highlight.imgElement, "record-highlight", null);},
-            function() {unhighlight(highlight.relElements, highlight.imgElement, "record-highlight", null);});
+      for (let h of highlightsToProcess) {
+        $("#" + h.imgElement).hover(
+            function() {h(h.relElements, h.imgElement, "record-highlight", null);},
+            function() {unhighlight(h.relElements, h.imgElement, "record-highlight", null);});
       }
       highlightsToProcess = []; // now handled, so clear it.
     }
@@ -523,11 +521,11 @@ RelChartBuilder.prototype.correlateHighlights = function(doc, relToGx, imgToGx) 
   // correlateHighlights(doc, relToGx, imgToGx)===
   let gxParentMap = {}; // map of gx object id to parent (or ancestor) gx object id in hierarchy.
   let gxPersonMap = {}; // map of gx object id to person it is inside of. (or the p1 of a relationship it is inside of).
-  gatherGxParentMap(doc, gxParentMap, gxPersonMap);
+  gatherGxParentMap(doc);
 
-  let gxToImg = reverseMap(imgToGx); // map of gx object id to array of image overlay element ids that came from that object.
+  // let gxToImg = reverseMap(imgToGx); // map of gx object id to array of image overlay element ids that came from that object.
   let gxToRel = reverseMap(relToGx); // map of gx object id to array of relationship graph element ids that came from that object.
-  let personToGx = reverseMap(gxPersonMap); // map of personId to list of gx object ids within that person
+  // let personToGx = reverseMap(gxPersonMap); // map of personId to list of gx object ids within that person
   let relToImg = {}; // map of relGraph element to array of imgElements that were found to associate with it.
 
   // For each image overlay HTML element, find the gx object it goes with; then find the corresponding list of relationship graph elements

@@ -126,11 +126,10 @@ function addChildren(graph) {
   // get a map of childId -> array of parent IDs.
   let parentMap = getParentMap(graph);
 
-  for (let personIndex = 0; personIndex < graph.personNodes.length; personIndex++) {
+  for (let childNode of graph.personNodes) {
     // For each person, get their list of parents. For each parent, see if there is a FamilyNode with that parent and any other in the list.
     // If so, add this person as a child to that family, and remove both parents from the list.
     // If not, find or create a single-parent family with that parent and add this child to it.
-    let childNode = graph.personNodes[personIndex];
     // Array of objects with {personId, parentChildRelationship}
     let parentIdsAndRels = parentMap[childNode.personId];
     if (parentIdsAndRels && parentIdsAndRels.length > 0) {
@@ -274,8 +273,7 @@ function getRelativeLabel(gender, maleType, femaleType, neutralType, isReverse, 
 
 function addOtherRelationshipsToPersonNodes(graph) {
   if (graph.gx.relationships) {
-    for (let r = 0; r < graph.gx.relationships.length; r++) {
-      let rel = graph.gx.relationships[r];
+    for (let rel of graph.gx.relationships) {
       if (rel.type !== GX_COUPLE  && rel.type !== GX_PARENT_CHILD) {
         // Other relationship type: We will not use it to display the relationship graph, but do want to include it as a "relative" in the PersonBox.
         let pid1 = getPersonIdFromReference(rel.person1);

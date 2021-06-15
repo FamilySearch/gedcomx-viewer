@@ -49,19 +49,19 @@ let currentRelChart;
 function undoGraph() {
   if (gedcomxChangePosition > 1) {
     let gx = gedcomxChangeHistory[--gedcomxChangePosition - 1];
-    buildGraph(gx, true, currentRelChart, true);
+    buildGraph(gx, prevRelChartOptions(currentRelChart));
   }
 }
 
 function redoGraph() {
   if (gedcomxChangePosition < gedcomxChangeHistory.length) {
     let gx = gedcomxChangeHistory[gedcomxChangePosition++];
-    buildGraph(gx, true, currentRelChart, true);
+    buildGraph(gx, prevRelChartOptions(currentRelChart));
   }
 }
 
 /**
- *
+ * Create a RelationshipGraph, construct from that a RelationshipChart, and return it.
  * @param gx - GedcomX document to visualize
  * @param isEditable - Flag for whether to include edit controls (requires JQuery UI dependency)
  * @param prevChart - Previous RelationshipChart object to use to get initial positions for corresponding PersonBox and FamilyLine elements.
@@ -71,13 +71,23 @@ function redoGraph() {
  * @returns {RelationshipChart}
  */
 function buildGraph(gx, isEditable, prevChart, ignoreUndo, imgOverlayToGx, isDraggable) {
-  if (!imgOverlayToGx && prevChart) {
-    imgOverlayToGx = prevChart.imgOverlayToGx; // in case this is non-null.
+  return buildRelGraph(gx, new ChartOptions({}));
+}
+
+/**
+ * Create a RelationshipGraph, construct from that a RelationshipChart, and return it.
+ * @param gx - GedcomX document to visualize
+ * @param chartOptions - ChartOptions object
+ * @returns {RelationshipChart}
+ */
+function buildRelGraph(gx, chartOptions) {
+  if (!chartOptions.imgOverlayToGx && chartOptions.prevChart) {
+    chartOptions.imgOverlayToGx = chartOptions.prevChart.imgOverlayToGx; // in case this is non-null.
   }
   try {
-    let graph = new RelationshipGraph(gx, prevChart ? prevChart.chartId : null);
+    let graph = new RelationshipGraph(gx, chartOptions.prevChart ? chartOptions.prevChart.chartId : null);
     let $relChartDiv = $("#rel-chart");
-    if (isEditable && !ignoreUndo) {
+    if (chartOptions.isEditable && !chartOptions.ignoreUndo) {
       gedcomxChangeHistory[gedcomxChangePosition++] = JSON.parse(JSON.stringify(gx));
       if (gedcomxChangePosition < gedcomxChangeHistory.length) {
         // Did a change after doing multiple "undos". So ignore the rest of the change history.
@@ -85,40 +95,42 @@ function buildGraph(gx, isEditable, prevChart, ignoreUndo, imgOverlayToGx, isDra
       }
     }
     if (!currentRelChart) {
-      $(document).keydown(function (e) {
-        let key = String.fromCharCode(e.which || e.keyCode);  // These are deprecated, but I couldn't figure out what else I was supposed to use
-        if (e.ctrlKey || e.metaKey) {
-          // Handle ctrl/cmd keypress
-          if ((key === 'Z' && e.shiftKey) || key === 'Y') {
-            // Ctrl/Cmd-shift Z or Cmd-Y => Redo
-            redoGraph();
-            e.stopPropagation();
-          }
-          else if (key === 'Z') { // lower-case z, no shift
-            // Ctrl/Cmd-Z => Undo
-            undoGraph();
-            e.stopPropagation();
-          }
-        }
-        else if (key === 'R') {
-          if (currentRelChart) {
-            let gx = currentRelChart.getGedcomX();
-            removeRedundantRelationships(gx);
-            e.stopPropagation();
-          }
-        }
-      });
+      $(document).keydown(handleKeypress);
     }
-    currentRelChart = new RelChartBuilder(graph, $relChartDiv, true, true, isEditable).buildChart(prevChart, imgOverlayToGx);
+    currentRelChart = new RelChartBuilder(graph, $relChartDiv, chartOptions).buildChart(chartOptions.prevChart, chartOptions.imgOverlayToGx);
     $relChartDiv.width(currentRelChart.width);
     $relChartDiv.height(currentRelChart.height);
-    if (isDraggable) {
+    if (chartOptions.isDraggable) {
       $relChartDiv.draggable();
     }
     return currentRelChart;
   }
   catch (err) {
     console.log(err);
+  }
+}
+
+function handleKeypress(e) {
+  let key = String.fromCharCode(e.which || e.keyCode);  // These are deprecated, but I couldn't figure out what else I was supposed to use
+  if (e.ctrlKey || e.metaKey) {
+    // Handle ctrl/cmd keypress
+    if ((key === 'Z' && e.shiftKey) || key === 'Y') {
+      // Ctrl/Cmd-shift Z or Cmd-Y => Redo
+      redoGraph();
+      e.stopPropagation();
+    }
+    else if (key === 'Z') { // lower-case z, no shift
+      // Ctrl/Cmd-Z => Undo
+      undoGraph();
+      e.stopPropagation();
+    }
+  }
+  else if (key === 'R') {
+    if (currentRelChart) {
+      let currentGx = currentRelChart.getGedcomX();
+      removeRedundantRelationships(currentGx);
+      e.stopPropagation();
+    }
   }
 }
 

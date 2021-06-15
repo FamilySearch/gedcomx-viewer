@@ -48,7 +48,7 @@
         dataType: "json",
         url: url,
         success:function(sampleGx){
-          currentRelChart = buildGraph(sampleGx, true);
+          currentRelChart = buildRelGraph(sampleGx, new ChartOptions({isEditable: true, shouldShowConfidence: true, shouldDisplayIds: true}));
         }
       });
       // $.getJSON(url, {format: "json"}, function(sampleGx){
@@ -67,7 +67,7 @@
      * @param doc - GedcomX document to rebuild the chart with.
      */
     function updateRecord(doc) {
-      currentRelChart = buildGraph(doc, true, currentRelChart);
+      currentRelChart = buildRelGraph(doc, prevRelChartOptions(currentRelChart));
     }
   </script>
 </body>

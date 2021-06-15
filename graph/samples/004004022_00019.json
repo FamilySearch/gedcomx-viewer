@@ -1,0 +1,873 @@
+{
+  "id" : "r1",
+  "attribution" : {
+    "contributor" : {
+      "resource" : "fs:AutomatedContentExtraction"
+    },
+    "created" : 1623244428945
+  },
+  "description" : "#src_r1",
+  "persons" : [ {
+    "id" : "r1p1",
+    "gender" : {
+      "type" : "http://gedcomx.org/Male",
+      "fields" : [ {
+        "type" : "http://gedcomx.org/Gender",
+        "values" : [ {
+          "type" : "http://gedcomx.org/Interpreted",
+          "labelId" : "PR_SEX_CODE",
+          "text" : "Male"
+        } ]
+      } ]
+    },
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://familysearch.org/ark:/61903/1:1:6ZR4-WKKG" ]
+    },
+    "names" : [ {
+      "confidence" : "http://confidence/100",
+      "nameForms" : [ {
+        "fullText" : "Manuel",
+        "parts" : [ {
+          "type" : "http://gedcomx.org/Given",
+          "value" : "Manuel",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Given",
+            "sources" : [ {
+              "description" : "#src_image_P19",
+              "descriptionId" : "src_image_P19",
+              "qualifiers" : [ {
+                "value" : "0.165625,0.12669574,0.190625,0.15406977",
+                "name" : "http://gedcomx.org/RectangleRegion"
+              }, {
+                "value" : "0.48691407,0.1128876,0.50097656,0.13129845",
+                "name" : "http://gedcomx.org/RectangleRegion"
+              }, {
+                "value" : "0.50097656,0.1128876,0.50253904,0.13129845",
+                "name" : "http://gedcomx.org/RectangleRegion"
+              } ]
+            } ],
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_GN_ORIG",
+              "text" : "Ma-\nnuel"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_GN",
+              "text" : "Manuel"
+            } ]
+          } ]
+        } ],
+        "fields" : [ {
+          "type" : "http://gedcomx.org/Name",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Original",
+            "labelId" : "PR_NAME_ORIG",
+            "text" : "Manuel"
+          }, {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_NAME",
+            "text" : "Manuel"
+          } ]
+        } ]
+      } ]
+    } ]
+  }, {
+    "id" : "r1p2",
+    "principal" : true,
+    "gender" : {
+      "type" : "http://gedcomx.org/Male",
+      "fields" : [ {
+        "type" : "http://gedcomx.org/Gender",
+        "values" : [ {
+          "type" : "http://gedcomx.org/Interpreted",
+          "labelId" : "PR_SEX_CODE",
+          "text" : "Male"
+        } ]
+      } ]
+    },
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://familysearch.org/ark:/61903/1:1:6ZR4-WKKP" ]
+    },
+    "names" : [ {
+      "confidence" : "http://confidence/100",
+      "nameForms" : [ {
+        "fullText" : "José de la Rosa",
+        "parts" : [ {
+          "type" : "http://gedcomx.org/Given",
+          "value" : "José de la Rosa",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Given",
+            "sources" : [ {
+              "description" : "#src_image_P19",
+              "descriptionId" : "src_image_P19",
+              "qualifiers" : [ {
+                "value" : "0.23339844,0.14801356,0.25683594,0.1703004",
+                "name" : "http://gedcomx.org/RectangleRegion"
+              }, {
+                "value" : "0.26308593,0.14801356,0.26933593,0.1703004",
+                "name" : "http://gedcomx.org/RectangleRegion"
+              }, {
+                "value" : "0.27402344,0.14801356,0.28652343,0.1703004",
+                "name" : "http://gedcomx.org/RectangleRegion"
+              }, {
+                "value" : "0.29589844,0.14801356,0.32246095,0.1703004",
+                "name" : "http://gedcomx.org/RectangleRegion"
+              } ]
+            } ],
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_GN_ORIG",
+              "text" : "José de la Rosa"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_GN",
+              "text" : "José de la Rosa"
+            } ]
+          } ]
+        } ],
+        "fields" : [ {
+          "type" : "http://gedcomx.org/Name",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Original",
+            "labelId" : "PR_NAME_ORIG",
+            "text" : "José de la Rosa"
+          }, {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_NAME",
+            "text" : "José de la Rosa"
+          } ]
+        } ]
+      } ]
+    } ],
+    "facts" : [ {
+      "type" : "http://gedcomx.org/Birth",
+      "date" : {
+        "original" : "1861",
+        "confidence" : "http://confidence/90",
+        "fields" : [ {
+          "type" : "http://gedcomx.org/Date",
+          "sources" : [ {
+            "description" : "#src_image_P19",
+            "descriptionId" : "src_image_P19",
+            "qualifiers" : [ {
+              "value" : "0.34277344,0.14801356,0.36621094,0.1703004",
+              "name" : "http://gedcomx.org/RectangleRegion"
+            }, {
+              "value" : "0.41933593,0.14801356,0.44433594,0.1703004",
+              "name" : "http://gedcomx.org/RectangleRegion"
+            }, {
+              "value" : "0.36933595,0.14801356,0.37089843,0.1703004",
+              "name" : "http://gedcomx.org/RectangleRegion"
+            }, {
+              "value" : "0.37714845,0.14801356,0.41464844,0.1703004",
+              "name" : "http://gedcomx.org/RectangleRegion"
+            } ]
+          } ],
+          "values" : [ {
+            "type" : "http://gedcomx.org/Original",
+            "labelId" : "PR_BIR_DATE_ORIG",
+            "text" : "diez y nueve días"
+          }, {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_BIR_DATE",
+            "text" : "1861",
+            "resource" : "+1861"
+          } ]
+        } ]
+      },
+      "fields" : [ {
+        "type" : "http://familysearch.org/types/fields/EventType",
+        "values" : [ {
+          "type" : "http://gedcomx.org/Original",
+          "labelId" : "PR_BIR_TYPE_ORIG",
+          "text" : "Birth"
+        }, {
+          "type" : "http://gedcomx.org/Interpreted",
+          "labelId" : "PR_BIR_TYPE",
+          "text" : "Birth"
+        } ]
+      } ]
+    }, {
+      "type" : "http://gedcomx.org/Christening",
+      "date" : {
+        "original" : "1861",
+        "confidence" : "http://confidence/30",
+        "fields" : [ {
+          "type" : "http://gedcomx.org/Date",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "EVENT_DATE",
+            "text" : "1861"
+          } ]
+        } ]
+      },
+      "place" : {
+        "original" : "Chincha Baja, Chincha, Ica, Perú",
+        "confidence" : "http://confidence/100",
+        "fields" : [ {
+          "type" : "http://gedcomx.org/Place",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "EVENT_PLACE",
+            "text" : "Chincha Baja, Chincha, Ica, Perú"
+          } ]
+        } ]
+      },
+      "primary" : true,
+      "fields" : [ {
+        "type" : "http://familysearch.org/types/fields/EventType",
+        "values" : [ {
+          "type" : "http://gedcomx.org/Interpreted",
+          "labelId" : "EVENT_TYPE",
+          "text" : "Christening"
+        } ]
+      } ]
+    } ]
+  }, {
+    "id" : "r1p3",
+    "gender" : {
+      "type" : "http://gedcomx.org/Male",
+      "fields" : [ {
+        "type" : "http://gedcomx.org/Gender",
+        "values" : [ {
+          "type" : "http://gedcomx.org/Interpreted",
+          "labelId" : "PR_SEX_CODE",
+          "text" : "Male"
+        } ]
+      } ]
+    },
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://familysearch.org/ark:/61903/1:1:6ZR4-WKK5" ]
+    },
+    "names" : [ {
+      "confidence" : "http://confidence/100",
+      "nameForms" : [ {
+        "fullText" : "Estanislao Matías Carrillo",
+        "parts" : [ {
+          "type" : "http://gedcomx.org/Given",
+          "value" : "Estanislao",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Given",
+            "sources" : [ {
+              "description" : "#src_image_P19",
+              "descriptionId" : "src_image_P19",
+              "qualifiers" : [ {
+                "value" : "0.17910156,0.16521318,0.24160156,0.19210272",
+                "name" : "http://gedcomx.org/RectangleRegion"
+              } ]
+            } ],
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_GN_ORIG",
+              "text" : "Estanislao"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_GN",
+              "text" : "Estanislao"
+            } ]
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/Surname",
+          "value" : "Matías Carrillo",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Surname",
+            "sources" : [ {
+              "description" : "#src_image_P19",
+              "descriptionId" : "src_image_P19",
+              "qualifiers" : [ {
+                "value" : "0.24921875,0.16521318,0.28671876,0.19210272",
+                "name" : "http://gedcomx.org/RectangleRegion"
+              }, {
+                "value" : "0.29453126,0.16521318,0.33984375,0.19210272",
+                "name" : "http://gedcomx.org/RectangleRegion"
+              } ]
+            } ],
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_SURN_ORIG",
+              "text" : "Matias Carrillo"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_SURN",
+              "text" : "Matías Carrillo"
+            } ]
+          } ]
+        } ],
+        "fields" : [ {
+          "type" : "http://gedcomx.org/Name",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Original",
+            "labelId" : "PR_NAME_ORIG",
+            "text" : "Estanislao Matías Carrillo"
+          }, {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_NAME",
+            "text" : "Estanislao Matías Carrillo"
+          } ]
+        } ]
+      } ]
+    } ]
+  }, {
+    "id" : "r1p4",
+    "gender" : {
+      "type" : "http://gedcomx.org/Female",
+      "fields" : [ {
+        "type" : "http://gedcomx.org/Gender",
+        "values" : [ {
+          "type" : "http://gedcomx.org/Interpreted",
+          "labelId" : "PR_SEX_CODE",
+          "text" : "Female"
+        } ]
+      } ]
+    },
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://familysearch.org/ark:/61903/1:1:6ZR4-WKKR" ]
+    },
+    "names" : [ {
+      "confidence" : "http://confidence/100",
+      "nameForms" : [ {
+        "fullText" : "Josefa Guadalupe Ca",
+        "parts" : [ {
+          "type" : "http://gedcomx.org/Given",
+          "value" : "Josefa Guadalupe Ca",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Given",
+            "sources" : [ {
+              "description" : "#src_image_P19",
+              "descriptionId" : "src_image_P19",
+              "qualifiers" : [ {
+                "value" : "0.36796874,0.16521318,0.40390626,0.19210272",
+                "name" : "http://gedcomx.org/RectangleRegion"
+              }, {
+                "value" : "0.41171876,0.16521318,0.47871095,0.19210272",
+                "name" : "http://gedcomx.org/RectangleRegion"
+              }, {
+                "value" : "0.48339844,0.16521318,0.50214845,0.19210272",
+                "name" : "http://gedcomx.org/RectangleRegion"
+              } ]
+            } ],
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_GN_ORIG",
+              "text" : "Josefa Guadalupe Ca"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_GN",
+              "text" : "Josefa Guadalupe Ca"
+            } ]
+          } ]
+        } ],
+        "fields" : [ {
+          "type" : "http://gedcomx.org/Name",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Original",
+            "labelId" : "PR_NAME_ORIG",
+            "text" : "Josefa Guadalupe Ca"
+          }, {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_NAME",
+            "text" : "Josefa Guadalupe Ca"
+          } ]
+        } ]
+      } ]
+    } ]
+  }, {
+    "id" : "r1p5",
+    "gender" : {
+      "type" : "http://gedcomx.org/Male",
+      "fields" : [ {
+        "type" : "http://gedcomx.org/Gender",
+        "values" : [ {
+          "type" : "http://gedcomx.org/Interpreted",
+          "labelId" : "PR_SEX_CODE",
+          "text" : "Male"
+        } ]
+      } ]
+    },
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://familysearch.org/ark:/61903/1:1:6ZR4-WKKT" ]
+    },
+    "names" : [ {
+      "confidence" : "http://confidence/100",
+      "nameForms" : [ {
+        "fullText" : "Diego Carrillo",
+        "parts" : [ {
+          "type" : "http://gedcomx.org/Given",
+          "value" : "Diego",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Given",
+            "sources" : [ {
+              "description" : "#src_image_P19",
+              "descriptionId" : "src_image_P19",
+              "qualifiers" : [ {
+                "value" : "0.21640626,0.1875,0.24453124,0.20930232",
+                "name" : "http://gedcomx.org/RectangleRegion"
+              } ]
+            } ],
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_GN_ORIG",
+              "text" : "Diego"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_GN",
+              "text" : "Diego"
+            } ]
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/Surname",
+          "value" : "Carrillo",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Surname",
+            "sources" : [ {
+              "description" : "#src_image_P19",
+              "descriptionId" : "src_image_P19",
+              "qualifiers" : [ {
+                "value" : "0.25078124,0.1875,0.29746094,0.20930232",
+                "name" : "http://gedcomx.org/RectangleRegion"
+              } ]
+            } ],
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_SURN_ORIG",
+              "text" : "Carrillo"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_SURN",
+              "text" : "Carrillo"
+            } ]
+          } ]
+        } ],
+        "fields" : [ {
+          "type" : "http://gedcomx.org/Name",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Original",
+            "labelId" : "PR_NAME_ORIG",
+            "text" : "Diego Carrillo"
+          }, {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_NAME",
+            "text" : "Diego Carrillo"
+          } ]
+        } ]
+      } ]
+    } ],
+    "facts" : [ {
+      "type" : "http://gedcomx.org/Occupation",
+      "value" : "rrillo P.",
+      "fields" : [ {
+        "type" : "http://gedcomx.org/Occupation",
+        "sources" : [ {
+          "description" : "#src_image_P19",
+          "descriptionId" : "src_image_P19",
+          "qualifiers" : [ {
+            "value" : "0.16503906,0.1875,0.19921875,0.20930232",
+            "name" : "http://gedcomx.org/RectangleRegion"
+          }, {
+            "value" : "0.20390625,0.1875,0.21171875,0.20930232",
+            "name" : "http://gedcomx.org/RectangleRegion"
+          } ]
+        } ],
+        "values" : [ {
+          "type" : "http://gedcomx.org/Original",
+          "labelId" : "PR_OCCUPATION_ORIG",
+          "text" : "rrillo P."
+        } ]
+      } ]
+    } ]
+  }, {
+    "id" : "r1p6",
+    "gender" : {
+      "type" : "http://gedcomx.org/Male",
+      "fields" : [ {
+        "type" : "http://gedcomx.org/Gender",
+        "values" : [ {
+          "type" : "http://gedcomx.org/Interpreted",
+          "labelId" : "PR_SEX_CODE",
+          "text" : "Male"
+        } ]
+      } ]
+    },
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://familysearch.org/ark:/61903/1:1:6ZR4-WKKY" ]
+    },
+    "names" : [ {
+      "confidence" : "http://confidence/100",
+      "nameForms" : [ {
+        "fullText" : "Pedro José Carrillo",
+        "parts" : [ {
+          "type" : "http://gedcomx.org/Given",
+          "value" : "Pedro José",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Given",
+            "sources" : [ {
+              "description" : "#src_image_P19",
+              "descriptionId" : "src_image_P19",
+              "qualifiers" : [ {
+                "value" : "0.34882814,0.1875,0.38007814,0.20930232",
+                "name" : "http://gedcomx.org/RectangleRegion"
+              }, {
+                "value" : "0.38789064,0.1875,0.41269532,0.20930232",
+                "name" : "http://gedcomx.org/RectangleRegion"
+              } ]
+            } ],
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_GN_ORIG",
+              "text" : "Pedro Jose"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_GN",
+              "text" : "Pedro José"
+            } ]
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/Surname",
+          "value" : "Carrillo",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Surname",
+            "sources" : [ {
+              "description" : "#src_image_P19",
+              "descriptionId" : "src_image_P19",
+              "qualifiers" : [ {
+                "value" : "0.42050782,0.1875,0.4734375,0.20930232",
+                "name" : "http://gedcomx.org/RectangleRegion"
+              } ]
+            } ],
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_SURN_ORIG",
+              "text" : "Carrillo"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_SURN",
+              "text" : "Carrillo"
+            } ]
+          } ]
+        } ],
+        "fields" : [ {
+          "type" : "http://gedcomx.org/Name",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Original",
+            "labelId" : "PR_NAME_ORIG",
+            "text" : "Pedro José Carrillo"
+          }, {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_NAME",
+            "text" : "Pedro José Carrillo"
+          } ]
+        } ]
+      } ]
+    } ]
+  }, {
+    "id" : "r1p7",
+    "gender" : {
+      "type" : "http://gedcomx.org/Male",
+      "fields" : [ {
+        "type" : "http://gedcomx.org/Gender",
+        "values" : [ {
+          "type" : "http://gedcomx.org/Interpreted",
+          "labelId" : "PR_SEX_CODE",
+          "text" : "Male"
+        } ]
+      } ]
+    },
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://familysearch.org/ark:/61903/1:1:6ZR4-WKKB" ]
+    },
+    "names" : [ {
+      "confidence" : "http://confidence/100",
+      "nameForms" : [ {
+        "fullText" : "Manuel María Pasos",
+        "parts" : [ {
+          "type" : "http://gedcomx.org/Given",
+          "value" : "Manuel",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Given",
+            "sources" : [ {
+              "description" : "#src_image_P19",
+              "descriptionId" : "src_image_P19",
+              "qualifiers" : [ {
+                "value" : "0.3951172,0.2051841,0.4201172,0.22335272",
+                "name" : "http://gedcomx.org/RectangleRegion"
+              } ]
+            } ],
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_GN_ORIG",
+              "text" : "Manl"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_GN",
+              "text" : "Manuel"
+            } ]
+          } ]
+        }, {
+          "type" : "http://gedcomx.org/Surname",
+          "value" : "María Pasos",
+          "fields" : [ {
+            "type" : "http://gedcomx.org/Surname",
+            "sources" : [ {
+              "description" : "#src_image_P19",
+              "descriptionId" : "src_image_P19",
+              "qualifiers" : [ {
+                "value" : "0.42617187,0.2051841,0.44023436,0.22335272",
+                "name" : "http://gedcomx.org/RectangleRegion"
+              }, {
+                "value" : "0.4464844,0.2051841,0.47597656,0.22335272",
+                "name" : "http://gedcomx.org/RectangleRegion"
+              } ]
+            } ],
+            "values" : [ {
+              "type" : "http://gedcomx.org/Original",
+              "labelId" : "PR_NAME_SURN_ORIG",
+              "text" : "Ma Pasos"
+            }, {
+              "type" : "http://gedcomx.org/Interpreted",
+              "labelId" : "PR_NAME_SURN",
+              "text" : "María Pasos"
+            } ]
+          } ]
+        } ],
+        "fields" : [ {
+          "type" : "http://gedcomx.org/Name",
+          "values" : [ {
+            "type" : "http://gedcomx.org/Original",
+            "labelId" : "PR_NAME_ORIG",
+            "text" : "Manuel María Pasos"
+          }, {
+            "type" : "http://gedcomx.org/Interpreted",
+            "labelId" : "PR_NAME",
+            "text" : "Manuel María Pasos"
+          } ]
+        } ]
+      } ]
+    } ]
+  } ],
+  "relationships" : [ {
+    "type" : "http://gedcomx.org/ParentChild",
+    "person1" : {
+      "resource" : "#r1p3",
+      "resourceId" : "r1p3"
+    },
+    "person2" : {
+      "resource" : "#r1p2",
+      "resourceId" : "r1p2"
+    },
+    "fields" : [ {
+      "type" : "http://familysearch.org/types/fields/RelativeType",
+      "sources" : [ {
+        "description" : "#src_image_P19",
+        "descriptionId" : "src_image_P19",
+        "qualifiers" : [ {
+          "value" : "0.16503906,0.16521318,0.17285156,0.19210272",
+          "name" : "http://gedcomx.org/RectangleRegion"
+        }, {
+          "value" : "0.45058593,0.14801356,0.47402343,0.1703004",
+          "name" : "http://gedcomx.org/RectangleRegion"
+        }, {
+          "value" : "0.48183593,0.14801356,0.49433595,0.1703004",
+          "name" : "http://gedcomx.org/RectangleRegion"
+        }, {
+          "value" : "0.49433595,0.14801356,0.5005859,0.1703004",
+          "name" : "http://gedcomx.org/RectangleRegion"
+        } ]
+      } ],
+      "values" : [ {
+        "type" : "http://gedcomx.org/Original",
+        "labelId" : "REL_TYPE_ORIG",
+        "text" : "hijo Nade"
+      }, {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE",
+        "text" : "hijo Nade",
+        "resource" : "http://gedcomx.org/ParentChild"
+      } ]
+    } ]
+  }, {
+    "type" : "http://gedcomx.org/Couple",
+    "person1" : {
+      "resource" : "#r1p3",
+      "resourceId" : "r1p3"
+    },
+    "person2" : {
+      "resource" : "#r1p4",
+      "resourceId" : "r1p4"
+    }
+  }, {
+    "type" : "http://gedcomx.org/ParentChild",
+    "person1" : {
+      "resource" : "#r1p4",
+      "resourceId" : "r1p4"
+    },
+    "person2" : {
+      "resource" : "#r1p2",
+      "resourceId" : "r1p2"
+    },
+    "fields" : [ {
+      "type" : "http://familysearch.org/types/fields/RelativeType",
+      "sources" : [ {
+        "description" : "#src_image_P19",
+        "descriptionId" : "src_image_P19",
+        "qualifiers" : [ {
+          "value" : "0.16503906,0.16521318,0.17285156,0.19210272",
+          "name" : "http://gedcomx.org/RectangleRegion"
+        }, {
+          "value" : "0.45058593,0.14801356,0.47402343,0.1703004",
+          "name" : "http://gedcomx.org/RectangleRegion"
+        }, {
+          "value" : "0.48183593,0.14801356,0.49433595,0.1703004",
+          "name" : "http://gedcomx.org/RectangleRegion"
+        }, {
+          "value" : "0.49433595,0.14801356,0.5005859,0.1703004",
+          "name" : "http://gedcomx.org/RectangleRegion"
+        } ]
+      } ],
+      "values" : [ {
+        "type" : "http://gedcomx.org/Original",
+        "labelId" : "REL_TYPE_ORIG",
+        "text" : "hijo Nade"
+      }, {
+        "type" : "http://gedcomx.org/Interpreted",
+        "labelId" : "REL_TYPE",
+        "text" : "hijo Nade",
+        "resource" : "http://gedcomx.org/ParentChild"
+      } ]
+    } ]
+  } ],
+  "sourceDescriptions" : [ {
+    "id" : "src_r1",
+    "about" : "#r1",
+    "componentOf" : {
+      "description" : "#src_1877097",
+      "descriptionId" : "src_1877097"
+    },
+    "resourceType" : "http://gedcomx.org/Record",
+    "coverage" : [ {
+      "spatial" : {
+        "original" : "Chincha Baja, Chincha, Ica, Perú"
+      },
+      "temporal" : {
+        "original" : "1861"
+      },
+      "recordType" : "http://gedcomx.org/Christening"
+    } ],
+    "sources" : [ {
+      "description" : "#src_image_P19",
+      "descriptionId" : "src_image_P19",
+      "qualifiers" : [ {
+        "value" : "0.15683594,0.09520349,0.50683594,0.22553295",
+        "name" : "http://gedcomx.org/RectangleRegion"
+      } ]
+    } ],
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://familysearch.org/ark:/61903/1:2:4B8D-XS9B" ]
+    }
+  }, {
+    "id" : "src_1877097",
+    "about" : "https://www.familysearch.org/platform/records/collections/1877097",
+    "resourceType" : "http://gedcomx.org/Collection",
+    "identifiers" : {
+      "http://gedcomx.org/Primary" : [ "https://www.familysearch.org/platform/records/collections/1877097" ]
+    }
+  }, {
+    "id" : "src_image_P19",
+    "about" : "https://familysearch.org/ark:/61903/3:1:SQWF-RXD9-9",
+    "resourceType" : "http://gedcomx.org/DigitalArtifact",
+    "identifiers" : {
+      "http://gedcomx.org/Persistent" : [ "https://familysearch.org/ark:/61903/3:1:SQWF-RXD9-9" ]
+    }
+  } ],
+  "documents" : [ {
+    "id" : "text",
+    "text" : "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n<stuff xmlns=\"https://www.familysearch.org/ace/stuff\">\n  <page id=\"P19\" filename=\"TH-195-687961-1-67.jpg\" pageWidth=\"5120\" pageHeight=\"4128\"/>\n  <record rect=\"803,393,1792,538\" id=\"REC1\">\n    <regionIds>R6</regionIds>\n    <textLines>año del Señor mil ochocientos sesenta y uno, Yo el infrascrito</textLines>\n    <textLines>encargado de la Doctrina por el Señor Cura propio D. J. Manuel</textLines>\n    <textLines>José Loyola Exorcicé Bautista Solemnemente puse Óleo y</textLines>\n    <textLines>crisma a José de la Rosa de diez y nueve días hijo Nade</textLines>\n    <textLines>Estanislao Matías Carrillo y de Josefa Guadalupe Ca</textLines>\n    <textLines>rrillo P. Diego Carrillo Testigo Pedro José Carrillo de</textLines>\n    <textLines>↔</textLines>\n    <textLines>que certifico =</textLines>\n    <textLines>Fray Manuel María Pasos</textLines>\n  </record>\n  <region rect=\"803,393,1792,538\" id=\"R6\" subPageId=\"LEFT\" type=\"PARAGRAPH\">\n    <line rect=\"819,393,1749,86\">\n      <token text=\"año\" type=\"DATE\" position=\"B\" rect=\"851,393,111,86\" style=\"cursive\"/>\n      <token text=\"del\" type=\"DATE\" position=\"I\" rect=\"994,393,63,86\" style=\"cursive\"/>\n      <token text=\"Señor\" type=\"DATE\" position=\"I\" rect=\"1089,393,151,86\" style=\"cursive\"/>\n      <token text=\"mil\" type=\"DATE\" position=\"I\" rect=\"1304,393,79,86\" style=\"cursive\"/>\n      <token text=\"ochocientos\" type=\"DATE\" position=\"I\" rect=\"1423,393,326,86\" style=\"cursive\"/>\n      <token text=\"sesenta\" orig=\"secenta\" type=\"DATE\" position=\"I\" rect=\"1773,393,215,86\" style=\"cursive\"/>\n      <token text=\"y\" type=\"DATE\" position=\"I\" rect=\"2019,393,8,86\" style=\"cursive\"/>\n      <token text=\"uno\" post=\"\" type=\"DATE\" position=\"E\" rect=\"2051,393,112,86\" style=\"cursive\"/>\n      <token text=\",\" rect=\"2163,393,15,86\" style=\"cursive\"/>\n      <token text=\"Yo\" type=\"COREF\" position=\"U\" rect=\"2202,393,32,86\" style=\"cursive\"/>\n      <token text=\"el\" rect=\"2250,393,40,86\" style=\"cursive\"/>\n      <token text=\"infrascrito\" orig=\"infrascri-\" split=\"B\" rect=\"2314,393,246,86 2560,393,8,86\" style=\"cursive\"/>\n    </line>\n    <line rect=\"816,466,1757,76\">\n      <token text=\"\" orig=\"to\" split=\"E\" rect=\"848,466,48,76\" style=\"cursive\"/>\n      <token text=\"encargado\" rect=\"911,466,271,76\" style=\"cursive\"/>\n      <token text=\"de\" rect=\"1214,466,31,76\" style=\"cursive\"/>\n      <token text=\"la\" rect=\"1277,466,48,76\" style=\"cursive\"/>\n      <token text=\"Doctrina\" rect=\"1357,466,246,76\" style=\"cursive\"/>\n      <token text=\"por\" rect=\"1643,466,87,76\" style=\"cursive\"/>\n      <token text=\"el\" rect=\"1754,466,40,76\" style=\"cursive\"/>\n      <token text=\"Señor\" type=\"TITLE\" position=\"U\" rect=\"1826,466,143,76\" style=\"cursive\"/>\n      <token text=\"Cura\" type=\"OCCUPATION\" position=\"U\" rect=\"2001,466,135,76\" style=\"cursive\"/>\n      <token text=\"propio\" rect=\"2175,466,191,76\" style=\"cursive\"/>\n      <token text=\"D.\" type=\"TITLE\" position=\"B\" rect=\"2390,466,40,76\" style=\"cursive\"/>\n      <token text=\"J.\" type=\"TITLE\" position=\"E\" rect=\"2438,466,40,76\" style=\"cursive\"/>\n      <token text=\"Manuel\" orig=\"Ma-\" split=\"B\" type=\"PERSON\" position=\"B\" rect=\"2493,466,72,76 2565,466,8,76\" style=\"cursive\"/>\n    </line>\n    <line rect=\"824,523,1771,113\">\n      <token text=\"\" orig=\"nuel\" split=\"E\" type=\"PERSON\" position=\"E\" rect=\"848,523,128,113\" style=\"cursive\"/>\n      <token text=\"José\" type=\"ORGANIZATION_RELIGIOUS\" position=\"B\" rect=\"1015,523,104,113\" style=\"cursive\"/>\n      <token text=\"Loyola\" type=\"ORGANIZATION_RELIGIOUS\" position=\"I\" rect=\"1151,523,192,113\" style=\"cursive\"/>\n      <token text=\"Exorcicé\" type=\"ORGANIZATION_RELIGIOUS\" position=\"I\" rect=\"1374,523,248,113\" style=\"cursive\"/>\n      <token text=\"Bautista\" orig=\"Ba\" type=\"ORGANIZATION_RELIGIOUS\" position=\"E\" rect=\"1670,523,79,113\">\n        <char style=\"cursive\"/>\n        <char style=\"superscript,underlined\"/>\n      </token>\n      <token text=\"Solemnemente\" orig=\"Solemnemte\" rect=\"1781,523,359,113\">\n        <char style=\"cursive\"/>\n        <char style=\"cursive\"/>\n        <char style=\"cursive\"/>\n        <char style=\"cursive\"/>\n        <char style=\"cursive\"/>\n        <char style=\"cursive\"/>\n        <char style=\"cursive\"/>\n        <char style=\"cursive\"/>\n        <char style=\"superscript,underlined\"/>\n        <char style=\"superscript,underlined\"/>\n      </token>\n      <token text=\"puse\" rect=\"2172,523,152,113\" style=\"cursive\"/>\n      <token text=\"Óleo\" orig=\"Oleo\" rect=\"2356,523,119,113\" style=\"cursive\"/>\n      <token text=\"y\" rect=\"2515,523,80,113\" style=\"cursive\"/>\n    </line>\n    <line rect=\"811,611,1752,92\">\n      <token text=\"crisma\" rect=\"843,611,248,92\" style=\"cursive\"/>\n      <token text=\"a\" orig=\"á\" rect=\"1115,611,40,92\" style=\"cursive\"/>\n      <token text=\"José\" type=\"PERSON\" position=\"B\" rect=\"1195,611,120,92\" style=\"cursive\"/>\n      <token text=\"de\" type=\"PERSON\" position=\"I\" rect=\"1347,611,32,92\" style=\"cursive\"/>\n      <token text=\"la\" type=\"PERSON\" position=\"I\" rect=\"1403,611,64,92\" style=\"cursive\"/>\n      <token text=\"Rosa\" type=\"PERSON\" position=\"E\" rect=\"1515,611,136,92\" style=\"cursive\"/>\n      <token text=\"de\" rect=\"1683,611,40,92\" style=\"cursive\"/>\n      <token text=\"diez\" orig=\"dies\" type=\"AGE\" position=\"B\" rect=\"1755,611,120,92\" style=\"cursive\"/>\n      <token text=\"y\" type=\"AGE\" position=\"I\" rect=\"1891,611,8,92\" style=\"cursive\"/>\n      <token text=\"nueve\" type=\"AGE\" position=\"I\" rect=\"1931,611,192,92\" style=\"cursive\"/>\n      <token text=\"días\" orig=\"dias\" type=\"AGE\" position=\"E\" rect=\"2147,611,128,92\" style=\"cursive\"/>\n      <token text=\"hijo\" type=\"FAMILY_MEMBER\" position=\"B\" rect=\"2307,611,120,92\" style=\"cursive\"/>\n      <token text=\"Nade\" orig=\"Na-\" split=\"B\" type=\"FAMILY_MEMBER\" position=\"I\" rect=\"2467,611,64,92 2531,611,32,92\" style=\"cursive\"/>\n    </line>\n    <line rect=\"813,682,1758,111\">\n      <token text=\"\" orig=\"de\" split=\"E\" type=\"FAMILY_MEMBER\" position=\"E\" rect=\"845,682,40,111\" style=\"cursive\"/>\n      <token text=\"Estanislao\" type=\"PERSON\" position=\"B\" rect=\"917,682,320,111\" style=\"cursive\"/>\n      <token text=\"Matías\" orig=\"Matias\" type=\"PERSON\" position=\"I\" rect=\"1276,682,192,111\" style=\"cursive\"/>\n      <token text=\"Carrillo\" type=\"PERSON\" position=\"E\" rect=\"1508,682,232,111\" style=\"cursive\"/>\n      <token text=\"y\" rect=\"1764,682,16,111\" style=\"cursive\"/>\n      <token text=\"de\" rect=\"1812,682,40,111\" style=\"cursive\"/>\n      <token text=\"Josefa\" type=\"PERSON\" position=\"B\" rect=\"1884,682,184,111\" style=\"cursive\"/>\n      <token text=\"Guadalupe\" type=\"PERSON\" position=\"I\" rect=\"2108,682,343,111\" style=\"cursive\"/>\n      <token text=\"Ca\" type=\"PERSON\" position=\"E\" rect=\"2475,682,96,111\" style=\"cursive\"/>\n    </line>\n    <line rect=\"805,774,1755,90\">\n      <token text=\"rrillo\" type=\"OCCUPATION\" position=\"B\" rect=\"845,774,175,90\" style=\"cursive\"/>\n      <token text=\"P.\" type=\"OCCUPATION\" position=\"E\" rect=\"1044,774,40,90\" style=\"cursive\"/>\n      <token text=\"Diego\" type=\"PERSON\" position=\"B\" rect=\"1108,774,144,90\" style=\"cursive\"/>\n      <token text=\"Carrillo\" type=\"PERSON\" position=\"E\" rect=\"1284,774,239,90\" style=\"cursive\"/>\n      <token text=\"Testigo\" type=\"NONFAMILY\" position=\"U\" rect=\"1555,774,199,90\" style=\"cursive\"/>\n      <token text=\"Pedro\" type=\"PERSON\" position=\"B\" rect=\"1786,774,160,90\" style=\"cursive\"/>\n      <token text=\"José\" orig=\"Jose\" type=\"PERSON\" position=\"I\" rect=\"1986,774,127,90\" style=\"cursive\"/>\n      <token text=\"Carrillo\" type=\"PERSON\" position=\"E\" rect=\"2153,774,271,90\" style=\"cursive\"/>\n      <token text=\"de\" rect=\"2480,774,80,90\" style=\"cursive\"/>\n    </line>\n    <line rect=\"2243,849,72,15\">\n      <token text=\"↔\" rect=\"2267,849,48,15\" style=\"cursive\"/>\n    </line>\n    <line rect=\"803,849,578,82\">\n      <token text=\"que\" rect=\"851,849,110,82\" style=\"cursive\"/>\n      <token text=\"certifico\" rect=\"1009,849,317,82\" style=\"cursive\"/>\n      <token text=\"=\" rect=\"1341,849,40,82\" style=\"cursive\"/>\n    </line>\n    <line rect=\"1904,847,533,75\">\n      <token text=\"Fray\" orig=\"Fr\" type=\"TITLE\" position=\"U\" rect=\"1936,847,48,75\" style=\"cursive\"/>\n      <token text=\"Manuel\" orig=\"Manl\" type=\"PERSON\" position=\"B\" rect=\"2023,847,128,75\">\n        <char style=\"cursive\"/>\n        <char style=\"cursive\"/>\n        <char style=\"cursive\"/>\n        <char style=\"superscript,underlined\"/>\n      </token>\n      <token text=\"María\" orig=\"Ma\" type=\"PERSON\" position=\"I\" rect=\"2182,847,72,75\">\n        <char style=\"cursive\"/>\n        <char style=\"superscript,underlined\"/>\n      </token>\n      <token text=\"Pasos\" type=\"PERSON\" position=\"E\" rect=\"2286,847,151,75\" style=\"cursive\"/>\n    </line>\n  </region>\n  <metadata>\n    <property name=\"BUILD\" value=\"1.0.b542\"/>\n    <property name=\"CREATED\" value=\"2021-06-09T04:36:29.328Z\"/>\n    <property name=\"FS_COLLECTION_ID\" value=\"1877097\"/>\n    <property name=\"FS_IMAGE_APID\" value=\"TH-195-687961-1-67\"/>\n    <property name=\"FS_IMAGE_ID\" value=\"004004022_00019\"/>\n    <property name=\"GROUP_APID\" value=\"TH-194-702963-1-23\"/>\n    <property name=\"IMAGE_ARK\" value=\"https://familysearch.org/ark:/61903/3:1:SQWF-RXD9-9\"/>\n    <property name=\"IMAGE_CLASSIFICATION\" value=\"paragraph\"/>\n    <property name=\"IMAGE_CLASSIFICATION_CONFIDENCE\" value=\"1.0\"/>\n    <property name=\"IMAGE_CLASSIFICATION_DATE\" value=\"2021-03-18\"/>\n    <property name=\"IMAGE_HAS_AGE_COUNT\" value=\"6\"/>\n    <property name=\"IMAGE_HAS_BIRTHS_COUNT\" value=\"0\"/>\n    <property name=\"IMAGE_HAS_BURIALS_COUNT\" value=\"0\"/>\n    <property name=\"IMAGE_HAS_CHRISTENINGS_COUNT\" value=\"4\"/>\n    <property name=\"IMAGE_HAS_COUPLES_COUNT\" value=\"0\"/>\n    <property name=\"IMAGE_HAS_DEATHS_COUNT\" value=\"0\"/>\n    <property name=\"IMAGE_HAS_GODPARENTS_COUNT\" value=\"7\"/>\n    <property name=\"IMAGE_HAS_GRANDPARENTS_COUNT\" value=\"0\"/>\n    <property name=\"IMAGE_HAS_MARRIAGES_COUNT\" value=\"0\"/>\n    <property name=\"IMAGE_HAS_OTHER_NONRELATIVES_COUNT\" value=\"8\"/>\n    <property name=\"IMAGE_HAS_PARENTS_COUNT\" value=\"8\"/>\n    <property name=\"IMAGE_HAS_SIBLINGS_COUNT\" value=\"0\"/>\n    <property name=\"IMAGE_RECORD_COUNT\" value=\"8\"/>\n    <property name=\"IMAGE_SEARCH_LINK\" value=\"https://www.familysearch.org/records/images/image-details?rmsId=TH-194-702963-1-23&amp;imageIndex=18&amp;singleView=true\"/>\n    <property name=\"LANGUAGE\" value=\"es\"/>\n    <property name=\"LANGUAGE_MODEL\" value=\"kaldi_prep_charHWOCR.20210428.spanish\"/>\n    <property name=\"LINE_SEGMENTATION_MODEL\" value=\"models/line-segment/2021-02-27\"/>\n    <property name=\"LM_QUALITY_ESTIMATE\" value=\"0.9646652413386162\"/>\n    <property name=\"NER_MODEL\" value=\"models/ner/MODEL05052021_9453\"/>\n    <property name=\"RECORD_DATE\" value=\"1861\"/>\n    <property name=\"RECORD_PLACE\" value=\"Chincha Baja, Chincha, Ica, Perú\"/>\n    <property name=\"RECORD_PLACE_ID\" value=\"10268847\"/>\n    <property name=\"RECORD_TYPE\" value=\"http://gedcomx.org/Christening\"/>\n    <property name=\"VARIANTS_FILE\" value=\"models/variants/variants.es.20210402.txt\"/>\n    <property name=\"VISUAL_MODEL\" value=\"models/visual/spanish-2021-05-07\"/>\n    <property name=\"VM_QUALITY_ESTIMATE\" value=\"0.9847891001433302\"/>\n    <property name=\"WAYPOINT_DATA_LINK\" value=\"https://www.familysearch.org/service/cds/recapi/images/3:1:SQWF-RXD9-9\"/>\n    <coverage date=\"1861-1883\" formalDate=\"+1861-01-01/+1883-12-31\" place=\"Chincha Baja, Chincha, Ica, Perú\" placeId=\"10268847\" recordType=\"Baptism Record\" recordTypeId=\"103612\" placeIdHierarchy=\"39 5864 431506 10268847\">\n      <recordTypeUri>http://familysearch.org/types/records/BaptismRecord</recordTypeUri>\n    </coverage>\n  </metadata>\n</stuff>\n"
+  }, {
+    "id" : "textPreVariants",
+    "text" : "año del Señor mil ochocientos secenta y uno, Yo el infrascri-\nto encargado de la Doctrina por el Señor Cura propio D. J. Ma-\nnuel José Loyola Exorcicé Ba Solemnemte puse Oleo y\ncrisma á José de la Rosa de dies y nueve dias hijo Na-\nde Estanislao Matias Carrillo y de Josefa Guadalupe Ca\nrrillo P. Diego Carrillo Testigo Pedro Jose Carrillo de\n↔\nque certifico =\nFr Manl Ma Pasos\n"
+  }, {
+    "id" : "textPostVariants",
+    "text" : "año del Señor mil ochocientos sesenta y uno, Yo el infrascrito encargado de la Doctrina por el Señor Cura propio D. J. Manuel José Loyola Exorcicé Bautista Solemnemente puse Óleo y\ncrisma a José de la Rosa de diez y nueve días hijo Nade Estanislao Matías Carrillo y de Josefa Guadalupe Ca\nrrillo P. Diego Carrillo Testigo Pedro José Carrillo de\n↔\nque certifico =\nFray Manuel María Pasos\n",
+    "notes" : [ {
+      "text" : "variants: models/variants/variants.es.20210402.txt"
+    } ]
+  }, {
+    "id" : "enamexPreRulesPreCorrections",
+    "text" : "<TIMEX TYPE=\"DATE\">año del Señor mil ochocientos secenta y uno</TIMEX>, <ENAMEX TYPE=\"COREF\">Yo</ENAMEX> el infrascri-\nto encargado de la Doctrina por el <ENAMEX TYPE=\"TITLE\">Señor</ENAMEX> <ENAMEX TYPE=\"OCCUPATION\">Cura</ENAMEX> propio <ENAMEX TYPE=\"TITLE\">D. J.</ENAMEX> <ENAMEX TYPE=\"PERSON\">Ma-\nnuel</ENAMEX> <ENAMEX TYPE=\"ORGANIZATION.rel\">José Loyola Exorcicé Ba</ENAMEX> Solemnemte puse Oleo y\ncrisma á <ENAMEX TYPE=\"PERSON\">José de la Rosa</ENAMEX> de <ENAMEX TYPE=\"AGE\">dies y nueve dias</ENAMEX> <ENAMEX TYPE=\"FAMILYMEMBER\">hijo Na-\nde</ENAMEX> <ENAMEX TYPE=\"PERSON\">Estanislao Matias Carrillo</ENAMEX> y de <ENAMEX TYPE=\"PERSON\">Josefa Guadalupe Ca</ENAMEX>\n<ENAMEX TYPE=\"OCCUPATION\">rrillo P.</ENAMEX> <ENAMEX TYPE=\"PERSON\">Diego Carrillo</ENAMEX> <ENAMEX TYPE=\"NONFAMILY\">Testigo</ENAMEX> <ENAMEX TYPE=\"PERSON\">Pedro Jose Carrillo</ENAMEX> de\n↔\nque certifico =\n<ENAMEX TYPE=\"TITLE\">Fr</ENAMEX> <ENAMEX TYPE=\"PERSON\">Manl Ma Pasos</ENAMEX>\n",
+    "notes" : [ {
+      "text" : "entity tagging model: models/ner/MODEL05052021_9453"
+    }, {
+      "text" : "Entity Rules Fired:\n\n\n"
+    } ]
+  }, {
+    "id" : "enamexPostRulesPreCorrections",
+    "text" : "<TIMEX TYPE=\"DATE\">año del Señor mil ochocientos secenta y uno</TIMEX>, <ENAMEX TYPE=\"COREF\">Yo</ENAMEX> el infrascri-\nto encargado de la Doctrina por el <ENAMEX TYPE=\"TITLE\">Señor</ENAMEX> <ENAMEX TYPE=\"OCCUPATION\">Cura</ENAMEX> propio <ENAMEX TYPE=\"TITLE\">D. J.</ENAMEX> <ENAMEX TYPE=\"PERSON\">Ma-\nnuel</ENAMEX> <ENAMEX TYPE=\"ORGANIZATION.rel\">José Loyola Exorcicé Ba</ENAMEX> Solemnemte puse Oleo y\ncrisma á <ENAMEX TYPE=\"PERSON\">José de la Rosa</ENAMEX> de <ENAMEX TYPE=\"AGE\">dies y nueve dias</ENAMEX> <ENAMEX TYPE=\"FAMILYMEMBER\">hijo Na-\nde</ENAMEX> <ENAMEX TYPE=\"PERSON\">Estanislao Matias Carrillo</ENAMEX> y de <ENAMEX TYPE=\"PERSON\">Josefa Guadalupe Ca</ENAMEX>\n<ENAMEX TYPE=\"OCCUPATION\">rrillo P.</ENAMEX> <ENAMEX TYPE=\"PERSON\">Diego Carrillo</ENAMEX> <ENAMEX TYPE=\"NONFAMILY\">Testigo</ENAMEX> <ENAMEX TYPE=\"PERSON\">Pedro Jose Carrillo</ENAMEX> de\n↔\nque certifico =\n<ENAMEX TYPE=\"TITLE\">Fr</ENAMEX> <ENAMEX TYPE=\"PERSON\">Manl Ma Pasos</ENAMEX>\n"
+  }, {
+    "id" : "nameChunking",
+    "text" : "<ENAMEX TYPE=\"GNP\">Ma-\nnuel</ENAMEX>\n\n<ENAMEX TYPE=\"GNP\">José</ENAMEX> <ENAMEX TYPE=\"PPGN\">de la Rosa</ENAMEX>\n\n<ENAMEX TYPE=\"GNP\">Estanislao</ENAMEX> <ENAMEX TYPE=\"FNP\">Matias</ENAMEX> <ENAMEX TYPE=\"FNP\">Carrillo</ENAMEX>\n\n<ENAMEX TYPE=\"GNP\">Josefa Guadalupe Ca</ENAMEX>\n\n<ENAMEX TYPE=\"GNP\">Diego</ENAMEX> <ENAMEX TYPE=\"FNP\">Carrillo</ENAMEX>\n\n<ENAMEX TYPE=\"GNP\">Pedro Jose</ENAMEX> <ENAMEX TYPE=\"FNP\">Carrillo</ENAMEX>\n\n<ENAMEX TYPE=\"GNP\">Manl</ENAMEX> <ENAMEX TYPE=\"FNP\">Ma Pasos</ENAMEX>\n\n",
+    "notes" : [ {
+      "text" : "name model: models/name/2019.03.12_neural-name"
+    }, {
+      "text" : "Name Rules Fired:\n\n\n"
+    } ]
+  }, {
+    "id" : "principalCount",
+    "text" : "null"
+  }, {
+    "id" : "relexPreRules",
+    "text" : "<TIMEX TYPE=\"DATE\">año del Señor mil ochocientos sesenta y uno</TIMEX>, <ENAMEX TYPE=\"COREF\">Yo</ENAMEX> el infrascrito encargado de la Doctrina por el <ENAMEX TYPE=\"TITLE\">Señor</ENAMEX> <ENAMEX TYPE=\"OCCUPATION\">Cura</ENAMEX> propio <ENAMEX TYPE=\"TITLE\">D. J.</ENAMEX> <ENAMEX TYPE=\"PERSON\">Manuel</ENAMEX> <ENAMEX TYPE=\"ORGANIZATION.rel\">José Loyola Exorcicé Bautista</ENAMEX> Solemnemente puse Óleo y\ncrisma a <ENAMEX TYPE=\"PERSON\">José de la Rosa</ENAMEX> de <ENAMEX TYPE=\"AGE\">diez y nueve días</ENAMEX> <ENAMEX TYPE=\"FAMILYMEMBER\">hijo Nade</ENAMEX> <ENAMEX TYPE=\"PERSON\">Estanislao Matías Carrillo</ENAMEX> y de <ENAMEX TYPE=\"PERSON\">Josefa Guadalupe Ca</ENAMEX>\n<ENAMEX TYPE=\"OCCUPATION\">rrillo P.</ENAMEX> <ENAMEX TYPE=\"PERSON\">Diego Carrillo</ENAMEX> <ENAMEX TYPE=\"NONFAMILY\">Testigo</ENAMEX> <ENAMEX TYPE=\"PERSON\">Pedro José Carrillo</ENAMEX> de\n↔\nque certifico =\n<ENAMEX TYPE=\"TITLE\">Fray</ENAMEX> <ENAMEX TYPE=\"PERSON\">Manuel María Pasos</ENAMEX>\n\n<RELEX TYPE=\"S=2+\"_STID=\"237\"_ENDID=\"237\"_STTOKEN=\"Estanislao Matías Carrillo\"_ENDTOKEN=\"Estanislao Matías Carrillo\">\n<RELEX TYPE=\"S=2+\"_STID=\"299\"_ENDID=\"299\"_STTOKEN=\"Diego Carrillo\"_ENDTOKEN=\"Diego Carrillo\">\n<RELEX TYPE=\"S=2+\"_STID=\"368\"_ENDID=\"368\"_STTOKEN=\"Manuel María Pasos\"_ENDTOKEN=\"Manuel María Pasos\">\n<RELEX TYPE=\"S=3+\"_STID=\"322\"_ENDID=\"322\"_STTOKEN=\"Pedro José Carrillo\"_ENDTOKEN=\"Pedro José Carrillo\">\n<RELEX TYPE=\"Z:AGE_OF\"_STID=\"190\"_ENDID=\"209\"_STTOKEN=\"José de la Rosa\"_ENDTOKEN=\"diez y nueve días\">\n<RELEX TYPE=\"Z:HASFAMMEMLST\"_STID=\"269\"_ENDID=\"227\"_STTOKEN=\"Josefa Guadalupe Ca\"_ENDTOKEN=\"hijo Nade\">\n<RELEX TYPE=\"Z:IS_PRINCIPAL\"_STID=\"190\"_ENDID=\"190\"_STTOKEN=\"José de la Rosa\"_ENDTOKEN=\"José de la Rosa\">\n<RELEX TYPE=\"Z:MEMBER_OF\"_STID=\"190\"_ENDID=\"227\"_STTOKEN=\"José de la Rosa\"_ENDTOKEN=\"hijo Nade\">\n<RELEX TYPE=\"Z:MEMBER_OF\"_STID=\"299\"_ENDID=\"314\"_STTOKEN=\"Diego Carrillo\"_ENDTOKEN=\"Testigo\">\n<RELEX TYPE=\"Z:MEMBER_OF\"_STID=\"322\"_ENDID=\"314\"_STTOKEN=\"Pedro José Carrillo\"_ENDTOKEN=\"Testigo\">\n<RELEX TYPE=\"Z:OCCUPATION_OF\"_STID=\"299\"_ENDID=\"289\"_STTOKEN=\"Diego Carrillo\"_ENDTOKEN=\"rrillo P.\">\n<RELEX TYPE=\"Z:TITLE_OF\"_STID=\"119\"_ENDID=\"113\"_STTOKEN=\"Manuel\"_ENDTOKEN=\"D. J.\">\n<RELEX TYPE=\"Z:TITLE_OF\"_STID=\"368\"_ENDID=\"363\"_STTOKEN=\"Manuel María Pasos\"_ENDTOKEN=\"Fray\">\n",
+    "notes" : [ {
+      "text" : "entity tagging model: models/ner/MODEL05052021_9453"
+    }, {
+      "text" : "Entity Rules Fired:\n\n\n"
+    } ]
+  }, {
+    "id" : "relexPostRules",
+    "text" : "<TIMEX TYPE=\"DATE\">año del Señor mil ochocientos sesenta y uno</TIMEX>, <ENAMEX TYPE=\"COREF\">Yo</ENAMEX> el infrascrito encargado de la Doctrina por el <ENAMEX TYPE=\"TITLE\">Señor</ENAMEX> <ENAMEX TYPE=\"OCCUPATION\">Cura</ENAMEX> propio <ENAMEX TYPE=\"TITLE\">D. J.</ENAMEX> <ENAMEX TYPE=\"PERSON\">Manuel</ENAMEX> <ENAMEX TYPE=\"ORGANIZATION.rel\">José Loyola Exorcicé Bautista</ENAMEX> Solemnemente puse Óleo y\ncrisma a <ENAMEX TYPE=\"PERSON\">José de la Rosa</ENAMEX> de <ENAMEX TYPE=\"AGE\">diez y nueve días</ENAMEX> <ENAMEX TYPE=\"FAMILYMEMBER\">hijo Nade</ENAMEX> <ENAMEX TYPE=\"PERSON\">Estanislao Matías Carrillo</ENAMEX> y de <ENAMEX TYPE=\"PERSON\">Josefa Guadalupe Ca</ENAMEX>\n<ENAMEX TYPE=\"OCCUPATION\">rrillo P.</ENAMEX> <ENAMEX TYPE=\"PERSON\">Diego Carrillo</ENAMEX> <ENAMEX TYPE=\"NONFAMILY\">Testigo</ENAMEX> <ENAMEX TYPE=\"PERSON\">Pedro José Carrillo</ENAMEX> de\n↔\nque certifico =\n<ENAMEX TYPE=\"TITLE\">Fray</ENAMEX> <ENAMEX TYPE=\"PERSON\">Manuel María Pasos</ENAMEX>\n\n<RELEX TYPE=\"S=2+\"_STID=\"237\"_ENDID=\"237\"_STTOKEN=\"Estanislao Matías Carrillo\"_ENDTOKEN=\"Estanislao Matías Carrillo\">\n<RELEX TYPE=\"S=2+\"_STID=\"299\"_ENDID=\"299\"_STTOKEN=\"Diego Carrillo\"_ENDTOKEN=\"Diego Carrillo\">\n<RELEX TYPE=\"S=2+\"_STID=\"368\"_ENDID=\"368\"_STTOKEN=\"Manuel María Pasos\"_ENDTOKEN=\"Manuel María Pasos\">\n<RELEX TYPE=\"S=3+\"_STID=\"322\"_ENDID=\"322\"_STTOKEN=\"Pedro José Carrillo\"_ENDTOKEN=\"Pedro José Carrillo\">\n<RELEX TYPE=\"Z:AGE_OF\"_STID=\"190\"_ENDID=\"209\"_STTOKEN=\"José de la Rosa\"_ENDTOKEN=\"diez y nueve días\">\n<RELEX TYPE=\"Z:HASFAMMEMLST\"_STID=\"190\"_ENDID=\"314\"_STTOKEN=\"José de la Rosa\"_ENDTOKEN=\"Testigo\">\n<RELEX TYPE=\"Z:HASFAMMEMLST\"_STID=\"237\"_ENDID=\"227\"_STTOKEN=\"Estanislao Matías Carrillo\"_ENDTOKEN=\"hijo Nade\">\n<RELEX TYPE=\"Z:HASFAMMEMLST\"_STID=\"269\"_ENDID=\"227\"_STTOKEN=\"Josefa Guadalupe Ca\"_ENDTOKEN=\"hijo Nade\">\n<RELEX TYPE=\"Z:IS_FEM_FOR\"_STID=\"@GENDER\"_ENDID=\"269\"_STTOKEN=\"@GENDER\"_ENDTOKEN=\"Josefa Guadalupe Ca\">\n<RELEX TYPE=\"Z:IS_MALE_FOR\"_STID=\"@GENDER\"_ENDID=\"119\"_STTOKEN=\"@GENDER\"_ENDTOKEN=\"Manuel\">\n<RELEX TYPE=\"Z:IS_MALE_FOR\"_STID=\"@GENDER\"_ENDID=\"190\"_STTOKEN=\"@GENDER\"_ENDTOKEN=\"José de la Rosa\">\n<RELEX TYPE=\"Z:IS_MALE_FOR\"_STID=\"@GENDER\"_ENDID=\"237\"_STTOKEN=\"@GENDER\"_ENDTOKEN=\"Estanislao Matías Carrillo\">\n<RELEX TYPE=\"Z:IS_MALE_FOR\"_STID=\"@GENDER\"_ENDID=\"299\"_STTOKEN=\"@GENDER\"_ENDTOKEN=\"Diego Carrillo\">\n<RELEX TYPE=\"Z:IS_MALE_FOR\"_STID=\"@GENDER\"_ENDID=\"322\"_STTOKEN=\"@GENDER\"_ENDTOKEN=\"Pedro José Carrillo\">\n<RELEX TYPE=\"Z:IS_MALE_FOR\"_STID=\"@GENDER\"_ENDID=\"368\"_STTOKEN=\"@GENDER\"_ENDTOKEN=\"Manuel María Pasos\">\n<RELEX TYPE=\"Z:IS_PRINCIPAL\"_STID=\"190\"_ENDID=\"190\"_STTOKEN=\"José de la Rosa\"_ENDTOKEN=\"José de la Rosa\">\n<RELEX TYPE=\"Z:MEMBER_OF\"_STID=\"190\"_ENDID=\"227\"_STTOKEN=\"José de la Rosa\"_ENDTOKEN=\"hijo Nade\">\n<RELEX TYPE=\"Z:MEMBER_OF\"_STID=\"299\"_ENDID=\"314\"_STTOKEN=\"Diego Carrillo\"_ENDTOKEN=\"Testigo\">\n<RELEX TYPE=\"Z:MEMBER_OF\"_STID=\"322\"_ENDID=\"314\"_STTOKEN=\"Pedro José Carrillo\"_ENDTOKEN=\"Testigo\">\n<RELEX TYPE=\"Z:OCCUPATION_OF\"_STID=\"299\"_ENDID=\"289\"_STTOKEN=\"Diego Carrillo\"_ENDTOKEN=\"rrillo P.\">\n<RELEX TYPE=\"Z:TITLE_OF\"_STID=\"119\"_ENDID=\"113\"_STTOKEN=\"Manuel\"_ENDTOKEN=\"D. J.\">\n<RELEX TYPE=\"Z:TITLE_OF\"_STID=\"299\"_ENDID=\"289\"_STTOKEN=\"Diego Carrillo\"_ENDTOKEN=\"rrillo P.\">\n<RELEX TYPE=\"Z:TITLE_OF\"_STID=\"368\"_ENDID=\"363\"_STTOKEN=\"Manuel María Pasos\"_ENDTOKEN=\"Fray\">\n",
+    "notes" : [ {
+      "text" : "recognizer: org.familysearch.ace.nlp.relation.RelationRecognizer\nrelation model: models/relation/2021.05.24_MaxEnt\nprincipal count model: models/principal-count/2018.01.29/MaxEntDocLearnerMultiOneNone.pdml.bin.gz"
+    }, {
+      "text" : "Relation Rules Fired:\n\nGenderRule\nMissingFamilyMemberPrincipalRule\nPairingRule\nAddOccupationOfRule\n"
+    } ]
+  }, {
+    "id" : "dateTransformationHistories",
+    "text" : "Date Transformation History:\nTag:   initial\nMeta:  nullHistory\nValue: +1861\n\n"
+  }, {
+    "id" : "date-standardization",
+    "text" : "Original Date Text: diez y nueve días\nInterpreted Date Text: [+1861]"
+  }, {
+    "id" : "cv-standardization",
+    "text" : "Original CV Text: Birth\nStandards CV Text: http://gedcomx.org/Birth"
+  }, {
+    "id" : "gedcomxConversionRules",
+    "text" : "Gedcomx Preconversion Rules Fired:\n\nAddOrRemoveCoupleForParentChildRule\nInferBirthDateFromAgeRule\n\nGedcomx Postconversion Rules Fired:\n\nAddOrUpdatePrimaryFactRule\n"
+  } ],
+  "fields" : [ {
+    "type" : "http://familysearch.org/types/fields/RecordGroup",
+    "values" : [ {
+      "type" : "http://gedcomx.org/Interpreted",
+      "labelId" : "FS_RECORD_GROUP",
+      "text" : "OutputDeliveryAllRobo"
+    } ]
+  }, {
+    "type" : "http://familysearch.org/types/fields/FsDisplayType",
+    "values" : [ {
+      "type" : "http://gedcomx.org/Interpreted",
+      "labelId" : "FS_DISPLAY_TYPE",
+      "text" : "Person"
+    } ]
+  }, {
+    "type" : "http://familysearch.org/types/fields/FsModelVer",
+    "values" : [ {
+      "type" : "http://gedcomx.org/Interpreted",
+      "labelId" : "FS_MODEL_VER",
+      "text" : "1"
+    } ]
+  }, {
+    "type" : "http://familysearch.org/types/fields/DigitalFilmNbr",
+    "values" : [ {
+      "type" : "http://gedcomx.org/Interpreted",
+      "labelId" : "FS_DIGITAL_FILM_NBR",
+      "text" : "004004022"
+    } ]
+  } ]
+}

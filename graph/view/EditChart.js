@@ -762,8 +762,20 @@ RelationshipChart.prototype.getMergeMessage = function(personIdsToMerge) {
  * @param ui - UI object that has the div id of the dropped person if e doesn't have it.
  */
 PersonBox.prototype.personDrop = function(e, ui) {
-  let droppedPersonBox = this; // = relChart.personBoxMap[e.target.id];
-  let targetId = e.originalEvent.target.id;
+  let droppedPersonBox = this; // = relChart.personBoxMap[e.target.id]; The PersonBox that was dropped ONTO
+  function getTargetId(element) {
+    for(let i = 0; element && i < 3; i++) {
+      if (element.id.search(/^[0-9]*-?box_/) >= 0) {
+        return element.id;
+      }
+      if (element.id.search(/personNodes/) >= 0) {
+        return null;
+      }
+      element = element.parentNode;
+    }
+  }
+
+  let targetId = getTargetId(e.originalEvent.target);
   if (!targetId) {
     targetId = ui.draggable.attr("id");
   }
@@ -802,7 +814,7 @@ PersonBox.prototype.personDrop = function(e, ui) {
       let draggedPersonBoxId = targetId.replace(/-[^-]*$/, "");
       let draggedPersonBox = this.relChart.personBoxMap[draggedPersonBoxId];
       if (!draggedPersonBox) {
-        console.print("Curious...");
+        console.log("Curious...");
       }
       let draggedPersonId = draggedPersonBox ? draggedPersonBox.getPersonId() : null;
       for (let sourcePersonBox of this.relChart.selectedPersonBoxes) {

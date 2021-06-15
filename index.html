@@ -150,7 +150,7 @@
       updateSelectablePersons(doc, $("#copy-person-fact-target-persons"));
 
       // Rebuild the relationship graph. Set global variable (defined in RelChartBuilder.js).
-      relChart = buildGraph(doc, true, relChart);
+      relChart = buildGraph(doc, prevRelChartOptions(relChart));
     }
 
     /**

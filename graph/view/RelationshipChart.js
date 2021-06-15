@@ -2,6 +2,57 @@
   RelationshipChart: Represents a graphical display of a relationship graph, including PersonBox and FamilyLine objects and their positions.
  */
 
+/**
+ * Constructor of ChartOptions
+ * @param prevChart - Previous chart to use in knowing where to animate new boxes from.
+ * @param imgOverlayToGx - Object that maps the image overly divs to corresponding GedcomX objects
+ * @param ignoreUndo - Flag for whether to ignore undo (i.e., true => don't create an undo log)
+ *
+ * @param isEditable - Flag for whether the chart is editable
+ * @param isDraggable - Flag for whether to allow the RelChart to be draggable.
+ * @param shouldCompress - Flag for whether to compress the chart vertically. (Default = true)
+ * @param shouldDisplayDetails - Flag for whether to display person details (i.e., facts). Default = true;
+ * @param shouldShowConfidence - Flag for whether to display the name, date and place confidence (when present)
+ * @param shouldDisplayIds - Flag for whether to display person IDs
+ * @constructor
+ */
+function ChartOptions({ prevChart= null,
+                        imgOverlayToGx= null,
+                        ignoreUndo= false,
+                        isEditable= false,
+                        isDraggable= false,
+                        shouldCompress = true,
+                        shouldDisplayDetails = true,
+                        shouldShowConfidence = false,
+                        shouldDisplayIds = false
+                      } = {}) {
+
+  this.prevChart = prevChart;
+  this.imgOverlayToGx = imgOverlayToGx;
+  this.ignoreUndo = ignoreUndo;
+
+  this.isEditable = isEditable;
+  this.isDraggable = isDraggable;
+  this.shouldShowConfidence = shouldShowConfidence;
+  this.shouldDisplayIds = shouldDisplayIds;
+  this.shouldDisplayDetails = shouldDisplayDetails;
+  this.shouldCompress = shouldCompress;
+}
+
+function prevRelChartOptions(prevRelChart, imgOverlayToGx) {
+  return new ChartOptions({
+    prevChart : prevRelChart,
+    imgOverlayToGx: imgOverlayToGx,
+    ignoreUndo: prevRelChart.ignoreUndo,
+    isEditable: prevRelChart.isEditable,
+    isDraggable: prevRelChart.isDraggable,
+    shouldCompress: prevRelChart.shouldCompress,
+    shouldDisplayDetails: prevRelChart.shouldDisplayDetails,
+    shouldShowConfidence: prevRelChart.shouldShowConfidence,
+    shouldDisplayIds: prevRelChart.shouldDisplayIds
+  });
+}
+
 // Tell whether personBox1 has a spouse that is not personBox2, or vice-versa
 RelationshipChart.prototype.hasDifferentSpouse = function(personBox1, personBox2) {
   if (personBox1 && personBox2) {
@@ -151,7 +202,7 @@ RelationshipChart.prototype.calculatePositions = function() {
  */
 RelationshipChart.prototype.setPreviousPositions = function(prevRelChart) {
   let newPersons = new LinkedHashSet();
-  for (personBox of this.personBoxes) {
+  for (let personBox of this.personBoxes) {
     let prevPersonBox = prevRelChart.personBoxMap[personBox.personBoxId];
     if (prevPersonBox) {
       let prevLeft = prevPersonBox.prevLeft ? prevPersonBox.prevLeft : prevPersonBox.getLeft();
@@ -161,7 +212,7 @@ RelationshipChart.prototype.setPreviousPositions = function(prevRelChart) {
       newPersons.add(personBox.personNode.personId);
     }
   }
-  for (familyLine of this.familyLines) {
+  for (let familyLine of this.familyLines) {
     let prevFamilyLine = prevRelChart.familyLineMap[familyLine.familyNode.familyId];
     if (prevFamilyLine) {
       let height = 1 + prevFamilyLine.bottomPerson.center - prevFamilyLine.topPerson.center;
@@ -198,14 +249,15 @@ RelationshipChart.prototype.setPreviousPositions = function(prevRelChart) {
  * Constructor. Creates an empty RelationshipChart. Needs to be built up using RelChartBuilder.buildChart()
  * @param relGraph - RelationshipGraph to represent in the RelationshipChart
  * @param $relChartDiv - JQuery object for the "rel-chart div
- * @param shouldIncludeDetails - Flag for whether to include person facts (false => just display names)
- * @param shouldCompress - Flag for whether to do vertical compression (false => each person on own line)
- * @param isEditable - Flag for whether to include edit controls (false => view only)
+ * @param chartOptions - chart options (see ChartOptions):
+ *        prevChart= null, imgOverlayToGx= null, ignoreUndo= false, isEditable= false, isDraggable= false,
+ *        shouldCompress = true, shouldDisplayDetails = true, shouldShowConfidence = false, shouldDisplayIds = false
  * @constructor
  */
-function RelationshipChart(relGraph, $relChartDiv, shouldIncludeDetails, shouldCompress, isEditable) {
+function RelationshipChart(relGraph, $relChartDiv, chartOptions) {
+
   this.relGraph = relGraph;
-  this.isEditable = isEditable;
+  this.isEditable = chartOptions.isEditable;
   this.chartId = this.relGraph.chartId;
   $relChartDiv.empty();
   $relChartDiv.append($.parseHTML(`<div id='personNodes-${this.chartId}'></div>\n<div id='familyLines-${this.chartId}'></div>\n<div id='editControls-${this.chartId}'></div>`));
@@ -227,18 +279,18 @@ function RelationshipChart(relGraph, $relChartDiv, shouldIncludeDetails, shouldC
   this.generationWidth = 280; // Width of a PersonBox (not including additional padding).
   this.lineGap = 10; // Horizontal pixels between one vertical line and another; and between a PersonBox and the vertical line.
   this.treeGap = 10; // Additional vertical pixels between someone in one connected tree and another one.
-  this.shouldIncludeDetails = shouldIncludeDetails;
-  this.shouldCompress = shouldCompress;
-  this.shouldDisplayIds = true;
+  this.shouldIncludeDetails = chartOptions.shouldIncludeDetails;
+  this.shouldCompress = chartOptions.shouldCompress;
+  this.shouldDisplayIds = chartOptions.shouldDisplayIds;
+  this.shouldShowConfidence = chartOptions.shouldShowConfidence;
   this.animationSpeed = 0;
 
   this.width = 0; // overall size of chart
   this.height = 0;
   this.prevHeight = 0; // height of chart before last update
   this.chartCompressor = new ChartCompressor(this);
-  this.includeConfidence = true;
 
-  if (isEditable) {
+  if (chartOptions.isEditable) {
     let relChart = this;
     $relChartDiv.click(function(){
       relChart.clearSelections();
