@@ -71,7 +71,13 @@ function redoGraph() {
  * @returns {RelationshipChart}
  */
 function buildGraph(gx, isEditable, prevChart, ignoreUndo, imgOverlayToGx, isDraggable) {
-  return buildRelGraph(gx, new ChartOptions({}));
+  return buildRelGraph(gx, prevChart ? prevRelChartOptions(prevChart): new ChartOptions({
+    isEditable: isEditable,
+    prevChart: prevChart,
+    ignoreUndo: ignoreUndo,
+    imgOverlayToGx: imgOverlayToGx,
+    isDraggable: isDraggable
+  }));
 }
 
 /**
