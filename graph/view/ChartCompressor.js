@@ -323,15 +323,13 @@ ChartCompressor.prototype.pushPeopleDown = function(personBoxes) {
       }
 
       if (minMove >= 0) {
-        let bumpedPersonBoxId;
-        for (let b = 0; b < bumpedSet.values.length; b++) {
-          bumpedPersonBoxId = bumpedSet.values[b];
+        for (let bumpedPersonBoxId of bumpedSet.values) {
           let otherBumpGroup = bumpGroupMap[bumpedPersonBoxId];
           if (otherBumpGroup) {
             // The person box we bumped into was part of an earlier group, so lump all those into this group now.
-            for (let i = 0; i < otherBumpGroup.personBoxIds.length; i++) {
+            for (let otherBumpedPersonBoxId of otherBumpGroup.personBoxIds.values) {
               // Remove them from the map, because we will add them all back in when the entire group is added.
-              delete bumpGroupMap[otherBumpGroup.personBoxIds[i]];
+              delete bumpGroupMap[otherBumpedPersonBoxId];
             }
             bumpGroup.addAll(otherBumpGroup);
           }

@@ -63,8 +63,7 @@ function wrongGender(father, mother) {
  */
 function addCouples(graph) {
   if (graph.gx.relationships) {
-    for (let r = 0; r < graph.gx.relationships.length; r++) {
-      let rel = graph.gx.relationships[r];
+    for (let rel of graph.gx.relationships) {
       if (rel.type === GX_COUPLE) {
         let pid1 = getPersonIdFromReference(rel.person1);
         let pid2 = getPersonIdFromReference(rel.person2);
@@ -87,8 +86,7 @@ function getParentMap(graph) {
   let parentMap = {};
 
   if (graph.gx.relationships) {
-    for (let r = 0; r < graph.gx.relationships.length; r++) {
-      let rel = graph.gx.relationships[r];
+    for (let rel of graph.gx.relationships) {
       if (rel.type === GX_PARENT_CHILD) {
         let parentId = getPersonIdFromReference(rel.person1);
         let childId = getPersonIdFromReference(rel.person2);
@@ -164,10 +162,10 @@ function addChildren(graph) {
         }
       }
       // If any parents were not part of a couple, create a single-parent family for them.
-      for (let parent = 0; parent < unusedParentIdsAndRels.length; parent++) {
-        let fatherNode = graph.personNodeMap[unusedParentIdsAndRels[parent].parentId];
+      for (let unusedParent of unusedParentIdsAndRels) {
+        let fatherNode = graph.personNodeMap[unusedParent.parentId];
         let motherNode = null;
-        let fatherRel = unusedParentIdsAndRels[parent].parentChildRelationship;
+        let fatherRel = unusedParent.parentChildRelationship;
         let motherRel = null;
         if (wrongGender(fatherNode, motherNode)) {
           motherNode = fatherNode;
@@ -187,8 +185,7 @@ function addChildren(graph) {
 }
 
 function addFamiliesToPersonNodes(graph) {
-  for (let f = 0; f < graph.familyNodes.length; f++) {
-    let familyNode = graph.familyNodes[f];
+  for (let familyNode of graph.familyNodes) {
     if (familyNode.father) {
       familyNode.father.addSpouseFamily(familyNode);
     }
@@ -196,8 +193,8 @@ function addFamiliesToPersonNodes(graph) {
       familyNode.mother.addSpouseFamily(familyNode);
     }
     if (familyNode.children) {
-      for (let c = 0; c < familyNode.children.length; c++) {
-        familyNode.children[c].addParentFamily(familyNode);
+      for (let child of familyNode.children) {
+        child.addParentFamily(familyNode);
       }
     }
   }

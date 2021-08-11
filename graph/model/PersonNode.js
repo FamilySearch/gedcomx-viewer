@@ -36,11 +36,9 @@ PersonNode.prototype. getFirstFullName = function(person) {
   }
   let firstFullName = null;
   if (person.names) {
-    for (let n = 0; n < person.names.length; n++) {
-      let name = person.names[n];
+    for (let name of person.names) {
       if (name.nameForms) {
-        for (let f = 0; f < name.nameForms.length; f++) {
-          let form = name.nameForms[f];
+        for (let form of name.nameForms) {
           if (form.fullText) {
             if (!firstFullName) {
               firstFullName = form.fullText;
