@@ -33,13 +33,13 @@
       let params = window.location.search;
       let urlParams = new URLSearchParams(params);
       let url = urlParams.get('url');
-
+      let sessionId = urlParams.get('sessionid');
       if (!url) {
         url = "samples/004004022_00019.json";
       }
       else if (url.includes(":")) {
         let personaId = url.match(/.*1:1:(.*)/)[1];
-        url = "https://api.familysearch.org/platform/records/personas/" + personaId + "?access_token=996c6d28-2626-443b-a0ea-7312dcda7705-prod";
+        url = "https://api.familysearch.org/platform/records/personas/" + personaId + "?access_token=" + sessionId;
       }
       $.ajax({
         beforeSend: function(request) {
