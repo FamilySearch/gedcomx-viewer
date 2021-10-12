@@ -210,7 +210,7 @@ RelationshipGraph.prototype.relTypeMap = {
   "Godparent": ["Godfather", "Godmother", "Godparent", "Godson", "Goddaughter", "Godchild"],
   "Sibling": ["Brother", "Sister", "Sibling"],
   "Fiance": ["Fiancé", "Fiancée", "Fiancé"], // female Fiancée has an extra "e"
-  "Grandparent": ["Grandfather", "Grandmother", "Grandparent", "Grandson", "Granddaughter", "Grandchild"],
+  "GrandParent": ["Grandfather", "Grandmother", "Grandparent", "Grandson", "Granddaughter", "Grandchild"],
   "GreatGrandparent": ["Great-grandfather", "Great-grandmother", "Great-grandparent", "Great-grandson", "Great-granddaughter", "Great-grandchild"],
   "SiblingInLaw": ["Brother-in-law", "Sister-in-law", "Sibling-in-Law"],
   "StepSibling": ["Stepbrother", "Stepsister", "Stepsibling"],
