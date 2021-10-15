@@ -1514,6 +1514,9 @@
            type: "GET",
            dataType: "json",
            accepts: { json: "application/x-gedcomx-v1+json" },
+           headers: {
+             "Accept": "application/x-gedcomx-v1+json"
+           },
            url: gedcomxUrl,
            success: function (doc, textStatus, jqKHR) {
              doc = fixGedcomx(doc);
