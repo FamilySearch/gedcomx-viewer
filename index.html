@@ -1507,14 +1507,13 @@
       $("#fetch-gx").click(function () {
         setRecordSourceDocument(null);
 
+        let sessionId = $("#session-id").val();
         let gedcomxUrl = $("#record-url").val();
+        gedcomxUrl = gedcomxUrl + (gedcomxUrl.includes('?') ? "&sessionId=" : "?sessionId=") + sessionId;
         $.ajax({
            type: "GET",
            dataType: "json",
            accepts: { json: "application/x-gedcomx-v1+json" },
-           xhrFields: {
-             withCredentials: "true"
-           },
            url: gedcomxUrl,
            success: function (doc, textStatus, jqKHR) {
              doc = fixGedcomx(doc);
@@ -1533,9 +1532,6 @@
              type: "GET",
              dataType: "text",
              accepts: {text: "*/*"},
-             xhrFields: {
-               withCredentials: "true"
-             },
              url: sourceUrl,
              success: function (text, textStatus, jqKHR) {
                setRecordSourceDocument(text);
@@ -1753,6 +1749,10 @@
                 <div class="form-group">
                   <div class="container-fluid p-0">
                     <div class="row">
+                      <div class="col">
+                        <label for="session-id">Session Id</label>
+                        <input id="session-id" type="text" class="form-control" aria-describedby="session-id"/>
+                      </div>
                       <div class="col">
                         <label for="record-url">GEDCOM X URL</label>
                         <input id="record-url" type="text" class="form-control" aria-describedby="record-url"
