@@ -27,8 +27,7 @@ function findNbxDocumentText(doc, docId) {
     if (!docId) {
       docId = "nbx";
     }
-    for (let d = 0; d < doc.documents.length; d++) {
-      let document = doc.documents[d];
+    for (let document of documents) {
       if (document.id === docId) {
         return document.text;
       }
@@ -66,7 +65,7 @@ function overlayBoxes(viewer, doc, sessionId) {
 
     let markerId = "m_" + overlayId;
     $markers.append(makeMarkerSpan(text, markerId, boxType));
-    let markerNode = document.getElementById(markerId); //$("#" + markerId)[0];
+    let markerNode = document.getElementById(markerId);
     let marker = {
       id : markerId,
       followOverlayId: overlayId,
@@ -91,11 +90,9 @@ function overlayBoxes(viewer, doc, sessionId) {
    */
   function addSourceBoxes(boxes, gxValue, boxType, text, markers, elementMap) {
     if (gxValue && !isEmpty(gxValue.sources)) {
-      for (let s = 0; s < gxValue.sources.length; s++) {
-        let sourceReference = gxValue.sources[s];
+      for (let sourceReference of gxValue.sources) {
         if (!isEmpty(sourceReference.qualifiers)) {
-          for (let q = 0; q < sourceReference.qualifiers.length; q++) {
-            let qualifier = sourceReference.qualifiers[q];
+          for (let qualifier of sourceReference.qualifiers) {
             if (qualifier.name === "http://gedcomx.org/RectangleRegion") {
               let rectangle = new Rectangle(qualifier.value);
               let overlay = createOverlay(boxType, rectangle, elementMap, gxValue);
@@ -121,12 +118,10 @@ function overlayBoxes(viewer, doc, sessionId) {
    */
   function addFieldBoxes(boxes, markers, fieldContainer, boxType, elementMap) {
     if (!isEmpty(fieldContainer.fields)) {
-      for (let f = 0; f < fieldContainer.fields.length; f++) {
-        let field = fieldContainer.fields[f];
+      for (let field of fieldContainer.fields) {
         if (field.values) {
           let text = null;
-          for (let v = 0; v < field.values.length; v++) {
-            let fieldValue = field.values[v];
+          for (let fieldValue of field.values) {
             if (fieldValue.text) {
               text = fieldValue.text;
             }
@@ -147,16 +142,13 @@ function overlayBoxes(viewer, doc, sessionId) {
    */
   function addNameBoxes(boxes, markers, names, elementMap) {
     if (names) {
-      for (let n = 0; n < names.length; n++) {
-        let name = names[n];
+      for (let name of names) {
         addFieldBoxes(boxes, markers, name, "name", elementMap);
         if (name.nameForms) {
-          for (let f = 0; f < name.nameForms.length; f++) {
-            let nameForm = name.nameForms[f];
+          for (let nameForm of name.nameForms) {
             addFieldBoxes(boxes, markers, nameForm, "name", elementMap);
             if (nameForm.parts) {
-              for (let np = 0; np < nameForm.parts.length; np++) {
-                let namePart = nameForm.parts[np];
+              for (let namePart of nameForm.parts) {
                 addFieldBoxes(boxes, markers, namePart, "name", elementMap);
               }
             }
@@ -168,8 +160,7 @@ function overlayBoxes(viewer, doc, sessionId) {
 
   function addFactBoxes(boxes, markers, facts, elementMap) {
     if (!isEmpty(facts)) {
-      for (let f = 0; f < facts.length; f++) {
-        let fact = facts[f];
+      for (let fact of facts) {
         addFieldBoxes(boxes, markers, fact, "fact", elementMap);
         if (fact.date) {
           addFieldBoxes(boxes, markers, fact.date, "date", elementMap);
@@ -184,8 +175,7 @@ function overlayBoxes(viewer, doc, sessionId) {
   // NBX bounding box [x,y,w,h] parsing...
   // Find the metadata string in the given array of {tag:, content:} with the given tag.
   function findMetadata(metadata, tag) {
-    for (let m = 0; m < metadata.length; m++) {
-      let meta = metadata[m];
+    for (let meta of metadata) {
       if (meta.tag === tag) {
         return meta.content;
       }
@@ -263,8 +253,7 @@ function overlayBoxes(viewer, doc, sessionId) {
     let imgWidth = imgSize[0];
     let imgHeight = imgSize[1];
 
-    for (let t = 0; t < nbx.sbody.length; t++) {
-      let tag = nbx.sbody[t];
+    for (let tag of nbx.sbody) {
       if (tag.rectangles) {
         //todo. So far there won't be any here.
       }
@@ -288,8 +277,8 @@ function overlayBoxes(viewer, doc, sessionId) {
     // Assume single image for now.
     let rects = imageArksAndRects[0].rectangles;
     if (rects) {
-      for (let r = 0; r < rects.length; r++) {
-        let overlay = createOverlay("article", rects[r], elementMap, doc);
+      for (let rect of rects) {
+        let overlay = createOverlay("article", rect, elementMap, doc);
         boxes.push(overlay);
       }
     }
@@ -316,8 +305,7 @@ function overlayBoxes(viewer, doc, sessionId) {
   addNbxBoxes(boxes, markers, findNbxDocumentText(doc));
 
   if (doc.persons) {
-    for (let p = 0; p < doc.persons.length; p++) {
-      let person = doc.persons[p];
+    for (let person of doc.persons) {
       addFieldBoxes(boxes, markers, person, "person", elementMap);
       addNameBoxes(boxes, markers, person.names, elementMap);
       addFactBoxes(boxes, markers, person.facts, elementMap);
@@ -327,8 +315,7 @@ function overlayBoxes(viewer, doc, sessionId) {
     }
   }
   if (doc.relationships) {
-    for (let r = 0; r < doc.relationships.length; r++) {
-      let relationship = doc.relationships[r];
+    for (let relationship of doc.relationships) {
       addFieldBoxes(boxes, markers, relationship, "relationship", elementMap);
       addFactBoxes(boxes, markers, relationship.facts, elementMap);
     }

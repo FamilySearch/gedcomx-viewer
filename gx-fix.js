@@ -22,15 +22,13 @@ function generateLocalId() {
  */
 function addLocalIds(doc) {
   if (doc.persons) {
-    for (let i = 0; i < doc.persons.length; i++) {
-      let person = doc.persons[i];
+    for (let person of doc.persons) {
       if (!person.id) {
         person.id = generateLocalId();
       }
 
       if (person.facts) {
-        for (let j = 0; j < person.facts.length; j++) {
-          let fact = person.facts[j];
+        for (let fact of person.facts) {
           if (!fact.id) {
             fact.id = generateLocalId();
           }
@@ -38,8 +36,7 @@ function addLocalIds(doc) {
       }
 
       if (person.names) {
-        for (let j = 0; j < person.names.length; j++) {
-          let name = person.names[j];
+        for (let name of person.names) {
           if (!name.id) {
             name.id = generateLocalId();
           }
@@ -49,15 +46,13 @@ function addLocalIds(doc) {
   }
 
   if (doc.relationships) {
-    for (let i = 0; i < doc.relationships.length; i++) {
-      let relationship = doc.relationships[i];
+    for (let relationship of doc.relationships) {
       if (!relationship.id) {
         relationship.id = generateLocalId();
       }
 
       if (relationship.facts) {
-        for (let j = 0; j < relationship.facts.length; j++) {
-          let fact = relationship.facts[j];
+        for (let fact of relationship.facts) {
           if (!fact.id) {
             fact.id = generateLocalId();
           }
@@ -77,17 +72,16 @@ function fixAge(doc) {
   let isObituary = sd && sd.coverage && sd.coverage.length > 0 && sd.coverage[0].recordType === "http://gedcomx.org/Obituary";
 
   if (doc.persons) {
-    for (let i = 0; i < doc.persons.length; i++) {
-      let person = doc.persons[i];
+    for (let person of doc.persons) {
       let age = null;
       if (person.fields) {
-        for (let j = 0; j < person.fields.length; j++) {
-          if (person.fields[j].type === "http://gedcomx.org/Age") {
-            let ageField = person.fields[j];
+        for (let personField of person.fields) {
+          if (personField.type === "http://gedcomx.org/Age") {
+            let ageField = personField;
             if (ageField.values) {
-              for (let k = 0; k < ageField.values.length; k++) {
-                if (ageField.values[k].type === "http://gedcomx.org/Original") {
-                  age = ageField.values[k].text;
+              for (let fieldValue of ageField.values) {
+                if (fieldValue.type === "http://gedcomx.org/Original") {
+                  age = fieldValue.text;
                   break;
                 }
               }
@@ -99,16 +93,15 @@ function fixAge(doc) {
 
       if (age && person.facts) {
         let ageAdded = false;
-        for (let j = 0; j < person.facts.length; j++) {
-          if ((isObituary && person.facts[j].type === "http://gedcomx.org/Death") || (!isObituary && person.facts[j].primary)) {
-            let fact = person.facts[j];
+        for (let fact of person.facts) {
+          if ((isObituary && fact.type === "http://gedcomx.org/Death") || (!isObituary &&fact.primary)) {
             if (!fact.qualifiers) {
               fact.qualifiers = [];
             }
 
             let addAge = true;
-            for (let k = 0; k < fact.qualifiers.length; k++) {
-              if (fact.qualifiers[k].name === "http://gedcomx.org/Age") {
+            for (let qualifier of fact.qualifiers) {
+              if (qualifier.name === "http://gedcomx.org/Age") {
                 ageAdded = true;
                 addAge = false;
                 break;
@@ -147,8 +140,7 @@ function fixTextOfSourceOfSource(doc, sourceDocumentText, sourceDocumentName) {
   if (sourceOfSource && sourceOfSource.about) {
     let sourceDocumentId = sourceOfSource.about.substr(1);
     if (doc.documents) {
-      for (let i = 0; i < doc.documents.length; i++) {
-        let candidate = doc.documents[i];
+      for (let candidate of doc.documents) {
         if (sourceDocumentId === candidate.id) {
           sourceDocument = candidate;
           break;
@@ -192,11 +184,9 @@ function fixTextOfSourceOfSource(doc, sourceDocumentText, sourceDocumentName) {
 
 function fixExplicitNameType(gx) {
   if (gx.persons) {
-    for (let i = 0; i < gx.persons.length; i++) {
-      let person = gx.persons[i];
+    for (let person of gx.persons) {
       if (person.names) {
-        for (let j = 0; j < person.names.length; j++) {
-          let name = person.names[j];
+        for (let name of person.names) {
           if (name.type === "http://gedcomx.org/BirthName") {
             //assume birth name is implicit, not explicit
             name.type = null;
@@ -243,8 +233,7 @@ function removeRedundantRelationships(gx) {
   //   parent personId (p1) to an array of child personIds (p2's) that have that parent.
   function makeParentMap(relationships) {
     let parentMap = {};
-    for (let r = 0; r < relationships.length; r++) {
-      let rel = relationships[r];
+    for (let rel of relationships) {
       if (rel.type === GX_PARENT_CHILD) {
         addIfNotThere(parentMap, getPersonId(rel.person1), getPersonId(rel.person2));
       }
@@ -259,8 +248,8 @@ function removeRedundantRelationships(gx) {
     for (let parentId in parentMap) {
       if (parentMap.hasOwnProperty(parentId)) {
         let childIds = parentMap[parentId];
-        for (let c = 0; c < childIds.length; c++) {
-          addIfNotThere(childMap, childIds[c], parentId);
+        for (let childId of childIds.length) {
+          addIfNotThere(childMap, childId, parentId);
         }
       }
     }
@@ -269,8 +258,7 @@ function removeRedundantRelationships(gx) {
 
   function makeSpouseMap(relationships) {
     let spouseMap = {};
-    for (let r = 0; r < relationships.length; r++) {
-      let rel = relationships[r];
+    for (let rel of relationships) {
       if (rel.type === GX_COUPLE) {
         addIfNotThere(spouseMap, getPersonId(rel.person1), getPersonId(rel.person2));
         addIfNotThere(spouseMap, getPersonId(rel.person2), getPersonId(rel.person1));
@@ -299,8 +287,7 @@ function removeRedundantRelationships(gx) {
             return relIds.includes(p2);
           }
           // There are relatives of the given type from p1. So look for p2 in the last map.
-          for (let r = 0; r < relIds.length; r++) {
-            let relId = relIds[r];
+          for (let relId of relIds) {
             if (!ignoreList.includes(relId)) { // skip any relatives that we have already visited in our search.
               // There are still more maps, so add the current id to the list to ignore, and recurse on the next map.
               let ignoreList2 = ignoreList.slice();

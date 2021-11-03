@@ -77,6 +77,18 @@ function getGenderString(person) {
   return gender;
 }
 
+function getGenderClass(genderString) {
+  if (genderString) {
+    if (genderString.charAt(0) === 'M') {
+      return "gender-male";
+    }
+    else if (genderString.charAt(0) === 'F') {
+      return "gender-female";
+    }
+  }
+  return "gender-unknown"
+}
+
 function getBestNameValue(person) {
   if (!person.names || !person.names.length) {
     return null;
@@ -181,8 +193,7 @@ function buildRecordUI(doc, url, editHooks) {
 
 function isSour(doc) {
   if (doc.fields) {
-    for (let i = 0; i < doc.fields.length; i++) {
-      let field = doc.fields[i];
+    for (let field of fields) {
       if (field.type === "http://familysearch.org/types/fields/FsVisStatus") {
         if (field.values && field.values.length > 0 && field.values[0].text === "restricted") {
           return true;
@@ -269,7 +280,7 @@ function buildPersonUI(doc, person, idMap, path, editHooks) {
 
 function buildGenderBadge(person, path, editHooks) {
   let genderString = getGenderString(person);
-  let genderClass = genderString ? genderString.charAt(0) === 'M' ? "gender-male" : genderString.charAt(0) === 'F' ? "gender-female" : "gender-unknown" : "gender-unknown";
+  let genderClass = getGenderClass(genderString);
   let genderBadge = span({ class: "gender badge badge-pill badge-secondary " + genderClass }).append(span({ "json-node-path": path + ".gender" }).text(genderString));
   if (editHooks.editGender) {
     span({class: "trigger oi oi-loop-circular ml-1"}).click(function() { editHooks.editGender(person.id); }).appendTo(genderBadge);
@@ -626,8 +637,7 @@ function findPersonByRef(doc, id) {
     }
 
     if (doc.persons) {
-      for (let i = 0; i < doc.persons.length; i++) {
-        let person = doc.persons[i];
+      for (let person of doc.persons) {
         if (person.id === id) {
           return person;
         }
