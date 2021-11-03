@@ -378,17 +378,17 @@ function buildFactsUI(subject, facts, path, editHooks, isRelationship) {
   let editFactFn = isRelationship ? editHooks.editRelationshipFact : editHooks.editPersonFact;
   let copyFactFn = isRelationship ? null : editHooks.copyPersonFact;
 
-  for (let i = 0; i < facts.length; i++) {
-    if (facts[i].value) {
+  for (let fact of facts) {
+    if (fact.value) {
       valueNeeded = true;
     }
 
-    if (facts[i].qualifiers) {
-      for (let j = 0; j < facts[i].qualifiers.length; j++) {
-        if (facts[i].qualifiers[j].name === "http://gedcomx.org/Age") {
+    if (fact.qualifiers) {
+      for (let qualifier of qualifiers) {
+        if (qualifier.name === "http://gedcomx.org/Age") {
           ageNeeded = true;
         }
-        if (facts[i].qualifiers[j].name === "http://gedcomx.org/Cause") {
+        if (qualifier.name === "http://gedcomx.org/Cause") {
           causeNeeded = true;
         }
       }
@@ -503,8 +503,8 @@ function buildRelativesUI(doc, person, idMap, editHooks) {
   if (doc.relationships) {
     for (let i = 0; i < doc.relationships.length; i++) {
       let relationship = doc.relationships[i];
-      let ref1 = relationship.person1 ? relationship.person1.resource ? relationship.person1.resource : "" : "";
-      let ref2 = relationship.person2 ? relationship.person2.resource ? relationship.person2.resource : "" : "";
+      let ref1 = relationship.person1 && relationship.person1.resource ? relationship.person1.resource : "";
+      let ref2 = relationship.person2 && relationship.person2.resource ? relationship.person2.resource : "";
       let isP1 = ref1.endsWith(person.id);
       let isP2 = ref2.endsWith(person.id);
       if (isP1 || isP2) {
@@ -550,8 +550,7 @@ function buildRelativeUI(relationship, relative, relativeLabel, idMap, path, edi
 function buildRelativeFactsUI(rel) {
   let facts = {};
   if (rel && rel.facts) {
-    for (let i = 0; i < rel.facts.length; i++) {
-      let fact = rel.facts[i];
+    for (let fact of rel.facts) {
       facts[parseType(fact.type)] = (fact.date ? fact.date.original + " " : "") + (fact.place ? fact.place.original + " " : "") + (fact.value ? "(" + fact.value + ")" : "");
     }
   }
@@ -559,7 +558,6 @@ function buildRelativeFactsUI(rel) {
 }
 
 function buildRelationshipsUI(doc, idMap, path, editHooks) {
-  let i;
   let relationships = div({id: "relationships"});
   path = path + ".relationships";
   for (let i = 0; i < doc.relationships.length; i++) {
