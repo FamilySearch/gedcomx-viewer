@@ -99,7 +99,7 @@
      *  Update a record.
      *
      *  @param doc The record to update.
-     *  @param url (optional) The url of the record, if applicable. (Ignored if null)
+     *  @param url (optional) The url or filename of the record, if applicable. (Ignored if null)
      *  @param editorAlreadyUpdated (optional) Flag for whether the 'editor' is already updated (avoids closing editor when it is being edited still).
      */
     function updateRecord(doc, url, editorAlreadyUpdated) {
@@ -110,6 +110,15 @@
       }
 
       currentGx = doc;
+      let backup = {
+        "doc": doc,
+        "url": url,
+        "text": sourceDocumentText,
+        "filename": sourceDocumentName
+      }
+      let backupStr = JSON.stringify(backup);
+      sessionStorage.setItem("Gx-Backup", backupStr);
+      localStorage.setItem("Gx-Backup.localStorage", backupStr);
 
       if (!editorAlreadyUpdated) {
         editor.set(doc);
@@ -182,6 +191,10 @@
       el.empty();
       if (name) {
         el.append($("<h1/>").append($("<small/>", {"class": "text-muted"}).text(name)));
+        let gxDownloadNode = $("#download-gx");
+        if (gxDownloadNode.attr("download") === "gx.txt") {
+          gxDownloadNode.attr("download", name.replace(/(.txt)?$/, ".gx.json"));
+        }
       }
       if (text) {
         el.append($("<textarea/>", {"class": "form-control border", "rows" : "15", "style": "font-size: 14px", "id" : "source-document"}).val(text));
@@ -1387,8 +1400,7 @@
       let age;
       let cause;
       if (fact.qualifiers) {
-        for (let i = 0; i < fact.qualifiers.length; i++) {
-          let qualifier = fact.qualifiers[i];
+        for (let qualifier of fact.qualifiers) {
           switch (qualifier.name) {
             case "http://gedcomx.org/Age":
               age = qualifier.value;
@@ -1420,6 +1432,18 @@
     function showError(text) {
       $("#alert-container").empty().append(text);
       $("#alert").modal("show");
+    }
+
+    function recoverRecord(useLocalStorage) {
+      let backupStr = useLocalStorage ? localStorage.getItem("Gx-Backup.localStorage") : sessionStorage.getItem("Gx-Backup");
+      if (backupStr) {
+        let backup = JSON.parse(backupStr);
+        if (backup.text) {
+          setRecordSourceDocument(backup.text, backup.filename);
+        }
+        updateRecord(backup.doc, backup.url);
+        $("#download-gx").attr("download", backup.filename);
+      }
     }
 
     function uploadGedcomx(files) {
@@ -1583,10 +1607,14 @@
       });
 
       $("#gxfile").filestyle({
-        text: "Choose GEDCOM X File",
+        text: "Choose GedcomX File",
         input: false,
         'onChange' : uploadGedcomx
       });
+
+      // $("#gxrecover").click(function() {
+      //   recoverRecord(true);
+      // });
 
       $("#record").on("drop", function(je) {
         let e = je.originalEvent;
@@ -1671,9 +1699,11 @@
       $("#edit-edit-relationship-fact").click(editRelationshipFact);
 
       $("#copy-copy-person-fact").click(copyPersonFact);
+      // See if the tab has been reloaded, in which case we want to restored the data that would otherwise be lost.
+      recoverRecord(false);
     });
   </script>
-  <style type="text/css">
+  <style>
     #gx-editor {
       max-height: 40vh;
       overflow-y: auto;
@@ -1716,7 +1746,7 @@
       <a id="copy-gx" href="#" class="btn btn-primary m-1" title="Copy GEDCOM X to Clipboard"><span class="oi oi-clipboard"></span></a>
     </li>
     <li class="nav-item">
-      <a id="download-gx" href="#" download="gx.txt" class="btn btn-primary m-1" title="Download GEDCOM X"><span class="oi oi-data-transfer-download"></span></a>
+      <a id="download-gx" href="#" download="gx.txt" class="btn btn-primary m-1" title="Download GedcomX"><span class="oi oi-data-transfer-download"></span></a>
     </li>
   </ul>
 </nav>
@@ -1742,7 +1772,8 @@
             <div class="tab-content border border-top-0 p-4" id="input-tab-content">
               <div class="tab-pane fade show active" id="upload" role="tabpanel" aria-labelledby="upload-tab">
                 <div class="form-group">
-                  <input type="file" id="gxfile" name="gx" data-text="Choose GEDCOM X File"/>
+                  <input type="file" id="gxfile" name="gx" data-text="Choose GedcomX File"/>
+                  <a href="" onClick="recoverRecord(true)">&nbsp;&nbsp;Recover last record</a>
                   <div class="pt-4">
                     <input type="file" class="pt-4" id="srcfile" name="src" data-text="Choose Source File"/>
                   </div>

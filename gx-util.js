@@ -200,8 +200,7 @@ function getAgent(doc, ref) {
   if (ref && ref.startsWith("#")) {
     let id = ref.substr(1);
     if (doc.agents) {
-      for (let i = 0; i < doc.agents.length; i++) {
-        let agent = doc.agents[i];
+      for (let agent of agents) {
         if (agent.id === id) {
           return agent;
         }
@@ -226,8 +225,7 @@ function getSourceDescription(doc, sourceIdOrUrl) {
     }
 
     if (doc.sourceDescriptions) {
-      for (let i = 0; i < doc.sourceDescriptions.length; i++) {
-        let srcDesc = doc.sourceDescriptions[i];
+      for (let srcDesc of doc.sourceDescriptions) {
         if (srcDesc.about === sourceIdOrUrl || srcDesc.id === sourceIdOrUrl) {
           source = srcDesc;
           break;
@@ -258,8 +256,7 @@ function getSourceDocument(doc, documentSourceDescription) {
   if (documentSourceDescription && documentSourceDescription.about) {
     let sourceDocumentId = documentSourceDescription.about.substr(1);
     if (doc.documents) {
-      for (let i = 0; i < doc.documents.length; i++) {
-        let candidate = doc.documents[i];
+      for (let candidate of doc.documents) {
         if (sourceDocumentId === candidate.id) {
           document = candidate;
           break;
@@ -317,12 +314,10 @@ function getImageArks(doc) {
   function findImageArksAndRectangles(sd, imageArks) {
     if (sd && imageArks.length === 0) {
       if (!isEmpty(sd.sources)) {
-        for (let s = 0; s < sd.sources.length; s++) {
-          let source = sd.sources[s];
+        for (let source of sd.sources) {
           let rectangles = [];
           if (source.qualifiers) {
-            for (let q = 0; q < source.qualifiers.length; q++) {
-              let qualifier = source.qualifiers[q];
+            for (let qualifier of source.qualifiers) {
               if (qualifier.name === "http://gedcomx.org/RectangleRegion") {
                 rectangles.push(new Rectangle(source.qualifiers[q].value));
               }
@@ -348,12 +343,12 @@ function getImageArks(doc) {
   let imageArks = [];
   // Get the "main" SourceDescription for this GedcomX document (i.e., for this Record).
   let mainSd = getSourceDescription(doc, doc.description);
-  let sd = mainSd;
-  while (sd && !isRecord(sd) && sd.componentOf) {
-    sd = getSourceDescription(doc, sd.componentOf.description);
+  let recordSd = mainSd;
+  while (recordSd && !isRecord(recordSd) && recordSd.componentOf) {
+    recordSd = getSourceDescription(doc, recordSd.componentOf.description);
   }
 
-  findImageArksAndRectangles(sd ? sd : mainSd, imageArks);
+  findImageArksAndRectangles(recordSd ? recordSd : mainSd, imageArks);
 
   return imageArks;
 }

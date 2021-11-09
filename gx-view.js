@@ -77,6 +77,18 @@ function getGenderString(person) {
   return gender;
 }
 
+function getGenderClass(genderString) {
+  if (genderString) {
+    if (genderString.charAt(0) === 'M') {
+      return "gender-male";
+    }
+    else if (genderString.charAt(0) === 'F') {
+      return "gender-female";
+    }
+  }
+  return "gender-unknown"
+}
+
 function getBestNameValue(person) {
   if (!person.names || !person.names.length) {
     return null;
@@ -181,8 +193,7 @@ function buildRecordUI(doc, url, editHooks) {
 
 function isSour(doc) {
   if (doc.fields) {
-    for (let i = 0; i < doc.fields.length; i++) {
-      let field = doc.fields[i];
+    for (let field of fields) {
       if (field.type === "http://familysearch.org/types/fields/FsVisStatus") {
         if (field.values && field.values.length > 0 && field.values[0].text === "restricted") {
           return true;
@@ -269,7 +280,7 @@ function buildPersonUI(doc, person, idMap, path, editHooks) {
 
 function buildGenderBadge(person, path, editHooks) {
   let genderString = getGenderString(person);
-  let genderClass = genderString ? genderString.charAt(0) === 'M' ? "gender-male" : genderString.charAt(0) === 'F' ? "gender-female" : "gender-unknown" : "gender-unknown";
+  let genderClass = getGenderClass(genderString);
   let genderBadge = span({ class: "gender badge badge-pill badge-secondary " + genderClass }).append(span({ "json-node-path": path + ".gender" }).text(genderString));
   if (editHooks.editGender) {
     span({class: "trigger oi oi-loop-circular ml-1"}).click(function() { editHooks.editGender(person.id); }).appendTo(genderBadge);
@@ -367,17 +378,17 @@ function buildFactsUI(subject, facts, path, editHooks, isRelationship) {
   let editFactFn = isRelationship ? editHooks.editRelationshipFact : editHooks.editPersonFact;
   let copyFactFn = isRelationship ? null : editHooks.copyPersonFact;
 
-  for (let i = 0; i < facts.length; i++) {
-    if (facts[i].value) {
+  for (let fact of facts) {
+    if (fact.value) {
       valueNeeded = true;
     }
 
-    if (facts[i].qualifiers) {
-      for (let j = 0; j < facts[i].qualifiers.length; j++) {
-        if (facts[i].qualifiers[j].name === "http://gedcomx.org/Age") {
+    if (fact.qualifiers) {
+      for (let qualifier of qualifiers) {
+        if (qualifier.name === "http://gedcomx.org/Age") {
           ageNeeded = true;
         }
-        if (facts[i].qualifiers[j].name === "http://gedcomx.org/Cause") {
+        if (qualifier.name === "http://gedcomx.org/Cause") {
           causeNeeded = true;
         }
       }
@@ -492,8 +503,8 @@ function buildRelativesUI(doc, person, idMap, editHooks) {
   if (doc.relationships) {
     for (let i = 0; i < doc.relationships.length; i++) {
       let relationship = doc.relationships[i];
-      let ref1 = relationship.person1 ? relationship.person1.resource ? relationship.person1.resource : "" : "";
-      let ref2 = relationship.person2 ? relationship.person2.resource ? relationship.person2.resource : "" : "";
+      let ref1 = relationship.person1 && relationship.person1.resource ? relationship.person1.resource : "";
+      let ref2 = relationship.person2 && relationship.person2.resource ? relationship.person2.resource : "";
       let isP1 = ref1.endsWith(person.id);
       let isP2 = ref2.endsWith(person.id);
       if (isP1 || isP2) {
@@ -539,8 +550,7 @@ function buildRelativeUI(relationship, relative, relativeLabel, idMap, path, edi
 function buildRelativeFactsUI(rel) {
   let facts = {};
   if (rel && rel.facts) {
-    for (let i = 0; i < rel.facts.length; i++) {
-      let fact = rel.facts[i];
+    for (let fact of rel.facts) {
       facts[parseType(fact.type)] = (fact.date ? fact.date.original + " " : "") + (fact.place ? fact.place.original + " " : "") + (fact.value ? "(" + fact.value + ")" : "");
     }
   }
@@ -548,7 +558,6 @@ function buildRelativeFactsUI(rel) {
 }
 
 function buildRelationshipsUI(doc, idMap, path, editHooks) {
-  let i;
   let relationships = div({id: "relationships"});
   path = path + ".relationships";
   for (let i = 0; i < doc.relationships.length; i++) {
@@ -626,8 +635,7 @@ function findPersonByRef(doc, id) {
     }
 
     if (doc.persons) {
-      for (let i = 0; i < doc.persons.length; i++) {
-        let person = doc.persons[i];
+      for (let person of doc.persons) {
         if (person.id === id) {
           return person;
         }

@@ -75,6 +75,8 @@
     $.ajax({
       beforeSend: function(request) {
         request.setRequestHeader("Accept", "application/x-gedcomx-v1+json");
+        request.setRequestHeader("User-Agent", "ACE Record Fixer");
+        request.setRequestHeader("Fs-User-Agent-Chain", "ACE Record Fixer");
       },
       dataType: "json",
       url: url,

@@ -19,8 +19,7 @@ function textObjectArrayHtml(content, relexMap) {
     html += "<ul>";
   }
 
-  for (let i = 0; i < content.length; i++) {
-    let textObject = content[i];
+  for (let textObject of content) {
     if (isList) {
       html += "<li>";
     }
@@ -97,8 +96,8 @@ function nbxToHtml(nbx) {
   // Format of relex object is type, startOffset, endOffset, startToken, endToken.
   function makeRelexMap(relex) {
     let map = {};
-    for (let i = 0; i < relex.length; i++) {
-      let offset = relex[i].startOffset;
+    for (let rel of relex) {
+      let offset = rel.startOffset;
       let list = map[offset];
       if (list === undefined) {
         list = [];
@@ -132,8 +131,8 @@ function nbxToHtml(nbx) {
 
   let alreadyUsed = [];
   html += "<script>\n";
-  for (let i = 0; i < nbx.relex.length; i++) {
-    let id = getId(nbx.relex[i].endOffset);
+  for (let rel of nbx.relex) {
+    let id = getId(rel.endOffset);
     if (alreadyUsed[id] === undefined) {
       alreadyUsed[id] = true;
       html += '$(".ref-' + id + '").hover(function(){\n' +
