@@ -193,7 +193,7 @@ function buildRecordUI(doc, url, editHooks) {
 
 function isSour(doc) {
   if (doc.fields) {
-    for (let field of fields) {
+    for (let field of doc.fields) {
       if (field.type === "http://familysearch.org/types/fields/FsVisStatus") {
         if (field.values && field.values.length > 0 && field.values[0].text === "restricted") {
           return true;
