@@ -150,8 +150,10 @@ RelationshipChart.prototype.calculatePositions = function() {
   let prevBox = null;
   let bottom;
 
+  // Remember current size so that if person's info has changed, the box can be animated to the right size.
   this.prevHeight = this.height;
 
+  // Put every person in their own horizontal row to begin with.
   for (let personBox of this.personBoxes) {
     personBox.setPreviousPosition();
     y += this.verticalGap + this.subtreeGap(prevBox, personBox);

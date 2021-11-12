@@ -188,7 +188,7 @@ ChartCompressor.prototype.moveHusbandsDown = function(personBoxes) {
           }
         }
 
-        if (!minY && minY > personBox.getCenter()) {
+        if (minY && minY > personBox.getCenter()) {
           personBox.move(minY - personBox.getCenter());
         }
       }
