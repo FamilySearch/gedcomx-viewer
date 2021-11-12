@@ -319,7 +319,7 @@ function getImageArks(doc) {
           if (source.qualifiers) {
             for (let qualifier of source.qualifiers) {
               if (qualifier.name === "http://gedcomx.org/RectangleRegion") {
-                rectangles.push(new Rectangle(source.qualifiers[q].value));
+                rectangles.push(new Rectangle(qualifier.value));
               }
             }
           }
