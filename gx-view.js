@@ -384,7 +384,7 @@ function buildFactsUI(subject, facts, path, editHooks, isRelationship) {
     }
 
     if (fact.qualifiers) {
-      for (let qualifier of qualifiers) {
+      for (let qualifier of fact.qualifiers) {
         if (qualifier.name === "http://gedcomx.org/Age") {
           ageNeeded = true;
         }

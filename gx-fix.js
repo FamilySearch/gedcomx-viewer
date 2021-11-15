@@ -248,7 +248,7 @@ function removeRedundantRelationships(gx) {
     for (let parentId in parentMap) {
       if (parentMap.hasOwnProperty(parentId)) {
         let childIds = parentMap[parentId];
-        for (let childId of childIds.length) {
+        for (let childId of childIds) {
           addIfNotThere(childMap, childId, parentId);
         }
       }
@@ -272,13 +272,15 @@ function removeRedundantRelationships(gx) {
    * For example, to see if p1 is a great-grandchild p2, map1, map2 and map3 would all be parentMaps.
    * Each map is a map of personId to an array of personIds of parents, children or spouses of p1.
    * map2 is ignored if null (in which case map3 is ignored, too).
-   * If p1 is ignored (skipped) at the other end of any map.
-   * @param p1 - PersonId to find relative for
-   * @param p2 - PersonId of the relative to find
-   * @param map1...n (any number) - list of maps, each from a personId to a list of relative personIds.
+   * p1 is ignored (skipped) at the other end of any map.
+   * @param person1Id - PersonId to find relative for
+   * @param person2Id - PersonId of the relative to find
+   * (optional) map1...n (any number) - list of maps, each from a personId to a list of relative personIds.
    */
-  function hasRelative(p1, p2 /*, map1, map2, map3, ...*/) {
-    function recursiveHasRelative(ignoreList, p1, p2, maps, mapIndex) {
+  function hasRelative(person1Id, person2Id /*, map1, map2, map3, ...*/) {
+    // Recursively see if p1 has a relative p2 in maps[mapIndex].
+    // Ignore any relationships ending in p1.
+    function recursiveHasRelative(ignoreList, p1, p2, mapIndex) {
       if (mapIndex < maps.length) {
         let relIds = maps[mapIndex][p1];
         if (relIds) {
@@ -292,7 +294,7 @@ function removeRedundantRelationships(gx) {
               // There are still more maps, so add the current id to the list to ignore, and recurse on the next map.
               let ignoreList2 = ignoreList.slice();
               ignoreList2.push(relId);
-              if (recursiveHasRelative(ignoreList2, relId, p2, maps, nextMapIndex)) {
+              if (recursiveHasRelative(ignoreList2, relId, p2, nextMapIndex)) {
                 return true;
               } // else keep trying the other IDs.
             }
@@ -303,7 +305,7 @@ function removeRedundantRelationships(gx) {
       return false;
     }
     let maps = [].slice.call(arguments, 2); // get the array of maps passed in
-    return recursiveHasRelative([p1], p1, p2, maps, 0);
+    return recursiveHasRelative([person1Id], person1Id, person2Id, 0);
   }
 
   // === removeRedundantRelationships ===
