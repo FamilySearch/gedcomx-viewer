@@ -102,15 +102,15 @@
      *  @param doc The record to update.
      *  @param url (optional) The url or filename of the record, if applicable. (Ignored if null)
      *  @param editorAlreadyUpdated (optional) Flag for whether the 'editor' is already updated (avoids closing editor when it is being edited still).
+     *  @param isClean - flag for whether this is a fresh update of the record, so the dirty bit should be cleared rather than set (like usual).
      */
-    function updateRecord(doc, url, editorAlreadyUpdated) {
-      dirty = true;
+    function updateRecord(doc, url, editorAlreadyUpdated, isClean) {
       url = url ? url : currentUrl;
       currentUrl = url;
       if (doc.records && doc.records.length > 0) {
         doc = doc.records[0];
       }
-
+      dirty = !isClean;
       currentGx = doc;
       let backup = {
         "doc": doc,
@@ -194,9 +194,9 @@
       if (name) {
         el.append($("<h1/>").append($("<small/>", {"class": "text-muted"}).text(name)));
         let gxDownloadNode = $("#download-gx");
-        if (gxDownloadNode.attr("download") === "gx.txt") {
+        // if (gxDownloadNode.attr("download") === "gx.txt") {
           gxDownloadNode.attr("download", name.replace(/(.txt)?$/, ".gx.json"));
-        }
+        // }
       }
       if (text) {
         el.append($("<textarea/>", {"class": "form-control border", "rows" : "15", "style": "font-size: 14px", "id" : "source-document"}).val(text));
@@ -1443,15 +1443,15 @@
         if (backup.text) {
           setRecordSourceDocument(backup.text, backup.filename);
         }
-        updateRecord(backup.doc, backup.url);
+        updateRecord(backup.doc, backup.url, false, true);
         $("#download-gx").attr("download", backup.filename);
       }
     }
     
     function clearRecord() {
       if (!dirty || confirm("There are changes since the last download. Are you sure you want to clear the record?")) {
-        updateRecord({}, null, false);
-        dirty = false;
+        setRecordSourceDocument(null);
+        updateRecord({}, null, false, true);
       }
     }
 
@@ -1473,10 +1473,9 @@
 
             relChart = null; // clear out any previous RelationshipChart
             doc = fixGedcomx(doc);
-            updateRecord(doc, file.name);
+            updateRecord(doc, file.name, false, true);
             loadSourceDocument(doc);
             $("#download-gx").attr("download", file.name);
-            dirty = false;
           }
         })(f);
 
@@ -1485,6 +1484,9 @@
     }
 
     function uploadSource(files) {
+      if (!dirty || confirm("Clear the GedcomX and lose unsaved changes? (Cancel to keep GedcomX)")) {
+        updateRecord({}, null, false, true);
+      }
       for (let i = 0, f; f = files[i]; i++) {
         let reader = new FileReader();
         reader.onload = (function(file) {
@@ -1554,7 +1556,7 @@
            url: gedcomxUrl,
            success: function (doc, textStatus, jqKHR) {
              doc = fixGedcomx(doc);
-             updateRecord(doc, gedcomxUrl);
+             updateRecord(doc, gedcomxUrl, false, true);
              loadSourceDocument(doc);
            },
 
@@ -1594,7 +1596,7 @@
         }
 
         doc = fixGedcomx(doc);
-        updateRecord(doc);
+        updateRecord(doc, "pasted.gx", false, true);
         loadSourceDocument(doc);
 
         let src = $("#pasted-source").val();
