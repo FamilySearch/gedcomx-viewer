@@ -94,6 +94,7 @@
 
     let imageChildWindow;
     let entityChildWindow;
+    let dirty = false;
 
     /**
      *  Update a record.
@@ -103,6 +104,7 @@
      *  @param editorAlreadyUpdated (optional) Flag for whether the 'editor' is already updated (avoids closing editor when it is being edited still).
      */
     function updateRecord(doc, url, editorAlreadyUpdated) {
+      dirty = true;
       url = url ? url : currentUrl;
       currentUrl = url;
       if (doc.records && doc.records.length > 0) {
@@ -1445,6 +1447,13 @@
         $("#download-gx").attr("download", backup.filename);
       }
     }
+    
+    function clearRecord() {
+      if (!dirty || confirm("There are changes since the last download. Are you sure you want to clear the record?")) {
+        updateRecord({}, null, false);
+        dirty = false;
+      }
+    }
 
     function uploadGedcomx(files) {
       setRecordSourceDocument(null);
@@ -1467,6 +1476,7 @@
             updateRecord(doc, file.name);
             loadSourceDocument(doc);
             $("#download-gx").attr("download", file.name);
+            dirty = false;
           }
         })(f);
 
@@ -1596,6 +1606,7 @@
       $("#download-gx").click(function() {
         let gx = exportGedcomx();
         this.href = "data:text/plain;charset=UTF-8," + encodeURIComponent(gx);
+        dirty = false;
       });
       
       $("#copy-gx").click(function () {
@@ -1773,7 +1784,8 @@
               <div class="tab-pane fade show active" id="upload" role="tabpanel" aria-labelledby="upload-tab">
                 <div class="form-group">
                   <input type="file" id="gxfile" name="gx" data-text="Choose GedcomX File"/>
-                  <a href="" onClick="recoverRecord(true)">&nbsp;&nbsp;Recover last record</a>
+                  &nbsp;&nbsp;<a href="" onClick="recoverRecord(true)">Recover last record</a><br/>
+                  &nbsp;&nbsp;<a href="" onClick="clearRecord()">Clear record</a>
                   <div class="pt-4">
                     <input type="file" class="pt-4" id="srcfile" name="src" data-text="Choose Source File"/>
                   </div>
