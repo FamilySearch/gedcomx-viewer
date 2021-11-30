@@ -1712,6 +1712,9 @@
       $("#edit-edit-relationship-fact").click(editRelationshipFact);
 
       $("#copy-copy-person-fact").click(copyPersonFact);
+
+      dragElement(document.getElementById("new-person"));
+      dragElement(document.getElementById("new-relationship"));
       // See if the tab has been reloaded, in which case we want to restored the data that would otherwise be lost.
       recoverRecord(false);
     });
@@ -1874,7 +1877,7 @@
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="new-person-label">Add Person</h5>
+        <h5 class="modal-title drag-header" id="new-person-label">Add Person<span class="drag-handle"> |||</span></h5>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
@@ -1918,7 +1921,7 @@
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="new-relationship-label">Add Relationship</h5>
+        <h5 class="modal-title drag-header" id="new-relationship-label">Add Relationship<span class="drag-handle"> |||</span></h5>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>

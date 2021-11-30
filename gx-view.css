@@ -37,3 +37,14 @@ pre {
     max-height: 40vh;
     overflow-y: auto;
 }
+
+.drag-header {
+    cursor: move;
+    z-index: 10;
+    padding: 10px 4px 10px 10px;
+    background-color: #e2e7f8;
+}
+
+.drag-handle {
+    color: #b9bfd5;
+}
