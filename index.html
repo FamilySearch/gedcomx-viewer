@@ -75,6 +75,11 @@
      * @param doc The doc to show.
      * @param url The URL of the record, if applicable.
      */
+
+
+
+
+
     function showRecord(doc, url) {
       let el = $("#record");
       el.empty();
@@ -109,6 +114,7 @@
       currentUrl = url;
       if (doc.records && doc.records.length > 0) {
         doc = doc.records[0];
+
       }
 
       currentGx = doc;
@@ -410,6 +416,8 @@
       $("#edit-record-metadata").modal("show");
     };
 
+
+
     function addPerson() {
       let person = {};
       person.id = "p_999" + Math.floor(Math.random() * Math.floor(1000000000));
@@ -431,6 +439,7 @@
       let givenNames = $("#new-person-given-names").val();
       let surnames = $("#new-person-surnames").val();
       let suffixes = $("#new-person-suffixes").val();
+
       nameForm.fullText = [prefixes, givenNames, surnames, suffixes].filter(Boolean).join(" ");
       nameForm.parts = [];
 
@@ -438,6 +447,7 @@
       addPart(givenNames, "Given");
       addPart(surnames, "Surname");
       addPart(suffixes, "Suffix");
+
 
       function addPart(value, type) {
         if (value) {
@@ -464,8 +474,88 @@
     }
 
     editHooks.addPerson = function() {
+      if (window.getSelection()) {
+        updatePersonNameFromHighlight();
+        window.getSelection().removeAllRanges();
+      }
       $("#new-person").modal("show");
     };
+
+    editHooks.updatePersonNameFrommHighlight = function() {
+      alert("hello");
+      if (window.getSelection()) {
+        updatePersonNameFromHighlight(); // Reads the text from article and updates fields
+        window.getSelection().removeAllRanges();
+      }
+    };
+
+    function updatePersonNameFromHighlight() {
+      var textArea = document.getElementById("source-document");
+      var text = textArea.value;
+      var indexStart = textArea.selectionStart;
+      var indexEnd = textArea.selectionEnd;
+      if (indexStart != null && indexEnd != null) {
+        var selectedTxt = text.substring(indexStart,indexEnd);//.split(" ");
+        var splitTxt = selectedTxt.split(" ");
+
+        var occurence = selectedTxt.match(/ /g).length;
+
+        let prefix = checkPrefix(splitTxt[0]);
+        let suffix = checkSuffix(splitTxt[splitTxt.length - 1]);
+
+        if (occurence >= 3) {
+          $("#new-person-prefixes").val(splitTxt[0]);
+          $("#new-person-given-names").val(splitTxt[1]);
+          $("#new-person-surnames").val(splitTxt[2]);
+          $("#new-person-suffixes").val(splitTxt[3]);
+        }
+        else if (occurence === 2) {
+
+          if (prefix === null && suffix === null) {
+            $("#new-person-given-names").val(splitTxt[0] + ' ' + splitTxt[1]);
+            $("#new-person-surnames").val(splitTxt[2]);
+          } else {
+
+            if (prefix != null) {
+              $("#new-person-given-names").val(splitTxt[1]);
+            } else {
+              $("#new-person-given-names").val(splitTxt[0]);
+            }
+
+            if (suffix != null) {
+              $("#new-person-surnames").val(splitTxt[1]);
+            } else {
+              $("#new-person-surnames").val(splitTxt[2]);
+            }
+          }
+        }
+        else if (occurence === 1) {
+          if (prefix != null) {
+            $("#new-person-given-names").val(splitTxt[1]);
+          } else {
+            $("#new-person-given-names").val(splitTxt[0]);
+            $("#new-person-surnames").val(splitTxt[1]);
+          }
+        }
+      }
+    }
+
+    function checkPrefix(prefix) {
+      if (prefix.toLowerCase().match("(mr|mrs|miss|rev|fr|dr|dra|infant|baby)\\.?")) {
+        return $("#new-person-prefixes").val(prefix);
+      }
+      else {
+        return null;
+      }
+    }
+    function checkSuffix(suffix) {
+      if (suffix.toLowerCase().match("(jr|sr|iv|ii+|vii+|xi|senr|senior|junior|junr)\\.?")) {
+        return $("#new-person-suffixes").val(suffix);
+      }
+      else {
+        return null;
+      }
+    }
 
     editHooks.removePerson = function (pid) {
       let doc = editor.get();
@@ -1693,6 +1783,8 @@
 
       $("#add-new-person").click(addPerson);
 
+      // onmouseup
+
       $("#add-new-relationship").click(addRelationship);
 
       $("#edit-edit-relationship").click(editRelationship);
@@ -1710,6 +1802,8 @@
       $("#edit-edit-relationship-fact").click(editRelationshipFact);
 
       $("#copy-copy-person-fact").click(copyPersonFact);
+
+      $("#add-person-button").click(updatePersonNameFromHighlight);
       // See if the tab has been reloaded, in which case we want to restored the data that would otherwise be lost.
       recoverRecord(false);
     });
@@ -1742,7 +1836,7 @@
   <span class="navbar-brand">View and Edit GEDCOM X</span>
   <ul class="navbar-nav ml-auto">
     <li class="nav-item">
-      <button type="button" class="btn btn-primary m-1" data-toggle="modal" data-target="#new-person" title="Add Person">
+      <button type="button" class="btn btn-primary m-1" data-toggle="modal" data-target="#new-person" title="Add Person" id="add-person-button">
         <span class="oi oi-plus"></span>
         <span class="oi oi-person"></span>
       </button>
