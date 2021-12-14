@@ -75,6 +75,11 @@
      * @param doc The doc to show.
      * @param url The URL of the record, if applicable.
      */
+
+
+
+
+
     function showRecord(doc, url) {
       let el = $("#record");
       el.empty();
@@ -102,15 +107,16 @@
      *  @param doc The record to update.
      *  @param url (optional) The url or filename of the record, if applicable. (Ignored if null)
      *  @param editorAlreadyUpdated (optional) Flag for whether the 'editor' is already updated (avoids closing editor when it is being edited still).
-     *  @param isClean - flag for whether this is a fresh update of the record, so the dirty bit should be cleared rather than set (like usual).
      */
-    function updateRecord(doc, url, editorAlreadyUpdated, isClean) {
+    function updateRecord(doc, url, editorAlreadyUpdated) {
+      dirty = true;
       url = url ? url : currentUrl;
       currentUrl = url;
       if (doc.records && doc.records.length > 0) {
         doc = doc.records[0];
+
       }
-      dirty = !isClean;
+
       currentGx = doc;
       let backup = {
         "doc": doc,
@@ -194,9 +200,9 @@
       if (name) {
         el.append($("<h1/>").append($("<small/>", {"class": "text-muted"}).text(name)));
         let gxDownloadNode = $("#download-gx");
-        // if (gxDownloadNode.attr("download") === "gx.txt") {
+        if (gxDownloadNode.attr("download") === "gx.txt") {
           gxDownloadNode.attr("download", name.replace(/(.txt)?$/, ".gx.json"));
-        // }
+        }
       }
       if (text) {
         el.append($("<textarea/>", {"class": "form-control border", "rows" : "15", "style": "font-size: 14px", "id" : "source-document"}).val(text));
@@ -410,6 +416,8 @@
       $("#edit-record-metadata").modal("show");
     };
 
+
+
     function addPerson() {
       let person = {};
       person.id = "p_999" + Math.floor(Math.random() * Math.floor(1000000000));
@@ -431,6 +439,7 @@
       let givenNames = $("#new-person-given-names").val();
       let surnames = $("#new-person-surnames").val();
       let suffixes = $("#new-person-suffixes").val();
+
       nameForm.fullText = [prefixes, givenNames, surnames, suffixes].filter(Boolean).join(" ");
       nameForm.parts = [];
 
@@ -438,6 +447,7 @@
       addPart(givenNames, "Given");
       addPart(surnames, "Surname");
       addPart(suffixes, "Suffix");
+
 
       function addPart(value, type) {
         if (value) {
@@ -464,8 +474,93 @@
     }
 
     editHooks.addPerson = function() {
+      if (window.getSelection()) {
+        updatePersonNameFromHighlight();
+        window.getSelection().removeAllRanges();
+      }
       $("#new-person").modal("show");
     };
+
+    /*
+      UpdatePersonNameFromHighlight
+      Gets the text area of 'source-document' and checks for highlighted text. Then parses into 'new-person' modal
+     */
+
+    editHooks.updatePersonNameFromHighlight = function() {
+      alert("hello");
+      if (window.getSelection()) {
+        updatePersonNameFromHighlight(); // Reads the text from article and updates fields
+        window.getSelection().removeAllRanges();
+      }
+    };
+
+    function updatePersonNameFromHighlight() {
+      var textArea = document.getElementById("source-document");
+      var text = textArea.value;
+      var indexStart = textArea.selectionStart;
+      var indexEnd = textArea.selectionEnd;
+      if (indexStart != null && indexEnd != null) {
+        var selectedTxt = text.substring(indexStart,indexEnd);//.split(" ");
+        var splitTxt = selectedTxt.split(" ");
+
+        var occurence = selectedTxt.match(/ /g).length;
+
+        let prefix = checkPrefix(splitTxt[0]);
+        let suffix = checkSuffix(splitTxt[splitTxt.length - 1]);
+
+        if (occurence >= 3) {
+          $("#new-person-prefixes").val(splitTxt[0]);
+          $("#new-person-given-names").val(splitTxt[1]);
+          $("#new-person-surnames").val(splitTxt[2]);
+          $("#new-person-suffixes").val(splitTxt[3]);
+        }
+        else if (occurence === 2) {
+
+          if (prefix === null && suffix === null) {
+            $("#new-person-given-names").val(splitTxt[0] + ' ' + splitTxt[1]);
+            $("#new-person-surnames").val(splitTxt[2]);
+          } else {
+
+            if (prefix != null) {
+              $("#new-person-given-names").val(splitTxt[1]);
+            } else {
+              $("#new-person-given-names").val(splitTxt[0]);
+            }
+
+            if (suffix != null) {
+              $("#new-person-surnames").val(splitTxt[1]);
+            } else {
+              $("#new-person-surnames").val(splitTxt[2]);
+            }
+          }
+        }
+        else if (occurence === 1) {
+          if (prefix != null) {
+            $("#new-person-given-names").val(splitTxt[1]);
+          } else {
+            $("#new-person-given-names").val(splitTxt[0]);
+            $("#new-person-surnames").val(splitTxt[1]);
+          }
+        }
+      }
+    }
+
+    function checkPrefix(prefix) {
+      if (prefix.toLowerCase().match("(mr|mrs|miss|rev|fr|dr|dra|infant|baby)\\.?")) {
+        return $("#new-person-prefixes").val(prefix);
+      }
+      else {
+        return null;
+      }
+    }
+    function checkSuffix(suffix) {
+      if (suffix.toLowerCase().match("(jr|sr|iv|ii+|vii+|xi|senr|senior|junior|junr)\\.?")) {
+        return $("#new-person-suffixes").val(suffix);
+      }
+      else {
+        return null;
+      }
+    }
 
     editHooks.removePerson = function (pid) {
       let doc = editor.get();
@@ -1147,7 +1242,7 @@
       else {
         $("#edit-person-fact-value").val("");
       }
-      
+
       let age;
       let cause;
       if (fact.qualifiers) {
@@ -1163,14 +1258,14 @@
           }
         }
       }
-      
+
       if (age) {
         $("#edit-person-fact-age").val(age);
       }
       else {
         $("#edit-person-fact-age").val("");
       }
-      
+
       if (cause) {
         $("#edit-person-fact-cause").val(cause);
       }
@@ -1398,7 +1493,7 @@
       else {
         $("#edit-relationship-fact-value").val("");
       }
-      
+
       let age;
       let cause;
       if (fact.qualifiers) {
@@ -1413,14 +1508,14 @@
           }
         }
       }
-      
+
       if (age) {
         $("#edit-relationship-fact-age").val(age);
       }
       else {
         $("#edit-relationship-fact-age").val("");
       }
-      
+
       if (cause) {
         $("#edit-relationship-fact-cause").val(cause);
       }
@@ -1443,15 +1538,15 @@
         if (backup.text) {
           setRecordSourceDocument(backup.text, backup.filename);
         }
-        updateRecord(backup.doc, backup.url, false, true);
+        updateRecord(backup.doc, backup.url);
         $("#download-gx").attr("download", backup.filename);
       }
     }
-    
+
     function clearRecord() {
       if (!dirty || confirm("There are changes since the last download. Are you sure you want to clear the record?")) {
-        setRecordSourceDocument(null);
-        updateRecord({}, null, false, true);
+        updateRecord({}, null, false);
+        dirty = false;
       }
     }
 
@@ -1473,9 +1568,10 @@
 
             relChart = null; // clear out any previous RelationshipChart
             doc = fixGedcomx(doc);
-            updateRecord(doc, file.name, false, true);
+            updateRecord(doc, file.name);
             loadSourceDocument(doc);
             $("#download-gx").attr("download", file.name);
+            dirty = false;
           }
         })(f);
 
@@ -1484,9 +1580,6 @@
     }
 
     function uploadSource(files) {
-      if (!dirty || confirm("Clear the GedcomX and lose unsaved changes? (Cancel to keep GedcomX)")) {
-        updateRecord({}, null, false, true);
-      }
       for (let i = 0, f; f = files[i]; i++) {
         let reader = new FileReader();
         reader.onload = (function(file) {
@@ -1556,7 +1649,7 @@
            url: gedcomxUrl,
            success: function (doc, textStatus, jqKHR) {
              doc = fixGedcomx(doc);
-             updateRecord(doc, gedcomxUrl, false, true);
+             updateRecord(doc, gedcomxUrl);
              loadSourceDocument(doc);
            },
 
@@ -1596,7 +1689,7 @@
         }
 
         doc = fixGedcomx(doc);
-        updateRecord(doc, "pasted.gx", false, true);
+        updateRecord(doc);
         loadSourceDocument(doc);
 
         let src = $("#pasted-source").val();
@@ -1610,7 +1703,7 @@
         this.href = "data:text/plain;charset=UTF-8," + encodeURIComponent(gx);
         dirty = false;
       });
-      
+
       $("#copy-gx").click(function () {
         new ClipboardJS("#copy-gx", {
           text: function(trigger) {
@@ -1695,6 +1788,8 @@
 
       $("#add-new-person").click(addPerson);
 
+      // onmouseup
+
       $("#add-new-relationship").click(addRelationship);
 
       $("#edit-edit-relationship").click(editRelationship);
@@ -1713,8 +1808,7 @@
 
       $("#copy-copy-person-fact").click(copyPersonFact);
 
-      dragElement(document.getElementById("new-person"));
-      dragElement(document.getElementById("new-relationship"));
+      $("#add-person-button").click(updatePersonNameFromHighlight);
       // See if the tab has been reloaded, in which case we want to restored the data that would otherwise be lost.
       recoverRecord(false);
     });
@@ -1747,7 +1841,7 @@
   <span class="navbar-brand">View and Edit GEDCOM X</span>
   <ul class="navbar-nav ml-auto">
     <li class="nav-item">
-      <button type="button" class="btn btn-primary m-1" data-toggle="modal" data-target="#new-person" title="Add Person">
+      <button type="button" class="btn btn-primary m-1" data-toggle="modal" data-target="#new-person" title="Add Person" id="add-person-button">
         <span class="oi oi-plus"></span>
         <span class="oi oi-person"></span>
       </button>
@@ -1762,7 +1856,7 @@
       <a id="copy-gx" href="#" class="btn btn-primary m-1" title="Copy GEDCOM X to Clipboard"><span class="oi oi-clipboard"></span></a>
     </li>
     <li class="nav-item">
-      <a id="download-gx" href="#" download="gx.json" class="btn btn-primary m-1" title="Download GedcomX"><span class="oi oi-data-transfer-download"></span></a>
+      <a id="download-gx" href="#" download="gx.txt" class="btn btn-primary m-1" title="Download GedcomX"><span class="oi oi-data-transfer-download"></span></a>
     </li>
   </ul>
 </nav>
@@ -1877,7 +1971,7 @@
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title drag-header" id="new-person-label">Add Person<span class="drag-handle"> |||</span></h5>
+        <h5 class="modal-title" id="new-person-label">Add Person</h5>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
@@ -1921,7 +2015,7 @@
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title drag-header" id="new-relationship-label">Add Relationship<span class="drag-handle"> |||</span></h5>
+        <h5 class="modal-title" id="new-relationship-label">Add Relationship</h5>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
