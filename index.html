@@ -162,6 +162,7 @@
 
       updateSelectablePersons(doc, $("#new-relationship-person-1"));
       updateSelectablePersons(doc, $("#new-relationship-person-2"));
+      updateSelectablePersons(doc, $("#new-relationship-person-3"));
       updateSelectablePersons(doc, $("#edit-relationship-person-1"));
       updateSelectablePersons(doc, $("#edit-relationship-person-2"));
       updateSelectablePersons(doc, $("#copy-person-fact-target-persons"));
@@ -1035,6 +1036,67 @@
       $("#new-person-fact").modal("hide");
     }
 
+
+    function addPersonFactMultiple() {
+      let doc = editor.get();
+      let pid = document.getElementById('new-relationship-person-3');
+
+      if (!pid) {
+        showError("Cannot add fact: no person id provided in the form.");
+        return;
+      }
+
+      for (let i = 0; i < pid.options.length; i++) {
+        let pids = pid.options[i];
+        if (pids.selected){
+          pids = pids.value;
+          let person = getPerson(doc, pids);
+          if (!person) {
+            showError("Cannot add fact: invalid person id: " + pid);
+            return;
+          }
+
+          let fact = {};
+          fact.id = generateLocalId();
+          fact.type = $("#new-person-fact-multiple-type").val();
+          fact.primary = $("#new-person-fact-primary2").is(":checked");
+
+          let date = $("#new-person-fact-date2").val();
+          if (date) {
+            fact.date = {};
+            fact.date.original = date;
+          }
+
+          let place = $("#new-person-fact-place2").val();
+          if (place) {
+            fact.place = {};
+            fact.place.original = place;
+          }
+
+          let value = $("#new-person-fact-value2").val();
+          if (value) {
+            fact.value = value;
+          }
+
+          let age = $("#new-person-fact-age2").val();
+          if (age) {
+            fact.qualifiers = fact.qualifiers || [];
+            fact.qualifiers.push({name: "http://gedcomx.org/Age", value: age});
+          }
+
+          let cause = $("#new-person-fact-cause2").val();
+          if (cause) {
+            fact.qualifiers = fact.qualifiers || [];
+            fact.qualifiers.push({name: "http://gedcomx.org/Cause", value: cause});
+          }
+
+          person.facts.push(fact);
+        }
+      }
+      updateRecord(doc);
+      $("#add-new-fact-multiple").modal("hide");
+    }
+
     function editPersonFact() {
       let doc = editor.get();
 
@@ -1172,9 +1234,15 @@
     }
 
     editHooks.addPersonFact =  function(pid) {
+      alert(pid);
       $("#new-person-fact-person-id").val(pid);
       $("#new-person-fact").modal("show");
     };
+
+    // editHooks.addPersonFactMultiple =  function(pid) {
+    //   //$("#new-person-fact-multiple").modal("show");
+    //   $("#add-new-fact-multiple").modal("show");
+    // };
 
     editHooks.removePersonFact = function(pid, fid) {
       if (!fid) {
@@ -1800,6 +1868,8 @@
 
       $("#add-new-person-fact").click(addPersonFact);
 
+      $("#add-new-person-fact2").click(addPersonFactMultiple);
+
       $("#edit-edit-person-fact").click(editPersonFact);
 
       $("#add-new-relationship-fact").click(addRelationshipFact);
@@ -1850,6 +1920,11 @@
       <button type="button" class="btn btn-primary m-1" data-toggle="modal" data-target="#new-relationship" title="Add Relationship">
         <span class="oi oi-plus"></span>
         <span class="oi oi-people"></span>
+      </button>
+    </li>
+    <li class="nav-item">
+      <button type="button" class="btn btn-primary m-1" data-toggle="modal" data-target="#add-new-fact-multiple" title="Add Fact" id="add-fact-button">
+        <span class="oi oi-plus"></span>
       </button>
     </li>
     <li class="nav-item">
@@ -2113,6 +2188,122 @@
   </div>
 </div>
 
+
+<!--new fact form modal-->
+<div class="modal fade" id="add-new-fact-multiple" tabindex="-1" role="dialog" aria-labelledby="add-new-fact-multiple-label" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="add-new-fact-multiple-label">Add Multiple Facts</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" id="new-person-fact-multiple-form">
+        <input type="hidden" id="new-person-fact-multiple-person-id"/>
+        <label for="new-person-fact-type">Fact Type</label>
+        <select class="form-control" id="new-person-fact-multiple-type">
+          <option value="http://gedcomx.org/Birth">Birth</option>
+          <option value="http://gedcomx.org/Death">Death</option>
+          <option disabled>──────────</option>
+          <option value="http://gedcomx.org/Adoption">Adoption</option>
+          <option value="http://gedcomx.org/AdultChristening">Adult Christening</option>
+          <option value="http://gedcomx.org/Amnesty">Amnesty</option>
+          <option value="http://gedcomx.org/Apprenticeship">Apprenticeship</option>
+          <option value="http://gedcomx.org/Arrest">Arrest</option>
+          <option value="http://gedcomx.org/Award">Award</option>
+          <option value="http://gedcomx.org/Baptism">Baptism</option>
+          <option value="http://gedcomx.org/BarMitzvah">Bar Mitzvah</option>
+          <option value="http://gedcomx.org/BatMitzvah">Bat Mitzvah</option>
+          <option value="http://gedcomx.org/Birth">Birth</option>
+          <option value="http://gedcomx.org/BirthNotice">Birth Notice</option>
+          <option value="http://gedcomx.org/Blessing">Blessing</option>
+          <option value="http://gedcomx.org/Burial">Burial</option>
+          <option value="http://gedcomx.org/Caste">Caste</option>
+          <option value="http://gedcomx.org/Census">Census</option>
+          <option value="http://gedcomx.org/Christening">Christening</option>
+          <option value="http://gedcomx.org/Circumcision">Circumcision</option>
+          <option value="http://gedcomx.org/Clan">Clan</option>
+          <option value="http://gedcomx.org/Confirmation">Confirmation</option>
+          <option value="http://gedcomx.org/Court">Court</option>
+          <option value="http://gedcomx.org/Cremation">Cremation</option>
+          <option value="http://gedcomx.org/Death">Death</option>
+          <option value="http://gedcomx.org/Education">Education</option>
+          <option value="http://gedcomx.org/EducationEnrollment">Education Enrollment</option>
+          <option value="http://gedcomx.org/Emigration">Emigration</option>
+          <option value="http://gedcomx.org/Ethnicity">Ethnicity</option>
+          <option value="http://gedcomx.org/Excommunication">Excommunication</option>
+          <option value="http://gedcomx.org/FirstCommunion">First Communion</option>
+          <option value="http://gedcomx.org/Funeral">Funeral</option>
+          <option value="http://gedcomx.org/GenderChange">Gender Change</option>
+          <option value="http://gedcomx.org/Graduation">Graduation</option>
+          <option value="http://gedcomx.org/Heimat">Heimat</option>
+          <option value="http://gedcomx.org/Immigration">Immigration</option>
+          <option value="http://gedcomx.org/Imprisonment">Imprisonment</option>
+          <option value="http://gedcomx.org/Inquest">Inquest</option>
+          <option value="http://gedcomx.org/LandTransaction">Land Transaction</option>
+          <option value="http://gedcomx.org/Language">Language</option>
+          <option value="http://gedcomx.org/Living">Living</option>
+          <option value="http://gedcomx.org/MaritalStatus">Marital Status</option>
+          <option value="http://gedcomx.org/Medical">Medical</option>
+          <option value="http://gedcomx.org/MilitaryAward">Military Award</option>
+          <option value="http://gedcomx.org/MilitaryDischarge">Military Discharge</option>
+          <option value="http://gedcomx.org/MilitaryDraftRegistration">Military Draft Registration</option>
+          <option value="http://gedcomx.org/MilitaryInduction">Military Induction</option>
+          <option value="http://gedcomx.org/MilitaryService">Military Service</option>
+          <option value="http://gedcomx.org/Mission">Mission</option>
+          <option value="http://gedcomx.org/MoveFrom">Move From</option>
+          <option value="http://gedcomx.org/MoveTo">Move To</option>
+          <option value="http://gedcomx.org/MultipleBirth">Multiple Birth</option>
+          <option value="http://gedcomx.org/NationalId">National Id</option>
+          <option value="http://gedcomx.org/Nationality">Nationality</option>
+          <option value="http://gedcomx.org/Naturalization">Naturalization</option>
+          <option value="http://gedcomx.org/NumberOfChildren">Number of Children</option>
+          <option value="http://gedcomx.org/NumberOfMarriages">Number of Marriages</option>
+          <option value="http://gedcomx.org/Obituary">Obituary</option>
+          <option value="http://gedcomx.org/Occupation">Occupation</option>
+          <option value="http://gedcomx.org/Ordination">Ordination</option>
+          <option value="http://gedcomx.org/Pardon">Pardon</option>
+          <option value="http://gedcomx.org/PhysicalDescription">Physical Description</option>
+          <option value="http://gedcomx.org/Probate">Probate</option>
+          <option value="http://gedcomx.org/Property">Property</option>
+          <option value="http://gedcomx.org/Race">Race</option>
+          <option value="http://gedcomx.org/Religion">Religion</option>
+          <option value="http://gedcomx.org/Residence">Residence</option>
+          <option value="http://gedcomx.org/Retirement">Retirement</option>
+          <option value="http://gedcomx.org/Stillbirth">Stillbirth</option>
+          <option value="http://gedcomx.org/TaxAssessment">Tax Assessment</option>
+          <option value="http://gedcomx.org/Tribe">Tribe</option>
+          <option value="http://gedcomx.org/Will">Will</option>
+          <option value="http://gedcomx.org/Visit">Visit</option>
+          <option value="http://gedcomx.org/Yahrzeit">Yahrzeit</option>
+        </select>
+        <label for="new-relationship-person-3" id="new-relationship-person-3-label">Person(s)</label>
+        <select multiple class="form-control" id="new-relationship-person-3">
+        </select>
+      <div class="form-check">
+        <input class="form-check-input" id="new-person-fact-primary2" type="checkbox" value=""/>
+        <label class="form-check-label" for="new-person-fact-primary">Primary</label>
+      </div>
+      <label for="new-person-fact-date">Date</label>
+      <input id="new-person-fact-date2" type="text" class="form-control"/>
+      <label for="new-person-fact-place">Place</label>
+      <input id="new-person-fact-place2" type="text" class="form-control"/>
+      <label for="new-person-fact-value">Value</label>
+      <input id="new-person-fact-value2" type="text" class="form-control"/>
+      <label for="new-person-fact-age">Age</label>
+      <input id="new-person-fact-age2" type="text" class="form-control"/>
+      <label for="new-person-fact-cause">Cause</label>
+      <input id="new-person-fact-cause2" type="text" class="form-control"/>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      <button id="add-new-person-fact2" type="button" class="btn btn-primary">Add Fact</button>
+    </div>
+    </div>
+    </div>
+  </div>
+</div>
+
 <!--new name form modal-->
 <div class="modal fade" id="new-name" tabindex="-1" role="dialog" aria-labelledby="new-name-label" aria-hidden="true">
   <div class="modal-dialog" role="document">
@@ -2203,84 +2394,84 @@
         </button>
       </div>
       <div class="modal-body" id="new-person-fact-form">
-        <input type="hidden" id="new-person-fact-person-id"/>
-        <label for="new-person-fact-type">Fact Type</label>
-        <select class="form-control" id="new-person-fact-type">
-          <option value="http://gedcomx.org/Birth">Birth</option>
-          <option value="http://gedcomx.org/Death">Death</option>
-          <option disabled>──────────</option>
-          <option value="http://gedcomx.org/Adoption">Adoption</option>
-          <option value="http://gedcomx.org/AdultChristening">Adult Christening</option>
-          <option value="http://gedcomx.org/Amnesty">Amnesty</option>
-          <option value="http://gedcomx.org/Apprenticeship">Apprenticeship</option>
-          <option value="http://gedcomx.org/Arrest">Arrest</option>
-          <option value="http://gedcomx.org/Award">Award</option>
-          <option value="http://gedcomx.org/Baptism">Baptism</option>
-          <option value="http://gedcomx.org/BarMitzvah">Bar Mitzvah</option>
-          <option value="http://gedcomx.org/BatMitzvah">Bat Mitzvah</option>
-          <option value="http://gedcomx.org/Birth">Birth</option>
-          <option value="http://gedcomx.org/BirthNotice">Birth Notice</option>
-          <option value="http://gedcomx.org/Blessing">Blessing</option>
-          <option value="http://gedcomx.org/Burial">Burial</option>
-          <option value="http://gedcomx.org/Caste">Caste</option>
-          <option value="http://gedcomx.org/Census">Census</option>
-          <option value="http://gedcomx.org/Christening">Christening</option>
-          <option value="http://gedcomx.org/Circumcision">Circumcision</option>
-          <option value="http://gedcomx.org/Clan">Clan</option>
-          <option value="http://gedcomx.org/Confirmation">Confirmation</option>
-          <option value="http://gedcomx.org/Court">Court</option>
-          <option value="http://gedcomx.org/Cremation">Cremation</option>
-          <option value="http://gedcomx.org/Death">Death</option>
-          <option value="http://gedcomx.org/Education">Education</option>
-          <option value="http://gedcomx.org/EducationEnrollment">Education Enrollment</option>
-          <option value="http://gedcomx.org/Emigration">Emigration</option>
-          <option value="http://gedcomx.org/Ethnicity">Ethnicity</option>
-          <option value="http://gedcomx.org/Excommunication">Excommunication</option>
-          <option value="http://gedcomx.org/FirstCommunion">First Communion</option>
-          <option value="http://gedcomx.org/Funeral">Funeral</option>
-          <option value="http://gedcomx.org/GenderChange">Gender Change</option>
-          <option value="http://gedcomx.org/Graduation">Graduation</option>
-          <option value="http://gedcomx.org/Heimat">Heimat</option>
-          <option value="http://gedcomx.org/Immigration">Immigration</option>
-          <option value="http://gedcomx.org/Imprisonment">Imprisonment</option>
-          <option value="http://gedcomx.org/Inquest">Inquest</option>
-          <option value="http://gedcomx.org/LandTransaction">Land Transaction</option>
-          <option value="http://gedcomx.org/Language">Language</option>
-          <option value="http://gedcomx.org/Living">Living</option>
-          <option value="http://gedcomx.org/MaritalStatus">Marital Status</option>
-          <option value="http://gedcomx.org/Medical">Medical</option>
-          <option value="http://gedcomx.org/MilitaryAward">Military Award</option>
-          <option value="http://gedcomx.org/MilitaryDischarge">Military Discharge</option>
-          <option value="http://gedcomx.org/MilitaryDraftRegistration">Military Draft Registration</option>
-          <option value="http://gedcomx.org/MilitaryInduction">Military Induction</option>
-          <option value="http://gedcomx.org/MilitaryService">Military Service</option>
-          <option value="http://gedcomx.org/Mission">Mission</option>
-          <option value="http://gedcomx.org/MoveFrom">Move From</option>
-          <option value="http://gedcomx.org/MoveTo">Move To</option>
-          <option value="http://gedcomx.org/MultipleBirth">Multiple Birth</option>
-          <option value="http://gedcomx.org/NationalId">National Id</option>
-          <option value="http://gedcomx.org/Nationality">Nationality</option>
-          <option value="http://gedcomx.org/Naturalization">Naturalization</option>
-          <option value="http://gedcomx.org/NumberOfChildren">Number of Children</option>
-          <option value="http://gedcomx.org/NumberOfMarriages">Number of Marriages</option>
-          <option value="http://gedcomx.org/Obituary">Obituary</option>
-          <option value="http://gedcomx.org/Occupation">Occupation</option>
-          <option value="http://gedcomx.org/Ordination">Ordination</option>
-          <option value="http://gedcomx.org/Pardon">Pardon</option>
-          <option value="http://gedcomx.org/PhysicalDescription">Physical Description</option>
-          <option value="http://gedcomx.org/Probate">Probate</option>
-          <option value="http://gedcomx.org/Property">Property</option>
-          <option value="http://gedcomx.org/Race">Race</option>
-          <option value="http://gedcomx.org/Religion">Religion</option>
-          <option value="http://gedcomx.org/Residence">Residence</option>
-          <option value="http://gedcomx.org/Retirement">Retirement</option>
-          <option value="http://gedcomx.org/Stillbirth">Stillbirth</option>
-          <option value="http://gedcomx.org/TaxAssessment">Tax Assessment</option>
-          <option value="http://gedcomx.org/Tribe">Tribe</option>
-          <option value="http://gedcomx.org/Will">Will</option>
-          <option value="http://gedcomx.org/Visit">Visit</option>
-          <option value="http://gedcomx.org/Yahrzeit">Yahrzeit</option>
-        </select>
+      <input type="hidden" id="new-person-fact-person-id"/>
+      <label for="new-person-fact-type">Fact Type</label>
+      <select class="form-control" id="new-person-fact-type">
+        <option value="http://gedcomx.org/Birth">Birth</option>
+        <option value="http://gedcomx.org/Death">Death</option>
+        <option disabled>──────────</option>
+        <option value="http://gedcomx.org/Adoption">Adoption</option>
+        <option value="http://gedcomx.org/AdultChristening">Adult Christening</option>
+        <option value="http://gedcomx.org/Amnesty">Amnesty</option>
+        <option value="http://gedcomx.org/Apprenticeship">Apprenticeship</option>
+        <option value="http://gedcomx.org/Arrest">Arrest</option>
+        <option value="http://gedcomx.org/Award">Award</option>
+        <option value="http://gedcomx.org/Baptism">Baptism</option>
+        <option value="http://gedcomx.org/BarMitzvah">Bar Mitzvah</option>
+        <option value="http://gedcomx.org/BatMitzvah">Bat Mitzvah</option>
+        <option value="http://gedcomx.org/Birth">Birth</option>
+        <option value="http://gedcomx.org/BirthNotice">Birth Notice</option>
+        <option value="http://gedcomx.org/Blessing">Blessing</option>
+        <option value="http://gedcomx.org/Burial">Burial</option>
+        <option value="http://gedcomx.org/Caste">Caste</option>
+        <option value="http://gedcomx.org/Census">Census</option>
+        <option value="http://gedcomx.org/Christening">Christening</option>
+        <option value="http://gedcomx.org/Circumcision">Circumcision</option>
+        <option value="http://gedcomx.org/Clan">Clan</option>
+        <option value="http://gedcomx.org/Confirmation">Confirmation</option>
+        <option value="http://gedcomx.org/Court">Court</option>
+        <option value="http://gedcomx.org/Cremation">Cremation</option>
+        <option value="http://gedcomx.org/Death">Death</option>
+        <option value="http://gedcomx.org/Education">Education</option>
+        <option value="http://gedcomx.org/EducationEnrollment">Education Enrollment</option>
+        <option value="http://gedcomx.org/Emigration">Emigration</option>
+        <option value="http://gedcomx.org/Ethnicity">Ethnicity</option>
+        <option value="http://gedcomx.org/Excommunication">Excommunication</option>
+        <option value="http://gedcomx.org/FirstCommunion">First Communion</option>
+        <option value="http://gedcomx.org/Funeral">Funeral</option>
+        <option value="http://gedcomx.org/GenderChange">Gender Change</option>
+        <option value="http://gedcomx.org/Graduation">Graduation</option>
+        <option value="http://gedcomx.org/Heimat">Heimat</option>
+        <option value="http://gedcomx.org/Immigration">Immigration</option>
+        <option value="http://gedcomx.org/Imprisonment">Imprisonment</option>
+        <option value="http://gedcomx.org/Inquest">Inquest</option>
+        <option value="http://gedcomx.org/LandTransaction">Land Transaction</option>
+        <option value="http://gedcomx.org/Language">Language</option>
+        <option value="http://gedcomx.org/Living">Living</option>
+        <option value="http://gedcomx.org/MaritalStatus">Marital Status</option>
+        <option value="http://gedcomx.org/Medical">Medical</option>
+        <option value="http://gedcomx.org/MilitaryAward">Military Award</option>
+        <option value="http://gedcomx.org/MilitaryDischarge">Military Discharge</option>
+        <option value="http://gedcomx.org/MilitaryDraftRegistration">Military Draft Registration</option>
+        <option value="http://gedcomx.org/MilitaryInduction">Military Induction</option>
+        <option value="http://gedcomx.org/MilitaryService">Military Service</option>
+        <option value="http://gedcomx.org/Mission">Mission</option>
+        <option value="http://gedcomx.org/MoveFrom">Move From</option>
+        <option value="http://gedcomx.org/MoveTo">Move To</option>
+        <option value="http://gedcomx.org/MultipleBirth">Multiple Birth</option>
+        <option value="http://gedcomx.org/NationalId">National Id</option>
+        <option value="http://gedcomx.org/Nationality">Nationality</option>
+        <option value="http://gedcomx.org/Naturalization">Naturalization</option>
+        <option value="http://gedcomx.org/NumberOfChildren">Number of Children</option>
+        <option value="http://gedcomx.org/NumberOfMarriages">Number of Marriages</option>
+        <option value="http://gedcomx.org/Obituary">Obituary</option>
+        <option value="http://gedcomx.org/Occupation">Occupation</option>
+        <option value="http://gedcomx.org/Ordination">Ordination</option>
+        <option value="http://gedcomx.org/Pardon">Pardon</option>
+        <option value="http://gedcomx.org/PhysicalDescription">Physical Description</option>
+        <option value="http://gedcomx.org/Probate">Probate</option>
+        <option value="http://gedcomx.org/Property">Property</option>
+        <option value="http://gedcomx.org/Race">Race</option>
+        <option value="http://gedcomx.org/Religion">Religion</option>
+        <option value="http://gedcomx.org/Residence">Residence</option>
+        <option value="http://gedcomx.org/Retirement">Retirement</option>
+        <option value="http://gedcomx.org/Stillbirth">Stillbirth</option>
+        <option value="http://gedcomx.org/TaxAssessment">Tax Assessment</option>
+        <option value="http://gedcomx.org/Tribe">Tribe</option>
+        <option value="http://gedcomx.org/Will">Will</option>
+        <option value="http://gedcomx.org/Visit">Visit</option>
+        <option value="http://gedcomx.org/Yahrzeit">Yahrzeit</option>
+      </select>
         <div class="form-check">
           <input class="form-check-input" id="new-person-fact-primary" type="checkbox" value=""/>
           <label class="form-check-label" for="new-person-fact-primary">Primary</label>                       
