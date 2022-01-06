@@ -495,63 +495,68 @@
 
         var occurence = selectedTxt.match(/ /g).length;
 
-        // Clear all four fields so we don't get anything dangling from last time.
-        $("#new-person-prefixes").val("");
-        $("#new-person-given-names").val("");
-        $("#new-person-surnames").val("");
-        $("#new-person-suffixes").val("");
+        var prefixField  = $("#new-person-prefixes");
+        var givenField   = $("#new-person-given-names");
+        var surnameField = $("#new-person-surnames");
+        var suffixField  = $("#new-person-suffixes");
 
-        let prefix = checkPrefix(splitTxt[0]);
-        let suffix = checkSuffix(splitTxt[splitTxt.length - 1]);
+        // Clear all four fields so we don't get anything dangling from last time.
+        prefixField.val("");
+        givenField.val("");
+        surnameField.val("");
+        suffixField.val("");
+
+        let prefix = checkPrefix(splitTxt[0], prefixField);
+        let suffix = checkSuffix(splitTxt[splitTxt.length - 1], suffixField);
 
         if (occurence >= 3) {
-          $("#new-person-prefixes").val(splitTxt[0]);
-          $("#new-person-given-names").val(splitTxt[1]);
-          $("#new-person-surnames").val(splitTxt[2]);
-          $("#new-person-suffixes").val(splitTxt[3]);
+          prefixField.val(splitTxt[0]);
+          givenField.val(splitTxt[1]);
+          surnameField.val(splitTxt[2]);
+          suffixField.val(splitTxt[3]);
         }
         else if (occurence === 2) {
 
           if (prefix === null && suffix === null) {
-            $("#new-person-given-names").val(splitTxt[0] + ' ' + splitTxt[1]);
-            $("#new-person-surnames").val(splitTxt[2]);
+            givenField.val(splitTxt[0] + ' ' + splitTxt[1]);
+            surnameField.val(splitTxt[2]);
           } else {
 
             if (prefix != null) {
-              $("#new-person-given-names").val(splitTxt[1]);
+              givenField.val(splitTxt[1]);
             } else {
-              $("#new-person-given-names").val(splitTxt[0]);
+              givenField.val(splitTxt[0]);
             }
 
             if (suffix != null) {
-              $("#new-person-surnames").val(splitTxt[1]);
+              surnameField.val(splitTxt[1]);
             } else {
-              $("#new-person-surnames").val(splitTxt[2]);
+              surnameField.val(splitTxt[2]);
             }
           }
         }
         else if (occurence === 1) {
           if (prefix != null) {
-            $("#new-person-given-names").val(splitTxt[1]);
+            givenField.val(splitTxt[1]);
           } else {
-            $("#new-person-given-names").val(splitTxt[0]);
-            $("#new-person-surnames").val(splitTxt[1]);
+            givenField.val(splitTxt[0]);
+            surnameField.val(splitTxt[1]);
           }
         }
       }
     }
 
-    function checkPrefix(prefix) {
+    function checkPrefix(prefix, prefixField) {
       if (prefix.toLowerCase().match("(mr|mrs|miss|rev|fr|dr|dra|infant|baby)\\.?$")) {
-        return $("#new-person-prefixes").val(prefix);
+        return prefixField.val(prefix);
       }
       else {
         return null;
       }
     }
-    function checkSuffix(suffix) {
+    function checkSuffix(suffix, suffixField) {
       if (suffix.toLowerCase().match("(jr|sr|iv|ii+|vii+|xi|senr|senior|junior|junr)\\.?$")) {
-        return $("#new-person-suffixes").val(suffix);
+        return suffixField.val(suffix);
       }
       else {
         return null;
