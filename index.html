@@ -490,7 +490,7 @@
       var indexStart = textArea.selectionStart;
       var indexEnd = textArea.selectionEnd;
       if (indexStart != null && indexEnd != null) {
-        var selectedTxt = text.substring(indexStart,indexEnd);//.split(" ");
+        var selectedTxt = text.substring(indexStart,indexEnd);
         var splitTxt = selectedTxt.split(" ");
 
         var occurence = selectedTxt.match(/ /g).length;
@@ -536,7 +536,7 @@
     }
 
     function checkPrefix(prefix) {
-      if (prefix.toLowerCase().match("(mr|mrs|miss|rev|fr|dr|dra|infant|baby)\\.?")) {
+      if (prefix.toLowerCase().match("(mr|mrs|miss|rev|fr|dr|dra|infant|baby)\\.?$")) {
         return $("#new-person-prefixes").val(prefix);
       }
       else {
@@ -544,7 +544,7 @@
       }
     }
     function checkSuffix(suffix) {
-      if (suffix.toLowerCase().match("(jr|sr|iv|ii+|vii+|xi|senr|senior|junior|junr)\\.?")) {
+      if (suffix.toLowerCase().match("(jr|sr|iv|ii+|vii+|xi|senr|senior|junior|junr)\\.?$")) {
         return $("#new-person-suffixes").val(suffix);
       }
       else {
