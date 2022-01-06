@@ -495,6 +495,12 @@
 
         var occurence = selectedTxt.match(/ /g).length;
 
+        // Clear all four fields so we don't get anything dangling from last time.
+        $("#new-person-prefixes").val("");
+        $("#new-person-given-names").val("");
+        $("#new-person-surnames").val("");
+        $("#new-person-suffixes").val("");
+
         let prefix = checkPrefix(splitTxt[0]);
         let suffix = checkSuffix(splitTxt[splitTxt.length - 1]);
 
