@@ -491,9 +491,7 @@
       var indexEnd = textArea.selectionEnd;
       if (indexStart != null && indexEnd != null) {
         var selectedTxt = text.substring(indexStart,indexEnd);
-        var splitTxt = selectedTxt.split(" ");
-
-        var occurence = selectedTxt.match(/ /g).length;
+        var splitTxt = selectedTxt.replace(/[,;]/g, " ").replace(/  */g, " ").trim().split(" ");
 
         var prefixField  = $("#new-person-prefixes");
         var givenField   = $("#new-person-given-names");
@@ -506,61 +504,27 @@
         surnameField.val("");
         suffixField.val("");
 
-        let prefix = checkPrefix(splitTxt[0], prefixField);
-        let suffix = checkSuffix(splitTxt[splitTxt.length - 1], suffixField);
-
-        if (occurence >= 3) {
-          prefixField.val(splitTxt[0]);
-          givenField.val(splitTxt[1]);
-          surnameField.val(splitTxt[2]);
-          suffixField.val(splitTxt[3]);
+        if (splitTxt.length > 0 && isPrefix(splitTxt[0])) {
+          prefixField.val(splitTxt.shift());
         }
-        else if (occurence === 2) {
-
-          if (prefix === null && suffix === null) {
-            givenField.val(splitTxt[0] + ' ' + splitTxt[1]);
-            surnameField.val(splitTxt[2]);
-          } else {
-
-            if (prefix != null) {
-              givenField.val(splitTxt[1]);
-            } else {
-              givenField.val(splitTxt[0]);
-            }
-
-            if (suffix != null) {
-              surnameField.val(splitTxt[1]);
-            } else {
-              surnameField.val(splitTxt[2]);
-            }
-          }
+        if (splitTxt.length > 0 && isSuffix(splitTxt[splitTxt.length - 1])) {
+          suffixField.val(splitTxt.pop());
         }
-        else if (occurence === 1) {
-          if (prefix != null) {
-            givenField.val(splitTxt[1]);
-          } else {
-            givenField.val(splitTxt[0]);
-            surnameField.val(splitTxt[1]);
-          }
+        if (splitTxt.length >= 2) {
+          surnameField.val(splitTxt.pop());
+        }
+        if (splitTxt.length > 0) {
+          givenField.val(splitTxt.join(" "));
         }
       }
     }
 
-    function checkPrefix(prefix, prefixField) {
-      if (prefix.toLowerCase().match("(mr|mrs|miss|rev|fr|dr|dra|infant|baby)\\.?$")) {
-        return prefixField.val(prefix);
-      }
-      else {
-        return null;
-      }
+    function isPrefix(prefix) {
+      return prefix.toLowerCase().match("(mr|mrs|miss|rev|fr|dr|dra|infant|baby)\\.?$");
     }
-    function checkSuffix(suffix, suffixField) {
-      if (suffix.toLowerCase().match("(jr|sr|iv|ii+|vii+|xi|senr|senior|junior|junr)\\.?$")) {
-        return suffixField.val(suffix);
-      }
-      else {
-        return null;
-      }
+
+    function isSuffix(suffix) {
+      return suffix.toLowerCase().match("(jr|sr|iv|ii+|vii+|xi|senr|senior|junior|junr)\\.?$");
     }
 
     editHooks.removePerson = function (pid) {
