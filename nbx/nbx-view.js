@@ -103,7 +103,7 @@ function nbxToHtml(nbx) {
         list = [];
         map[offset] = list;
       }
-      list.push(relex[i]);
+      list.push(rel);
     }
     return map;
   }
