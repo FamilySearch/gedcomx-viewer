@@ -353,6 +353,7 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
   }
 
   // PersonBox constructor ==========================================
+  this.debugName = personNode.name;
   this.relChart = relChart; // for access to settings like personBorder.
   this.personNode = personNode; // PersonNode that corresponds to this PersonBox
   this.above = personAbove; // PersonBox of the person above in the global list of person boxes (not necessarily the same generation)

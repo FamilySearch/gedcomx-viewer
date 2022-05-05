@@ -70,6 +70,11 @@ function PersonNode(person) {
   this.parentFamilies =[];
   this.spouseFamilies = [];
   this.relatives = []; // Array of "relatives", defined as {label: "<Label>", id: "<PersonNodeId>"}
+  // Flags indicating that there are more relatives available for this person that are being included in this RelationshipGraph,
+  //  i.e., there are relationships to people who either weren't included in the GedcomX, or are being hidden.
+  this.hasMoreParents = false;
+  this.hasMoreSpouses = false;
+  this.hasMoreChildren = false;
 }
 
 PersonNode.prototype.addParentFamily = function(familyNode) {

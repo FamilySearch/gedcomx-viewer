@@ -69,13 +69,26 @@ function addCouples(graph) {
         let pid2 = getPersonIdFromReference(rel.person2);
         let fatherNode = graph.personNodeMap[pid1];
         let motherNode = graph.personNodeMap[pid2];
-        if (wrongGender(fatherNode, motherNode)) {
-          // Swap persons to make p1 the father and p2 the mother, if possible.
-          let temp = fatherNode;
-          fatherNode = motherNode;
-          motherNode = temp;
+        if (fatherNode && motherNode) {
+          if (wrongGender(fatherNode, motherNode)) {
+            // Swap persons to make p1 the father and p2 the mother, if possible.
+            let temp = fatherNode;
+            fatherNode = motherNode;
+            motherNode = temp;
+          }
+          addFamily(graph, makeFamilyId(graph.chartId, fatherNode, motherNode), fatherNode, motherNode, rel);
         }
-        addFamily(graph, makeFamilyId(graph.chartId, fatherNode, motherNode), fatherNode, motherNode, rel);
+        else if (pid1 && pid2) {
+          // Had a Couple relationship with two IDs, but at least one isn't in the graph
+          // (perhaps because it is a tree person with a relationship to someone who wasn't fetched yet)
+          // so flag that person as having more spouses than are shown in the RelationshipGraph.
+          if (fatherNode) {
+            fatherNode.hasMoreSpouses = true;
+          }
+          else if (motherNode) {
+            motherNode.hasMoreSpouses = true;
+          }
+        }
       }
     }
   }
@@ -83,14 +96,14 @@ function addCouples(graph) {
 
 // Get a map of personId -> list of objects that contain parentId (of one of that person's parents) and parentChildRelationship (from the GedcomX) for that parent.
 function getParentMap(graph) {
-  let parentMap = {};
+  let parentMap = new Map();
 
   if (graph.gx.relationships) {
     for (let rel of graph.gx.relationships) {
       if (rel.type === GX_PARENT_CHILD) {
         let parentId = getPersonIdFromReference(rel.person1);
         let childId = getPersonIdFromReference(rel.person2);
-        let parentIds = parentMap[childId];
+        let parentIds = parentMap.get(childId);
         let parentIdAndRel = {
           parentId: parentId,
           parentChildRelationship: rel
@@ -101,7 +114,7 @@ function getParentMap(graph) {
         }
         else {
           // Create a new array with this one element and add it to the map.
-          parentMap[childId] = [parentIdAndRel];
+          parentMap.set(childId, [parentIdAndRel]);
         }
       }
     }
@@ -121,15 +134,18 @@ function removeFromArray(value, array) {
 
 // Add children to the existing FamilyNodes in the graph.
 function addChildren(graph) {
-  // get a map of childId -> array of parent IDs.
+  // get a map of childId -> array of {parentId: <parentPersonId>, parentChildRelationship: <GedcomX ParentChild relationship>}
   let parentMap = getParentMap(graph);
 
   for (let childNode of graph.personNodes) {
-    // For each person, get their list of parents. For each parent, see if there is a FamilyNode with that parent and any other in the list.
+    // For each person in the graph, get their list of parents. For each parent, see if there is a FamilyNode with that parent and any other in the list.
     // If so, add this person as a child to that family, and remove both parents from the list.
     // If not, find or create a single-parent family with that parent and add this child to it.
     // Array of objects with {personId, parentChildRelationship}
-    let parentIdsAndRels = parentMap[childNode.personId];
+    let parentIdsAndRels = parentMap.get(childNode.personId);
+    if (parentIdsAndRels) {
+      parentMap.delete(childNode.personId);
+    }
     if (parentIdsAndRels && parentIdsAndRels.length > 0) {
       let unusedParentIdsAndRels = parentIdsAndRels.slice();
       for (let parent1 = 0; parent1 < parentIdsAndRels.length; parent1++) {
@@ -173,13 +189,30 @@ function addChildren(graph) {
           motherRel = fatherRel;
           fatherRel = null;
         }
-        let familyId = makeFamilyId(graph.chartId, fatherNode, motherNode);
-        let familyNode = graph.getFamily(familyId);
-        if (!familyNode) {
-          familyNode = addFamily(graph, familyId, fatherNode, motherNode); // single parent, so no couple relationship
+        if (fatherNode || motherNode) {
+          let familyId = makeFamilyId(graph.chartId, fatherNode, motherNode);
+          let familyNode = graph.getFamily(familyId);
+          if (!familyNode) {
+            familyNode = addFamily(graph, familyId, fatherNode, motherNode); // single parent, so no couple relationship
+          }
+          familyNode.addChild(childNode, fatherRel, motherRel);
         }
-        familyNode.addChild(childNode, fatherRel, motherRel);
+        else {
+          // Relationship to someone who is not in the graph (like when a tree person has a relationship to someone who hasn't been fetched yet)
+          // So flag this person as having more parents than are shown.
+          childNode.hasMoreParents = true;
+        }
       }
+    }
+  }
+  // At this point, any entries remaining in parentMap[childId] indicate that the childId is not included in this RelationshipGraph
+  // Therefore, any parents that ARE included need to be marked as having more children than are shown.
+  let v = parentMap.values();
+  
+  for (let parentInfo of parentMap.values()) {
+    let parentNode = graph.getPerson(parentInfo.parentId);
+    if (parentNode) {
+      parentNode.hasMoreChildren = true;
     }
   }
 }

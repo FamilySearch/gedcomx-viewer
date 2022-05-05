@@ -34,13 +34,26 @@
       let urlParams = new URLSearchParams(params);
       let url = urlParams.get('url');
       let sessionId = urlParams.get('sessionid');
+      let isTree = false;
+      if (url && url.includes(":")) {
+        let matches = url.match(/.*1:1:(.*)/);
+        if (matches) {
+          let personaId = matches[1];
+          url = "https://api.familysearch.org/platform/records/personas/" + personaId + "?access_token=" + sessionId;
+        }
+        else {
+          matches = url.match(/.*4:1:(.*)/);
+          if (matches) {
+            let personId = matches[1];
+            isTree = true;
+            url = "https://api.familysearch.org/platform/tree/persons/" + personId + "?relatives=true&access_token=" + sessionId;
+          }
+        }
+      }
       if (!url) {
         url = "samples/004004022_00019.json";
       }
-      else if (url.includes(":")) {
-        let personaId = url.match(/.*1:1:(.*)/)[1];
-        url = "https://api.familysearch.org/platform/records/personas/" + personaId + "?access_token=" + sessionId;
-      }
+
       $.ajax({
         beforeSend: function(request) {
           request.setRequestHeader("Accept", "application/x-gedcomx-v1+json");
@@ -48,7 +61,7 @@
         dataType: "json",
         url: url,
         success:function(sampleGx){
-          currentRelChart = buildRelGraph(sampleGx, new ChartOptions({isEditable: true, shouldShowConfidence: true, shouldDisplayIds: true}));
+          currentRelChart = buildRelGraph(sampleGx, new ChartOptions({isEditable: true, shouldShowConfidence: true, shouldDisplayIds: false}));
         }
       });
       // $.getJSON(url, {format: "json"}, function(sampleGx){
