@@ -270,9 +270,10 @@ function combineArrays(array1, array2) {
 }
 
 /**
- *
- * @param key - p=parents, s=spouses, c=children [b=siblings]; upper case => hide instead of show those relatives. M=hide "Me".
- * @param selectedPersonBoxes
+ * Show additional relatives of the selected persons (or hide the persons or their relatives, if "shouldHide" is true)
+ * @param key - P=parents, S=spouses, C=children. M=hide "Me".
+ * @param shouldHide - Flag for whether to hide the selected persons. False => show them.
+ * @param selectedPersonBoxes - Array of PersonBox objects that are selected in the UI.
  */
 function toggleRelativesOfSelectedPersons(key, shouldHide, selectedPersonBoxes) {
   let needRecordUpdate = false;
@@ -439,7 +440,7 @@ function hasMore(personId, relativeIdsMap) {
   let relativeIds = relativeIdsMap.get(personId);
   if (relativeIds) {
     for (const relativeId of relativeIds) {
-      if (!gxPersonMap.has(relativeId)) {
+      if (!gxPersonMap.has(relativeId) || hiddenPersons.has(relativeId)) {
         return true;
       }
     }

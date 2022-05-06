@@ -139,13 +139,17 @@ function handleKeypress(e) {
         removeRedundantRelationships(currentGx);
         e.stopPropagation();
         break;
-      case 'p':
-      case 's':
-      case 'c':
+      case 'I':
+        currentRelChart.shouldDisplayIds = !currentRelChart.shouldDisplayIds;
+        updateRecord(currentRelChart.getGedcomX());
+        break;
+      case 'D':
+        currentRelChart.shouldDisplayDetails = !currentRelChart.shouldDisplayDetails;
+        updateRecord(currentRelChart.getGedcomX());
+        break;
       case 'P':
       case 'S':
       case 'C':
-      case 'b':
       case 'B':
         toggleRelativesOfSelectedPersons(key, e.shiftKey, currentRelChart.selectedPersonBoxes);
         e.stopPropagation();
