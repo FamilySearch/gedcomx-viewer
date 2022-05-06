@@ -103,7 +103,8 @@ function buildRelGraph(gx, chartOptions) {
     if (!currentRelChart) {
       $(document).keydown(handleKeypress);
     }
-    currentRelChart = new RelChartBuilder(graph, $relChartDiv, chartOptions).buildChart(chartOptions.prevChart, chartOptions.imgOverlayToGx);
+    let relChartBuilder = new RelChartBuilder(graph, $relChartDiv, chartOptions);
+    currentRelChart = relChartBuilder.buildChart(chartOptions.prevChart, chartOptions.imgOverlayToGx);
     $relChartDiv.width(currentRelChart.width);
     $relChartDiv.height(currentRelChart.height);
     if (chartOptions.isDraggable) {
@@ -131,13 +132,27 @@ function handleKeypress(e) {
       e.stopPropagation();
     }
   }
-  else if (key === 'R') {
-    if (currentRelChart) {
-      let currentGx = currentRelChart.getGedcomX();
-      removeRedundantRelationships(currentGx);
-      e.stopPropagation();
+  else if (currentRelChart) {
+    switch (key) {
+      case 'R':
+        let currentGx = currentRelChart.getGedcomX();
+        removeRedundantRelationships(currentGx);
+        e.stopPropagation();
+        break;
+      case 'p':
+      case 's':
+      case 'c':
+      case 'P':
+      case 'S':
+      case 'C':
+      case 'b':
+      case 'B':
+        toggleRelativesOfSelectedPersons(key, e.shiftKey, currentRelChart.selectedPersonBoxes);
+        e.stopPropagation();
+        break;
     }
   }
+
 }
 
 /*

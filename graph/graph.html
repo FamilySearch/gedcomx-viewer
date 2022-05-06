@@ -23,6 +23,7 @@
   <script src="view/RelationshipChart.js"></script>
   <script src="view/RelChartBuilder.js"></script>
   <script src="view/EditChart.js"></script>
+  <script src="tree/TreeFetch.js"></script>
   <script src="graph.js"></script>
 </head>
 <body>
@@ -46,7 +47,7 @@
           if (matches) {
             let personId = matches[1];
             isTree = true;
-            url = "https://api.familysearch.org/platform/tree/persons/" + personId + "?relatives=true&access_token=" + sessionId;
+            url = "https://api.familysearch.org/platform/tree/persons/" + personId + "?access_token=" + sessionId;
           }
         }
       }
@@ -54,16 +55,22 @@
         url = "samples/004004022_00019.json";
       }
 
-      $.ajax({
-        beforeSend: function(request) {
-          request.setRequestHeader("Accept", "application/x-gedcomx-v1+json");
-        },
-        dataType: "json",
-        url: url,
-        success:function(sampleGx){
-          currentRelChart = buildRelGraph(sampleGx, new ChartOptions({isEditable: true, shouldShowConfidence: true, shouldDisplayIds: false}));
-        }
-      });
+      if (isTree) {
+        let fetchSpec = new FetchSpec(null, url, [2, 2, 1.5/*, 1.5, 1.5, 1.5, 0, 0*/], sessionId);
+        fetchPersonsAsync([fetchSpec]);
+      }
+      else {
+        $.ajax({
+          beforeSend: function (request) {
+            request.setRequestHeader("Accept", "application/x-gedcomx-v1+json");
+          },
+          dataType: "json",
+          url: url,
+          success: function (sampleGx) {
+            currentRelChart = buildRelGraph(sampleGx, new ChartOptions({isEditable: true, shouldShowConfidence: true, shouldDisplayIds: false}));
+          }
+        });
+      }
       // $.getJSON(url, {format: "json"}, function(sampleGx){
       //   currentRelChart = buildGraph(sampleGx, true);
       // });

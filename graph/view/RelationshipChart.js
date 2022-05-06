@@ -14,6 +14,7 @@
  * @param shouldDisplayDetails - Flag for whether to display person details (i.e., facts). Default = true;
  * @param shouldShowConfidence - Flag for whether to display the name, date and place confidence (when present)
  * @param shouldDisplayIds - Flag for whether to display person IDs
+ * @param isTree - Flag for whether this is a tree view with dynamic relatives
  * @constructor
  */
 function ChartOptions({ prevChart= null,
@@ -281,7 +282,7 @@ function RelationshipChart(relGraph, $relChartDiv, chartOptions) {
   this.generationWidth = 280; // Width of a PersonBox (not including additional padding).
   this.lineGap = 10; // Horizontal pixels between one vertical line and another; and between a PersonBox and the vertical line.
   this.treeGap = 10; // Additional vertical pixels between someone in one connected tree and another one.
-  this.shouldIncludeDetails = chartOptions.shouldIncludeDetails;
+  this.shouldDisplayDetails = chartOptions.shouldDisplayDetails;
   this.shouldCompress = chartOptions.shouldCompress;
   this.shouldDisplayIds = chartOptions.shouldDisplayIds;
   this.shouldShowConfidence = chartOptions.shouldShowConfidence;

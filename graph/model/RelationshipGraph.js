@@ -14,12 +14,17 @@
 
 function addPersonNodes(graph) {
   if (graph.gx.persons) {
-    for (let p = 0; p < graph.gx.persons.length; p++) {
-      let personNode = new PersonNode(graph.gx.persons[p]);
-      graph.personNodes[p] = personNode;
-      graph.personNodeMap[personNode.personId] = personNode;
-      if (graph.gx.persons[p].principal) {
-        graph.principals.push(personNode);
+    let personNodeIndex = 0;
+    for (const gxPerson of graph.gx.persons) {
+      let personId = gxPerson.id;
+      let personAnalysis = personAnalysisMap ? personAnalysisMap.get(personId) : null;
+      if (!personAnalysis || personAnalysis.isVisible) {
+        let personNode = new PersonNode(gxPerson);
+        graph.personNodes[personNodeIndex++] = personNode;
+        graph.personNodeMap[personNode.personId] = personNode;
+        if (gxPerson.principal) {
+          graph.principals.push(personNode);
+        }
       }
     }
   }

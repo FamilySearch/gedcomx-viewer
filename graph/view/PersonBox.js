@@ -333,8 +333,9 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
    @param personBoxId - Id for this PersonBox
    @param duplicateOfBox - PersonBox that this one is a duplicate of (if any)
    @param shouldDisplayIds - Flag for whether to include person IDs.
+   @param shouldDisplayDetails - Flag for whether to show facts
    */
-  function makePersonDiv(personNode, personBoxId, duplicateOfBox, shouldDisplayIds) {
+  function makePersonDiv(personNode, personBoxId, duplicateOfBox, shouldDisplayIds, shouldDisplayDetails) {
     let html = "<div class='personNode gender-" + personNode.gender + (duplicateOfBox ? " duplicate" : "") +
         (personNode.person.principal ? " principalPerson" : "") +
         "' id='" + personBoxId + "'>\n";
@@ -346,7 +347,9 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
     if (shouldDisplayIds) {
       html += addIdDiv(person);
     }
-    html += addFactDivs(personNode);
+    if (shouldDisplayDetails) {
+      html += addFactDivs(personNode);
+    }
     html += addRelativeDivs(personNode);
     html += "</div>";
     return $.parseHTML(html);
@@ -386,7 +389,7 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
   }
   relChart.personBoxMap[this.personBoxId] = this;
 
-  let personDiv = makePersonDiv(personNode, this.personBoxId, this.duplicateOf, relChart.shouldDisplayIds);
+  let personDiv = makePersonDiv(personNode, this.personBoxId, this.duplicateOf, relChart.shouldDisplayIds, relChart.shouldDisplayDetails);
   relChart.$personsDiv.append(personDiv);
   this.$personDiv = $("#" + this.personBoxId);
   // $("#" + getGenderDivId(this.personBoxId)).click(function(e){
