@@ -5,7 +5,16 @@
 
 RelChartBuilder.prototype.resetRemainingPersons = function() {
   for (let personNode of this.relChart.relGraph.personNodes) {
-    this.remainingPersonIds.add(personNode.personId);
+    let isVisible = true;
+    if (personAnalysisMap) {
+      let personAnalysis = personAnalysisMap.get(personNode.personId);
+      if (personAnalysis && !personAnalysis.isVisible) {
+        isVisible = false;
+      }
+    }
+    if (isVisible) {
+      this.remainingPersonIds.add(personNode.personId);
+    }
   }
 };
 

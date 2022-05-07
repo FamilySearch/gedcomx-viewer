@@ -233,7 +233,7 @@ function receivePersons(gx, fetchSpecs) {
     fetchPersonsAsync(remainingFetchSpecs);
   }
   if (gx.persons && gx.persons.length > 0) {
-    updatePersonAnalysis(masterGx.persons[0].id);
+    updatePersonAnalysis(getFirstPersonId());
   }
 
   // Draw or update the relationship chart with what we have so far
@@ -269,6 +269,10 @@ function combineArrays(array1, array2) {
   }
 }
 
+function getFirstPersonId() {
+  return masterGx.persons[0].id;
+}
+
 /**
  * Show additional relatives of the selected persons (or hide the persons or their relatives, if "shouldHide" is true)
  * @param key - P=parents, S=spouses, C=children. M=hide "Me".
@@ -291,7 +295,7 @@ function toggleRelativesOfSelectedPersons(key, shouldHide, selectedPersonBoxes) 
         relativeIds = spouseIdsMap.get(personId);
         break;
       case 'M': // "Me"
-        if (shouldHide && personId !== masterGx.persons[0].id) {
+        if (shouldHide && personId !== getFirstPersonId()) {
           relativeIds = [personId];
         }
         break;
@@ -300,7 +304,7 @@ function toggleRelativesOfSelectedPersons(key, shouldHide, selectedPersonBoxes) 
       if (shouldHide) {
         // Hide selected relatives
         for (const relativeId of relativeIds) {
-          if (!hiddenPersons.has(relativeId) && gxPersonMap.has(relativeId)) {
+          if (!hiddenPersons.has(relativeId) && gxPersonMap.has(relativeId) && relativeId !== getFirstPersonId()) {
             hiddenPersons.add(relativeId);
             needRecordUpdate = true;
           }
@@ -325,6 +329,7 @@ function toggleRelativesOfSelectedPersons(key, shouldHide, selectedPersonBoxes) 
     }
   }
   if (needRecordUpdate) {
+    updatePersonAnalysis(getFirstPersonId());
     updateRecord(masterGx);
   }
 }

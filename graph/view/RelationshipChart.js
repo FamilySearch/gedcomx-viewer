@@ -210,23 +210,28 @@ RelationshipChart.prototype.setPreviousPositions = function(prevRelChart) {
   // (Future: recurse from->from->from... until finding one that was in the previous chart, if we ever
   // start having cases where more than one generation of persons is being added at a time. For now it isn't needed.).
   function getPrevOrFromPersonBox(personBox) {
-    let prevPersonBox = prevRelChart.personBoxMap[personBox.personBoxId];
-    if (!prevPersonBox && personAnalysisMap) {
-      let personAnalysis = personAnalysisMap.get(personBox.personNode.personId);
-      if (personAnalysis) {
-        let fromId = personAnalysis.fromPersonId;
-        let numFrom = 0;
-        while (fromId && !prevPersonBox && numFrom++ < 5) {
-          let prevBoxId = PersonBox.prototype.getPersonBoxId(fromId, prevRelChart.chartId);
-          prevPersonBox = prevRelChart.personBoxMap[prevBoxId];
-          if (!prevPersonBox) {
-            personAnalysis = personAnalysisMap.get(personBox.personNode.personId);
-            fromId = personAnalysis.fromPersonId;
+    if (personBox) {
+      let prevPersonBox = prevRelChart.personBoxMap[personBox.personBoxId];
+      if (!prevPersonBox && personAnalysisMap) {
+        let personAnalysis = personAnalysisMap.get(personBox.personNode.personId);
+        if (personAnalysis) {
+          let fromId = personAnalysis.fromPersonId;
+          let numFrom = 0;
+          while (fromId && !prevPersonBox && numFrom++ < 5) {
+            let prevBoxId = PersonBox.prototype.getPersonBoxId(fromId, prevRelChart.chartId);
+            prevPersonBox = prevRelChart.personBoxMap[prevBoxId];
+            if (!prevPersonBox) {
+              personAnalysis = personAnalysisMap.get(personBox.personNode.personId);
+              fromId = personAnalysis.fromPersonId;
+            }
           }
         }
       }
+      return prevPersonBox;
     }
-    return prevPersonBox;
+    else {
+      return null;
+    }
   }
 
   function setFamilyLinePositionsFromPrevStuff(familyLine, x, bottomPerson, topPerson, father, mother) {
