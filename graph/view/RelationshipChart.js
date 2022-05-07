@@ -204,46 +204,98 @@ RelationshipChart.prototype.calculatePositions = function() {
  * @param prevRelChart
  */
 RelationshipChart.prototype.setPreviousPositions = function(prevRelChart) {
-  let newPersons = new LinkedHashSet();
-  for (let personBox of this.personBoxes) {
+  // Get the PersonBox on the previous version of this chart that has the same ID as the given personBox.
+  // If there isn't one (probably because this person just got added to the chart), then find the
+  //   previousPersonBox that this person came "from" while navigating from the root person to this person.
+  // (Future: recurse from->from->from... until finding one that was in the previous chart, if we ever
+  // start having cases where more than one generation of persons is being added at a time. For now it isn't needed.).
+  function getPrevOrFromPersonBox(personBox) {
     let prevPersonBox = prevRelChart.personBoxMap[personBox.personBoxId];
+    if (!prevPersonBox && personAnalysisMap) {
+      let personAnalysis = personAnalysisMap.get(personBox.personNode.personId);
+      if (personAnalysis) {
+        let fromId = personAnalysis.fromPersonId;
+        let numFrom = 0;
+        while (fromId && !prevPersonBox && numFrom++ < 5) {
+          let prevBoxId = PersonBox.prototype.getPersonBoxId(fromId, prevRelChart.chartId);
+          prevPersonBox = prevRelChart.personBoxMap[prevBoxId];
+          if (!prevPersonBox) {
+            personAnalysis = personAnalysisMap.get(personBox.personNode.personId);
+            fromId = personAnalysis.fromPersonId;
+          }
+        }
+      }
+    }
+    return prevPersonBox;
+  }
+
+  function setFamilyLinePositionsFromPrevStuff(familyLine, x, bottomPerson, topPerson, father, mother) {
+    let height = 1 + bottomPerson.center - topPerson.center;
+    familyLine.$familyLineDiv.css({left: x + "px", top: topPerson.center + "px", height: height + "px"});
+    if (familyLine.$familyLineDrop) { // => isEditable
+      familyLine.$familyLineDrop.css({height: height + "px"});
+    }
+    let width;
+    if (familyLine.$fatherLineDiv) {
+      width = familyLine.safeWidth(father.getLeft() - x);
+      familyLine.$fatherLineDiv.css({"left": x, "top": father.center + "px", "width": width + "px"});
+    }
+    if (familyLine.$motherLineDiv) {
+      width = familyLine.safeWidth(mother.getLeft() - x);
+      familyLine.$motherLineDiv.css({"left": x, "top": mother.center + "px", "width": width + "px"});
+    }
+    for (let c = 0; c < familyLine.children.length; c++) {
+      let childPersonBox = familyLine.children[c];
+      let prevChildBox = prevDude(childPersonBox);
+      if (prevChildBox) {
+        width = familyLine.safeWidth(x - prevChildBox.getRight());
+        familyLine.$childrenLineDivs[c].css({"left": prevChildBox.getRight(), "top": prevChildBox.center, "width": width});
+        familyLine.$childrenLineDots[c].css({"left": prevChildBox.getRight() + width - familyLine.dotWidth / 2, "top": prevChildBox.center - familyLine.dotHeight / 2});
+        if (familyLine.$childrenX) { // => isEditable
+          familyLine.$childrenX[c].css({"left": x - familyLine.xSize, "top": prevChildBox.center - familyLine.xSize / 2});
+        }
+      }
+    }
+  }
+
+  function setFamilyLineFromPrevPosition(prevFamilyLine, familyLine) {
+    let bottomPerson = prevFamilyLine.bottomPerson;
+    let topPerson = prevFamilyLine.topPerson;
+    let father = prevFamilyLine.father;
+    let mother = prevFamilyLine.mother;
+    let x = prevFamilyLine.x;
+    setFamilyLinePositionsFromPrevStuff(familyLine, x, bottomPerson, topPerson, father, mother);
+  }
+
+  function prevDude(personBox) {
+    let prevPersonBox = getPrevOrFromPersonBox(personBox);
+    return prevPersonBox ? prevPersonBox : personBox;
+  }
+
+  function setFamilyLineFromPrevPersonPositions(familyLine) {
+    let bottomPerson = prevDude(familyLine.bottomPerson);
+    let topPerson = prevDude(familyLine.topPerson);
+    let father = prevDude(familyLine.father);
+    let mother = prevDude(familyLine.mother);
+    let x = familyLine.x;
+    setFamilyLinePositionsFromPrevStuff(familyLine, x, bottomPerson, topPerson, father, mother);
+  }
+
+  for (let personBox of this.personBoxes) {
+    let prevPersonBox = getPrevOrFromPersonBox(personBox);
     if (prevPersonBox) {
       let prevLeft = prevPersonBox.prevLeft ? prevPersonBox.prevLeft : prevPersonBox.getLeft();
       personBox.$personDiv.css({left: prevLeft, top: prevPersonBox.getTop()});
     }
-    else {
-      newPersons.add(personBox.personNode.personId);
-    }
   }
+
   for (let familyLine of this.familyLines) {
     let prevFamilyLine = prevRelChart.familyLineMap[familyLine.familyNode.familyId];
     if (prevFamilyLine) {
-      let height = 1 + prevFamilyLine.bottomPerson.center - prevFamilyLine.topPerson.center;
-      familyLine.$familyLineDiv.css({left: prevFamilyLine.x + "px", top: prevFamilyLine.topPerson.center + "px", height: height + "px"});
-      if (familyLine.$familyLineDrop) { // => isEditable
-        familyLine.$familyLineDrop.css({height: height + "px"});
-      }
-      let width;
-      if (familyLine.$fatherLineDiv) {
-        width = prevFamilyLine.safeWidth(prevFamilyLine.father.getLeft() - prevFamilyLine.x);
-        familyLine.$fatherLineDiv.css({"left": prevFamilyLine.x, "top": prevFamilyLine.father.center + "px", "width": width + "px"});
-      }
-      if (familyLine.$motherLineDiv) {
-        width = prevFamilyLine.safeWidth(prevFamilyLine.mother.getLeft() - prevFamilyLine.x);
-        familyLine.$motherLineDiv.css({"left": prevFamilyLine.x, "top": prevFamilyLine.mother.center + "px", "width": width + "px"});
-      }
-      for (let c = 0;  c < familyLine.children.length; c++) {
-        let childPersonBox = familyLine.children[c];
-        let prevChildBox = prevRelChart.personBoxMap[childPersonBox.personBoxId];
-        if (prevChildBox) {
-          width = prevFamilyLine.safeWidth(prevFamilyLine.x - prevChildBox.getRight());
-          familyLine.$childrenLineDivs[c].css({"left": prevChildBox.getRight(), "top": prevChildBox.center, "width": width});
-          familyLine.$childrenLineDots[c].css({"left": prevChildBox.getRight() + width - familyLine.dotWidth / 2, "top": prevChildBox.center - familyLine.dotHeight / 2});
-          if (familyLine.$childrenX) { // => isEditable
-            familyLine.$childrenX[c].css({"left": prevFamilyLine.x - prevFamilyLine.xSize, "top": prevChildBox.center - prevFamilyLine.xSize / 2});
-          }
-        }
-      }
+      setFamilyLineFromPrevPosition(prevFamilyLine ? prevFamilyLine : familyLine, familyLine);
+    }
+    else {
+      setFamilyLineFromPrevPersonPositions(familyLine);
     }
   }
 };
@@ -286,7 +338,7 @@ function RelationshipChart(relGraph, $relChartDiv, chartOptions) {
   this.shouldCompress = chartOptions.shouldCompress;
   this.shouldDisplayIds = chartOptions.shouldDisplayIds;
   this.shouldShowConfidence = chartOptions.shouldShowConfidence;
-  this.animationSpeed = 0;
+  this.animationSpeed = 1000;
 
   this.width = 0; // overall size of chart
   this.height = 0;

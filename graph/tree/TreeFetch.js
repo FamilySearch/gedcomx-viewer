@@ -233,7 +233,7 @@ function receivePersons(gx, fetchSpecs) {
     fetchPersonsAsync(remainingFetchSpecs);
   }
   if (gx.persons && gx.persons.length > 0) {
-    updatePersonAnalysis(gx.persons[0].id);
+    updatePersonAnalysis(masterGx.persons[0].id);
   }
 
   // Draw or update the relationship chart with what we have so far
@@ -450,7 +450,7 @@ function hasMore(personId, relativeIdsMap) {
 
 function PersonAnalysis(personId, personPath, fromPersonId, isVisible) {
   this.personId = personId;
-  this.fromPerson = fromPersonId;
+  this.fromPersonId = fromPersonId;
   this.personPath = personPath;
   this.hasMoreParents = hasMore(personId, parentIdsMap);
   this.hasMoreSpouses = hasMore(personId, spouseIdsMap);
