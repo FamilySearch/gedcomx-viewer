@@ -481,7 +481,14 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
     this.$spousePlus = relChart.makeControl(`${this.personBoxId}-personSpousePlus`, "relPlus personSpousePlus");
     this.$parentPlus = relChart.makeControl(`${this.personBoxId}-personParentPlus`, "relPlus personParentPlus");
     this.$personDiv.click(function(e) {
-      personBox.clickPerson(e);
+      if (e.ctrlKey || e.metaKey) {
+        // Open person ID in Family Tree
+        let familyTreePersonUrl = "https://familysearch.org/ark:/61903/4:1:" + personBox.personNode.personId;
+        window.open(familyTreePersonUrl, "_blank");
+      }
+      else {
+        personBox.clickPerson(e);
+      }
     });
 
     // Allow a person box to be able to receive a drag & drop event.
