@@ -67,6 +67,18 @@ PersonBox.prototype.getPersonBoxId = function(personId, chartId) {
   return `box_${personId}-${chartId}`;
 };
 
+function clickIndicator(key, shouldHide, personId) {
+  let personIds = [personId];
+  if (currentRelChart && currentRelChart.selectedPersonBoxes) {
+    let selectedPersonIds = getPersonIdsOfPersonBoxes(currentRelChart.selectedPersonBoxes);
+    if (selectedPersonIds.includes(personId)) {
+      personIds = selectedPersonIds;
+    }
+  }
+  toggleRelativesOfSelectedPersons(key, shouldHide === "true", personIds);
+  return false;
+}
+
 /**
  * Constructor for a PersonBox.
  * @param personNode - PersonNode containing the information shown in this PersonBox.
@@ -336,21 +348,75 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
    @param shouldDisplayDetails - Flag for whether to show facts
    */
   function makePersonDiv(personNode, personBoxId, duplicateOfBox, shouldDisplayIds, shouldDisplayDetails) {
+    function hasRelatives(relativeIdsMap, personId) {
+      let relativeIds = relativeIdsMap ? relativeIdsMap.get(personId) : null;
+      return relativeIds && relativeIds.length > 0;
+    }
+
+    /**
+     * Add an indicator on a person box to be used for showing (adding if necessary) or else hiding relatives in some direction.
+     * For showing relationships, the icon is always showing. For removing, it only appears on hover.
+     * @param position (top, bottom, left, right)
+     * @param key - Key to pass to ... P=Parents, S=Spouse, C=Child, M=Me
+     * @param shouldHide - Flag for whether this is a "hide" indicator that only appears during hover. false => "show" indicator that always shows.
+     */
+    function addIndicator(position, key, shouldHide) {
+      let indicatorId = personBoxId + "-indicator-" + position;
+      let indicatorClass = position + "-indicator-" + (shouldHide ? "hide" : "show");
+      let hoverClass = personBoxId + "-indicators";
+      let clickArgs = "\"" + key + "\",\"" + (shouldHide ? "true" : "false") + "\",\"" + personNode.personId + "\"";
+      return "<div id='" + indicatorId + "' class='" + indicatorClass + " " + hoverClass + "' onclick='clickIndicator(" + clickArgs + ");return false;'/>";
+    }
+
     let html = "<div class='personNode gender-" + personNode.gender + (duplicateOfBox ? " duplicate" : "") +
         (personNode.person.principal ? " principalPerson" : "") +
         "' id='" + personBoxId + "'>\n";
     let imageFile = PersonBox.prototype.genderImageMap[personNode.gender];
     // Use CDN to deliver these to avoid problems with different relative paths for different consumers.
     html += "<img id='" + getGenderDivId(personBoxId) + "' src='https://cdn.jsdelivr.net/gh/FamilySearch/gedcomx-viewer@master/graph/images/" + imageFile + "' class='gender-image'>";
-    let person = personNode.person;
-    html += addNameSpans(person);
+    let gxPerson = personNode.person;
+    html += addNameSpans(gxPerson);
     if (shouldDisplayIds) {
-      html += addIdDiv(person);
+      html += addIdDiv(gxPerson);
     }
     if (shouldDisplayDetails) {
       html += addFactDivs(personNode);
     }
     html += addRelativeDivs(personNode);
+    if (personAnalysisMap) {
+      let personId = personNode.personId;
+      let personAnalysis = personAnalysisMap.get(personId);
+      if (personAnalysis) {
+        if (personAnalysis.hasMoreParents) {
+          html += addIndicator("right", "P", false);
+        }
+        else if (hasRelatives(parentIdsMap, personId)) {
+          html += addIndicator("right", "P", true);
+        }
+        if (personAnalysis.hasMoreChildren) {
+          html += addIndicator("left", "C", false);
+        }
+        else if (hasRelatives(childIdsMap, personId)) {
+          html += addIndicator("left", "C", true);
+        }
+        if (personAnalysis.hasMoreSpouses) {
+          if (personNode.getGenderCode() === GENDER_CODE_FEMALE) {
+            html += addIndicator("top", "S", false);
+          }
+          else {
+            html += addIndicator("bottom", "S", false);
+          }
+        }
+        else if (hasRelatives(spouseIdsMap, personId)) {
+          if (personNode.getGenderCode() === GENDER_CODE_FEMALE) {
+            html += addIndicator("top", "S", true);
+          }
+          else {
+            html += addIndicator("bottom", "S", true);
+          }
+        }
+      }
+    }
     html += "</div>";
     return $.parseHTML(html);
   }

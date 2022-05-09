@@ -204,3 +204,95 @@
     outline-width: 8px;
     outline-style: dotted;
 }
+
+/* Arrows */
+.right-indicator-show,.left-indicator-show,.top-indicator-show,.bottom-indicator-show,
+.right-indicator-hide,.left-indicator-hide,.top-indicator-hide,.bottom-indicator-hide {
+    position: absolute;
+    background-repeat: no-repeat;
+    z-index:400;
+}
+
+.right-indicator-show {
+    right:-10px;
+    width:10px;
+    top: 50%;
+    margin-top: -10px;
+    height:20px;
+    background-image: url('images/arrows/half-right.png');
+    background-size: 10px 20px;
+}
+
+.left-indicator-show {
+    left:-10px;
+    width:10px;
+    top: 50%;
+    margin-top: -10px;
+    height:20px;
+    background-image: url('images/arrows/half-left.png');
+    background-size: 10px 20px;
+}
+
+.top-indicator-show {
+    top:-10px;
+    height:10px;
+    width:20px;
+    left: 50%;
+    margin-left: -10px;
+    background-image: url('images/arrows/half-top.png');
+    background-size: 20px 10px;
+}
+
+.bottom-indicator-show {
+    bottom:-10px;
+    height:10px;
+    width:20px;
+    left: 50%;
+    margin-left: -10px;
+    background-image: url('images/arrows/half-bottom.png');
+    background-size: 20px 10px;
+}
+
+.right-indicator-hide,.left-indicator-hide,.top-indicator-hide,.bottom-indicator-hide {
+    opacity: .30;
+}
+
+.right-indicator-hide {
+    right:0;
+    width:10px;
+    height:20px;
+    top: 50%;
+    margin-top: -10px;
+    background-image: url('images/arrows/half-left.png');
+    background-size: 10px 20px;
+}
+
+.left-indicator-hide {
+    left:0;
+    width:10px;
+    height:20px;
+    top: 50%;
+    margin-top: -10px;
+    background-image: url('images/arrows/half-right.png');
+    background-size: 10px 20px;
+}
+
+.top-indicator-hide {
+    top:0;
+    height:10px;
+    width:20px;
+    left: 50%;
+    margin-left: -10px;
+    background-image: url('images/arrows/half-bottom.png');
+    background-size: 20px 10px;
+}
+
+.bottom-indicator-hide {
+    bottom:0;
+    height:10px;
+    width:20px;
+    left: 50%;
+    margin-left: -10px; /* to center it */
+    background-image: url('images/arrows/half-top.png');
+    background-size: 20px 10px;
+}

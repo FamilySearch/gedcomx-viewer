@@ -49,6 +49,14 @@
             isTree = true;
             url = "https://api.familysearch.org/platform/tree/persons/" + personId + "?access_token=" + sessionId;
           }
+          else {
+            matches = url.match(/.*2:2:(.*)/);
+            if (matches) {
+              let personId = matches[1];
+              isTree = true;
+              url = url + "?access_token=" + sessionId;
+            }
+          }
         }
       }
       if (!url) {
@@ -56,7 +64,7 @@
       }
 
       if (isTree) {
-        let fetchSpec = new FetchSpec(null, url, [2/*, 2, 1.5, 1.5, 1.5, 1.5, 0, 0*/], sessionId);
+        let fetchSpec = new FetchSpec(null, url, [1/*, 2, 1.5, 1.5, 1.5, 1.5, 0, 0*/], sessionId);
         fetchPersonsAsync([fetchSpec]);
       }
       else {

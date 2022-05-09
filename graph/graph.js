@@ -117,8 +117,26 @@ function buildRelGraph(gx, chartOptions) {
   }
 }
 
+function getPersonIdsOfPersonBoxes(selectedPersonBoxes) {
+  let personIds = [];
+  for (const personBox of selectedPersonBoxes) {
+    personIds.push(personBox.personNode.personId);
+  }
+  return personIds;
+}
+
+function findPersonIndex(gxPersons, personId) {
+  for (let personIndex = 0; personIndex < gxPersons.length; personIndex++) {
+    if (gxPersons[personIndex].id === personId) {
+      return personIndex;
+    }
+  }
+  return -1;
+}
+
 function handleKeypress(e) {
   let key = String.fromCharCode(e.which || e.keyCode);  // These are deprecated, but I couldn't figure out what else I was supposed to use
+
   if (e.ctrlKey || e.metaKey) {
     // Handle ctrl/cmd keypress
     if ((key === 'Z' && e.shiftKey) || key === 'Y') {
@@ -151,8 +169,20 @@ function handleKeypress(e) {
       case 'S':
       case 'C':
       case 'B':
-        toggleRelativesOfSelectedPersons(key, e.shiftKey, currentRelChart.selectedPersonBoxes);
+        toggleRelativesOfSelectedPersons(key, e.shiftKey, getPersonIdsOfPersonBoxes(currentRelChart.selectedPersonBoxes));
         e.stopPropagation();
+        break;
+      case '1':
+        if (masterGx && masterGx.persons && masterGx.persons.length > 1 &&
+            currentRelChart.selectedPersonBoxes && currentRelChart.selectedPersonBoxes.length === 1) {
+          let selectedPersonIndex = findPersonIndex(masterGx.persons, currentRelChart.selectedPersonBoxes[0].personNode.personId);
+          if (selectedPersonIndex > 0) {
+            let temp = masterGx.persons[selectedPersonIndex];
+            masterGx.persons[selectedPersonIndex] = masterGx.persons[0];
+            masterGx.persons[0] = temp;
+          }
+        }
+        updateRecord(currentRelChart.getGedcomX());
         break;
     }
   }

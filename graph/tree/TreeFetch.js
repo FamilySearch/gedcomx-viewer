@@ -62,6 +62,9 @@ function fetchPersonsAsync(fetchSpecs) {
     // Each person will cause the chart to update when it comes in. (Might be cool, or might be annoying).
     // So: Create a map of requestId -> Number remaining, and only redraw when all have arrived, or if a timeout has kicked in.
     // (But do this later to support LLS. For hackathon, concentrate on Family Tree).
+    for (const fetchSpec of fetchSpecs) {
+      fetchFromOneUrl(fetchSpec.personUrl, fetchSpec);
+    }
   }
 }
 
@@ -277,22 +280,22 @@ function getFirstPersonId() {
  * Show additional relatives of the selected persons (or hide the persons or their relatives, if "shouldHide" is true)
  * @param key - P=parents, S=spouses, C=children. M=hide "Me".
  * @param shouldHide - Flag for whether to hide the selected persons. False => show them.
- * @param selectedPersonBoxes - Array of PersonBox objects that are selected in the UI.
+ * @param selectedPersonIds - Array of personIds of PersonBox objects that are selected in the UI.
  */
-function toggleRelativesOfSelectedPersons(key, shouldHide, selectedPersonBoxes) {
+function toggleRelativesOfSelectedPersons(key, shouldHide, selectedPersonIds) {
   let needRecordUpdate = false;
-  for (const personBox of selectedPersonBoxes) {
-    let personId = personBox.personNode.personId;
+  let fetchSpecs = [];
+  for (const personId of selectedPersonIds) {
     let relativeIds = [];
     switch (key) {
       case 'C': //children
-        relativeIds = combineArrays(childIdsMap.get(personId), spouseIdsMap.get(personId));
+        relativeIds = shouldHide ? childIdsMap.get(personId) : combineArrays(childIdsMap.get(personId), spouseIdsMap.get(personId));
         break;
       case 'P': // parents
         relativeIds = parentIdsMap.get(personId);
         break;
       case 'S': // spouses
-        relativeIds = spouseIdsMap.get(personId);
+        relativeIds = shouldHide ? combineArrays(childIdsMap.get(personId), spouseIdsMap.get(personId)) : spouseIdsMap.get(personId);
         break;
       case 'M': // "Me"
         if (shouldHide && personId !== getFirstPersonId()) {
@@ -311,7 +314,6 @@ function toggleRelativesOfSelectedPersons(key, shouldHide, selectedPersonBoxes) 
         }
       }
       else {
-        let fetchSpecs = [];
         for (const relativeId of relativeIds) {
           if (hiddenPersons.has(relativeId)) {
             hiddenPersons.delete(relativeId);
@@ -321,12 +323,12 @@ function toggleRelativesOfSelectedPersons(key, shouldHide, selectedPersonBoxes) 
             fetchSpecs.push(new FetchSpec(relativeId, null, [0], null));
           }
         }
-        if (fetchSpecs.length > 0) {
-          needRecordUpdate = false; // don't bother redrawing the chart yet. We're about to fetch some more people and redraw anyway.
-          fetchPersonsAsync(fetchSpecs);
-        }
       }
     }
+  }
+  if (fetchSpecs.length > 0) {
+    needRecordUpdate = false; // don't bother redrawing the chart yet. We're about to fetch some more people and redraw anyway.
+    fetchPersonsAsync(fetchSpecs);
   }
   if (needRecordUpdate) {
     updatePersonAnalysis(getFirstPersonId());
