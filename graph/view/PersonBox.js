@@ -75,7 +75,7 @@ function clickIndicator(key, shouldHide, personId) {
       personIds = selectedPersonIds;
     }
   }
-  toggleRelativesOfSelectedPersons(key, shouldHide === "true", personIds);
+  toggleRelatives(key, shouldHide === "true", personIds);
   return false;
 }
 

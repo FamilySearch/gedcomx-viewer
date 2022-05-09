@@ -169,7 +169,7 @@ function handleKeypress(e) {
       case 'S':
       case 'C':
       case 'B':
-        toggleRelativesOfSelectedPersons(key, e.shiftKey, getPersonIdsOfPersonBoxes(currentRelChart.selectedPersonBoxes));
+        toggleRelatives(key, e.shiftKey, getPersonIdsOfPersonBoxes(currentRelChart.selectedPersonBoxes));
         e.stopPropagation();
         break;
       case '1':

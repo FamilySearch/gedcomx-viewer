@@ -277,25 +277,52 @@ function getFirstPersonId() {
 }
 
 /**
- * Show additional relatives of the selected persons (or hide the persons or their relatives, if "shouldHide" is true)
- * @param key - P=parents, S=spouses, C=children. M=hide "Me".
+ * Show additional relatives of the selected persons (or hide the persons or their relatives, if "shouldHide" is true).
+ * - When hiding relatives, if any of them are the "from" relative (i.e., the one that would connect the start person to this person),
+ *     then only hide those (and set a new start person) if there are no other relatives being hidden.
+ *     This allows us to, for example, show the children of an ancestor, and then hide those children without the ancestor disappearing
+ *     by severing the link back to the root person.
+ * @param key - Kind of relatives to toggle: P=parents, S=spouses, C=children. M=hide "Me".
  * @param shouldHide - Flag for whether to hide the selected persons. False => show them.
  * @param selectedPersonIds - Array of personIds of PersonBox objects that are selected in the UI.
  */
-function toggleRelativesOfSelectedPersons(key, shouldHide, selectedPersonIds) {
+function toggleRelatives(key, shouldHide, selectedPersonIds) {
+
+  // If hiding relatives, see if we will be hiding the "from" person and others. If so, remove the "from" person from the list.
+  function filterRelatives(personId, relIds) {
+    if (relIds && relIds.length > 1 && personAnalysisMap) {
+      let personAnalysis = personAnalysisMap.get(personId);
+      if (personAnalysis && personAnalysis.fromPersonId && relIds.includes(personAnalysis.fromPersonId) && hiddenPersons) {
+        let fromPersonId = personAnalysis.fromPersonId;
+        let filteredIds = [];
+        for (const relId of relIds) {
+          if (relId !== fromPersonId && !hiddenPersons.has(relId)) {
+            filteredIds.push(relId);
+          }
+        }
+        if (filteredIds.length === 0) {
+          // All of the relatives except the "from" person were already hidden, so allow the "from" person to be hidden.
+          filteredIds.push(fromPersonId);
+        }
+        return filteredIds;
+      }
+    }
+    return relIds;
+  }
+  
   let needRecordUpdate = false;
   let fetchSpecs = [];
   for (const personId of selectedPersonIds) {
     let relativeIds = [];
     switch (key) {
       case 'C': //children
-        relativeIds = shouldHide ? childIdsMap.get(personId) : combineArrays(childIdsMap.get(personId), spouseIdsMap.get(personId));
+        relativeIds = shouldHide ? filterRelatives(personId, childIdsMap.get(personId)) : combineArrays(childIdsMap.get(personId), spouseIdsMap.get(personId));
         break;
       case 'P': // parents
         relativeIds = parentIdsMap.get(personId);
         break;
       case 'S': // spouses
-        relativeIds = shouldHide ? combineArrays(childIdsMap.get(personId), spouseIdsMap.get(personId)) : spouseIdsMap.get(personId);
+        relativeIds = shouldHide ? combineArrays(filterRelatives(personId, childIdsMap.get(personId)), filterRelatives(personId, spouseIdsMap.get(personId))) : spouseIdsMap.get(personId);
         break;
       case 'M': // "Me"
         if (shouldHide && personId !== getFirstPersonId()) {
