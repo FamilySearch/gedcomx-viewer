@@ -252,7 +252,8 @@ function receivePersons(gx, fetchSpecs) {
           isEditable: true,
           shouldShowConfidence: false,
           shouldDisplayIds: true,
-          shouldDisplayDetails: false
+          shouldDisplayDetails: false,
+          isDraggable: true
         });
     currentRelChart = buildRelGraph(masterGx, chartOptions);
   }

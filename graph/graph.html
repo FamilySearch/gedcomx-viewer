@@ -33,7 +33,8 @@
     $(document).ready(function(){
       let params = window.location.search;
       let urlParams = new URLSearchParams(params);
-      let url = urlParams.get('url');
+      let pid = urlParams.get('pid');
+      let url = pid ? "4:1:" + pid : urlParams.get('url');
       let sessionId = urlParams.get('sessionid');
       let isTree = false;
       if (url && url.includes(":")) {
