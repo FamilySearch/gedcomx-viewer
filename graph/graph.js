@@ -177,12 +177,14 @@ function handleKeypress(e) {
             currentRelChart.selectedPersonBoxes && currentRelChart.selectedPersonBoxes.length === 1) {
           let selectedPersonIndex = findPersonIndex(masterGx.persons, currentRelChart.selectedPersonBoxes[0].personNode.personId);
           if (selectedPersonIndex > 0) {
+            masterGx.persons[0].principal = false;
             let temp = masterGx.persons[selectedPersonIndex];
             masterGx.persons[selectedPersonIndex] = masterGx.persons[0];
             masterGx.persons[0] = temp;
+            masterGx.persons[0].principal = true;
           }
         }
-        updateRecord(currentRelChart.getGedcomX());
+        updateRecord(masterGx);
         break;
     }
   }

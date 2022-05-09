@@ -130,6 +130,9 @@ function receivePersons(gx, fetchSpecs) {
         }
       }
     }
+    if (masterGx.persons.length > 0) {
+      masterGx.persons[0].principal = true;
+    }
   }
 
   function gatherRemainingFetchSpecs(fetchSpecs) {
