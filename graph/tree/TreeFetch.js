@@ -63,7 +63,7 @@ function fetchPersonsAsync(fetchSpecs) {
     // So: Create a map of requestId -> Number remaining, and only redraw when all have arrived, or if a timeout has kicked in.
     // (But do this later to support LLS. For hackathon, concentrate on Family Tree).
     for (const fetchSpec of fetchSpecs) {
-      fetchFromOneUrl(fetchSpec.personUrl, fetchSpec);
+      fetchFromOneUrl(fetchSpec.personUrl, fetchSpecs);
     }
   }
 }
@@ -280,6 +280,17 @@ function getFirstPersonId() {
   return masterGx.persons[0].id;
 }
 
+function refreshMasterGx() {
+  if (masterGx && masterGx.persons) {
+    let personIds = [];
+    for (const gxPerson of masterGx.persons) {
+      //todo: create FetchSpec for all persons
+      //todo: fetch everyone again
+      //todo: If Family Tree api has a limit on #persons to fetch at once, fix that.
+    }
+  }
+
+}
 /**
  * Show additional relatives of the selected persons (or hide the persons or their relatives, if "shouldHide" is true).
  * - When hiding relatives, if any of them are the "from" relative (i.e., the one that would connect the start person to this person),
@@ -429,8 +440,9 @@ function FetchSpec(personId, personUrl, downCounts, sessionId) {
 }
 
 //===== Person Analysis =====================
-// Map of personId -> PersonAnalysis
-let personAnalysisMap = null;
+
+// personAnalysisMap is declared in graph.js to avoid errors, but is created here.
+
 // Map of personPath -> Array of personIds at that path
 let pathPersonsMap = null;
 

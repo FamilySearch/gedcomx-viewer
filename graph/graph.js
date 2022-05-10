@@ -45,6 +45,8 @@ let gedcomxChangeHistory = [];
 // If a change is made when this position is not at the end, then all following elements are removed.
 let gedcomxChangePosition = 0;
 let currentRelChart;
+// Map of personId -> PersonAnalysis. Created in TreeFetch.js, but defined here to avoid errors when we check for its existence.
+let personAnalysisMap;
 
 function undoGraph() {
   if (gedcomxChangePosition > 1) {
@@ -153,8 +155,15 @@ function handleKeypress(e) {
   else if (currentRelChart) {
     switch (key) {
       case 'R':
-        let currentGx = currentRelChart.getGedcomX();
-        removeRedundantRelationships(currentGx);
+        if (e.shiftKey) {
+          if (masterGx) {
+            refreshMasterGx();
+          }
+        }
+        else {
+          let currentGx = currentRelChart.getGedcomX();
+          removeRedundantRelationships(currentGx);
+        }
         e.stopPropagation();
         break;
       case 'I':
