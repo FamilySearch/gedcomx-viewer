@@ -481,8 +481,8 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
     this.$spousePlus = relChart.makeControl(`${this.personBoxId}-personSpousePlus`, "relPlus personSpousePlus");
     this.$parentPlus = relChart.makeControl(`${this.personBoxId}-personParentPlus`, "relPlus personParentPlus");
     this.$personDiv.click(function(e) {
-      if (e.ctrlKey || e.metaKey) {
-        // Open person ID in Family Tree
+      if (e.shiftKey && (e.ctrlKey || e.metaKey)) {
+        // Open person ID in Family Tree on shift-cmd/ctrl-click
         let familyTreePersonUrl = "https://familysearch.org/ark:/61903/4:1:" + personBox.personNode.personId;
         window.open(familyTreePersonUrl, "_blank");
       }

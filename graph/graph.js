@@ -136,6 +136,8 @@ function findPersonIndex(gxPersons, personId) {
   return -1;
 }
 
+let shouldCollapse = true;
+
 function handleKeypress(e) {
   let key = String.fromCharCode(e.which || e.keyCode);  // These are deprecated, but I couldn't figure out what else I was supposed to use
 
@@ -154,6 +156,10 @@ function handleKeypress(e) {
   }
   else if (currentRelChart) {
     switch (key) {
+      case 'L':
+        shouldCollapse = !shouldCollapse;
+        updateRecord(currentRelChart.getGedcomX());
+        break;
       case 'R':
         if (e.shiftKey) {
           if (masterGx) {
@@ -178,6 +184,7 @@ function handleKeypress(e) {
       case 'S':
       case 'C':
       case 'B':
+      case 'M':
         toggleRelatives(key, e.shiftKey, getPersonIdsOfPersonBoxes(currentRelChart.selectedPersonBoxes));
         e.stopPropagation();
         break;

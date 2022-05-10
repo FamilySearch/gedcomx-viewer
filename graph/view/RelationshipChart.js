@@ -167,7 +167,7 @@ RelationshipChart.prototype.calculatePositions = function() {
 
   // Move persons closer together until they either (a) touch the person above or below them, or (b) come within
   // 1/2 box height of their nearest child or parent.
-  if (this.shouldCompress) {
+  if (shouldCollapse) { //this.shouldCompress) {
     this.chartCompressor.compressGraph(this.personBoxes);
   }
 
