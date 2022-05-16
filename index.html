@@ -89,7 +89,7 @@
 
     // Current GedcomX record object, used by the pop-up bounding box window to get access to the record and image data.
     // Use 'var' to make available to child pop-up windows.
-    var currentGx;
+    let currentGx;
     let relChart;
 
     let imageChildWindow;
@@ -486,35 +486,37 @@
 
     function updatePersonNameFromHighlight() {
       var textArea = document.getElementById("source-document");
-      var text = textArea.value;
-      var indexStart = textArea.selectionStart;
-      var indexEnd = textArea.selectionEnd;
-      if (indexStart != null && indexEnd != null) {
-        var selectedTxt = text.substring(indexStart,indexEnd);
-        var splitTxt = selectedTxt.replace(/[,;]/g, " ").replace(/  */g, " ").trim().split(" ");
+      if (textArea) {
+        var text = textArea.value;
+        var indexStart = textArea.selectionStart;
+        var indexEnd = textArea.selectionEnd;
+        if (indexStart != null && indexEnd != null) {
+          var selectedTxt = text.substring(indexStart, indexEnd);
+          var splitTxt = selectedTxt.replace(/[,;]/g, " ").replace(/  */g, " ").trim().split(" ");
 
-        var prefixField  = $("#new-person-prefixes");
-        var givenField   = $("#new-person-given-names");
-        var surnameField = $("#new-person-surnames");
-        var suffixField  = $("#new-person-suffixes");
+          var prefixField = $("#new-person-prefixes");
+          var givenField = $("#new-person-given-names");
+          var surnameField = $("#new-person-surnames");
+          var suffixField = $("#new-person-suffixes");
 
-        // Clear all four fields so we don't get anything dangling from last time.
-        prefixField.val("");
-        givenField.val("");
-        surnameField.val("");
-        suffixField.val("");
+          // Clear all four fields so we don't get anything dangling from last time.
+          prefixField.val("");
+          givenField.val("");
+          surnameField.val("");
+          suffixField.val("");
 
-        if (splitTxt.length > 0 && isPrefix(splitTxt[0])) {
-          prefixField.val(splitTxt.shift());
-        }
-        if (splitTxt.length > 0 && isSuffix(splitTxt[splitTxt.length - 1])) {
-          suffixField.val(splitTxt.pop());
-        }
-        if (splitTxt.length >= 2) {
-          surnameField.val(splitTxt.pop());
-        }
-        if (splitTxt.length > 0) {
-          givenField.val(splitTxt.join(" "));
+          if (splitTxt.length > 0 && isPrefix(splitTxt[0])) {
+            prefixField.val(splitTxt.shift());
+          }
+          if (splitTxt.length > 0 && isSuffix(splitTxt[splitTxt.length - 1])) {
+            suffixField.val(splitTxt.pop());
+          }
+          if (splitTxt.length >= 2) {
+            surnameField.val(splitTxt.pop());
+          }
+          if (splitTxt.length > 0) {
+            givenField.val(splitTxt.join(" "));
+          }
         }
       }
     }

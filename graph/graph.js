@@ -185,11 +185,13 @@ function handleKeypress(e) {
       case 'C':
       case 'B':
       case 'M':
-        toggleRelatives(key, e.shiftKey, getPersonIdsOfPersonBoxes(currentRelChart.selectedPersonBoxes));
+        if (typeof toggleRelatives != 'undefined') {
+          toggleRelatives(key, e.shiftKey, getPersonIdsOfPersonBoxes(currentRelChart.selectedPersonBoxes));
+        }
         e.stopPropagation();
         break;
       case '1':
-        if (masterGx && masterGx.persons && masterGx.persons.length > 1 &&
+        if (typeof masterGx != 'undefined' && masterGx && masterGx.persons && masterGx.persons.length > 1 &&
             currentRelChart.selectedPersonBoxes && currentRelChart.selectedPersonBoxes.length === 1) {
           let selectedPersonIndex = findPersonIndex(masterGx.persons, currentRelChart.selectedPersonBoxes[0].personNode.personId);
           if (selectedPersonIndex > 0) {
@@ -199,8 +201,8 @@ function handleKeypress(e) {
             masterGx.persons[0] = temp;
             masterGx.persons[0].principal = true;
           }
+          updateRecord(masterGx);
         }
-        updateRecord(masterGx);
         break;
     }
   }

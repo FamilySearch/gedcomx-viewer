@@ -3,9 +3,6 @@
     and adding them to a gedcomx object.
  */
 
-// Map of personId -> FetchSpec for that person ID
-//let stillToFetch = new Map();
-
 // Master GedcomX object with all the persons and relationships fetched so far.
 let masterGx = null;
 
