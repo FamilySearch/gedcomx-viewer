@@ -48,3 +48,11 @@ pre {
 .drag-handle {
     color: #b9bfd5;
 }
+
+.edit-section {
+    border: solid lightblue;
+    box-shadow: 2px 2px 4px lightgray;
+    padding:4px;
+    margin: 3px;
+    white-space: pre-wrap;
+}
