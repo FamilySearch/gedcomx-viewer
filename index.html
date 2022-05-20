@@ -181,8 +181,14 @@
       });
     }
 
+    let nextSectionIndex = 1;
+
     /**
-     * Show the source of a record.
+     * Show the source of a record. There is a "source-file" DIV in the HTML that contains one 'section' that corresponds to each record.
+     * Usually there is just one text section and one GedcomX record.
+     * But if a "¶" is included in the original text, or is typed at any time, then additional sections are added for each "¶".
+     * The "¶" is removed and not displayed. But if 'delete' is typed at the end of a section, then it is joined with the previous section.
+     * When gathering the text from all the sections, each section is assumed to be separated by a newline followed by a "¶" character.
      *
      * @param text The text to show.
      * @param name Name/title for the text.
@@ -190,21 +196,296 @@
     function setRecordSourceDocument(text, name) {
       sourceDocumentText = text;
       sourceDocumentName = name;
-      let el = $("#source-file");
-      el.empty();
+      let sourceFileElement = $("#source-file");
+      sourceFileElement.empty();
       if (name) {
-        el.append($("<h1/>").append($("<small/>", {"class": "text-muted"}).text(name)));
+        sourceFileElement.append($("<h1/>").append($("<small/>", {"class": "text-muted"}).text(name)));
         let gxDownloadNode = $("#download-gx");
         gxDownloadNode.attr("download", name.replace(/(.txt)?$/, ".gx.json"));
       }
       if (text) {
-        el.append($("<textarea/>", {"class": "form-control border", "rows" : "15", "style": "font-size: 14px", "id" : "source-document"}).val(text));
-        $("#source-document").on("input", function(){
-          updateDocumentText($(this).val());
-        });
+        if (text.includes("¶")) {
+          let sectionDiv = makeTextSection(null, text);
+          sourceFileElement.append(sectionDiv);
+          splitText(sectionDiv);
+        }
+        else {
+          sourceFileElement.append($("<textarea/>", {"class": "form-control border", "rows": "15", "style": "font-size: 14px", "id": "source-document"}).val(text));
+          $("#source-document").on("input", function () {
+            updateDocumentText($(this).val());
+          });
+        }
         $("#source-viewer").show();
       }
     }
+
+    function mergeSections(div1, div2) {
+      let firstChild2 = div2.firstChild;
+      while (div2.firstChild) {
+        div1.appendChild(div2.firstChild);
+      }
+      div2.remove();
+      div1.focus();
+      let range = document.createRange();
+      range.selectNodeContents(firstChild2);
+      range.collapse(true);
+      // For some stupid reason, doing the following in a timeout
+      let selection = document.getSelection();
+      range.setStart(firstChild2, 0);
+      range.setEnd(firstChild2, 0);
+      range.collapse(true);
+      selection.removeAllRanges();
+      setTimeout(function () {
+        // Strangely, if this isn't in a timeout section, then Chrome replaces the <div> with a <span>,
+        // thus making the two sections be on the same line. Whatever.
+        selection.addRange(range);
+      }, 1);
+    }
+
+    function makeTextSection(firstChildNode, orTextToUse) {
+      let sectionId = "text-section-" + nextSectionIndex++;
+      let element = $("<div contenteditable='true' class='edit-section' id='" + sectionId + "'/>");
+      if (firstChildNode) {
+        element.append(firstChildNode);
+      }
+      else {
+        let lines = orTextToUse.split("\n");
+        for (let line of lines) {
+          let lineDiv = document.createElement("div");
+          lineDiv.textContent = line;
+          element.append(lineDiv);
+        }
+      }
+
+      function cursorIsAtBeginningOfSection(node) {
+        let selection = window.getSelection();
+        if (selection && selection.focusOffset === 0) {
+          let selectedNode = selection.focusNode;
+          if (selectedNode) {
+            for (let currentNode = node; currentNode; currentNode = currentNode.firstChild) {
+              if (currentNode === selectedNode) {
+                return true;
+              }
+            }
+          }
+        }
+        return false;
+      }
+
+      element               // Carol, Dec. 12.¶Doug, Dec. 16¶Earnie, Dec 19. ¶Oh yeah, and Carol
+          .on("input", function (e) {
+            // todo: Handle paste of text, which might have multiple "¶"
+            if (!e.originalEvent.data || e.originalEvent.data.includes("¶")) {
+              splitText(this);//, getCaretIndex(window, this), this);
+            }
+          })
+          .keydown(function (e) {
+            let event = e.originalEvent;
+            let isCmd = event.getModifierState("Meta") || event.getModifierState("Control");
+            if (event.code === "Enter" && isCmd) {
+              insertParagraphMarkAtCursor();
+              splitText(this);
+            }
+            else if (event.code === "Backspace" && cursorIsAtBeginningOfSection(this)) {
+              let prevSection = this.previousSibling;
+              if (prevSection) {
+                mergeSections(prevSection, this);
+              }
+            }
+          });
+      return element[0];
+    }
+
+    function insertParagraphMarkAtCursor() {
+      let selection = window.getSelection();
+      if (selection) {
+        let selectedNode = selection.focusNode;
+        if (selectedNode) {
+          selectedNode.textContent = selectedNode.textContent.substring(0, selection.focusOffset) + "¶" + selectedNode.textContent.substring(selection.focusOffset);
+        }
+      }
+    }
+
+    /**
+     * Given a DIV for one text section, which now apparently has at least one "¶" in it,
+     * split all of the text in this DIV past each ¶ into its own new section DIV.
+     */
+    function splitText(node) {
+      let newChildrenPairs = splitDomOnParagraphMark(node);
+      let lastNode = node;
+      for (let childNodePair of newChildrenPairs) {
+        let childNode = childNodePair[0];
+        let childSibling = childNodePair[1];
+        let newSectionDiv = makeTextSection(childNode, null);
+        if (childSibling) {
+          newSectionDiv.append(childSibling);
+        }
+        lastNode.insertAdjacentElement('afterend', newSectionDiv);
+        lastNode = newSectionDiv;
+      }
+      lastNode.focus();
+    }
+
+    /**
+     * Check the children of the given DOM node (and its descendants) for ¶ marks.
+     * For each one found, create a new child node of the same type as the one it's found in,
+     * and add the new child to the returned array. The new child will not be a child of 'node',
+     * but, rather, the child of a new text section.
+     * So, for example, if we have
+     * <div id="1">Births: <b>Alex, Jan 2. ¶Bob, Jan 5. ¶Carol, Jan 6.</b> All doing well.</div>
+     * then the dom looks like
+     * div id=1
+     *   #text "Births: "
+     *   b
+     *     #text "Alex, Jan 2. ¶Bob, Jan 5. ¶Carol, Jan 6."
+     *   #text " All doing well."
+     * and we want it to end up as
+     * div id=1
+     *   #text "Births: "
+     *   b
+     *     #text "Alex, Jan 2. "
+     * div id=2
+     *   b
+     *     #text "Bob, Jan 5. "
+     * div id=3
+     *   b
+     *     #text "Carol, Jan 6."
+     *   #text " All doing well."
+     * Calling this on the div would
+     *   1) Ignore the first text line, as there is no ¶
+     *   2) Recursively call on the b
+     *      1) Find the first ¶, so
+     *         (a) truncate the b node's text to "Alex, Jan 2. "; and
+     *         (b) create a new #text node with "Bob, Jan 5. ¶Carol, Jan 6.", and add that to the array of new children
+     *      2) While looping, find the second ¶ in the newly-created #text node, so
+     *         (a) truncate the new #text to be "Bob, Jan 5. "
+     *         (b) create another new #text node with "Carol, Jan 6." and add that to the array of new children
+     *      3) return the array of two new children
+     *   3) Upon receiving two new children, the for each one,
+     *     (a) create a new <b> node with the child text, and add that to the list of new children.
+     *     (b) return that array of two new children
+     *   4) The caller will then create two new 'text section divs' and insert them after the original section div.
+     */
+    function splitDomOnParagraphMark(node) {
+      // Array of child nodes that need to each be the first child of a new section DIV.
+      let newChildren = [];
+      for (let childNode = node.firstChild; childNode; childNode = childNode.nextSibling) {
+        if (childNode.nodeName === '#text') {
+          let pos;
+          while ((pos = childNode.textContent.indexOf("¶")) >= 0) {
+            if (pos === 0) {
+              // Remove ¶ from beginning
+              childNode.textContent = childNode.textContent.substring(1);
+              // if (childNode !== node.firstChild) {
+                // If this is the first child of a section DIV, then the ¶ was redundant and no other structural change is needed.
+                // Otherwise, this node becomes the first child of a new div.
+                newChildren.push([childNode, null]);
+              // }
+            }
+            else {
+              // Split this node at the (first) ¶
+              let leftText = childNode.textContent.substring(0, pos);
+              let rightText = childNode.textContent.substring(pos + 1);
+              childNode.textContent = leftText;
+              let newNode = document.createTextNode(rightText);//dNode.nodeName);
+              newNode.textContent = rightText;
+              newChildren.push([newNode, null]);
+              // Cause 'newNode' to be checked for more ¶ in the while loop.
+              childNode = newNode;
+            }
+          }
+        }
+        else if (childNode.firstChild) {
+          // Not #text element, and has children, so try splitting those.
+          let subChildrenPairs = splitDomOnParagraphMark(childNode);
+          let lastNewElementPair = null;
+          for (let subChildPair of subChildrenPairs) {
+            // Split text down below, so create a new node of the same type as 'node' and add the subChild to it.
+            let newElement = document.createElement(childNode.nodeName);
+            let subChild = subChildPair[0];
+            let subChildsNextSibling = subChildPair[1];
+            newElement.appendChild(subChild);
+            if (subChildsNextSibling) {
+              newElement.appendChild(subChildsNextSibling);
+            }
+            let newElementPair = [newElement, null];
+            newChildren.push(newElementPair);
+            lastNewElementPair = newElementPair;
+          }
+          if (lastNewElementPair && childNode.nextSibling) {
+            lastNewElementPair[1] = childNode.nextSibling;
+            console.log("...");
+          }
+        }
+      }
+      return newChildren;
+    }
+
+    // function splitTextOnCaret(win, contentEditable) {
+    //   let index = 0;
+    //   let selection = win.getSelection();
+    //   let textNodes = textNodesUnder(contentEditable);
+    //   let leftText = "";
+    //   let rightText = "";
+    //   let foundSelection = false;
+    //
+    //   for(let node of textNodes) {
+    //     if(node === selection.focusNode) {
+    //       leftText += node.textContent.substring(0, selection.focusOffset);
+    //       rightText += node.textContent.substring(selection.focusOffset);
+    //       foundSelection = true;
+    //       break;
+    //     }
+    //     else {
+    //       if (foundSelection) {
+    //         leftText += node.textContent;
+    //       }
+    //       else {
+    //         rightText += node.textContent;
+    //       }
+    //     }
+    //   }
+    //
+    //   return [leftText, rightText];
+    // }
+    // // Get the index of where the caret is in the given contentEditable node's text.
+    // // (In case the content contains rich text like bold, or multiple lines, this will give the
+    // // index in the combined text.)
+    // // Not sure if newlines are being counted as one or not...
+    // function getCaretIndex(win, contentEditable) {
+    //   let index = 0;
+    //   let selection = win.getSelection();
+    //   let textNodes = textNodesUnder(contentEditable);
+    //
+    //   for(let i = 0; i < textNodes.length; i++) {
+    //     let node = textNodes[i];
+    //     let isSelectedNode = node === selection.focusNode;
+    //
+    //     if(isSelectedNode) {
+    //       index += selection.focusOffset;
+    //       break;
+    //     }
+    //     else {
+    //       index += node.textContent.length;
+    //     }
+    //   }
+    //
+    //   return index;
+    // }
+    //
+    // //Helper function to get an array of all the text nodes under the given node
+    // function textNodesUnder(node) { // https://stackoverflow.com/a/10730777/3245937
+    //   let all = [];
+    //   for (let childNode=node.firstChild; childNode; childNode=childNode.nextSibling){
+    //     if (childNode.nodeType === 3) {
+    //       all.push(childNode);
+    //     }
+    //     else {
+    //       all = all.concat(textNodesUnder(childNode));
+    //     }
+    //   }
+    //   return all;
+    // }
 
     // Update the document text in the GedcomX, in response to edits happening in the text area.
     function updateDocumentText(text) {
@@ -1846,6 +2127,11 @@
       dragElement(document.getElementById("new-relationship"));
       // See if the tab has been reloaded, in which case we want to restored the data that would otherwise be lost.
       recoverRecord(false);
+      // let sampleText = "Births:\n" +
+      //     "Alex, Dec. 9. " +
+      //     "¶Bob, Dec. 10." +
+      //     "¶Carol, Dec. 12.";
+      // setRecordSourceDocument(sampleText, "Sample Text with ¶");
     });
   </script>
   <style>
