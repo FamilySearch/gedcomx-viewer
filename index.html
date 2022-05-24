@@ -86,18 +86,77 @@
         findRecordNode($(this).attr("json-node-path"));
       });
     }
+    /* == RecordInfo ===
+      A RecordInfo object holds information about one record, as well as its corresponding text section, if any.
+      - Every text section will correspond to one RecordInfo.
+      - Each RecordInfo will contain one GedcomX record (possibly an empty one like "{}").
+      - Each RecordInfo can correspond to a text section, or can have no corresponding text section (yet).
+      Common flows:
+      - Load new GedcomX record => text cleared; One RecordInfo that points to the new record and no text section.
+      - Load new Record Set     => text cleared; Array of RecordInfo (one per record in the record set), none of which point to a text section.
+      - Load text when no Gx record exists yet => One RecordInfo with empty ({}) record, which corresponds to the one text section.
+      - Split text section => insert a RecordInfo after the one that corresponds to the current text section. Empty record that corresponds to new section.
+        - Eventually, look to see if the following RecordInfo (a) has no corresponding text section yet, and (b) has names that apper in the new section.
+          If so, then associate the record there. This is especially helpful to "undo" an accidental delete of a section break.
+      - Merge text section => merge persons and records from the second RecordInfo into the first one, and delete the second one from the array.
+      - Load text when Gx record or record set already loaded:
+        - If one text section and one record, then point the first (and only) RecordInfo at the first (and only) text section.
+        - If one text section and >1 record, then point the first RecordInfo at the first (and only) text section
+          (User will have to split text section and drag other records over to them).
+        - If multiple text sections, then create an empty record for each, and user must drag the records to the correct sections.
+          (Eventually, create alignment code that looks at words in each section and names in each record to try to line them up)
+      So a RecordInfo may have a null sectionId, but all text sections should have exactly one RecordInfo that points at it.
+    */
+    // Array of RecordInfo objects, one for each GedcomX record being edited, possibly from a multi-record article, such as a birth list.
+    let recordInfos = [];
+    let currentRecordIndex = 0; // Index in recordInfos[] of the currently-selected record.
+
+    //MAYBE: have an array of RecordInfo objects, each with:
+    //  - gxRecord
+    //  - Summary (name of first principal or first person in record)
+    //  - sectionId of corresponding text section, if identified. null => don't know what text section it goes with.
 
     // Current GedcomX record object, used by the pop-up bounding box window to get access to the record and image data.
-    // Use 'var' to make available to child pop-up windows.
     let currentGx;
+    // Relationship chart for the current GedcomX
     let relChart;
 
     let imageChildWindow;
     let entityChildWindow;
     let dirty = false;
 
+    function RecordInfo(sectionId, gxRecord) {
+      this.gxRecord = gxRecord ? gxRecord : {};
+
+      // Get an array of (lower case) full text strings from all the name forms of all the people in the given record.
+      function getRecordNames(gxRecord) {
+        let names = [];
+        if (gxRecord.persons) {
+          for (let person of persons) {
+            if (person.names) {
+              for (let name of person.names) {
+                if (name.nameForms) {
+                  for (let nameForm of name.nameForms) {
+                    if (nameForm.fullText && nameForm.fullText.length > 0) {
+                      names.push(nameForm.fullText.toLowerCase());
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        return names;
+      }
+
+      this.names = getRecordNames(gxRecord);
+      this.summary = this.names.length > 0 ? this.names[0] : "<NoNames>";
+      // id of contenteditable <div> that corresponds to this record (if any so far).
+      this.sectionId = sectionId;
+    }
+
     /**
-     *  Update a record.
+     *  Having made a change to the given record, update the display of it.
      *
      *  @param doc The record to update.
      *  @param url (optional) The url or filename of the record, if applicable. (Ignored if null)
@@ -183,13 +242,30 @@
 
     let nextSectionIndex = 1;
 
+    // Set the sectionId of each RecordInfo in recordInfos[] to the text section each record seems to have come from.
+    // If unclear, err on the side of leaving sections unassigned.
+    // function alignTextSectionsWithRecords() {
+    //   let sourceFileElement = $("#source-file");
+    //   let sectionTexts = [];
+    //   let sectionIndex = 0;
+    //   for (let sectionDiv = sourceFileElement.firstChild; sectionDiv; sectionDiv = sectionDiv.nextSibling) {
+    //     //todo: See if this recurses
+    //     sectionTexts[sectionIndex++] = sectionDiv.textContent;
+    //   }
+    //
+    //   let scores = [];
+    //   for (let recordIndex = 0; recordIndex < recordInfos.length; recordIndex++) {
+    //
+    //   }
+    // }
+
     /**
      * Show the source of a record. There is a "source-file" DIV in the HTML that contains one 'section' that corresponds to each record.
      * Usually there is just one text section and one GedcomX record.
-     * But if a "¶" is included in the original text, or is typed at any time, then additional sections are added for each "¶".
+     * But if a "¶" is included in the original text, or is typed at any time (or cmd/ctrl-Enter typed), then additional sections are added for each "¶".
      * The "¶" is removed and not displayed. But if 'delete' is typed at the end of a section, then it is joined with the previous section.
      * When gathering the text from all the sections, each section is assumed to be separated by a newline followed by a "¶" character.
-     *
+     * Each text section always corresponds to a RecordInfo object in the global recordInfos[] array, which in turn points back at this text section.
      * @param text The text to show.
      * @param name Name/title for the text.
      */
@@ -197,39 +273,81 @@
       sourceDocumentText = text;
       sourceDocumentName = name;
       let sourceFileElement = $("#source-file");
+
+      // Clear text sections and any pointers to them
       sourceFileElement.empty();
+      if (recordInfos) {
+        for (let recordInfo of recordInfos) {
+          recordInfo.sectionId = null;
+        }
+      }
+
       if (name) {
         sourceFileElement.append($("<h1/>").append($("<small/>", {"class": "text-muted"}).text(name)));
         let gxDownloadNode = $("#download-gx");
         gxDownloadNode.attr("download", name.replace(/(.txt)?$/, ".gx.json"));
       }
+
       if (text) {
-        if (text.includes("¶")) {
-          let sectionDiv = makeTextSection(null, text);
-          sourceFileElement.append(sectionDiv);
-          splitText(sectionDiv);
+        let sectionDiv = makeTextSection(null, text);
+        // Clear sectionId on all recordInfos, and remove any that have empty gedcomx objects (like "{}").
+        recordInfos = recordInfos.filter(function(recordInfo) {
+          recordInfo.sectionId = null;
+          return recordInfo.gxRecord && Object.keys(recordInfo.gxRecord).length > 0;
+        });
+        if (recordInfos.length > 0) {
+          recordInfos[0].sectionId = sectionDiv.id;
         }
         else {
-          sourceFileElement.append($("<textarea/>", {"class": "form-control border", "rows": "15", "style": "font-size: 14px", "id": "source-document"}).val(text));
-          $("#source-document").on("input", function () {
-            updateDocumentText($(this).val());
-          });
+          recordInfos = [new RecordInfo(sectionDiv.id, {})]
         }
+        sourceFileElement.append(sectionDiv);
+        if (text.includes("¶")) {
+          splitText(sectionDiv);
+        }
+        selectTextSection(sectionDiv.id, true);
+        sectionDiv.focus();
+        //alignTextSectionsWithRecords();
         $("#source-viewer").show();
       }
     }
 
+    // Find the index of the RecordInfo object in the global recordInfos[] that has the given sectionId
+    //   (or -1 if not found, which should be impossible).
+    function findRecordInfo(textSectionId) {
+      for (let index = 0; index < recordInfos.length; index++) {
+        if (recordInfos[index].sectionId === textSectionId) {
+          return index;
+        }
+      }
+      return -1; // not found
+    }
+
+    // Find the RecordInfo objects in the global recordInfos[] that refer to the two given textSectionIds.
+    // Merge the GedcomX data from the second RecordInfo into the GedcomX info of the first one.
+    // Delete the second RecordInfo object from recordInfos[] and slide the others down.
+    function mergeRecords(textSectionId1, textSectionId2) {
+      let recordInfo1Index = findRecordInfo(textSectionId1);
+      let recordInfo2Index = findRecordInfo(textSectionId2);
+      if (recordInfo1Index >= 0 && recordInfo2Index >= 0) {
+        mergeGedcomx(recordInfos[recordInfo1Index].gxRecord, recordInfos[recordInfo2Index].gxRecord);
+        recordInfos.splice(recordInfo2Index, 1);
+      }
+    }
+
+    // Append the text from the second text section's div into the first one's div, and remove div2.
+    // Merge the GedcomX from div2's corresponding entry in recordInfos[] into div1's entry, and remove div2's entry.
     function mergeSections(div1, div2) {
       let firstChild2 = div2.firstChild;
       while (div2.firstChild) {
         div1.appendChild(div2.firstChild);
       }
+      mergeRecords(div1.id, div2.id);
       div2.remove();
-      div1.focus();
+      selectTextSection(div1.id, true);
       let range = document.createRange();
       range.selectNodeContents(firstChild2);
       range.collapse(true);
-      // For some stupid reason, doing the following in a timeout
       let selection = document.getSelection();
       range.setStart(firstChild2, 0);
       range.setEnd(firstChild2, 0);
@@ -240,6 +358,21 @@
         // thus making the two sections be on the same line. Whatever.
         selection.addRange(range);
       }, 1);
+    }
+
+    function cursorIsAtBeginningOfSection(node) {
+      let selection = window.getSelection();
+      if (selection && selection.focusOffset === 0) {
+        let selectedNode = selection.focusNode;
+        if (selectedNode) {
+          for (let currentNode = node; currentNode; currentNode = currentNode.firstChild) {
+            if (currentNode === selectedNode) {
+              return true;
+            }
+          }
+        }
+      }
+      return false;
     }
 
     function makeTextSection(firstChildNode, orTextToUse) {
@@ -257,45 +390,58 @@
         }
       }
 
-      function cursorIsAtBeginningOfSection(node) {
-        let selection = window.getSelection();
-        if (selection && selection.focusOffset === 0) {
-          let selectedNode = selection.focusNode;
-          if (selectedNode) {
-            for (let currentNode = node; currentNode; currentNode = currentNode.firstChild) {
-              if (currentNode === selectedNode) {
-                return true;
-              }
-            }
-          }
-        }
-        return false;
-      }
-
-      element               // Carol, Dec. 12.¶Doug, Dec. 16¶Earnie, Dec 19. ¶Oh yeah, and Carol
+      element
           .on("input", function (e) {
-            // todo: Handle paste of text, which might have multiple "¶"
             if (!e.originalEvent.data || e.originalEvent.data.includes("¶")) {
-              splitText(this);//, getCaretIndex(window, this), this);
+              splitText(this, true);
             }
           })
           .keydown(function (e) {
             let event = e.originalEvent;
             let isCmd = event.getModifierState("Meta") || event.getModifierState("Control");
             if (event.code === "Enter" && isCmd) {
+              // Cmd/ctrl-Enter will split the current text section at the cursor.
               insertParagraphMarkAtCursor();
-              splitText(this);
+              splitText(this, true);
             }
             else if (event.code === "Backspace" && cursorIsAtBeginningOfSection(this)) {
+              // Hitting delete when at the beginning of a section will delete the "section break" and merge the sections together.
               let prevSection = this.previousSibling;
               if (prevSection) {
                 mergeSections(prevSection, this);
               }
             }
+          })
+          .on("focus", function() {
+            selectTextSection(this.id, false);
           });
       return element[0];
     }
 
+    /**
+     * Select the given text section, while deselecting all the others.
+     * Select the corresponding RecordInfo object's GedcomX record for display and editing.
+     * @param textSectionId - id of div to select
+     * @param forceSelection -
+     */
+    function selectTextSection(textSectionId, forceSelection) {
+      let recordIndex = findRecordInfo(textSectionId);
+      if (recordIndex >= 0 && (forceSelection || recordIndex !== currentRecordIndex)) {
+        // Deselect the currently-selected section, if any
+        $(".selected-section").removeClass("selected-section");
+        let recordInfo = recordInfos[recordIndex];
+        currentRecordIndex = recordIndex;
+        if (recordInfo.sectionId) {
+          let sectionDiv = $("#" + recordInfo.sectionId);
+          sectionDiv.addClass("selected-section");
+          sectionDiv.focus();
+        }
+        updateRecord(recordInfo.gxRecord, null, false, true);
+      }
+    }
+
+    // When the user types cmd/ctrl-Enter, then insert a paragraph mark at the current cursor location,
+    //   in preparation for the text being split just as though the paragraph mark had been typed.
     function insertParagraphMarkAtCursor() {
       let selection = window.getSelection();
       if (selection) {
@@ -307,23 +453,42 @@
     }
 
     /**
-     * Given a DIV for one text section, which now apparently has at least one "¶" in it,
-     * split all of the text in this DIV past each ¶ into its own new section DIV.
+     * Insert a new RecordInfo object after, and point the new RecordInfo object at sectionId2
      */
-    function splitText(node) {
-      let newChildrenPairs = splitDomOnParagraphMark(node);
-      let lastNode = node;
+    function insertRecordInfo(sectionId1, sectionId2) {
+      let recordIndex1 = findRecordInfo(sectionId1);
+      let recordIndex2 = recordIndex1 + 1;
+      //todo: Check the following record to see if (a) it has no section Id yet; and (b) its names appear in the given text section.
+      // If so, then re-use the existing RecordInfo and point it at this sectionId. Otherwise, create a new RecordInfo with an empty record.
+      let newRecordInfo = new RecordInfo(sectionId2, {});
+      recordInfos.splice(recordIndex2, 0, newRecordInfo);
+    }
+
+    /**
+     * Given a DIV for one text section, which probably has at least one "¶" in it,
+     * split all of the text in this DIV past each ¶ into its own new section DIV.
+     * @param textSectionDiv - DOM node for a contenteditable text section.
+     * @param shouldSelectNewNode - Flag for whether to set the newly-created node as the currently-selected one, and put focus on it.
+     */
+    function splitText(textSectionDiv, shouldSelectNewNode) {
+      let newChildrenPairs = splitDomOnParagraphMark(textSectionDiv);
+      let lastNode = textSectionDiv;
       for (let childNodePair of newChildrenPairs) {
         let childNode = childNodePair[0];
         let childSibling = childNodePair[1];
         let newSectionDiv = makeTextSection(childNode, null);
-        if (childSibling) {
+        insertRecordInfo(lastNode.id, newSectionDiv.id);
+        while (childSibling) {
+          let nextSibling = childSibling.nextSibling;
           newSectionDiv.append(childSibling);
+          childSibling = nextSibling;
         }
         lastNode.insertAdjacentElement('afterend', newSectionDiv);
         lastNode = newSectionDiv;
       }
-      lastNode.focus();
+      if (shouldSelectNewNode) {
+        selectTextSection(lastNode.id, true);
+      }
     }
 
     /**
@@ -387,7 +552,7 @@
               let leftText = childNode.textContent.substring(0, pos);
               let rightText = childNode.textContent.substring(pos + 1);
               childNode.textContent = leftText;
-              let newNode = document.createTextNode(rightText);//dNode.nodeName);
+              let newNode = document.createTextNode(rightText);
               newNode.textContent = rightText;
               newChildren.push([newNode, null]);
               // Cause 'newNode' to be checked for more ¶ in the while loop.
@@ -401,12 +566,21 @@
           let lastNewElementPair = null;
           for (let subChildPair of subChildrenPairs) {
             // Split text down below, so create a new node of the same type as 'node' and add the subChild to it.
-            let newElement = document.createElement(childNode.nodeName);
             let subChild = subChildPair[0];
             let subChildsNextSibling = subChildPair[1];
-            newElement.appendChild(subChild);
-            if (subChildsNextSibling) {
-              newElement.appendChild(subChildsNextSibling);
+            let newElement;
+            if (subChild === childNode.firstChild) {
+              // If we're splitting on the first child of a node, then steal the entire node.
+              newElement = childNode;
+            }
+            else {
+              newElement = document.createElement(childNode.nodeName);
+              newElement.appendChild(subChild);
+              while (subChildsNextSibling) {
+                let temp = subChildsNextSibling.nextSibling;
+                newElement.appendChild(subChildsNextSibling);
+                subChildsNextSibling = temp;
+              }
             }
             let newElementPair = [newElement, null];
             newChildren.push(newElementPair);
@@ -420,72 +594,6 @@
       }
       return newChildren;
     }
-
-    // function splitTextOnCaret(win, contentEditable) {
-    //   let index = 0;
-    //   let selection = win.getSelection();
-    //   let textNodes = textNodesUnder(contentEditable);
-    //   let leftText = "";
-    //   let rightText = "";
-    //   let foundSelection = false;
-    //
-    //   for(let node of textNodes) {
-    //     if(node === selection.focusNode) {
-    //       leftText += node.textContent.substring(0, selection.focusOffset);
-    //       rightText += node.textContent.substring(selection.focusOffset);
-    //       foundSelection = true;
-    //       break;
-    //     }
-    //     else {
-    //       if (foundSelection) {
-    //         leftText += node.textContent;
-    //       }
-    //       else {
-    //         rightText += node.textContent;
-    //       }
-    //     }
-    //   }
-    //
-    //   return [leftText, rightText];
-    // }
-    // // Get the index of where the caret is in the given contentEditable node's text.
-    // // (In case the content contains rich text like bold, or multiple lines, this will give the
-    // // index in the combined text.)
-    // // Not sure if newlines are being counted as one or not...
-    // function getCaretIndex(win, contentEditable) {
-    //   let index = 0;
-    //   let selection = win.getSelection();
-    //   let textNodes = textNodesUnder(contentEditable);
-    //
-    //   for(let i = 0; i < textNodes.length; i++) {
-    //     let node = textNodes[i];
-    //     let isSelectedNode = node === selection.focusNode;
-    //
-    //     if(isSelectedNode) {
-    //       index += selection.focusOffset;
-    //       break;
-    //     }
-    //     else {
-    //       index += node.textContent.length;
-    //     }
-    //   }
-    //
-    //   return index;
-    // }
-    //
-    // //Helper function to get an array of all the text nodes under the given node
-    // function textNodesUnder(node) { // https://stackoverflow.com/a/10730777/3245937
-    //   let all = [];
-    //   for (let childNode=node.firstChild; childNode; childNode=childNode.nextSibling){
-    //     if (childNode.nodeType === 3) {
-    //       all.push(childNode);
-    //     }
-    //     else {
-    //       all = all.concat(textNodesUnder(childNode));
-    //     }
-    //   }
-    //   return all;
-    // }
 
     // Update the document text in the GedcomX, in response to edits happening in the text area.
     function updateDocumentText(text) {
@@ -502,10 +610,10 @@
       if (doc.records && doc.records.length > 0) {
         doc = doc.records[0];
       }
-      let documentSourceDescription = getDocumentSourceDescription(doc);
-      let sourceDocument = getSourceDocument(doc, documentSourceDescription);
+      let mainSourceDescription = getMainSourceDescription(doc);
+      let sourceDocument = getSourceDocument(doc, mainSourceDescription);
       if (sourceDocument) {
-        let title = documentSourceDescription.titles && documentSourceDescription.titles.length > 0 ? documentSourceDescription.titles[0].value : null;
+        let title = mainSourceDescription.titles && mainSourceDescription.titles.length > 0 ? mainSourceDescription.titles[0].value : null;
         setRecordSourceDocument(sourceDocument.text, title, sourceDocument);
       }
     }
@@ -1859,6 +1967,23 @@
       }
     }
 
+    /**
+     * Take an uploaded or pasted GedcomX record OR RECORD SET and prepare the editor with it.
+     * @param recordOrRecordSet - GedcomX record [treated just like a single-record RecordSet] or GedcomX RecordSet
+     * @param filename - Filename of the GedcomX record or record set file.
+     */
+    function prepareGedcomx(recordOrRecordSet, filename) {
+      if (!dirty || confirm("There are changes since the last download. Are you sure you want to clear the record?")) {
+        recordSet = recordOrRecordSet.records ? recordOrRecordSet : [recordOrRecordSet];
+        if (recordSet.length > 0) {
+
+        }
+        else {
+          updateRecord({}, null, false, true);
+        }
+      }
+    }
+
     function uploadGedcomx(files) {
       setRecordSourceDocument(null);
 
@@ -2127,11 +2252,11 @@
       dragElement(document.getElementById("new-relationship"));
       // See if the tab has been reloaded, in which case we want to restored the data that would otherwise be lost.
       recoverRecord(false);
-      // let sampleText = "Births:\n" +
-      //     "Alex, Dec. 9. " +
-      //     "¶Bob, Dec. 10." +
-      //     "¶Carol, Dec. 12.";
-      // setRecordSourceDocument(sampleText, "Sample Text with ¶");
+      let sampleText = "Births:\n" +
+          "Alex, Dec. 9. " +
+          "¶Bob, Dec. 10." +
+          "¶Carol, Dec. 12.";
+      setRecordSourceDocument(sampleText, "Sample Text with ¶");
     });
   </script>
   <style>
@@ -2269,6 +2394,7 @@
             </div>
           </div>
           <div class="col-8 pt-4">
+            <div id="rec-list"></div>
             <div id="rel-chart"></div>
             <div id="record"></div>
           </div>

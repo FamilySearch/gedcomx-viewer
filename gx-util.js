@@ -237,7 +237,7 @@ function getSourceDescription(doc, sourceIdOrUrl) {
 }
 
 // Find the source description of the 'source' for the record, i.e., for the 'document' that contains the original text.
-function getDocumentSourceDescription(doc) {
+function getMainSourceDescription(doc) {
   let recordSourceDescription = getSourceDescription(doc, doc.description);
 
   let documentSourceDescription;
@@ -247,14 +247,14 @@ function getDocumentSourceDescription(doc) {
   return documentSourceDescription;
 }
 
-// Find the source "document" within the given GedcomX document, and return it (or null if not found).
-function getSourceDocument(doc, documentSourceDescription) {
-  if (!documentSourceDescription) {
-    documentSourceDescription = getDocumentSourceDescription(doc);
+// Find the source "Document" object within the given GedcomX document, and return it (or null if not found).
+function getSourceDocument(doc, mainSourceDescription) {
+  if (!mainSourceDescription) {
+    mainSourceDescription = getMainSourceDescription(doc);
   }
   let document;
-  if (documentSourceDescription && documentSourceDescription.about) {
-    let sourceDocumentId = documentSourceDescription.about.substr(1);
+  if (mainSourceDescription && mainSourceDescription.about) {
+    let sourceDocumentId = mainSourceDescription.about.substr(1);
     if (doc.documents) {
       for (let candidate of doc.documents) {
         if (sourceDocumentId === candidate.id) {
