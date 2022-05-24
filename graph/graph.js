@@ -154,7 +154,7 @@ function handleKeypress(e) {
       e.stopPropagation();
     }
   }
-  else if (currentRelChart) {
+  else if (currentRelChart && typeof recordInfos === 'undefined') {
     switch (key) {
       case 'L':
         shouldCollapse = !shouldCollapse;

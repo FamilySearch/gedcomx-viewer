@@ -11,8 +11,8 @@ function fixGedcomx(gx) {
   return gx;
 }
 
-function generateLocalId() {
-  return Math.random().toString(36).substr(2, 9);
+function generateLocalId(prefix) {
+  return (prefix ? prefix : "") + Math.random().toString(36).substr(2, 9);
 }
 
 /**
@@ -24,13 +24,13 @@ function addLocalIds(doc) {
   if (doc.persons) {
     for (let person of doc.persons) {
       if (!person.id) {
-        person.id = generateLocalId();
+        person.id = generateLocalId("p_");
       }
 
       if (person.facts) {
         for (let fact of person.facts) {
           if (!fact.id) {
-            fact.id = generateLocalId();
+            fact.id = generateLocalId("f_");
           }
         }
       }
@@ -38,7 +38,7 @@ function addLocalIds(doc) {
       if (person.names) {
         for (let name of person.names) {
           if (!name.id) {
-            name.id = generateLocalId();
+            name.id = generateLocalId("n_");
           }
         }
       }
@@ -48,13 +48,13 @@ function addLocalIds(doc) {
   if (doc.relationships) {
     for (let relationship of doc.relationships) {
       if (!relationship.id) {
-        relationship.id = generateLocalId();
+        relationship.id = generateLocalId("r_");
       }
 
       if (relationship.facts) {
         for (let fact of relationship.facts) {
           if (!fact.id) {
-            fact.id = generateLocalId();
+            fact.id = generateLocalId("rf_");
           }
         }
       }
@@ -128,17 +128,17 @@ function fixAge(doc) {
   }
 }
 
-function fixTextOfSourceOfSource(doc, sourceDocumentText, sourceDocumentName) {
-  let source = getSourceDescription(doc, doc.description);
+function fixTextOfSourceOfSource(doc, sourceDocumentText, sourceDocumentName, localId) {
+  let mainSourceDescription = getSourceDescription(doc, doc.description);
 
   let sourceOfSource;
-  if (source && source.sources && source.sources.length > 0) {
-    sourceOfSource = getSourceDescription(doc, source.sources[0].description);
+  if (mainSourceDescription && mainSourceDescription.sources && mainSourceDescription.sources.length > 0) {
+    sourceOfSource = getSourceDescription(doc, mainSourceDescription.sources[0].description);
   }
 
   let sourceDocument;
   if (sourceOfSource && sourceOfSource.about) {
-    let sourceDocumentId = sourceOfSource.about.substr(1);
+    let sourceDocumentId = sourceOfSource.about.substr(1); // Remove "#" from front
     if (doc.documents) {
       for (let candidate of doc.documents) {
         if (sourceDocumentId === candidate.id) {
@@ -151,7 +151,7 @@ function fixTextOfSourceOfSource(doc, sourceDocumentText, sourceDocumentName) {
 
   if (!sourceDocument) {
     sourceDocument = {};
-    sourceDocument.id = generateLocalId();
+    sourceDocument.id = generateLocalId("doc_");
     doc.documents = doc.documents || [];
     doc.documents.push(sourceDocument);
   }
@@ -164,22 +164,22 @@ function fixTextOfSourceOfSource(doc, sourceDocumentText, sourceDocumentName) {
 
   if (!sourceOfSource) {
     sourceOfSource = {};
-    sourceOfSource.id = generateLocalId();
+    sourceOfSource.id = localId || generateLocalId("sd_");
     sourceOfSource.about = "#" + sourceDocument.id;
     doc.sourceDescriptions = doc.sourceDescriptions || [];
     doc.sourceDescriptions.push(sourceOfSource);
   }
 
-  if (!source) {
-    source = {};
-    source.id = generateLocalId();
+  if (!mainSourceDescription) {
+    mainSourceDescription = {};
+    mainSourceDescription.id = generateLocalId("sd_");
     doc.sourceDescriptions = doc.sourceDescriptions || [];
-    doc.sourceDescriptions.push(source);
-    doc.description = "#" + source.id;
+    doc.sourceDescriptions.push(mainSourceDescription);
+    doc.description = "#" + mainSourceDescription.id;
   }
 
-  source.sources = [];
-  source.sources.push({description: "#" + sourceOfSource.id, descriptionId: sourceOfSource.id});
+  mainSourceDescription.sources = [];
+  mainSourceDescription.sources.push({description: "#" + sourceOfSource.id, descriptionId: sourceOfSource.id});
 }
 
 function fixExplicitNameType(gx) {
@@ -400,7 +400,7 @@ function mergeGedcomx(gx1, gx2) {
       }
       else {
         checkForIdCollisions(listName, list1, list2);
-        list1.append(list2);
+        list1.push(...list2);
       }
     }
   }
