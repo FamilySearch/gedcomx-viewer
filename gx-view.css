@@ -56,3 +56,7 @@ pre {
     margin: 3px;
     white-space: pre-wrap;
 }
+
+.selected-section {
+    background-color: #fffee4;
+}

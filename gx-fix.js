@@ -366,4 +366,51 @@ function removeRedundantRelationships(gx) {
   }
 }
 
+// Merge all of the persons, relationships, etc., from gx2 into gx1
+// (Assumes that local IDs in both GedcomX documents are unique. If not, this function needs to be a lot more complicated to avoid collisions
+// and fix up all references...)
+function mergeGedcomx(gx1, gx2) {
+  function checkForIdCollisions(listName, list1, list2) {
+    let ids1 = new Set();
+    for (let element of list1) {
+      if (element.id) {
+        if (ids1.has(element.id)) {
+          throw new Error("Odd. Two " + listName + " with same ID in gedcomx1");
+        }
+        ids1.add(element.id);
+      }
+    }
+    for (let element of list2) {
+      if (element.id && ids1.has(element.id)) {
+        // If you hit this error, then take the time to write the code so that when merging two GedcomX objects,
+        //  we make sure all of the ids of all kinds are unique, and that all of the references to them use the
+        //  new IDs. (i.e., relationship.person1/2=>new person IDs; source[references] => new sourceDescription ids; place references=>new place description ids;
+        //  and attributions => new agent Ids.
+        throw new Error("Error: Same id '" + element.id + "' in " + listName + " list in Gedcomx1 and Gedcomx2. Fancier code needed...");
+      }
+    }
+  }
+
+  function mergeArrays(listName) {
+    let list1 = gx1[listName];
+    let list2 = gx2[listName];
+    if (list2 && list2.length > 0) {
+      if (!list1 || list1.length === 0) {
+        gx1[listName] = gx2[listName];
+      }
+      else {
+        checkForIdCollisions(listName, list1, list2);
+        list1.append(list2);
+      }
+    }
+  }
+
+  if (!gx2) {
+    return; // nothing to do
+  }
+  for (let listName of ["persons", "relationships", "sourceDescriptions", "agents", "events", "places", "documents", "collections", "fields", "recordDescriptors"]) {
+    mergeArrays(listName);
+  }
+}
+
 
