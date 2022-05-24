@@ -22,9 +22,9 @@
   <script type="text/javascript">
     $(document).ready(function(){
       const viewer = document.querySelector('fs-single-image-viewer');
-      if (window.opener && window.opener.currentGx) {
+      if (window.opener && window.opener.getCurrentGx()) {
         window.opener.imageChildWindow = document;
-        let doc = window.opener.currentGx;
+        let doc = window.opener.getCurrentGx();
         doc = fixGedcomx(doc);
         overlayBoxes(viewer, doc);
       }

@@ -117,7 +117,10 @@
     //  - sectionId of corresponding text section, if identified. null => don't know what text section it goes with.
 
     // Current GedcomX record object, used by the pop-up bounding box window to get access to the record and image data.
-    let currentGx;
+    function getCurrentGx() {
+      return editor.get();
+    }
+
     // Relationship chart for the current GedcomX
     let relChart;
 
@@ -132,7 +135,7 @@
       function getRecordNames(gxRecord) {
         let names = [];
         if (gxRecord.persons) {
-          for (let person of persons) {
+          for (let person of gxRecord.persons) {
             if (person.names) {
               for (let name of person.names) {
                 if (name.nameForms) {
@@ -169,14 +172,20 @@
       if (doc.records && doc.records.length > 0) {
         doc = doc.records[0];
       }
+      if (typeof recordInfos !== 'undefined' && currentRecordIndex >= 0 && currentRecordIndex < recordInfos.length) {
+        recordInfos[currentRecordIndex].gxRecord = doc;
+      }
       dirty = !isClean;
-      currentGx = doc;
       let backup = {
         "doc": doc,
         "url": url,
         "text": sourceDocumentText,
-        "filename": sourceDocumentName
+        "filename": sourceDocumentName,
+        "recordInfos" : recordInfos,
+        "currentRecordIndex" : currentRecordIndex,
+        "textSections" : getTextSections()
       }
+
       let backupStr = JSON.stringify(backup);
       sessionStorage.setItem("Gx-Backup", backupStr);
       localStorage.setItem("Gx-Backup.localStorage", backupStr);
@@ -259,6 +268,17 @@
     //   }
     // }
 
+    // Get an array of o
+    function getTextSections() {
+      let sourceFileElement = $("#source-file")[0];
+      if (sourceFileElement) {
+        return sourceFileElement.innerHTML;
+      }
+      else {
+        return "";
+      }
+    }
+
     /**
      * Show the source of a record. There is a "source-file" DIV in the HTML that contains one 'section' that corresponds to each record.
      * Usually there is just one text section and one GedcomX record.
@@ -332,6 +352,8 @@
       if (recordInfo1Index >= 0 && recordInfo2Index >= 0) {
         mergeGedcomx(recordInfos[recordInfo1Index].gxRecord, recordInfos[recordInfo2Index].gxRecord);
         recordInfos.splice(recordInfo2Index, 1);
+        currentRecordIndex = recordInfo1Index;
+        updateRecord(recordInfos[recordInfo1Index].gxRecord);
       }
     }
 
@@ -375,21 +397,7 @@
       return false;
     }
 
-    function makeTextSection(firstChildNode, orTextToUse) {
-      let sectionId = "text-section-" + nextSectionIndex++;
-      let element = $("<div contenteditable='true' class='edit-section' id='" + sectionId + "'/>");
-      if (firstChildNode) {
-        element.append(firstChildNode);
-      }
-      else {
-        let lines = orTextToUse.split("\n");
-        for (let line of lines) {
-          let lineDiv = document.createElement("div");
-          lineDiv.textContent = line;
-          element.append(lineDiv);
-        }
-      }
-
+    function enableTextSectionActions(element) {
       element
           .on("input", function (e) {
             if (!e.originalEvent.data || e.originalEvent.data.includes("¶")) {
@@ -412,9 +420,26 @@
               }
             }
           })
-          .on("focus", function() {
+          .on("focus", function () {
             selectTextSection(this.id, false);
           });
+    }
+
+    function makeTextSection(firstChildNode, orTextToUse) {
+      let sectionId = "text-section-" + nextSectionIndex++;
+      let element = $("<div contenteditable='true' class='edit-section' id='" + sectionId + "'/>");
+      if (firstChildNode) {
+        element.append(firstChildNode);
+      }
+      else {
+        let lines = orTextToUse.split("\n");
+        for (let line of lines) {
+          let lineDiv = document.createElement("div");
+          lineDiv.textContent = line;
+          element.append(lineDiv);
+        }
+      }
+      enableTextSectionActions(element);
       return element[0];
     }
 
@@ -430,11 +455,18 @@
         // Deselect the currently-selected section, if any
         $(".selected-section").removeClass("selected-section");
         let recordInfo = recordInfos[recordIndex];
+        // if (currentRecordIndex >= 0) {
+          // Store possibly-edited GedcomX
+          // recordInfos[currentRecordIndex].gxRecord = getCurrentGx();
+        // }
         currentRecordIndex = recordIndex;
         if (recordInfo.sectionId) {
           let sectionDiv = $("#" + recordInfo.sectionId);
           sectionDiv.addClass("selected-section");
           sectionDiv.focus();
+        }
+        if (relChart) {
+          relChart = null; // avoid animation at beginning when switching to different records.
         }
         updateRecord(recordInfo.gxRecord, null, false, true);
       }
@@ -644,14 +676,30 @@
       }
     }
 
-    function exportGedcomx() {
-      let doc = editor.get();
-
-      if (sourceDocumentText) {
-        fixTextOfSourceOfSource(doc, sourceDocumentText, sourceDocumentName);
+    function getSectionText(sectionId) {
+      if (sectionId) {
+        let sectionDiv = $("#" + sectionId);
+        if (sectionDiv) {
+          // Replace <div/>, <br[/]> and <p[/]> with "\n"
+          return sectionDiv.html().replaceAll(/<\/div>/ig, "\n").replaceAll(/<(br|p)[/]?>/ig, "\n").replaceAll(/<[^>]*>/g, "").trim();
+        }
       }
+      return null;
+    }
 
-      return JSON.stringify(doc, function (key, value) {
+    function exportGedcomx() {
+      let records = [];
+      for (let recordInfo of recordInfos) {
+        let doc = recordInfo.gxRecord;
+        if (recordInfo.sectionId) {
+          let sectionText = getSectionText(recordInfo.sectionId); //$("#" + recordInfo.sectionId).text();
+          fixTextOfSourceOfSource(doc, sectionText, sourceDocumentName, recordInfo.sectionId);
+        }
+        records.push(doc);
+      }
+      let recordSet = { "records" : records };
+
+      return JSON.stringify(recordSet, function (key, value) {
         if (key === "fields") {
           //strip out any fields
           return undefined;
@@ -691,7 +739,7 @@
       let sd = getSourceDescription(doc, doc.description);
       if (!sd) {
         sd = {};
-        sd.id = generateLocalId();
+        sd.id = generateLocalId("sd_");
         doc.description = "#" + sd.id;
       }
 
@@ -739,7 +787,7 @@
 
         if (!publisherAgent) {
           publisherAgent = {};
-          publisherAgent.id = generateLocalId();
+          publisherAgent.id = generateLocalId("a_");
           sd.publisher = {};
           sd.publisher.resourceId = publisherAgent.id;
           sd.publisher.resource = "#" + publisherAgent.id;
@@ -810,7 +858,7 @@
       person.fields = [];
 
       let name = {};
-      name.id = generateLocalId();
+      name.id = generateLocalId("n_");
       name.type = null;
       name.nameForms = [];
 
@@ -874,39 +922,43 @@
     };
 
     function updatePersonNameFromHighlight() {
-      var textArea = document.getElementById("source-document");
-      if (textArea) {
-        var text = textArea.value;
-        var indexStart = textArea.selectionStart;
-        var indexEnd = textArea.selectionEnd;
-        if (indexStart != null && indexEnd != null) {
-          var selectedTxt = text.substring(indexStart, indexEnd);
-          var splitTxt = selectedTxt.replace(/[,;]/g, " ").replace(/  */g, " ").trim().split(" ");
+      let selection = window.getSelection();
+      if (selection) {
+        let selectedText = selection.toString();
+      // }
+      // let textArea = document.getElementById("source-document");
+      // if (textArea) {
+      //   let text = textArea.value;
+      //   let indexStart = textArea.selectionStart;
+      //   let indexEnd = textArea.selectionEnd;
+      //   if (indexStart != null && indexEnd != null) {
+      //     let selectedTxt = text.substring(indexStart, indexEnd);
+        let splitTxt = selectedText.replace(/[,;]/g, " ").replace(/  */g, " ").trim().split(" ");
 
-          var prefixField = $("#new-person-prefixes");
-          var givenField = $("#new-person-given-names");
-          var surnameField = $("#new-person-surnames");
-          var suffixField = $("#new-person-suffixes");
+        let prefixField = $("#new-person-prefixes");
+        let givenField = $("#new-person-given-names");
+        let surnameField = $("#new-person-surnames");
+        let suffixField = $("#new-person-suffixes");
 
-          // Clear all four fields so we don't get anything dangling from last time.
-          prefixField.val("");
-          givenField.val("");
-          surnameField.val("");
-          suffixField.val("");
+        // Clear all four fields so we don't get anything dangling from last time.
+        prefixField.val("");
+        givenField.val("");
+        surnameField.val("");
+        suffixField.val("");
 
-          if (splitTxt.length > 0 && isPrefix(splitTxt[0])) {
-            prefixField.val(splitTxt.shift());
-          }
-          if (splitTxt.length > 0 && isSuffix(splitTxt[splitTxt.length - 1])) {
-            suffixField.val(splitTxt.pop());
-          }
-          if (splitTxt.length >= 2) {
-            surnameField.val(splitTxt.pop());
-          }
-          if (splitTxt.length > 0) {
-            givenField.val(splitTxt.join(" "));
-          }
+        if (splitTxt.length > 0 && isPrefix(splitTxt[0])) {
+          prefixField.val(splitTxt.shift());
         }
+        if (splitTxt.length > 0 && isSuffix(splitTxt[splitTxt.length - 1])) {
+          suffixField.val(splitTxt.pop());
+        }
+        if (splitTxt.length >= 2) {
+          surnameField.val(splitTxt.pop());
+        }
+        if (splitTxt.length > 0) {
+          givenField.val(splitTxt.join(" "));
+        }
+        // }
       }
     }
 
@@ -961,7 +1013,7 @@
         for (let j = 0; j < pids2.length; j++) {
           let pid2 = pids2[j];
           let relationship = {};
-          relationship.id = generateLocalId();
+          relationship.id = generateLocalId("r_");
           relationship.type = $("#new-relationship-type").val();
           relationship.person1 = {};
           relationship.person1.resourceId = pid1;
@@ -1103,7 +1155,7 @@
       }
 
       let name = {};
-      name.id = generateLocalId();
+      name.id = generateLocalId("n_");
       let nameType = $("#new-person-name-type").val();
       if (nameType) {
         name.type = nameType;
@@ -1353,7 +1405,7 @@
       }
 
       let fact = {};
-      fact.id = generateLocalId();
+      fact.id = generateLocalId("f_");
       fact.type = $("#new-person-fact-type").val();
       fact.primary = $("#new-person-fact-primary").is(":checked");
 
@@ -1412,7 +1464,7 @@
           }
 
           let fact = {};
-          fact.id = generateLocalId();
+          fact.id = generateLocalId("f_");
           fact.type = $("#new-person-fact-multiple-type").val();
           fact.primary = $("#new-person-fact-primary2").is(":checked");
 
@@ -1580,7 +1632,7 @@
 
         targetPerson.facts = targetPerson.facts || [];
         let clonedFact = $.extend(true, {}, fact);
-        clonedFact.id = generateLocalId();
+        clonedFact.id = generateLocalId("f_");
         targetPerson.facts.push(clonedFact);
       }
 
@@ -1719,7 +1771,7 @@
       }
 
       let fact = {};
-      fact.id = generateLocalId();
+      fact.id = generateLocalId("f_");
       fact.type = $("#new-relationship-fact-type").val();
       fact.primary = $("#new-relationship-fact-primary").is(":checked");
 
@@ -1952,7 +2004,20 @@
       let backupStr = useLocalStorage ? localStorage.getItem("Gx-Backup.localStorage") : sessionStorage.getItem("Gx-Backup");
       if (backupStr) {
         let backup = JSON.parse(backupStr);
-        if (backup.text) {
+        if (backup.recordInfos && backup.recordInfos.length > 0) {
+          recordInfos = backup.recordInfos;
+          currentRecordIndex = backup.currentRecordIndex;
+        }
+        if (backup.textSections) {
+          let sourceFileElement = $("#source-file");
+          sourceFileElement.html(backup.textSections);
+          sourceFileElement.children('div').each(function() {
+            if (this.contentEditable === "true") {
+              enableTextSectionActions($(this));
+            }
+          });
+        }
+        else if (backup.text) {
           setRecordSourceDocument(backup.text, backup.filename);
         }
         updateRecord(backup.doc, backup.url, false, true);
@@ -1972,43 +2037,55 @@
      * @param recordOrRecordSet - GedcomX record [treated just like a single-record RecordSet] or GedcomX RecordSet
      * @param filename - Filename of the GedcomX record or record set file.
      */
-    function prepareGedcomx(recordOrRecordSet, filename) {
+    function importRecordSet(recordOrRecordSet, filename) {
       if (!dirty || confirm("There are changes since the last download. Are you sure you want to clear the record?")) {
-        recordSet = recordOrRecordSet.records ? recordOrRecordSet : [recordOrRecordSet];
-        if (recordSet.length > 0) {
-
+        recordInfos = [];
+        let recordSet = recordOrRecordSet.records ? recordOrRecordSet : {"records": [recordOrRecordSet]}
+        let sourceFileElement = $("#source-file");
+        setRecordSourceDocument(null, filename);
+        for (let doc of recordSet.records) {
+          doc = fixGedcomx(doc);
+          let sourceDocument = getSourceDocument(doc);
+          let textSection = sourceDocument ? makeTextSection(null, sourceDocument.text) : null;
+          if (textSection) {
+            sourceFileElement.append(textSection);
+          }
+          let recordInfo = new RecordInfo(textSection ? textSection.id : null, doc);
+          recordInfos.push(recordInfo);
         }
-        else {
-          updateRecord({}, null, false, true);
+        if (recordInfos.length > 0) {
+          currentRecordIndex = 0;
+          selectTextSection(recordInfos[currentRecordIndex].sectionId, true);
         }
       }
     }
 
     function uploadGedcomx(files) {
       setRecordSourceDocument(null);
-
-      for (let i = 0, f; f = files[i]; i++) {
+      let recordIndex = 0;
+      recordInfos = [];
+      currentRecordIndex = -1;
+      relChart = null; // clear out any previous RelationshipChart
+      setRecordSourceDocument(null);
+      for (let f of files) {
         let reader = new FileReader();
         reader.onload = (function(file) {
           return function(e) {
-            let doc;
+            let recordSet;
             try {
-              doc = JSON.parse(e.target.result);
+              recordSet = JSON.parse(e.target.result);
             }
             catch (e) {
               showError(e.toString());
               return;
             }
-
-            relChart = null; // clear out any previous RelationshipChart
-            doc = fixGedcomx(doc);
-            updateRecord(doc, file.name, false, true);
-            loadSourceDocument(doc);
+            importRecordSet(recordSet, file.name);
             $("#download-gx").attr("download", file.name);
           }
         })(f);
 
         reader.readAsText(f);
+        recordIndex++;
       }
     }
 
@@ -2083,10 +2160,8 @@
              "Accept": "application/x-gedcomx-v1+json"
            },
            url: gedcomxUrl,
-           success: function (doc, textStatus, jqKHR) {
-             doc = fixGedcomx(doc);
-             updateRecord(doc, gedcomxUrl, false, true);
-             loadSourceDocument(doc);
+           success: function (gxRecordOrRecordSet, textStatus, jqKHR) {
+             importRecordSet(gxRecordOrRecordSet);
            },
 
            error: function (jqXHR, textStatus, errorThrown) {
@@ -2113,20 +2188,16 @@
       });
 
       $("#paste-gx").click(function() {
-        setRecordSourceDocument(null);
-
-        let doc;
+        let recordOrRecordSet;
         try {
-          doc = JSON.parse($("#pasted-gx").val());
+          recordOrRecordSet = JSON.parse($("#pasted-gx").val());
         }
         catch (e) {
           showError(e.toString());
           return;
         }
 
-        doc = fixGedcomx(doc);
-        updateRecord(doc, "pasted.gx", false, true);
-        loadSourceDocument(doc);
+        importRecordSet(recordOrRecordSet, null);
 
         let src = $("#pasted-source").val();
         if (src) {
@@ -2251,7 +2322,7 @@
       dragElement(document.getElementById("new-person"));
       dragElement(document.getElementById("new-relationship"));
       // See if the tab has been reloaded, in which case we want to restored the data that would otherwise be lost.
-      recoverRecord(false);
+      // recoverRecord(false);
       let sampleText = "Births:\n" +
           "Alex, Dec. 9. " +
           "¶Bob, Dec. 10." +
