@@ -44,6 +44,26 @@
     color: #6d6d6d;
 }
 
+.prefix {
+    color: #8a0000;
+    font-weight: lighter;
+}
+
+.given {
+    color: #0700ac;
+    font-weight: bold;
+}
+
+.surname {
+    color: #000000;
+    font-weight: bold;
+}
+
+.suffix {
+    color: #9c9c9c;
+    font-weight: lighter;
+}
+
 .isPrincipal,.notPrincipal {
     position: absolute;
     right: 4px;

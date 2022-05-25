@@ -100,7 +100,15 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
           for (let form of name.nameForms) {
             if (form.fullText) {
               let elementId = nextId("name", relChartToGx, name);
-              html += "  <span class='" + (isFirstFullName ? "fullName" : "altName") + "' id='" + elementId + "'>" + encode(form.fullText) + "</span>";
+              if (form.parts) {
+                const namePartSpans = form.parts.map(part => {
+                  const partType = part.type.substring(part.type.lastIndexOf("/") + 1).toLowerCase();
+                  return `<span class="${partType}" id="${elementId}">${encode(part.value)}</span>`;
+                });
+                html += `  ${namePartSpans.join('  ')}`;
+              } else {
+                html += `  <span class="${isFirstFullName ? 'fullName' : 'altName'}" id="${elementId}">${encode(form.fullText)}</span>`;
+              }
               if (isFirstFullName) {
                 let isPrincipal = person.principal;
                 html += "<span class='" + (isPrincipal ? "isPrincipal" : "notPrincipal") + " toolTip'>" + (isPrincipal ? "*" : " ") +
