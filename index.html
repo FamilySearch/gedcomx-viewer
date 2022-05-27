@@ -1045,7 +1045,7 @@
       if (selection) {
         let selectedText = selection.toString();
 
-        let hasCommaAfterFirstPart = selectedText.match(/[A-Za-z]*,.*/) ? true : false;
+        let hasCommaAfterFirstPart = !!selectedText.match(/[A-Za-z]*,.*/);
         let splitTxt = selectedText.replace(/[,;()]/g, " ").replace(/  */g, " ").trim().split(" ");
 
         let prefixField = $("#new-person-prefixes");
