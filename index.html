@@ -793,8 +793,14 @@
       if (sectionId) {
         let sectionDiv = $("#" + sectionId);
         if (sectionDiv) {
-          // Replace <div/>, <br[/]> and <p[/]> with "\n"
-          return sectionDiv.html().replaceAll(/<\/div>/ig, "\n").replaceAll(/<(br|p)[/]?>/ig, "\n").replaceAll(/<[^>]*>/g, "").trim();
+          let text = "";
+          for (let child of sectionDiv.children()) {
+            text += child.textContent;
+            if (child.nodeName === 'DIV' || child.nodeName === 'P' || child.nodeName === 'BR') {
+              text += "\n";
+            }
+          }
+          return text.trim();
         }
       }
       return null;
