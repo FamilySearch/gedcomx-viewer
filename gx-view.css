@@ -60,3 +60,7 @@ pre {
 .selected-section {
     background-color: #fffee4;
 }
+
+.section-drop-hover {
+    background-color: #e4fffb;
+}

@@ -439,8 +439,121 @@
           element.append(lineDiv);
         }
       }
+      element.droppable({
+        hoverClass: "section-drop-hover",
+        scope: "personDropScope",
+        drop: personDropOnTextSection
+      });
       enableTextSectionActions(element);
       return element[0];
+    }
+
+    function findRecordInfoWithPersonId(personId) {
+      for (let i = 0; i < recordInfos.length; i++) {
+        let recordInfo = recordInfos[i];
+        if (recordInfo.gxRecord && recordInfo.gxRecord.persons) {
+          for (let person of recordInfo.gxRecord.persons) {
+            if (person.id === personId) {
+              return i;
+            }
+          }
+        }
+      }
+      throw Error("Could not find dropped person with id " + personId);
+    }
+
+    // Get the person ID from the person1 or person2 person reference in a relationship
+    function getRelativePersonId(relative) {
+      if (relative.resource.startsWith("#")) {
+        return relative.resource.substring(1);
+      }
+      return relative.resourceId;
+    }
+
+    // Gather a set of person IDs that are related (directly or indirectly) to the given personId in the given GedcomX record.
+    function getRelatedPersonIds(personId, gxRecord) {
+      // personIds to move: Includes the original personId, plus anyone connected via relationships (directly or indirectly)
+      let personIds = new Set();
+      personIds.add(personId);
+      let added = true;
+      while (added) {
+        added = false;
+        if (gxRecord.relationships) {
+          for (let relationship of gxRecord.relationships) {
+            let person1Id = getRelativePersonId(relationship.person1);
+            let person2Id = getRelativePersonId(relationship.person2);
+            if (personIds.has(person1Id) && !personIds.has(person2Id)) {
+              personIds.add(person2Id);
+              added = true;
+            }
+            else if (personIds.has(person2Id) && !personIds.has(person1Id)) {
+              personIds.add(person1Id);
+              added = true;
+            }
+          }
+        }
+      }
+      return personIds;
+    }
+
+    /**
+     * Move a person (and any connected relatives and relationships) from one record to the other.
+     * @param personId - personId to move
+     * @param sourceRecord - GedcomX record to move from
+     * @param targetRecord - GedcomX record to move to
+     */
+    function movePersonToOtherRecord(personId, sourceRecord, targetRecord) {
+      // personIds to move: Includes the original personId, plus anyone connected via relationships (directly or indirectly)
+      let personIdsToMove = getRelatedPersonIds(personId, sourceRecord);
+      if (!targetRecord.persons) {
+        targetRecord.persons = [];
+      }
+      for (let p = 0; p < sourceRecord.persons.length; p++) {
+        if (personIdsToMove.has(sourceRecord.persons[p].id)) {
+          targetRecord.persons.push(sourceRecord.persons[p]);
+          sourceRecord.persons.splice(p--, 1);
+        }
+      }
+      if (sourceRecord.relationships) {
+        for (let r = 0; r < sourceRecord.relationships.length; r++) {
+          let relationship = sourceRecord.relationships[r];
+          if (personIdsToMove.has(getRelativePersonId(relationship.person1)) || personIdsToMove.has(getRelativePersonId(relationship.person2))) {
+            if (!targetRecord.relationships) {
+              targetRecord.relationships = [relationship];
+            }
+            else {
+              targetRecord.relationships.push(relationship);
+            }
+            sourceRecord.relationships.splice(r--, 1);
+          }
+        }
+      }
+    }
+
+    /**
+     * Handle an event in which a person box was dropped on this text section.
+     * @param e - Event. Has the div id of the dropped control in e.originalEvent.target.id
+     * @param ui - UI object that has the div id of the dropped person if e doesn't have it.
+     */
+    function personDropOnTextSection(e, ui) {
+      let textSectionId = e.target.id; // or e.target.id?
+      let personBoxId = ui.draggable.attr("id");
+
+      // Remove initial chart#: 1-box_... => box_...
+      personBoxId = personBoxId.replace(/^[0-9]*-/,"");
+
+      if (personBoxId.startsWith("box_") && personBoxId.indexOf("Plus") < 0) {
+        // (local) personId of the dragged & dropped person
+        let personId = currentRelChart.personBoxMap[personBoxId].personNode.personId;
+        // GedcomX record corresponding to the text section that the person was dropped onto
+        let sourceRecordIndex = findRecordInfoWithPersonId(personId);
+        let targetRecordIndex = findRecordInfo(textSectionId);
+        if (sourceRecordIndex !== targetRecordIndex) {
+          movePersonToOtherRecord(personId, recordInfos[sourceRecordIndex].gxRecord, recordInfos[targetRecordIndex].gxRecord);
+          // Continue displaying the same original record, in case there are more persons from this record that need to be dragged over.
+          updateRecord(recordInfos[currentRecordIndex].gxRecord);
+        }
+      }
     }
 
     /**
@@ -2264,6 +2377,11 @@
       });
 
       $("#source-file").on("drop", function(je) {
+        // For some reason, dropping on a text-section is causing this function to fire.
+        // So as a workaround, ignore if not source-file.
+        if (je.target.id !== "source-file") {
+          return true;
+        }
         let e = je.originalEvent;
         e.preventDefault();
         e.stopPropagation();
