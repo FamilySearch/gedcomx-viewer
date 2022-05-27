@@ -1044,15 +1044,9 @@
       let selection = window.getSelection();
       if (selection) {
         let selectedText = selection.toString();
-      // }
-      // let textArea = document.getElementById("source-document");
-      // if (textArea) {
-      //   let text = textArea.value;
-      //   let indexStart = textArea.selectionStart;
-      //   let indexEnd = textArea.selectionEnd;
-      //   if (indexStart != null && indexEnd != null) {
-      //     let selectedTxt = text.substring(indexStart, indexEnd);
-        let splitTxt = selectedText.replace(/[,;]/g, " ").replace(/  */g, " ").trim().split(" ");
+
+        let hasCommaAfterFirstPart = selectedText.match(/[A-Za-z]*,.*/) ? true : false;
+        let splitTxt = selectedText.replace(/[,;()]/g, " ").replace(/  */g, " ").trim().split(" ");
 
         let prefixField = $("#new-person-prefixes");
         let givenField = $("#new-person-given-names");
@@ -1072,7 +1066,7 @@
           suffixField.val(splitTxt.pop());
         }
         if (splitTxt.length >= 2) {
-          surnameField.val(splitTxt.pop());
+          surnameField.val(hasCommaAfterFirstPart ? splitTxt.shift() : splitTxt.pop());
         }
         if (splitTxt.length > 0) {
           givenField.val(splitTxt.join(" "));
