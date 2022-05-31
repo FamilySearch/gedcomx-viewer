@@ -1,6 +1,12 @@
 /*
   Set of data and utility functions to manage fetching persons from a family tree
     and adding them to a gedcomx object.
+  Todo:
+  - Sort children by birth dates.
+  - Sort spouses by marriage date.
+  - Toggle details on selected persons (instead of everyone).
+  - Include landing page on LLS URL so it works with FS Session ID.
+  - Default to session ID user ID if no PID specified.
  */
 
 // Master GedcomX object with all the persons and relationships fetched so far.

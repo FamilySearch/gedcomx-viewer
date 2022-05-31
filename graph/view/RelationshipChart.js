@@ -318,6 +318,7 @@ function RelationshipChart(relGraph, $relChartDiv, chartOptions) {
 
   this.relGraph = relGraph;
   this.isEditable = chartOptions.isEditable;
+  this.ignoreUndo = chartOptions.ignoreUndo;
   this.chartId = this.relGraph.chartId;
   $relChartDiv.empty();
   $relChartDiv.append($.parseHTML(`<div id='personNodes-${this.chartId}'></div>\n<div id='familyLines-${this.chartId}'></div>\n<div id='editControls-${this.chartId}'></div>`));

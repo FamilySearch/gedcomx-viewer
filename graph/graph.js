@@ -62,6 +62,14 @@ function redoGraph() {
   }
 }
 
+function updateGraphUndo(gx) {
+  gedcomxChangeHistory[gedcomxChangePosition++] = JSON.parse(JSON.stringify(gx));
+  if (gedcomxChangePosition < gedcomxChangeHistory.length) {
+    // Did a change after doing multiple "undos". So ignore the rest of the change history.
+    gedcomxChangeHistory.length = gedcomxChangePosition;
+  }
+}
+
 /**
  * Create a RelationshipGraph, construct from that a RelationshipChart, and return it.
  * @param gx - GedcomX document to visualize
@@ -96,14 +104,10 @@ function buildRelGraph(gx, chartOptions) {
     let graph = new RelationshipGraph(gx, chartOptions.prevChart ? chartOptions.prevChart.chartId : null);
     let $relChartDiv = $("#rel-chart");
     if (chartOptions.isEditable && !chartOptions.ignoreUndo) {
-      gedcomxChangeHistory[gedcomxChangePosition++] = JSON.parse(JSON.stringify(gx));
-      if (gedcomxChangePosition < gedcomxChangeHistory.length) {
-        // Did a change after doing multiple "undos". So ignore the rest of the change history.
-        gedcomxChangeHistory.length = gedcomxChangePosition;
-      }
+      updateGraphUndo(gx);
     }
     if (!currentRelChart) {
-      $(document).keydown(handleKeypress);
+      $(document).keydown(handleGraphKeydown);
     }
     let relChartBuilder = new RelChartBuilder(graph, $relChartDiv, chartOptions);
     currentRelChart = relChartBuilder.buildChart(chartOptions.prevChart, chartOptions.imgOverlayToGx);
@@ -138,11 +142,15 @@ function findPersonIndex(gxPersons, personId) {
 
 let shouldCollapse = true;
 
-function handleKeypress(e) {
-  let key = String.fromCharCode(e.which || e.keyCode);  // These are deprecated, but I couldn't figure out what else I was supposed to use
+function handleGraphKeydown(e) {
+  if ($(document.activeElement).is(":input,[contenteditable]") || !currentRelChart) {
+    // ignore keydown events in input boxes or contenteditable sections. Those already handle cmd/ctrl-Z for undo/redo on their own.
+    return;
+  }
+  let key = e.key.toUpperCase();
 
-  if (e.ctrlKey || e.metaKey) {
-    // Handle ctrl/cmd keypress
+  if (!currentRelChart.ignoreUndo && (e.ctrlKey || e.metaKey)) {
+    // Handle ctrl/cmd keydown
     if ((key === 'Z' && e.shiftKey) || key === 'Y') {
       // Ctrl/Cmd-shift Z or Cmd-Y => Redo
       redoGraph();
@@ -154,11 +162,12 @@ function handleKeypress(e) {
       e.stopPropagation();
     }
   }
-  else if (currentRelChart && typeof recordInfos === 'undefined') {
+  else {
     switch (key) {
       case 'L':
         shouldCollapse = !shouldCollapse;
         updateRecord(currentRelChart.getGedcomX());
+        e.stopPropagation();
         break;
       case 'R':
         if (e.shiftKey) {
@@ -175,10 +184,12 @@ function handleKeypress(e) {
       case 'I':
         currentRelChart.shouldDisplayIds = !currentRelChart.shouldDisplayIds;
         updateRecord(currentRelChart.getGedcomX());
+        e.stopPropagation();
         break;
       case 'D':
         currentRelChart.shouldDisplayDetails = !currentRelChart.shouldDisplayDetails;
         updateRecord(currentRelChart.getGedcomX());
+        e.stopPropagation();
         break;
       case 'P':
       case 'S':
@@ -187,8 +198,8 @@ function handleKeypress(e) {
       case 'M':
         if (typeof toggleRelatives != 'undefined') {
           toggleRelatives(key, e.shiftKey, getPersonIdsOfPersonBoxes(currentRelChart.selectedPersonBoxes));
+          e.stopPropagation();
         }
-        e.stopPropagation();
         break;
       case '1':
         if (typeof masterGx != 'undefined' && masterGx && masterGx.persons && masterGx.persons.length > 1 &&
@@ -202,6 +213,7 @@ function handleKeypress(e) {
             masterGx.persons[0].principal = true;
           }
           updateRecord(masterGx);
+          e.stopPropagation();
         }
         break;
     }
@@ -212,7 +224,7 @@ function handleKeypress(e) {
 /*
 Todo:
 - Have line out to that FamilyLine center on the marriage fact for that couple, if any?
-- Optimize horizontal arrangement of FamilyLines toi minimize line-crossings.
+- Optimize horizontal arrangement of FamilyLines to minimize line-crossings.
 - Able to enter URL to load from there.
 - Edit everything:
   - Use change history to support undo/redo.

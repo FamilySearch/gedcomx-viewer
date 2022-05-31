@@ -96,7 +96,7 @@
       - Load new Record Set     => text cleared; Array of RecordInfo (one per record in the record set), none of which point to a text section.
       - Load text when no Gx record exists yet => One RecordInfo with empty ({}) record, which corresponds to the one text section.
       - Split text section => insert a RecordInfo after the one that corresponds to the current text section. Empty record that corresponds to new section.
-        - Eventually, look to see if the following RecordInfo (a) has no corresponding text section yet, and (b) has names that apper in the new section.
+        - Eventually, look to see if the following RecordInfo (a) has no corresponding text section yet, and (b) has names that appear in the new section.
           If so, then associate the record there. This is especially helpful to "undo" an accidental delete of a section break.
       - Merge text section => merge persons and records from the second RecordInfo into the first one, and delete the second one from the array.
       - Load text when Gx record or record set already loaded:
@@ -158,6 +158,55 @@
       this.sectionId = sectionId;
     }
 
+    // Array of previous copies of the GedcomX RecordSet and text sections before a set of changes was made.
+    // [0] is the original GedcomX. Each time the graph is built, a copy of the latest GedcomX is added to the array (if isEditable is true).
+    let recordSetChangeHistory = [];
+    // Position in recordSetChangeHistory. Normally recordSetChangeHistory = recordSetChangeHistory.length.
+    // But if 'undo' has been done, it can be earlier. If 'redo' is done before any further changes, then it advances again.
+    // If a change is made when this position is not at the end, then all following elements are removed.
+    let recordSetChangePosition = 0;
+
+    function undoRecordSet() {
+      if (recordSetChangePosition > 1) {
+        let backupStr = recordSetChangeHistory[--recordSetChangePosition - 1];
+        recoverRecordSetFromBackupString(backupStr);
+      }
+    }
+
+    function redoRecordSet() {
+      if (recordSetChangePosition < recordSetChangeHistory.length) {
+        let backupStr = recordSetChangeHistory[recordSetChangePosition++];
+        recoverRecordSetFromBackupString(backupStr);
+      }
+    }
+
+    function updateRecordSetUndo(backupStr) {
+      recordSetChangeHistory[recordSetChangePosition++] = backupStr;
+      if (recordSetChangePosition < recordSetChangeHistory.length) {
+        // Did a change after doing multiple "undos". So ignore the rest of the change history.
+        recordSetChangeHistory.length = recordSetChangePosition;
+      }
+    }
+
+    function handleEditorKeydown(e) {
+      if (!$(document.activeElement).is(":input,[contenteditable]")) {
+        let key = e.key.toUpperCase();
+        if (e.ctrlKey || e.metaKey) {
+          // Handle ctrl/cmd keydown
+          if ((key === 'Z' && e.shiftKey) || key === 'Y') {
+            // Ctrl/Cmd-shift Z or Cmd-Y => Redo
+            redoRecordSet();
+            e.stopPropagation();
+          }
+          else if (key === 'Z') { // lower-case z, no shift
+            // Ctrl/Cmd-Z => Undo
+            undoRecordSet();
+            e.stopPropagation();
+          }
+        }
+      }
+    }
+
     /**
      *  Having made a change to the given record, update the display of it.
      *
@@ -165,8 +214,9 @@
      *  @param url (optional) The url or filename of the record, if applicable. (Ignored if null)
      *  @param editorAlreadyUpdated (optional) Flag for whether the 'editor' is already updated (avoids closing editor when it is being edited still).
      *  @param isClean - flag for whether this is a fresh update of the record, so the dirty bit should be cleared rather than set (like usual).
+     *  @param fromUndoLog - flag for whether this update is coming from the undo history, in which case the undo history should not be updated.
      */
-    function updateRecord(doc, url, editorAlreadyUpdated, isClean) {
+    function updateRecord(doc, url, editorAlreadyUpdated, isClean, fromUndoLog) {
       url = url ? url : currentUrl;
       currentUrl = url;
       if (doc.records && doc.records.length > 0) {
@@ -189,6 +239,9 @@
       let backupStr = JSON.stringify(backup);
       sessionStorage.setItem("Gx-Backup", backupStr);
       localStorage.setItem("Gx-Backup.localStorage", backupStr);
+      if (!fromUndoLog) {
+        updateRecordSetUndo(backupStr);
+      }
 
       if (!editorAlreadyUpdated) {
         editor.set(doc);
@@ -230,7 +283,7 @@
       updateSelectablePersons(doc, $("#copy-person-fact-target-persons"));
 
       // Rebuild the relationship graph. Set global variable (defined in RelChartBuilder.js).
-      relChart = buildGraph(doc, true, relChart);
+      relChart = buildGraph(doc, true, relChart, true);
     }
 
     /**
@@ -353,7 +406,6 @@
         mergeGedcomx(recordInfos[recordInfo1Index].gxRecord, recordInfos[recordInfo2Index].gxRecord);
         recordInfos.splice(recordInfo2Index, 1);
         currentRecordIndex = recordInfo1Index;
-        updateRecord(recordInfos[recordInfo1Index].gxRecord);
       }
     }
 
@@ -733,7 +785,6 @@
           }
           if (lastNewElementPair && childNode.nextSibling) {
             lastNewElementPair[1] = childNode.nextSibling;
-            console.log("...");
           }
         }
       }
@@ -2116,26 +2167,30 @@
     function recoverRecord(useLocalStorage) {
       let backupStr = useLocalStorage ? localStorage.getItem("Gx-Backup.localStorage") : sessionStorage.getItem("Gx-Backup");
       if (backupStr) {
-        let backup = JSON.parse(backupStr);
-        if (backup.recordInfos && backup.recordInfos.length > 0) {
-          recordInfos = backup.recordInfos;
-          currentRecordIndex = backup.currentRecordIndex;
-        }
-        if (backup.textSections) {
-          let sourceFileElement = $("#source-file");
-          sourceFileElement.html(backup.textSections);
-          sourceFileElement.children('div').each(function() {
-            if (this.contentEditable === "true") {
-              enableTextSectionActions($(this));
-            }
-          });
-        }
-        else if (backup.text) {
-          setRecordSourceDocument(backup.text, backup.filename);
-        }
-        updateRecord(backup.doc, backup.url, false, true);
-        $("#download-gx").attr("download", backup.filename);
+        recoverRecordSetFromBackupString(backupStr);
       }
+    }
+
+    function recoverRecordSetFromBackupString(backupStr) {
+      let backup = JSON.parse(backupStr);
+      if (backup.recordInfos && backup.recordInfos.length > 0) {
+        recordInfos = backup.recordInfos;
+        currentRecordIndex = backup.currentRecordIndex;
+      }
+      if (backup.textSections) {
+        let sourceFileElement = $("#source-file");
+        sourceFileElement.html(backup.textSections);
+        sourceFileElement.children('div').each(function() {
+          if (this.contentEditable === "true") {
+            enableTextSectionActions($(this));
+          }
+        });
+      }
+      else if (backup.text) {
+        setRecordSourceDocument(backup.text, backup.filename);
+      }
+      updateRecord(backup.doc, backup.url, false, true, true);
+      $("#download-gx").attr("download", backup.filename);
     }
 
     function clearRecord() {
@@ -2436,6 +2491,8 @@
       $("#copy-copy-person-fact").click(copyPersonFact);
 
       $("#add-person-button").click(updatePersonNameFromHighlight);
+
+      $(document).keydown(handleEditorKeydown);
 
       dragElement(document.getElementById("new-person"));
       dragElement(document.getElementById("new-relationship"));
