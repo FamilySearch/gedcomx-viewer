@@ -135,7 +135,7 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
   // Return an HTML span with the given confidence in it, if any; otherwise, return the empty string.
   function getConfidenceSpan(confidenceUri) {
     if (relChart.shouldShowConfidence && confidenceUri) {
-      let confidenceValue = confidenceUri.replace(/.*=(?=[0-9]+$)/, "");
+      let confidenceValue = confidenceUri.replace(/.*[=/](?=[0-9]+$)/, "");
       if (confidenceValue) {
         return "<span class=confidence> [" + encode(confidenceValue) + "%]</span>"
       }
