@@ -197,11 +197,13 @@
             // Ctrl/Cmd-shift Z or Cmd-Y => Redo
             redoRecordSet();
             e.stopPropagation();
+            e.preventDefault(); // Prevent browser from treating Cmd-Y as "Show all history".
           }
           else if (key === 'Z') { // lower-case z, no shift
             // Ctrl/Cmd-Z => Undo
             undoRecordSet();
             e.stopPropagation();
+            e.preventDefault();
           }
         }
       }
@@ -2497,12 +2499,12 @@
       dragElement(document.getElementById("new-person"));
       dragElement(document.getElementById("new-relationship"));
       // See if the tab has been reloaded, in which case we want to restored the data that would otherwise be lost.
-      // recoverRecord(false);
-      let sampleText = "Births:\n" +
-          "Alex, Dec. 9. " +
-          "¶Bob, Dec. 10." +
-          "¶Carol, Dec. 12.";
-      setRecordSourceDocument(sampleText, "Sample Text with ¶");
+      recoverRecord(false);
+      // let sampleText = "Births:\n" +
+      //     "Alex, Dec. 9. " +
+      //     "¶Bob, Dec. 10." +
+      //     "¶Carol, Dec. 12.";
+      // setRecordSourceDocument(sampleText, "Sample Text with ¶");
     });
   </script>
   <style>
@@ -2575,6 +2577,9 @@
               <li class="nav-item">
                 <a class="nav-link" id="paste-tab" data-toggle="tab" href="#paste" role="tab" aria-controls="paste" aria-selected="false">Paste</a>
               </li>
+              <li class="nav-item">
+                <a class="nav-link" id="help-tab" data-toggle="tab" href="#help" role="tab" aria-controls="help" aria-selected="false">Help</a>
+              </li>
             </ul>
             <div class="tab-content border border-top-0 p-4" id="input-tab-content">
               <div class="tab-pane fade show active" id="upload" role="tabpanel" aria-labelledby="upload-tab">
@@ -2625,6 +2630,41 @@
                   </div>
                 </div>
                 <a id="paste-gx" href="#" class="btn btn-primary">Paste</a>
+              </div>
+              <div class="tab-pane fade" id="help" role="tabpanel" aria-labelledby="help-tab">
+                Tips:
+                <ul>
+                  <li><b>Importing data:</b></li>
+                  <ul>
+                    <li>Drag & drop GedcomX or Record Set file onto "Choose GedcomX File" button to load records.</li>
+                    <li>Drag & drop text (or NBX) file onto "Choose Source File" to load text.</li>
+                  </ul>
+                  <li><b>Handling multiple records:</b>
+                    <ul>
+                      <li>Type Cmd/Ctrl-Enter (or "¶", Option-7 on Mac) in text area to split record.</li>
+                      <li>Type Delete at the beginning of one section to merge it into the previous one.</li>
+                      <li>Click or Tab/Shift-Tab to select a text section. The corresponding record will display.</li>
+                      <li>Drag a person from the relationship graph to a text section to move that person (and all connected relatives) to that section's record.</li>
+                    </ul>
+                  <li>Select text before clicking the "new person" button to pre-populate the person box with that person's name.
+                      Fix the name parts if they weren't split correctly</li>
+                  <li><b>Undo</b>: Cmd/Ctrl-Z will undo, and Cmd/Ctrl-Shift-Z (or Cmd/Ctrl-Y) will redo.</li>
+                  <ul>
+                    <li>When the focus is on a text area, normal text undo/redo will happen.</li>
+                    <li>Otherwise, the latest record change or record selection will be undone/redone. (Click outside the text area if needed for this to function)</li>
+                  </ul>
+                  <li><b>Editing relationships</b> in the relationship graph.</li>
+                  <ul>
+                    <li>Click a person to select them. Relationship controls ("+") will appear.</li>
+                    <li>Drag a "spouse +" (on the top or bottom) to another person to create a couple relationship.</li>
+                    <li>Drag a "parent +" (on the right) to a vertical couple line to add both parent relationships at once. Or:</li>
+                    <ul>
+                      <li>Drag a "parent +" (on the right) to another person to make that one person a parent.</li>
+                      <li>Drag a "child +" (on the left) to another person to make that person a child.</li>
+                    </ul>
+                    <li>Click a vertical "family line" to select it. Click a red "x" to remove a parent or child from the family.</li>
+                  </ul>
+                </ul>
               </div>
             </div>
           </div>
