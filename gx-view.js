@@ -645,34 +645,6 @@ function findPersonByRef(doc, id) {
   return null;
 }
 
-function getIdentifier(object) {
-  let id = null;
-  if (object.identifiers) {
-    id = getFirst(object.identifiers["http://gedcomx.org/Persistent"]);
-    if (id === null) {
-      id = getFirst(object.identifiers["http://gedcomx.org/Primary"]);
-      if (id === null) {
-        for (let idType in object.identifiers) {
-          if (object.identifiers.hasOwnProperty(idType)) {
-            id = getFirst(object.identifiers[idType]);
-            if (id !== null) {
-              return id;
-            }
-          }
-        }
-      }
-    }
-  }
-  return id;
-}
-
-function getFirst(array) {
-  if (!isEmpty(array)) {
-    return array[0];
-  }
-  return null;
-}
-
 function dragElement(elmnt) {
   let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
   if (document.getElementById(elmnt.id + "-label")) {

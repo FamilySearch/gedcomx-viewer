@@ -9,6 +9,7 @@
  * @param ignoreUndo - Flag for whether to ignore undo (i.e., true => don't create an undo log)
  *
  * @param isEditable - Flag for whether the chart is editable
+ * @param isSelectable - Flag for whether the chart is "selectable", meaning people can be selected/deselected, even if they can't be edited (like for FT browser)
  * @param isDraggable - Flag for whether to allow the RelChart to be draggable.
  * @param shouldCompress - Flag for whether to compress the chart vertically. (Default = true)
  * @param shouldDisplayDetails - Flag for whether to display person details (i.e., facts). Default = true;
@@ -21,6 +22,7 @@ function ChartOptions({ prevChart= null,
                         imgOverlayToGx= null,
                         ignoreUndo= false,
                         isEditable= false,
+                        isSelectable = false,
                         isDraggable= false,
                         shouldCompress = true,
                         shouldDisplayDetails = true,
@@ -33,6 +35,7 @@ function ChartOptions({ prevChart= null,
   this.ignoreUndo = ignoreUndo;
 
   this.isEditable = isEditable;
+  this.isSelectable = isSelectable;
   this.isDraggable = isDraggable;
   this.shouldShowConfidence = shouldShowConfidence;
   this.shouldDisplayIds = shouldDisplayIds;
@@ -46,6 +49,7 @@ function prevRelChartOptions(prevRelChart, imgOverlayToGx) {
     imgOverlayToGx: imgOverlayToGx,
     ignoreUndo: prevRelChart.ignoreUndo,
     isEditable: prevRelChart.isEditable,
+    isSelectable: prevRelChart.isSelectable,
     isDraggable: prevRelChart.isDraggable,
     shouldCompress: prevRelChart.shouldCompress,
     shouldDisplayDetails: prevRelChart.shouldDisplayDetails,
@@ -318,6 +322,7 @@ function RelationshipChart(relGraph, $relChartDiv, chartOptions) {
 
   this.relGraph = relGraph;
   this.isEditable = chartOptions.isEditable;
+  this.isSelectable = chartOptions.isSelectable;
   this.ignoreUndo = chartOptions.ignoreUndo;
   this.chartId = this.relGraph.chartId;
   $relChartDiv.empty();
@@ -351,7 +356,7 @@ function RelationshipChart(relGraph, $relChartDiv, chartOptions) {
   this.prevHeight = 0; // height of chart before last update
   this.chartCompressor = new ChartCompressor(this);
 
-  if (chartOptions.isEditable) {
+  if (chartOptions.isEditable || chartOptions.isSelectable) {
     let relChart = this;
     $relChartDiv.click(function(){
       relChart.clearSelections();

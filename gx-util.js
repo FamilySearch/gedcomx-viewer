@@ -210,15 +210,63 @@ function getAgent(doc, ref) {
   return null;
 }
 
+// Get a date string from the date in the given fact (if any), or return 'undefined' otherwise.
+function getFactDate(fact) {
+  if (fact && fact.date && fact.date.original) {
+    return fact.date.original;
+  }
+  return undefined;
+}
+
+function getFactPlace(fact) {
+  if (fact && fact.place && fact.place.original) {
+    return fact.place.original;
+  }
+  return undefined;
+}
+
+// Get the first "Persistent" identifier (or "Primary" identifier, or any other identifier) from the given GedcomX object
+function getIdentifier(gxObject) {
+  let id = null;
+  if (gxObject.identifiers) {
+    id = getFirst(gxObject.identifiers["http://gedcomx.org/Persistent"]);
+    if (id === null) {
+      id = getFirst(gxObject.identifiers["http://gedcomx.org/Primary"]);
+      if (id === null) {
+        for (let idType in gxObject.identifiers) {
+          if (gxObject.identifiers.hasOwnProperty(idType)) {
+            id = getFirst(gxObject.identifiers[idType]);
+            if (id !== null) {
+              return id;
+            }
+          }
+        }
+      }
+    }
+  }
+  return id;
+}
+
+function getFirst(array) {
+  if (!isEmpty(array)) {
+    return array[0];
+  }
+  return null;
+}
+
 /**
  * Find the SourceDescription object for the given source ID or URL (i.e., from the document's root "description" attribute)
  * @param doc - GedcomX document (e.g., for a persona or record)
  * @param sourceIdOrUrl - The local ID (with or without "#") or full "about" URL for the SourceDescription being sought.
+ *        (If null, then use the document's "description" attribute to find the "main" source description from the doc).
  * @returns {*}
  */
 function getSourceDescription(doc, sourceIdOrUrl) {
   let source = null;
 
+  if (!sourceIdOrUrl) {
+    sourceIdOrUrl = doc.description;
+  }
   if (doc && sourceIdOrUrl) {
     if (sourceIdOrUrl.charAt(0) === '#') {
       sourceIdOrUrl = sourceIdOrUrl.substring(1);
@@ -237,7 +285,7 @@ function getSourceDescription(doc, sourceIdOrUrl) {
 }
 
 // Find the source description of the 'source' for the record, i.e., for the 'document' that contains the original text.
-function getMainSourceDescription(doc) {
+function getMainSourceDocumentSourceDescription(doc) {
   let recordSourceDescription = getSourceDescription(doc, doc.description);
 
   let documentSourceDescription;
@@ -250,7 +298,7 @@ function getMainSourceDescription(doc) {
 // Find the source "Document" object within the given GedcomX document, and return it (or null if not found).
 function getSourceDocument(doc, mainSourceDescription) {
   if (!mainSourceDescription) {
-    mainSourceDescription = getMainSourceDescription(doc);
+    mainSourceDescription = getMainSourceDocumentSourceDescription(doc);
   }
   let document;
   if (mainSourceDescription && mainSourceDescription.about) {

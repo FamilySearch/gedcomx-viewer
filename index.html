@@ -808,7 +808,7 @@
       if (doc.records && doc.records.length > 0) {
         doc = doc.records[0];
       }
-      let mainSourceDescription = getMainSourceDescription(doc);
+      let mainSourceDescription = getMainSourceDocumentSourceDescription(doc);
       let sourceDocument = getSourceDocument(doc, mainSourceDescription);
       if (sourceDocument) {
         let title = mainSourceDescription.titles && mainSourceDescription.titles.length > 0 ? mainSourceDescription.titles[0].value : null;

@@ -252,7 +252,8 @@ function receivePersons(gx, fetchSpecs) {
   else {
     let chartOptions = new ChartOptions(
         {
-          isEditable: true,
+          isEditable: false,
+          isSelectable: true,
           shouldShowConfidence: false,
           shouldDisplayIds: true,
           shouldDisplayDetails: false,
@@ -343,8 +344,9 @@ function toggleRelatives(key, shouldHide, selectedPersonIds) {
         relativeIds = shouldHide ? combineArrays(filterRelatives(personId, childIdsMap.get(personId)), filterRelatives(personId, spouseIdsMap.get(personId))) : spouseIdsMap.get(personId);
         break;
       case 'M': // "Me"
-        if (shouldHide && personId !== getFirstPersonId()) {
+        if (personId !== getFirstPersonId()) {
           relativeIds = [personId];
+          shouldHide = true; // Can't "unhide" a person that is not displayed.
         }
         break;
     }

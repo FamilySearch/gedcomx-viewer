@@ -155,21 +155,6 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
     return "Other";
   }
 
-  // Get a date string from the date in the given fact (if any), or return 'undefined' otherwise.
-  function getDate(fact) {
-    if (fact && fact.date && fact.date.original) {
-      return fact.date.original;
-    }
-    return undefined;
-  }
-
-  function getPlace(fact) {
-    if (fact && fact.place && fact.place.original) {
-      return fact.place.original;
-    }
-    return undefined;
-  }
-
   /**
    * If the given value is not empty, then add it to the given array, wrapped in a "span" element,
    *   and with an appropriate element id.
@@ -198,8 +183,8 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
     if (fact.value && fact.value.toLowerCase() !== getFactName(fact).toLowerCase()) {
       addIfNotEmpty(fact.value, parts, factNamePrefix + "-value", fact);
     }
-    addIfNotEmpty(getDate(fact), parts, factNamePrefix + "-date", fact.date);
-    addIfNotEmpty(getPlace(fact), parts, factNamePrefix + "-place", fact.place);
+    addIfNotEmpty(getFactDate(fact), parts, factNamePrefix + "-date", fact.date);
+    addIfNotEmpty(getFactPlace(fact), parts, factNamePrefix + "-place", fact.place);
     return parts.length === 0 ? undefined : parts.join("; ");
   }
 
@@ -488,16 +473,6 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
     this.$childPlus = relChart.makeControl(`${this.personBoxId}-personChildPlus`, "relPlus personChildPlus");
     this.$spousePlus = relChart.makeControl(`${this.personBoxId}-personSpousePlus`, "relPlus personSpousePlus");
     this.$parentPlus = relChart.makeControl(`${this.personBoxId}-personParentPlus`, "relPlus personParentPlus");
-    this.$personDiv.click(function(e) {
-      if (e.shiftKey && (e.ctrlKey || e.metaKey)) {
-        // Open person ID in Family Tree on shift-cmd/ctrl-click
-        let familyTreePersonUrl = "https://familysearch.org/ark:/61903/4:1:" + personBox.personNode.personId;
-        window.open(familyTreePersonUrl, "_blank");
-      }
-      else {
-        personBox.clickPerson(e);
-      }
-    });
 
     // Allow a person box to be able to receive a drag & drop event.
     this.$personDiv.droppable({
@@ -508,5 +483,18 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
       }
     });
     this.$personDiv.draggable({revert: true, scope: "personDropScope", zIndex: 2, opacity: 0.5});
+  }
+  if (relChart.isEditable || relChart.isSelectable) {
+    let personBox = this;
+    this.$personDiv.click(function(e) {
+      if (e.shiftKey && (e.ctrlKey || e.metaKey)) {
+        // Open person ID in Family Tree on shift-cmd/ctrl-click
+        let familyTreePersonUrl = "https://familysearch.org/ark:/61903/4:1:" + personBox.personNode.personId;
+        window.open(familyTreePersonUrl, "_blank");
+      }
+      else {
+        personBox.clickPerson(e);
+      }
+    });
   }
 }

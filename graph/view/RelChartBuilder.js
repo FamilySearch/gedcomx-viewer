@@ -93,14 +93,14 @@ RelChartBuilder.prototype.addSpouses = function(personBox, subtree, needsRelativ
             }
             // Reverse the list of children and then add them all to the spouse family line so they'll be in the right order
             childBoxes.reverse();
-            for (let c = 0; c < childBoxes.length; c++) {
-              spouseFamilyLine.addChild(childBoxes[c], this.relChart.isEditable);
+            for (let childBox of childBoxes) {
+              spouseFamilyLine.addChild(childBox, this.relChart.isEditable);
             }
           }
           else {
             // Insert children above the person (i.e., the mother), from first to last
-            for (let c = 0; c < spouseFamily.children.length; c++) {
-              let childBox = this.insert(direction, personBox, spouseFamily.children[c], personBox.generationIndex - 1, null, spouseFamilyLine, needsRelativesQueue, subtree);
+            for (let child of spouseFamily.children) {
+              let childBox = this.insert(direction, personBox, child, personBox.generationIndex - 1, null, spouseFamilyLine, needsRelativesQueue, subtree);
               spouseFamilyLine.addChild(childBox, this.relChart.isEditable);
             }
           }
@@ -591,10 +591,7 @@ let highlightsToProcess = [];
  * @return RelationshipChart built from the given graph starting with the given person
  */
 RelChartBuilder.prototype.buildChart = function(prevChart, imgOverlayToGx) {
-  // this.relChart.$personsDiv.empty();
-  // this.relChart.$familyLinesDiv.empty();
   if (this.relChart.isEditable) {
-    // this.relChart.$editControlsDiv.empty();
     this.relChart.addEditControls();
   }
   this.relGraphToGx = {}; // map of relationship graph HTML element id to GedcomX object id that corresponds. Can be many-to-1

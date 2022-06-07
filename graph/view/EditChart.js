@@ -1195,9 +1195,11 @@ RelationshipChart.prototype.addGapDropZones = function() {
 PersonBox.prototype.deselectPerson = function() {
   // Clicked on the only selected person, so deselect it.
   this.$personDiv.removeAttr("chosen");
-  this.$parentPlus.hide();
-  this.$spousePlus.hide();
-  this.$childPlus.hide();
+  if (this.relChart.isEditable) {
+    this.$parentPlus.hide();
+    this.$spousePlus.hide();
+    this.$childPlus.hide();
+  }
   removeFromArray(this, this.relChart.selectedPersonBoxes);
 };
 
@@ -1205,14 +1207,16 @@ PersonBox.prototype.selectPerson = function() {
   this.$personDiv.attr("chosen", "uh-huh");
   this.relChart.selectedPersonBoxes.push(this);
 
-  // Set the '+' controls: child at center of left side; parent at center of right side;
-  //    and spouse in center of top (if female or unknown) or bottom (if male).
-  let d = this.relChart.editControlSize / 2;
-  let centerX = (this.getLeft() + this.getRight()) / 2;
-  this.relChart.positionFamilyControl(this.$childPlus, this.getLeft() - d, this.getCenter() - d);
-  this.relChart.positionFamilyControl(this.$parentPlus, this.getRight() - d, this.getCenter() - d);
-  this.relChart.positionFamilyControl(this.$spousePlus, centerX - d, this.personNode.gender === 'F' ? this.getTop() - d : this.getBottom() - d);
-  this.$personDiv.focus(); // avoid text getting selected accidentally.
+  if (this.relChart.isEditable) {
+    // Set the '+' controls: child at center of left side; parent at center of right side;
+    //    and spouse in center of top (if female or unknown) or bottom (if male).
+    let d = this.relChart.editControlSize / 2;
+    let centerX = (this.getLeft() + this.getRight()) / 2;
+    this.relChart.positionFamilyControl(this.$childPlus, this.getLeft() - d, this.getCenter() - d);
+    this.relChart.positionFamilyControl(this.$parentPlus, this.getRight() - d, this.getCenter() - d);
+    this.relChart.positionFamilyControl(this.$spousePlus, centerX - d, this.personNode.gender === 'F' ? this.getTop() - d : this.getBottom() - d);
+    this.$personDiv.focus(); // avoid text getting selected accidentally.
+  }
 };
 
 PersonBox.prototype.isSelected = function() {

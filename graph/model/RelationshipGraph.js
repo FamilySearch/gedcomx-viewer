@@ -212,8 +212,6 @@ function addChildren(graph) {
   }
   // At this point, any entries remaining in parentMap[childId] indicate that the childId is not included in this RelationshipGraph
   // Therefore, any parents that ARE included need to be marked as having more children than are shown.
-  let v = parentMap.values();
-  
   for (let parentInfo of parentMap.values()) {
     let parentNode = graph.getPerson(parentInfo.parentId);
     if (parentNode) {
@@ -324,11 +322,152 @@ function addOtherRelationshipsToPersonNodes(graph) {
   }
 }
 
+function getFactYear(fact) {
+  let date = getFactDate(fact);
+  if (date) {
+    let matches = date.match(/(\d\d\d\d)/);
+    if (matches && matches.length > 0) {
+      let year = matches[0];
+      return year;
+    }
+  }
+  return null;
+}
+
+function getPersonBirthYear(personNode) {
+  let bestBirthYear = null;
+  if (personNode && personNode.person.facts) {
+    for (let fact of personNode.person.facts) {
+      if (fact.type === "http://gedcomx.org/Birth") {
+        let year = getFactYear(fact);
+        if (year > 0) {
+          return year;
+        }
+      }
+      else if (fact.type === "http://gedcomx.org/Christening" || fact.type === "http://gedcomx.org/Baptism") {
+        let year = getFactYear(fact);
+        if (year > 0) {
+          bestBirthYear = year;
+        }
+      }
+    }
+  }
+  return bestBirthYear;
+}
+
+function getFamilyMarriageOrChildYear(familyNode) {
+  let minYear = null;
+  if (familyNode) {
+    if (familyNode.coupleRel && familyNode.coupleRel.facts) {
+      for (let fact of familyNode.coupleRel.facts) {
+        let year = getFactYear(fact);
+        if (year && (!minYear || year < minYear)) {
+          minYear = year;
+        }
+      }
+    }
+    if (!minYear && familyNode.children) {
+      for (let child of familyNode.children) {
+        let year = getPersonBirthYear(child);
+        if (year && (!minYear || year < minYear)) {
+          minYear = year;
+        }
+      }
+    }
+  }
+  return minYear;
+}
+
+/**
+ * Sort the given array according to the value returned for each element by the valueFunction(node).
+ * If the value function returns a null value for a node, then keep it in its original order as much as possible
+ *   while making sure that all nodes with values are in the right order.
+ * For example, if sorting children a, b, c, d, e by birth order, and the known birth years are b=1820 and d=1810,
+ * then we end up with a, d, b, c, e; since d must be before b, but no other birth years cause any other changes.
+ * @param nodes - list of objects to sort (e.g., PersonNodes)
+ * @param valueFunction - function to use to get a value for each node (e.g., birth year for PersonNode), or null if no value available.
+ */
+function sortArrayWhereNeeded(nodes, valueFunction) {
+  if (nodes && nodes.length > 1) {
+    // List of "compare node" objects with node, original order, and sort value.
+    // List where values are known (these will sort first by value, then by original order on tie)
+    let valueNodes = [];
+    // List where values are unknown (these will sort in their original order)
+    let noValueNodes = [];
+    let origOrder = 0;
+    for (let node of nodes) {
+      let value = valueFunction(node);
+      let compareNode = {
+        node: node,
+        origOrder: origOrder++,
+        value: valueFunction(node)
+      };
+      if (value) {
+        valueNodes.push(compareNode);
+      }
+      else {
+        noValueNodes.push(compareNode);
+      }
+    }
+    // Sort the nodes with known values by those values, and then by original order when there are ties.
+    valueNodes.sort(function(a, b) {
+      if (a.value !== b.value) {
+        return a.value < b.value ? -1 : 1;
+      }
+      else {
+        return a.origOrder < b.origOrder ? -1 : 1;
+      }
+    });
+    // (noValueNodes[] will already be in order of "origOrder" since that is how they were added to the array.)
+
+    // For each node with a value, insert non-value nodes with earlier original order before,
+    //  then insert the value node, then repeat that until all nodes are in the array.
+    // Overwrites the original nodes[] array.
+    let pos = 0;
+    let valuePos = 0;
+    let noValuePos = 0;
+    while (pos < nodes.length) {
+      if (valuePos < valueNodes.length && noValuePos < noValueNodes.length) {
+        if (valueNodes[valuePos].origOrder < noValueNodes[noValuePos].origOrder) {
+          nodes[pos++] = valueNodes[valuePos++].node;
+        }
+        else {
+          nodes[pos++] = noValueNodes[noValuePos++].node;
+        }
+      }
+      else if (valuePos < valueNodes.length) {
+        nodes[pos++] = valueNodes[valuePos++].node;
+      }
+      else if (noValuePos < noValueNodes.length) {
+        nodes[pos++] = noValueNodes[noValuePos++].node;
+      }
+      else {
+        throw new Error("Infinite loop or something.");
+      }
+    }
+    if (pos !== nodes.length || valuePos !== valueNodes.length || noValuePos !== noValueNodes.length) {
+      throw new Error("Counts didn't line up in sortArrayWhereNeeded.");
+    }
+  }
+}
+
+// Sort the children oldest-to-youngest and spouse families for each person by marriage year or youngest child year (when known)
+// so that children and spouses appear in order when possible.
+function sortChildrenAndSpouses(graph) {
+  for (let family of graph.familyNodes) {
+    sortArrayWhereNeeded(family.children, getPersonBirthYear);
+  }
+  for (let person of graph.personNodes) {
+    sortArrayWhereNeeded(person.spouseFamilies, getFamilyMarriageOrChildYear);
+  }
+}
+
 function addFamilyNodes(graph) {
   addCouples(graph);
   addChildren(graph);
   addFamiliesToPersonNodes(graph);
   addOtherRelationshipsToPersonNodes(graph);
+  sortChildrenAndSpouses(graph);
 }
 
 RelationshipGraph.prototype.getPerson = function(personId) {
