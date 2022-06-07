@@ -23,24 +23,30 @@ let parentIdsMap = new Map(); // Map of person Id to an array of their parents' 
 let spouseIdsMap = new Map(); // Map of person Id to an array of their spouses' ids
 let childIdsMap = new Map(); // Map of person Id to an array of their children's ids
 
+function askForLogin() {
+  $("#rel-chart").html("Log in to <a href='https://www.familysearch.org'>FamilySearch</a> in another tab and then reload this page. (Or add 'sessionid=&lt;sessionId&gt;' to the URL)");
+}
 
 /**
  * Fetch a set of persons, and update the
- * @param fetchSpecs - Array of FetchSpec objects (see below)
+ * @param fetchSpecs - Array of FetchSpec objects (see below) describing persons to fetch (and perhaps further generations to fetch after that)
  */
 function fetchPersonsAsync(fetchSpecs) {
   function fetchFromOneUrl(urlToFetch, theFetchSpecs) {
     $.ajax({
       beforeSend: function (request) {
         request.setRequestHeader("Accept", "application/x-gedcomx-v1+json");
-        // request.setRequestHeader("Authorization", "Bearer " + fetchSpec.sessionId);
+        request.setRequestHeader("Authorization", "Bearer " + fetchSpecs[0].sessionId);
       },
       dataType: "json",
       url: urlToFetch,
+      statusCode: {
+        401: askForLogin
+      },
       success: async function (gx) {
         //Pause for animation: await new Promise(r => setTimeout(r, 1000));
         receivePersons(gx, theFetchSpecs);
-      }
+      },
     });
   }
 
@@ -48,6 +54,7 @@ function fetchPersonsAsync(fetchSpecs) {
     return personUrl.includes("4:1:") || personUrl.includes("/platform/tree/persons/")
   }
 
+  // == function fetchPersonsAsync ==
   if (isFamilyTreeUrl(fetchSpecs[0].personUrl)) {
     // This is Family Tree, so we can optimize multiple fetches into one call
     let personIds = [];
@@ -57,14 +64,14 @@ function fetchPersonsAsync(fetchSpecs) {
         personIds.push(personId);
       }
     }
-    let personsUrl = "https://api.familysearch.org/platform/tree/persons?flag=fsh&pids=" + personIds.join(",") + "&access_token=" + fetchSpecs[0].sessionId;
+    let personsUrl = "https://api.familysearch.org/platform/tree/persons?flag=fsh&pids=" + personIds.join(",");
     fetchFromOneUrl(personsUrl, fetchSpecs);
   }
   else {
     // Maybe LLS or something, so we need to fetch each person separately on a separate thread.
     // Each person will cause the chart to update when it comes in. (Might be cool, or might be annoying).
-    // So: Create a map of requestId -> Number remaining, and only redraw when all have arrived, or if a timeout has kicked in.
-    // (But do this later to support LLS. For hackathon, concentrate on Family Tree).
+    // Send the entire list of fetchSpecs through to "receivePersons" so it can check to see if all requested
+    //   persons have arrived yet. Only when all of the persons in the list have arrived will any further fetching begin.
     for (const fetchSpec of fetchSpecs) {
       fetchFromOneUrl(fetchSpec.personUrl, fetchSpecs);
     }
@@ -76,20 +83,22 @@ function getPersonUrl(gxPerson) {
 }
 
 /**
- * Having received a GedcomX payload, add the new persons over to the main GedcomX object, and 
+ * Having received a GedcomX payload, add the new persons over to the main GedcomX object and on to the relationship chart.
+ * If all of the persons in the given fetchSpecs have now arrived (either because we did a single multi-person Family Tree call,
+ *   or because this is the last of the FetchSpecs to come through) then recurse to additional persons that need to be fetched.
  * @param gx - GedcomX received for the given fetchSpecs
- * @param fetchSpecs - Array of {personUrl, [downGenerations...]}
+ * @param fetchSpecs - Array of {personUrl, [downGenerations...]} to be fetched.
  */
 function receivePersons(gx, fetchSpecs) {
   // Get or create the array at map.get(personId1), and add person2Id to that array, if it is not already there.
-  function addIdToArray(map, person1Id, person2Id) {
-    let arr = map.get(person1Id);
+  function addIdToArray(map, id1, id2) {
+    let arr = map.get(id1);
     if (!arr) {
-      arr = [person2Id];
-      map.set(person1Id, arr);
+      arr = [id2];
+      map.set(id1, arr);
     }
-    else if (!arr.includes(person2Id)) {
-      arr.push(person2Id);
+    else if (!arr.includes(id2)) {
+      arr.push(id2);
     }
   }
 
@@ -206,6 +215,7 @@ function receivePersons(gx, fetchSpecs) {
       return allParentIds;
     }
 
+    //=== gatherRemainingFetchSpecs ===
     // Map of personId -> FetchSpec for that person ID (for persons not fetched yet)
     let fetchSpecMap = new Map();
     for (const fetchSpec of fetchSpecs) {
@@ -233,13 +243,77 @@ function receivePersons(gx, fetchSpecs) {
     return Array.from(fetchSpecMap.values());
   }
 
+  function normalizePersonAndRelationshipIds(gx) {
+
+    function normalizeId(personIdOrUrl) {
+      return personIdOrUrl ? personIdOrUrl.replaceAll(/.*[:/#]/g, "") : null;
+    }
+
+    function normalizePersonReference(ref) {
+      if (ref && ref.resource && ref.resource.length > 0 && ref.resource.substring(0, 1) === "#") {
+        let origPersonId = ref.resource.substring(1);
+        let normalizedPersonId = personIdMap.get(origPersonId);
+        if (normalizedPersonId) {
+          ref.resource = "#" + normalizedPersonId;
+        }
+        else {
+          console.log("Warning: Could not find normalized person id...");
+        }
+      }
+      ref.resourceId = normalizeId(ref.resource);
+    }
+
+    //=== normalizePersonAndRelationshipIds
+    // Map of original local person ID to normalized one
+    let personIdMap = new Map();
+    if (gx.persons) {
+      for (let person of gx.persons) {
+        let personUrl = getPersonUrl(person);
+        let newPersonId = normalizeId(personUrl);
+        personIdMap.set(person.id, newPersonId);
+        person.id = newPersonId;
+      }
+    }
+
+    if (gx.relationships) {
+      for (let relationship of gx.relationships) {
+        normalizePersonReference(relationship.person1);
+        normalizePersonReference(relationship.person2);
+        relationship.id = normalizeId(relationship.type).substring(0, 1) + "_" + relationship.person1.resourceId + "_" + relationship.person2.resourceId;
+      }
+    }
+  }
+
+  function everyoneHasArrived(fetchSpecs) {
+    for (let fetchSpec of fetchSpecs) {
+      // fetchSpec = {personId, personUrl, [1, 2, 0]}
+      if (!gxPersonMap.has(fetchSpec.personId)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   // ---- receivePersons -----------------------------------
+  normalizePersonAndRelationshipIds(gx);
   updateMasterGx(gx);
 
-  // Start fetching anyone else in the FetchSpec
-  let remainingFetchSpecs = gatherRemainingFetchSpecs(fetchSpecs);
-  if (remainingFetchSpecs.length > 0) {
-    fetchPersonsAsync(remainingFetchSpecs);
+  function gatherPersonIds(gx) {
+    let pids = [];
+    if (gx.persons) {
+      for (let person of gx.persons) {
+        pids.push(person.id);
+      }
+    }
+    return pids.join(", ");
+  }
+
+  if (everyoneHasArrived(fetchSpecs)) {
+    // Start fetching anyone else in the FetchSpec who isn't already being fetched in the current array of fetchSpecs.
+    let remainingFetchSpecs = gatherRemainingFetchSpecs(fetchSpecs);
+    if (remainingFetchSpecs.length > 0) {
+      fetchPersonsAsync(remainingFetchSpecs);
+    }
   }
   if (gx.persons && gx.persons.length > 0) {
     updatePersonAnalysis(getFirstPersonId());
@@ -331,6 +405,7 @@ function toggleRelatives(key, shouldHide, selectedPersonIds) {
   
   let needRecordUpdate = false;
   let fetchSpecs = [];
+  let fetchMap = new Map(); // map of personId -> FetchSpec for that person to be fetched.
   for (const personId of selectedPersonIds) {
     let relativeIds = [];
     switch (key) {
@@ -366,8 +441,10 @@ function toggleRelatives(key, shouldHide, selectedPersonIds) {
             hiddenPersons.delete(relativeId);
             needRecordUpdate = true;
           }
-          if (!gxPersonMap.has(relativeId)) {
-            fetchSpecs.push(new FetchSpec(relativeId, null, [0], null));
+          if (!gxPersonMap.has(relativeId) && !fetchMap.has(relativeId)) {
+            let fetchSpec = new FetchSpec(relativeId, null, [0], null);
+            fetchSpecs.push(fetchSpec);
+            fetchMap.set(relativeId, fetchSpec);
           }
         }
       }
