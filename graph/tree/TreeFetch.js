@@ -32,10 +32,13 @@ function clearPersonCache() {
   childIdsMap.clear();
 }
 
-function setUpHelp() {
+function setUpHelp(treeHelpHtmlUrl) {
+  if (!treeHelpHtmlUrl) {
+    treeHelpHtmlUrl = "https://familysearch.github.io/gedcomx-viewer/tree/tree-help.html";
+  }
   let $helpArea = $("#help-area");
   if ($helpArea) {
-    $helpArea.load("tree/tree-help.html", function () {
+    $helpArea.load(treeHelpHtmlUrl, function () {
       $("#tree-graph-help-content").hide().draggable();
     });
   }
