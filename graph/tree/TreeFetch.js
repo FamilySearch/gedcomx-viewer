@@ -23,6 +23,25 @@ let parentIdsMap = new Map(); // Map of person Id to an array of their parents' 
 let spouseIdsMap = new Map(); // Map of person Id to an array of their spouses' ids
 let childIdsMap = new Map(); // Map of person Id to an array of their children's ids
 
+function setUpHelp() {
+  let $helpArea = $("#help-area");
+  if ($helpArea) {
+    $helpArea.load("tree/tree-help.html", function () {
+      $("#tree-graph-help-content").hide().draggable();
+    });
+  }
+}
+
+function toggleTreeGraphHelp() {
+  let $div = $("#tree-graph-help-content");
+  if ($div.is(":visible")) {
+    $div.hide();
+  }
+  else {
+    $div.show();
+  }
+}
+
 function askForLogin() {
   $("#rel-chart").html("Log in to <a href='https://www.familysearch.org'>FamilySearch</a> in another tab and then reload this page. (Or add 'sessionid=&lt;sessionId&gt;' to the URL)");
 }
