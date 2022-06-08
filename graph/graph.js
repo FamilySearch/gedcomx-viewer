@@ -171,13 +171,13 @@ function handleGraphKeydown(e) {
         break;
       case 'R':
         if (e.shiftKey) {
-          if (masterGx) {
-            refreshMasterGx();
-          }
-        }
-        else {
           let currentGx = currentRelChart.getGedcomX();
           removeRedundantRelationships(currentGx);
+        }
+        else {
+          if (typeof masterGx != 'undefined') {
+            refreshMasterGx();
+          }
         }
         e.stopPropagation();
         break;

@@ -23,6 +23,15 @@ let parentIdsMap = new Map(); // Map of person Id to an array of their parents' 
 let spouseIdsMap = new Map(); // Map of person Id to an array of their spouses' ids
 let childIdsMap = new Map(); // Map of person Id to an array of their children's ids
 
+function clearPersonCache() {
+  masterGx = null;
+  gxPersonMap.clear();
+  gxRelIdSet.clear();
+  parentIdsMap.clear();
+  spouseIdsMap.clear();
+  childIdsMap.clear();
+}
+
 function setUpHelp() {
   let $helpArea = $("#help-area");
   if ($helpArea) {
@@ -83,8 +92,18 @@ function fetchPersonsAsync(fetchSpecs) {
         personIds.push(personId);
       }
     }
-    let personsUrl = "https://api.familysearch.org/platform/tree/persons?flag=fsh&pids=" + personIds.join(",");
-    fetchFromOneUrl(personsUrl, fetchSpecs);
+    while (personIds.length > 0) {
+      const maxIdsToFetch = 100;
+      let idsToFetch = personIds.length < maxIdsToFetch ? personIds : personIds.slice(0, maxIdsToFetch);
+      let personsUrl = "https://api.familysearch.org/platform/tree/persons?flag=fsh&pids=" + idsToFetch.join(",");
+      fetchFromOneUrl(personsUrl, fetchSpecs);
+      if (personIds.length >= maxIdsToFetch) {
+        personIds.splice(0, maxIdsToFetch);
+      }
+      else {
+        personIds = [];
+      }
+    }
   }
   else {
     // Maybe LLS or something, so we need to fetch each person separately on a separate thread.
@@ -262,7 +281,7 @@ function receivePersons(gx, fetchSpecs) {
     return Array.from(fetchSpecMap.values());
   }
 
-  function normalizePersonAndRelationshipIds(gx) {
+  function normalizePersonAndRelationshipIds(gx, firstPersonId) {
 
     function normalizeId(personIdOrUrl) {
       return personIdOrUrl ? personIdOrUrl.replaceAll(/.*[:/#]/g, "") : null;
@@ -286,11 +305,22 @@ function receivePersons(gx, fetchSpecs) {
     // Map of original local person ID to normalized one
     let personIdMap = new Map();
     if (gx.persons) {
+      let firstPersonIdPos = null;
+      let p = 0;
       for (let person of gx.persons) {
         let personUrl = getPersonUrl(person);
         let newPersonId = normalizeId(personUrl);
         personIdMap.set(person.id, newPersonId);
         person.id = newPersonId;
+        if (newPersonId === firstPersonId) {
+          firstPersonIdPos = p;
+        }
+        p++;
+      }
+      if (firstPersonIdPos > 0) {
+        let temp = gx.persons[0];
+        gx.persons[0] = gx.persons[firstPersonIdPos];
+        gx.persons[firstPersonIdPos] = temp;
       }
     }
 
@@ -314,18 +344,8 @@ function receivePersons(gx, fetchSpecs) {
   }
 
   // ---- receivePersons -----------------------------------
-  normalizePersonAndRelationshipIds(gx);
+  normalizePersonAndRelationshipIds(gx, fetchSpecs[0].personId);
   updateMasterGx(gx);
-
-  function gatherPersonIds(gx) {
-    let pids = [];
-    if (gx.persons) {
-      for (let person of gx.persons) {
-        pids.push(person.id);
-      }
-    }
-    return pids.join(", ");
-  }
 
   if (everyoneHasArrived(fetchSpecs)) {
     // Start fetching anyone else in the FetchSpec who isn't already being fetched in the current array of fetchSpecs.
@@ -348,7 +368,7 @@ function receivePersons(gx, fetchSpecs) {
           isEditable: false,
           isSelectable: true,
           shouldShowConfidence: false,
-          shouldDisplayIds: true,
+          shouldDisplayIds: false,
           shouldDisplayDetails: false,
           isDraggable: true
         });
@@ -378,23 +398,45 @@ function getFirstPersonId() {
 }
 
 function refreshMasterGx() {
-  if (masterGx && masterGx.persons) {
-    let personIds = [];
-    for (const gxPerson of masterGx.persons) {
-      //todo: create FetchSpec for all persons
-      //todo: fetch everyone again
-      //todo: If Family Tree api has a limit on #persons to fetch at once, fix that.
+  let fetchSpecs = [];
+
+  if (currentRelChart) {
+    let firstPersonId = masterGx && masterGx.persons && masterGx.persons.length > 0 ? masterGx.persons[0].id : null;
+    let firstPersonPosition = -1;
+    for (let personBox of currentRelChart.personBoxes) {
+      let personId = personBox.personNode.personId;
+      let personUrl = getPersonUrl(personBox.personNode.person);
+      let fetchSpec = new FetchSpec(personId, personUrl, [0], null);
+      if (personId === firstPersonId) {
+        firstPersonPosition = fetchSpecs.length;
+      }
+      fetchSpecs.push(fetchSpec);
+    }
+    if (firstPersonPosition > 0) {
+      // Swap to make sure the starting person remains the starting position, to keep people from moving around unnecessarily.
+      let temp = fetchSpecs[0];
+      fetchSpecs[0] = fetchSpecs[firstPersonPosition];
+      fetchSpecs[firstPersonPosition] = temp;
     }
   }
-
+  else if (masterGx && masterGx.persons) {
+    for (const gxPerson of masterGx.persons) {
+      fetchSpecs.push(new FetchSpec(gxPerson.id, getPersonUrl(gxPerson), [0], null));
+    }
+  }
+  if (fetchSpecs.length > 0) {
+    clearPersonCache();
+    fetchPersonsAsync(fetchSpecs);
+  }
 }
+
 /**
  * Show additional relatives of the selected persons (or hide the persons or their relatives, if "shouldHide" is true).
  * - When hiding relatives, if any of them are the "from" relative (i.e., the one that would connect the start person to this person),
  *     then only hide those (and set a new start person) if there are no other relatives being hidden.
  *     This allows us to, for example, show the children of an ancestor, and then hide those children without the ancestor disappearing
  *     by severing the link back to the root person.
- * @param key - Kind of relatives to toggle: P=parents, S=spouses, C=children. M=hide "Me".
+ * @param key - Kind of relatives to toggle: P=parents, S=spouses, C=children. M=hide "Me". R=Refresh
  * @param shouldHide - Flag for whether to hide the selected persons. False => show them.
  * @param selectedPersonIds - Array of personIds of PersonBox objects that are selected in the UI.
  */
