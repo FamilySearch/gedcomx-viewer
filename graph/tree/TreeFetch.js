@@ -55,7 +55,7 @@ function toggleTreeGraphHelp() {
 }
 
 function askForLogin() {
-  $("#rel-chart").html("Log in to <a href='https://www.familysearch.org'>FamilySearch</a> in another tab and then reload this page. (Or add 'sessionid=&lt;sessionId&gt;' to the URL)");
+  $("#rel-chart").html("Log in to <a href='https://www.familysearch.org' target='_blank'>FamilySearch</a> in another tab and then reload this page. (Or add 'sessionid=&lt;sessionId&gt;' to the URL)");
 }
 
 /**
@@ -377,6 +377,17 @@ function receivePersons(gx, fetchSpecs) {
         });
     currentRelChart = buildRelGraph(masterGx, chartOptions);
   }
+  for (let fetchSpec of fetchSpecs) {
+    if (fetchSpec.shouldSelect) {
+      let personBoxIds = currentRelChart.personIdPersonBoxesMap[fetchSpec.personId];
+      if (personBoxIds) {
+        for (let personBoxId of personBoxIds) {
+          let personBox = currentRelChart.personBoxMap[personBoxId];
+          personBox.selectPerson();
+        }
+      }
+    }
+  }
 }
 
 let hiddenPersons = new Set();
@@ -472,9 +483,13 @@ function toggleRelatives(key, shouldHide, selectedPersonIds) {
   let fetchMap = new Map(); // map of personId -> FetchSpec for that person to be fetched.
   for (const personId of selectedPersonIds) {
     let relativeIds = [];
+    let spouseIdsToNotSelect = [];
     switch (key) {
       case 'C': //children
         relativeIds = shouldHide ? filterRelatives(personId, childIdsMap.get(personId)) : combineArrays(childIdsMap.get(personId), spouseIdsMap.get(personId));
+        if (!shouldHide) {
+          spouseIdsToNotSelect = spouseIdsMap.get(personId);
+        }
         break;
       case 'P': // parents
         relativeIds = parentIdsMap.get(personId);
@@ -506,7 +521,8 @@ function toggleRelatives(key, shouldHide, selectedPersonIds) {
             needRecordUpdate = true;
           }
           if (!gxPersonMap.has(relativeId) && !fetchMap.has(relativeId)) {
-            let fetchSpec = new FetchSpec(relativeId, null, [0], null);
+            let shouldSelect = !spouseIdsToNotSelect.includes(relativeId);
+            let fetchSpec = new FetchSpec(relativeId, null, [0], null, shouldSelect);
             fetchSpecs.push(fetchSpec);
             fetchMap.set(relativeId, fetchSpec);
           }
@@ -564,19 +580,21 @@ FetchSpec.prototype.sessionId = null;
 FetchSpec.prototype.exampleUrl = null;
 
 /**
- * Constructor for a FetchSpec object
+ * Constructor for a FetchSpec object, which specifies who to fetch from a lineage-linked GedcomX API such as Family Tree or LLS.
  * @param personId - local person ID.
  * @param personUrl - URL of person to fetch
  * @param downCounts - Array of # of generations of descendants to fetch for each ancestor of this person (starting with this person), once they arrive.
  *   For each generation, .5 down is the person's spouse, and 1 down is spouse + children.
- * @param sessionId - Session ID to use for fetching
+ * @param sessionId - Session ID to use for fetching (if null, will use the last session ID that was provided)
+ * @param shouldSelect - Flag for whether to select the person after they are loaded (default = false)
  * @constructor
  */
-function FetchSpec(personId, personUrl, downCounts, sessionId) {
+function FetchSpec(personId, personUrl, downCounts, sessionId, shouldSelect) {
   this.personId = personId ? personId : getPersonIdFromUrl(personUrl);
   this.personUrl = personUrl ? personUrl : FetchSpec.prototype.exampleUrl.match(/(.*[:\/])([-A-Z0-9]+)/)[1] + personId;
   this.downCounts = downCounts ? downCounts : []; //ensure non-null array
   this.sessionId = sessionId ? sessionId : FetchSpec.prototype.sessionId;
+  this.shouldSelect = shouldSelect;
   if (!FetchSpec.prototype.sessionId) {
     FetchSpec.prototype.sessionId = sessionId;
   }

@@ -334,6 +334,7 @@ function RelationshipChart(relGraph, $relChartDiv, chartOptions) {
   this.generations = []; // array of Generations that the persons are in, left to right
   this.familyLines = []; // array of family lines
 
+  this.personIdPersonBoxesMap = {}; // map of personId to a list of corresponding PersonBoxes (usually 1)
   this.personBoxMap = {}; // map of personBoxId to their corresponding PersonBox
   this.familyLineMap = {}; // map of familyId to its corresponding FamilyLine object
   this.personDupCount = {}; // map of personId to how many duplicates have been seen so far (null/undefined => 0).

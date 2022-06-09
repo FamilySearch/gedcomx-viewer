@@ -147,10 +147,19 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
   // and convert 'FactTypeName' to 'Fact Type Name'. If no type, return "Other".
   function getFactName(fact) {
     if (fact && fact.type) {
+      let factName = fact.type.startsWith("data:,") ? fact.type.replace(/data:,/, "") : fact.type.replace(/.*\//g, "");
+      let noURI = decodeURI(factName).replaceAll(/[+]/g, " ");
+      let splitCamel = noURI.replace(/([^A-Z ])([A-Z])/g, "$1 $2" );
+      let singleSpaces = splitCamel.replaceAll(/  */g, " ");
+      let trimmed = singleSpaces.trim();
+      // if (fact.type.startsWith("data:,")) {
+      //   return fact.type.replace(/data:,/, "").replaceAll(/ *[+] */g, " ");
+      // }
       // Strip up to last "/" to convert "http://gedcomx.org/MarriageBanns" to "MarriageBanns".
       // Then insert a space before all capital letters to get " Marriage Banns".
       // Then trim white space to get "Marriage Banns".
-      return fact.type.replace(/.*\//g, '').replace(/([A-Z])/g, " $1" ).replace(/^ /, "");
+      // return fact.type.replace(/.*\//g, '').replace(/([A-Z])/g, " $1" );
+      return trimmed;
     }
     return "Other";
   }
@@ -165,6 +174,9 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
    */
   function addIfNotEmpty(value, array, type, gx) {
     if (value) {
+      if (value.length > 250) {
+        value = value.substr(0, 250) + "...";
+      }
       value = encode(value);
       if (type && gx) {
         let elementId = nextId(type, relChartToGx, gx);
@@ -447,6 +459,13 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
     this.personBoxId += "_dup" + dupCount;
   }
   relChart.personBoxMap[this.personBoxId] = this;
+  let boxIds = relChart.personIdPersonBoxesMap[personNode.personId];
+  if (boxIds) {
+    boxIds.push(this.personBoxId);
+  }
+  else {
+    relChart.personIdPersonBoxesMap[personNode.personId] = [this.personBoxId];
+  }
 
   let personDiv = makePersonDiv(personNode, this.personBoxId, this.duplicateOf, relChart.shouldDisplayIds, relChart.shouldDisplayDetails);
   relChart.$personsDiv.append(personDiv);
