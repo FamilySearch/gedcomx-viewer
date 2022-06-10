@@ -6,7 +6,7 @@
 RelChartBuilder.prototype.resetRemainingPersons = function() {
   for (let personNode of this.relChart.relGraph.personNodes) {
     let isVisible = true;
-    if (personAnalysisMap) {
+    if (typeof personAnalysisMap != 'undefined') {
       let personAnalysis = personAnalysisMap.get(personNode.personId);
       if (personAnalysis && !personAnalysis.isVisible) {
         isVisible = false;

@@ -23,6 +23,9 @@ let parentIdsMap = new Map(); // Map of person Id to an array of their parents' 
 let spouseIdsMap = new Map(); // Map of person Id to an array of their spouses' ids
 let childIdsMap = new Map(); // Map of person Id to an array of their children's ids
 
+// Map of personId -> PersonAnalysis.
+let personAnalysisMap;
+
 function clearPersonCache() {
   masterGx = null;
   gxPersonMap.clear();
@@ -34,7 +37,7 @@ function clearPersonCache() {
 
 function setUpHelp(treeHelpHtmlUrl) {
   if (!treeHelpHtmlUrl) {
-    treeHelpHtmlUrl = "https://familysearch.github.io/gedcomx-viewer/tree/tree-help.html";
+    treeHelpHtmlUrl = "https://familysearch.github.io/gedcomx-viewer/graph/tree/tree-help.html";
   }
   let $helpArea = $("#help-area");
   if ($helpArea) {
