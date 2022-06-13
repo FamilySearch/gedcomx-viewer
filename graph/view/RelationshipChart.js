@@ -216,7 +216,7 @@ RelationshipChart.prototype.setPreviousPositions = function(prevRelChart) {
   function getPrevOrFromPersonBox(personBox) {
     if (personBox) {
       let prevPersonBox = prevRelChart.personBoxMap[personBox.personBoxId];
-      if (!prevPersonBox && personAnalysisMap) {
+      if (!prevPersonBox && isTreeGraph()) {
         let personAnalysis = personAnalysisMap.get(personBox.personNode.personId);
         if (personAnalysis) {
           let fromId = personAnalysis.fromPersonId;

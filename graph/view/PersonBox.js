@@ -388,7 +388,7 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
       html += addFactDivs(personNode);
     }
     html += addRelativeDivs(personNode);
-    if (personAnalysisMap) {
+    if (isTreeGraph()) {
       let personId = personNode.personId;
       let personAnalysis = personAnalysisMap.get(personId);
       if (personAnalysis) {

@@ -17,7 +17,7 @@ function addPersonNodes(graph) {
     let personNodeIndex = 0;
     for (const gxPerson of graph.gx.persons) {
       let personId = gxPerson.id;
-      let personAnalysis = personAnalysisMap ? personAnalysisMap.get(personId) : null;
+      let personAnalysis = isTreeGraph() ? personAnalysisMap.get(personId) : null;
       if (!personAnalysis || personAnalysis.isVisible) {
         let personNode = new PersonNode(gxPerson);
         graph.personNodes[personNodeIndex++] = personNode;

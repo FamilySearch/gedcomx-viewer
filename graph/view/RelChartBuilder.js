@@ -6,7 +6,7 @@
 RelChartBuilder.prototype.resetRemainingPersons = function() {
   for (let personNode of this.relChart.relGraph.personNodes) {
     let isVisible = true;
-    if (typeof personAnalysisMap != 'undefined') {
+    if (isTreeGraph()) {
       let personAnalysis = personAnalysisMap.get(personNode.personId);
       if (personAnalysis && !personAnalysis.isVisible) {
         isVisible = false;
@@ -583,6 +583,10 @@ RelChartBuilder.prototype.correlateHighlights = function(doc, relToGx, imgToGx) 
     }
   }
 };
+
+function isTreeGraph() {
+  return typeof personAnalysisMap != 'undefined';
+}
 
 let highlightsToProcess = [];
 
