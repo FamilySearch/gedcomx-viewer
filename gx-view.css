@@ -64,3 +64,21 @@ pre {
 .section-drop-hover {
     background-color: #e4fffb;
 }
+
+.hanging-indent {
+    padding-left: 22px;
+    text-indent: -22px;
+    margin-bottom: 0;
+}
+
+.sft-relationship {
+    color: #015b46;
+}
+
+.sft-person {
+    color: #0000b7;
+}
+
+.sft-tag {
+    color: #6c854e;
+}

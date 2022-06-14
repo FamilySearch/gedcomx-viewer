@@ -315,6 +315,20 @@ function getSourceDocument(doc, mainSourceDescription) {
   return document;
 }
 
+function findDocumentText(doc, docId) {
+  if (doc.documents) {
+    if (!docId) {
+      docId = "nbx";
+    }
+    for (let document of doc.documents) {
+      if (document.id === docId) {
+        return document.text;
+      }
+    }
+  }
+  return null;
+}
+
 /**
  * Create an object with {x, y, width, height}, either from those four values, or four a comma-seprated string containing those four values.
  * @param x1OrRectangle - Either an x coordinate, or a string with "x,y,width,height" all in them.

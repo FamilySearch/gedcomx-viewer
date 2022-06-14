@@ -209,6 +209,27 @@
       }
     }
 
+    function getSftSummaryHtml(doc) {
+      let summary = findDocumentText(doc, "sftPrediction");
+      if (summary) {
+        let lines = summary.split("\n");
+        let html = "";
+        for (let line of lines) {
+          if (line.startsWith("relationship ")) {
+            line = line.replace(/^(relationship) /, "<span class='sft-relationship'>$1</span> ");
+            line = line.replace(/ (pe[0-9]+)/g, " <span class='sft-person'>$1</span>");
+          }
+          else if (line.startsWith("pe")) {
+            line = line.replace(/^(pe[0-9]*) /, "<span class='sft-person'>$1</span> ")
+          }
+          line = line.replace(/ (_[^ ]*)/g, " <span class='sft-tag'>$1</span>");
+          html += "<p class='hanging-indent'>" + line + "</p>";
+        }
+        return html;
+      }
+      return null;
+    }
+
     /**
      *  Having made a change to the given record, update the display of it.
      *
@@ -248,6 +269,11 @@
       if (!editorAlreadyUpdated) {
         editor.set(doc);
         $("#source-viewer").show();
+      }
+
+      let sftSummaryHtml = getSftSummaryHtml(doc);
+      if (sftSummaryHtml) {
+        $("#sft-summary").html(sftSummaryHtml);
       }
 
       function getImageLink(doc) {
@@ -2675,7 +2701,7 @@
               <div id="source-file" class="pt-4"></div>
               <div id="gx-editor" class="pt-2"></div>
               <div><span id="image-link">IMAGE LINK</span>&nbsp;&nbsp;<span id="nbx-link">ENTITY VIEWER</span></div>
-
+              <div id="sft-summary"></div>
             </div>
           </div>
           <div class="col-8 pt-4">

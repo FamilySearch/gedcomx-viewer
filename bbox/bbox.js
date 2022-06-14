@@ -22,20 +22,6 @@ function createOverlay(type, rectangle, elementMap, gxObject) {
   };
 }
 
-function findNbxDocumentText(doc, docId) {
-  if (doc.documents) {
-    if (!docId) {
-      docId = "nbx";
-    }
-    for (let document of documents) {
-      if (document.id === docId) {
-        return document.text;
-      }
-    }
-  }
-  return null;
-}
-
 /**
  * Add highlight boxes and corresponding text markers to the image viewer, as found in the given GedcomX document.
  *   A map is returned with key = local HTML element "id" for each highlight created; and value = "id" of the GedcomX object it came from.
@@ -302,7 +288,7 @@ function overlayBoxes(viewer, doc, sessionId) {
   }
 
   // Add bounding boxes for all words. (Do this before names, dates and places, so that those will be on top)
-  addNbxBoxes(boxes, markers, findNbxDocumentText(doc));
+  addNbxBoxes(boxes, markers, findDocumentText(doc));
 
   if (doc.persons) {
     for (let person of doc.persons) {

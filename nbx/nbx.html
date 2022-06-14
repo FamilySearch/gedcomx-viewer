@@ -27,9 +27,9 @@
       window.opener.entityChildWindow = document;
       let doc = window.opener.getCurrentGx();
       doc = fixGedcomx(doc);
-      nbxText = findNbxDocumentText(doc, "relexPostRules");
+      nbxText = findDocumentText(doc, "relexPostRules");
       if (!nbxText) {
-        nbxText = findNbxDocumentText(doc, "nbx");
+        nbxText = findDocumentText(doc, "nbx");
         if (nbxText) {
           // Remove bounding boxes.
           nbxText = nbxText.replace(/\[[0-9]*,[0-9]*:[0-9]*,[0-9]*] /g, "");
