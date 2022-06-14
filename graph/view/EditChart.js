@@ -1502,7 +1502,7 @@ FamilyLine.prototype.changeMother = function(motherBox) {
 };
 
 // Set the person in the given fatherBox to be the father of this family, updating the underlying GedcomX as needed. Update record.
-FamilyLine.prototype.changeFather = function(chartId, fatherBox) {
+FamilyLine.prototype.changeFather = function(fatherBox) {
   if (this.father) {
     // Remove the existing mother from the family, if any.
     this.removeFather();
