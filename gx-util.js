@@ -302,7 +302,7 @@ function getSourceDocument(doc, mainSourceDescription) {
   }
   let document;
   if (mainSourceDescription && mainSourceDescription.about) {
-    let sourceDocumentId = mainSourceDescription.about.substr(1);
+    let sourceDocumentId = mainSourceDescription.about.startsWith("#") ? mainSourceDescription.about.substr(1) : "text";
     if (doc.documents) {
       for (let candidate of doc.documents) {
         if (sourceDocumentId === candidate.id) {

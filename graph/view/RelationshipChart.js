@@ -290,11 +290,15 @@ RelationshipChart.prototype.setPreviousPositions = function(prevRelChart) {
     setFamilyLinePositionsFromPrevStuff(familyLine, x, bottomPerson, topPerson, father, mother);
   }
 
+  let selectedPersonIds = new Set(prevRelChart.selectedPersonBoxes ? getPersonIdsOfPersonBoxes(prevRelChart.selectedPersonBoxes) : []);
   for (let personBox of this.personBoxes) {
     let prevPersonBox = getPrevOrFromPersonBox(personBox);
     if (prevPersonBox) {
       let prevLeft = prevPersonBox.prevLeft ? prevPersonBox.prevLeft : prevPersonBox.getLeft();
       personBox.$personDiv.css({left: prevLeft, top: prevPersonBox.getTop()});
+      if (prevPersonBox.personNode.personId === personBox.personNode.personId && selectedPersonIds.has(personBox.personNode.personId)) {
+        personBox.selectPerson();
+      }
     }
   }
 
@@ -322,7 +326,7 @@ function RelationshipChart(relGraph, $relChartDiv, chartOptions) {
 
   this.relGraph = relGraph;
   this.isEditable = chartOptions.isEditable;
-  this.isSelectable = chartOptions.isSelectable;
+  this.isSelectable = chartOptions.isSelectable || chartOptions.isEditable;
   this.ignoreUndo = chartOptions.ignoreUndo;
   this.chartId = this.relGraph.chartId;
   $relChartDiv.empty();
@@ -357,12 +361,13 @@ function RelationshipChart(relGraph, $relChartDiv, chartOptions) {
   this.prevHeight = 0; // height of chart before last update
   this.chartCompressor = new ChartCompressor(this);
 
-  if (chartOptions.isEditable || chartOptions.isSelectable) {
+  if (chartOptions.isSelectable) {
     let relChart = this;
     $relChartDiv.click(function(){
       relChart.clearSelections();
     });
     this.selectedFamilyLine = null;
     this.selectedPersonBoxes = [];
+    this.detailedPersonIds = new Set();
   }
 }

@@ -467,7 +467,8 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
     relChart.personIdPersonBoxesMap[personNode.personId] = [this.personBoxId];
   }
 
-  let personDiv = makePersonDiv(personNode, this.personBoxId, this.duplicateOf, relChart.shouldDisplayIds, relChart.shouldDisplayDetails);
+  let shouldDisplayDetails = relChart.shouldDisplayDetails || relChart.detailedPersonIds.has(this.personNode.personId);
+  let personDiv = makePersonDiv(personNode, this.personBoxId, this.duplicateOf, relChart.shouldDisplayIds, shouldDisplayDetails);
   relChart.$personsDiv.append(personDiv);
   this.$personDiv = $("#" + this.personBoxId);
   // $("#" + getGenderDivId(this.personBoxId)).click(function(e){

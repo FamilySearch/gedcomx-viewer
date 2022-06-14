@@ -140,6 +140,15 @@ function findPersonIndex(gxPersons, personId) {
 
 let shouldCollapse = true;
 
+function allSelectedPersonsHaveDetails() {
+  for (let personBox of currentRelChart.selectedPersonBoxes) {
+    if (!currentRelChart.detailedPersonIds.has(personBox.personNode.personId)) {
+      return false;
+    }
+  }
+  return true;
+}
+
 function handleGraphKeydown(e) {
   if ($(document.activeElement).is(":input,[contenteditable]") || !currentRelChart) {
     // ignore keydown events in input boxes or contenteditable sections. Those already handle cmd/ctrl-Z for undo/redo on their own.
@@ -185,7 +194,21 @@ function handleGraphKeydown(e) {
         e.stopPropagation();
         break;
       case 'D':
-        currentRelChart.shouldDisplayDetails = !currentRelChart.shouldDisplayDetails;
+        if (currentRelChart.selectedPersonBoxes.length > 0) {
+          if (e.shiftKey || allSelectedPersonsHaveDetails()) {
+            for (let personBox of currentRelChart.selectedPersonBoxes) {
+              currentRelChart.detailedPersonIds.delete(personBox.personNode.personId);
+            }
+          }
+          else {
+            for (let personBox of currentRelChart.selectedPersonBoxes) {
+              currentRelChart.detailedPersonIds.add(personBox.personNode.personId);
+            }
+          }
+        }
+        else {
+          currentRelChart.shouldDisplayDetails = !currentRelChart.shouldDisplayDetails;
+        }
         updateRecord(currentRelChart.getGedcomX());
         e.stopPropagation();
         break;

@@ -598,6 +598,7 @@ RelChartBuilder.prototype.buildChart = function(prevChart, imgOverlayToGx) {
   if (this.relChart.isEditable) {
     this.relChart.addEditControls();
   }
+  this.relChart.detailedPersonIds = prevChart ? new Set(prevChart.detailedPersonIds) : new Set();
   this.relGraphToGx = {}; // map of relationship graph HTML element id to GedcomX object id that corresponds. Can be many-to-1
   this.relChart.animationSpeed = prevChart ? 1000 : 0;
   this.addPersons();

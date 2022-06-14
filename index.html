@@ -286,7 +286,7 @@
 
       // Rebuild the relationship graph. Set global variable (defined in RelChartBuilder.js).
       relChart = buildGraph(doc, true, relChart, true);
-    }
+     }
 
     /**
      *  Update the selectable persons of a record.
@@ -2236,7 +2236,6 @@
       recordInfos = [];
       currentRecordIndex = -1;
       relChart = null; // clear out any previous RelationshipChart
-      setRecordSourceDocument(null);
       for (let f of files) {
         let reader = new FileReader();
         reader.onload = (function(file) {

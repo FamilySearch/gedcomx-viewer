@@ -366,6 +366,7 @@ function receivePersons(gx, fetchSpecs) {
 
   // Draw or update the relationship chart with what we have so far
   if (currentRelChart) {
+    currentRelChart.selectedPersonBoxes = []; // clear selections
     updateRecord(masterGx, null, false, true);
   }
   else {
