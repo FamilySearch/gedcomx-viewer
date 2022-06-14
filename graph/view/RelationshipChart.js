@@ -361,7 +361,7 @@ function RelationshipChart(relGraph, $relChartDiv, chartOptions) {
   this.prevHeight = 0; // height of chart before last update
   this.chartCompressor = new ChartCompressor(this);
 
-  if (chartOptions.isSelectable) {
+  if (this.isSelectable) {
     let relChart = this;
     $relChartDiv.click(function(){
       relChart.clearSelections();
