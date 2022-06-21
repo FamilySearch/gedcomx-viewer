@@ -645,6 +645,29 @@ function findPersonByRef(doc, id) {
   return null;
 }
 
+// Return HTML for a Swifty (SFT) summary, as stored in the sft document (default name: sftPrediction)
+function getSftSummaryHtml(doc, sftDocName) {
+  let summary = findDocumentText(doc, sftDocName ? sftDocName : "sftPrediction");
+  if (summary) {
+    let lines = summary.split("\n");
+    let html = "<h3>SFT Summary</h3>\n";
+    for (let origLine of lines) {
+      let line = origLine;
+      if (line.startsWith("relationship ")) {
+        line = line.replace(/^(relationship) /, "<span class='sft-relationship'>$1</span> ");
+        line = line.replace(/ (pe[0-9]+)/g, " <span class='sft-person'>$1</span>");
+      }
+      else if (line.startsWith("pe")) {
+        line = line.replace(/^(pe[0-9]*) /, "<span class='sft-person'>$1</span> ")
+      }
+      line = line.replace(/ (_[^ ]*)/g, " <span class='sft-tag'>$1</span>");
+      html += "<p class='hanging-indent'>" + line + "</p>";
+    }
+    return html;
+  }
+  return null;
+}
+
 function dragElement(elmnt) {
   let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
   if (document.getElementById(elmnt.id + "-label")) {
