@@ -58,7 +58,7 @@ pre {
 }
 
 .selected-section {
-    background-color: #fffee4;
+    background-color: rgba(255, 254, 228, 0.19);;
 }
 
 .section-drop-hover {

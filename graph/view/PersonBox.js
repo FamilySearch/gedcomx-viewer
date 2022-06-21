@@ -353,9 +353,18 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
    @param shouldDisplayDetails - Flag for whether to show facts
    */
   function makePersonDiv(personNode, personBoxId, duplicateOfBox, shouldDisplayIds, shouldDisplayDetails) {
-    function hasRelatives(relativeIdsMap, personId) {
+    function hasVisibleRelatives(relativeIdsMap, personId) {
       let relativeIds = relativeIdsMap ? relativeIdsMap.get(personId) : null;
-      return relativeIds && relativeIds.length > 0;
+      let numVisible = 0;
+      if (relativeIds) {
+        for (let relativeId of relativeIds) {
+          let personAnalysis = personAnalysisMap.get(relativeId);
+          if (personAnalysis && personAnalysis.isVisible) {
+            numVisible++;
+          }
+        }
+      }
+      return numVisible > 0;
     }
 
     /**
@@ -378,7 +387,7 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
         "' id='" + personBoxId + "'>\n";
     let imageFile = PersonBox.prototype.genderImageMap[personNode.gender];
     // Use CDN to deliver these to avoid problems with different relative paths for different consumers.
-    html += "<img id='" + getGenderDivId(personBoxId) + "' src='https://cdn.jsdelivr.net/gh/FamilySearch/gedcomx-viewer@master/graph/images/" + imageFile + "' class='gender-image'>";
+    html += "<img alt='gender " + personNode.gender + "' id='" + getGenderDivId(personBoxId) + "' src='https://cdn.jsdelivr.net/gh/FamilySearch/gedcomx-viewer@master/graph/images/" + imageFile + "' class='gender-image'>";
     let gxPerson = personNode.person;
     html += addNameSpans(gxPerson);
     if (shouldDisplayIds) {
@@ -395,13 +404,13 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
         if (personAnalysis.hasMoreParents) {
           html += addIndicator("right", "P", false);
         }
-        else if (hasRelatives(parentIdsMap, personId)) {
+        if (hasVisibleRelatives(parentIdsMap, personId)) {
           html += addIndicator("right", "P", true);
         }
         if (personAnalysis.hasMoreChildren) {
           html += addIndicator("left", "C", false);
         }
-        else if (hasRelatives(childIdsMap, personId)) {
+        if (hasVisibleRelatives(childIdsMap, personId)) {
           html += addIndicator("left", "C", true);
         }
         if (personAnalysis.hasMoreSpouses) {
@@ -412,7 +421,7 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
             html += addIndicator("bottom", "S", false);
           }
         }
-        else if (hasRelatives(spouseIdsMap, personId)) {
+        else if (hasVisibleRelatives(spouseIdsMap, personId)) {
           if (personNode.getGenderCode() === GENDER_CODE_FEMALE) {
             html += addIndicator("top", "S", true);
           }
