@@ -82,3 +82,13 @@ pre {
 .sft-tag {
     color: #6c854e;
 }
+
+.downloaded-message {
+    position: absolute;
+    top: 80px;
+    right: 50px;
+    padding: 15px;
+    color: white;
+    background-color: rgba(25, 129, 254, 0.66);
+    border-radius: 10px;
+}

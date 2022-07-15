@@ -63,6 +63,7 @@
      * @type string
      */
     let currentUrl = null;
+    let gxFilename = "gx.json";
 
     let sourceDocumentText = null;
     let sourceDocumentName = null;
@@ -192,6 +193,7 @@
       if (!$(document.activeElement).is(":input,[contenteditable]")) {
         let key = e.key.toUpperCase();
         if (e.ctrlKey || e.metaKey) {
+          console.log("Cmd-" + key);
           // Handle ctrl/cmd keydown
           if ((key === 'Z' && e.shiftKey) || key === 'Y') {
             // Ctrl/Cmd-shift Z or Cmd-Y => Redo
@@ -204,6 +206,22 @@
             undoRecordSet();
             e.stopPropagation();
             e.preventDefault();
+          }
+          // Shortcuts for add buttons at top
+          else if (key === 'C' && e.shiftKey) {
+            $("#copy-gx")[0].click();
+          }
+          else if (key === 'D' && e.shiftKey) {
+            $("#download-gx")[0].click();
+          }
+          else if (key === 'P' && e.shiftKey) {
+            $("#add-person-button")[0].click();
+          }
+          else if (key === 'E' && e.shiftKey) {
+            $("#add-relationship-button")[0].click();
+          }
+          else if (key === 'F' && e.shiftKey) {
+            $("#add-fact-button")[0].click();
           }
         }
       }
@@ -364,8 +382,7 @@
 
       if (name) {
         sourceFileElement.append($("<h1/>").append($("<small/>", {"class": "text-muted"}).text(name)));
-        let gxDownloadNode = $("#download-gx");
-        gxDownloadNode.attr("download", name.replace(/(.txt)?$/, ".gx.json"));
+        gxFilename = name.replace(/(.txt)?$/, ".gx.json");
       }
 
       if (text) {
@@ -701,7 +718,7 @@
      * and add the new child to the returned array. The new child will not be a child of 'node',
      * but, rather, the child of a new text section.
      * So, for example, if we have
-     * <div id="1">Births: <b>Alex, Jan 2. ¶Bob, Jan 5. ¶Carol, Jan 6.</b> All doing well.</div>
+     * <div id="1">Births: <b>Alex, Jan 2. ¶Bob, Jan 5. ¶Carol, Jan 6.</strong> All doing well.</div>
      * then the dom looks like
      * div id=1
      *   #text "Births: "
@@ -1129,7 +1146,6 @@
         if (splitTxt.length > 0) {
           givenField.val(splitTxt.join(" "));
         }
-        // }
       }
     }
 
@@ -2197,7 +2213,7 @@
         setRecordSourceDocument(backup.text, backup.filename);
       }
       updateRecord(backup.doc, backup.url, false, true, true);
-      $("#download-gx").attr("download", backup.filename);
+      gxFilename = backup.filename;
     }
 
     function clearRecord() {
@@ -2254,7 +2270,7 @@
               return;
             }
             importRecordSet(recordSet, file.name);
-            $("#download-gx").attr("download", file.name);
+            gxFilename = file.name;
           }
         })(f);
 
@@ -2381,8 +2397,18 @@
 
       $("#download-gx").click(function() {
         let gx = exportGedcomx();
-        this.href = "data:text/plain;charset=UTF-8," + encodeURIComponent(gx);
+        if (!gxFilename) {
+          gxFilename = "gx2.json";
+        }
+        save(gxFilename, gx);
+        // this.href = "data:text/plain;charset=UTF-8," + encodeURIComponent(gx);
+        // this.download = this.download ? this.download : "ggx.json";
         dirty = false;
+        let $errorMsg = $("<p><div id='downloaded_msg' class='downloaded-message'>Downloaded to " + gxFilename + "</div></p>");
+        $('#navbar').append($errorMsg);
+        setTimeout(function() {
+          $errorMsg.remove();
+        }, 1500)
       });
 
       $("#copy-gx").click(function () {
@@ -2510,6 +2536,21 @@
       //     "¶Carol, Dec. 12.";
       // setRecordSourceDocument(sampleText, "Sample Text with ¶");
     });
+
+    function save(filename, data) {
+      const blob = new Blob([data], {type: 'text/csv'});
+      if(window.navigator.msSaveOrOpenBlob) {
+        window.navigator.msSaveBlob(blob, filename);
+      }
+      else{
+        const elem = window.document.createElement('a');
+        elem.href = window.URL.createObjectURL(blob, {oneTimeOnly : true});
+        elem.download = filename;
+        document.body.appendChild(elem);
+        elem.click();
+        document.body.removeChild(elem);
+      }
+    }
   </script>
   <style>
     #gx-editor {
@@ -2537,7 +2578,7 @@
 <!--Top navigation-->
 <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
   <span class="navbar-brand">View and Edit GEDCOM X</span>
-  <ul class="navbar-nav ml-auto">
+  <ul class="navbar-nav ml-auto" id="navbar">
     <li class="nav-item">
       <button type="button" class="btn btn-primary m-1" data-toggle="modal" data-target="#new-person" title="Add Person" id="add-person-button">
         <span class="oi oi-plus"></span>
@@ -2545,7 +2586,7 @@
       </button>
     </li>
     <li class="nav-item">
-      <button type="button" class="btn btn-primary m-1" data-toggle="modal" data-target="#new-relationship" title="Add Relationship">
+      <button type="button" class="btn btn-primary m-1" data-toggle="modal" data-target="#new-relationship" title="Add Relationship" id="add-relationship-button">
         <span class="oi oi-plus"></span>
         <span class="oi oi-people"></span>
       </button>
@@ -2559,7 +2600,7 @@
       <a id="copy-gx" href="#" class="btn btn-primary m-1" title="Copy GEDCOM X to Clipboard"><span class="oi oi-clipboard"></span></a>
     </li>
     <li class="nav-item">
-      <a id="download-gx" href="#" download="gx.json" class="btn btn-primary m-1" title="Download GedcomX"><span class="oi oi-data-transfer-download"></span></a>
+      <div id="download-gx" class="btn btn-primary m-1" title="Download GedcomX"><span class="oi oi-data-transfer-download"></span></div>
     </li>
   </ul>
 </nav>
@@ -2638,36 +2679,51 @@
               <div class="tab-pane fade" id="help" role="tabpanel" aria-labelledby="help-tab">
                 Tips:
                 <ul>
-                  <li><b>Importing data:</b></li>
-                  <ul>
-                    <li>Drag & drop GedcomX or Record Set file onto "Choose GedcomX File" button to load records.</li>
-                    <li>Drag & drop text (or NBX) file onto "Choose Source File" to load text.</li>
-                  </ul>
-                  <li><b>Handling multiple records:</b>
+                  <li><strong>Importing data:</strong>
+                    <ul>
+                      <li>Drag & drop GedcomX or Record Set file onto "Choose GedcomX File" button to load records.</li>
+                      <li>Drag & drop text (or NBX) file onto "Choose Source File" to load text.</li>
+                    </ul>
+                  </li>
+                  <li><strong>Handling multiple records:</strong>
                     <ul>
                       <li>Type Cmd/Ctrl-Enter (or "¶", Option-7 on Mac) in text area to split record.</li>
                       <li>Type Delete at the beginning of one section to merge it into the previous one.</li>
                       <li>Click or Tab/Shift-Tab to select a text section. The corresponding record will display.</li>
                       <li>Drag a person from the relationship graph to a text section to move that person (and all connected relatives) to that section's record.</li>
                     </ul>
+                  </li>
                   <li>Select text before clicking the "new person" button to pre-populate the person box with that person's name.
                       Fix the name parts if they weren't split correctly</li>
-                  <li><b>Undo</b>: Cmd/Ctrl-Z will undo, and Cmd/Ctrl-Shift-Z (or Cmd/Ctrl-Y) will redo.</li>
-                  <ul>
-                    <li>When the focus is on a text area, normal text undo/redo will happen.</li>
-                    <li>Otherwise, the latest record change or record selection will be undone/redone. (Click outside the text area if needed for this to function)</li>
-                  </ul>
-                  <li><b>Editing relationships</b> in the relationship graph.</li>
-                  <ul>
-                    <li>Click a person to select them. Relationship controls ("+") will appear.</li>
-                    <li>Drag a "spouse +" (on the top or bottom) to another person to create a couple relationship.</li>
-                    <li>Drag a "parent +" (on the right) to a vertical couple line to add both parent relationships at once. Or:</li>
+                  <li><strong>Undo</strong>: Cmd/Ctrl-Z will undo, and Cmd/Ctrl-Shift-Z (or Cmd/Ctrl-Y) will redo.
                     <ul>
-                      <li>Drag a "parent +" (on the right) to another person to make that one person a parent.</li>
-                      <li>Drag a "child +" (on the left) to another person to make that person a child.</li>
+                      <li>When the focus is on a text area, normal text undo/redo will happen.</li>
+                      <li>Otherwise, the latest record change or record selection will be undone/redone. (Click outside the text area if needed for this to function)</li>
                     </ul>
-                    <li>Click a vertical "family line" to select it. Click a red "x" to remove a parent or child from the family.</li>
-                  </ul>
+                  </li>
+                  <li><strong>Editing relationships</strong> in the relationship graph.
+                    <ul>
+                      <li>Click a person to select them. Relationship controls ("+") will appear.</li>
+                      <li>Drag a "spouse +" (on the top or bottom) to another person to create a couple relationship.</li>
+                      <li>Drag a "parent +" (on the right) to a vertical couple line to add both parent relationships at once. Or:
+                        <ul>
+                          <li>Drag a "parent +" (on the right) to another person to make that one person a parent.</li>
+                          <li>Drag a "child +" (on the left) to another person to make that person a child.</li>
+                        </ul>
+                      </li>
+                      <li>Click a vertical "family line" to select it. Click a red "x" to remove a parent or child from the family.</li>
+                    </ul>
+                  </li>
+                  <li><strong>Keyboard shortcuts</strong> (same as clicking a button at the top right)
+                    <ul>
+                      <li>Cmd/Ctrl-Shift-P - Add new Person</li>
+                      <li>Cmd/Ctrl-Shift-E - Add new rElationship (Note that Cmd/Ctrl-Shift-R will refresh the page)</li>
+                      <li>Cmd/Ctrl-Shift-F - Add new Fact</li>
+                      <li>Cmd/Ctrl-Shift-D - Download GedcomX</li>
+                    </ul>
+                  </li>
+                  Note that after pop-ups close, you may need to click on the page so that the keyboard "focus" allows for shortcuts to work.
+                  Be especially careful about that when doing a download.
                 </ul>
               </div>
             </div>
