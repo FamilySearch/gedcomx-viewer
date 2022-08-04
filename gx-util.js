@@ -385,16 +385,18 @@ function getImageArks(doc) {
               }
             }
           }
-          let nextSd = getSourceDescription(doc, source.description);
-          if (isImage(nextSd)) {
-            let arkAndRectangles = {image: nextSd.about};
-            if (!isEmpty(rectangles)) {
-              arkAndRectangles.rectangles = rectangles;
+          if (source.description) {
+            let nextSd = getSourceDescription(doc, source.description);
+            if (isImage(nextSd)) {
+              let arkAndRectangles = {image: nextSd.about};
+              if (!isEmpty(rectangles)) {
+                arkAndRectangles.rectangles = rectangles;
+              }
+              imageArks.push(arkAndRectangles);
             }
-            imageArks.push(arkAndRectangles);
-          }
-          else {
-            findImageArksAndRectangles(nextSd, imageArks);
+            else {
+              findImageArksAndRectangles(nextSd, imageArks);
+            }
           }
         }
       }
