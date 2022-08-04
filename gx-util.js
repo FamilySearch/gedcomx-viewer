@@ -394,7 +394,7 @@ function getImageArks(doc) {
             imageArks.push(arkAndRectangles);
           }
           else {
-            findImageArksAndRectangles(nextSd, imageArks);
+            //findImageArksAndRectangles(nextSd, imageArks);
           }
         }
       }
