@@ -876,13 +876,7 @@
       }
       let recordSet = { "records" : records };
 
-      return JSON.stringify(recordSet, function (key, value) {
-        if (key === "fields") {
-          //strip out any fields
-          return undefined;
-        }
-        return value;
-      }, 2);
+      return JSON.stringify(recordSet, (key, value) => value, 2);
     }
 
     function getPerson(doc, pid) {
