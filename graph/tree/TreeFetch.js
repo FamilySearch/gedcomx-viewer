@@ -62,7 +62,7 @@ function askForLogin() {
 }
 
 /**
- * Fetch a set of persons, and update the
+ * Fetch a set of persons, and asynchronously call receivePersons on the ones received.
  * @param fetchSpecs - Array of FetchSpec objects (see below) describing persons to fetch (and perhaps further generations to fetch after that)
  */
 function fetchPersonsAsync(fetchSpecs) {
@@ -146,6 +146,7 @@ function receivePersons(gx, fetchSpecs) {
     }
   }
 
+  // Copy any additional persons or relationships from the given GedcomX into the masterGx.
   function updateMasterGx(gx) {
     // Update masterGx
     if (masterGx == null) {
@@ -259,13 +260,32 @@ function receivePersons(gx, fetchSpecs) {
       return allParentIds;
     }
 
+    function addAllNeededOneHops() {
+      function addRelatives(personId, relativeIdsMap) {
+        const relativeIds = relativeIdsMap.get(personId);
+        if (relativeIds) {
+          for (const relativeId of relativeIds) {
+            if (!gxPersonMap.has(relativeId) && !fetchSpecMap.has(relativeId)) {
+              addFetchSpecToMap(fetchSpecMap, new FetchSpec(relativeId, null, 0, null));
+            }
+          }
+        }
+      }
+
+      for (const fetchSpec of fetchSpecs) {
+        addRelatives(fetchSpec.personId, parentIdsMap);
+        addRelatives(fetchSpec.personId, spouseIdsMap);
+        addRelatives(fetchSpec.personId, childIdsMap);
+      }
+    }
+
     //=== gatherRemainingFetchSpecs ===
     // Map of personId -> FetchSpec for that person ID (for persons not fetched yet)
     let fetchSpecMap = new Map();
     for (const fetchSpec of fetchSpecs) {
-      // We have fetchSpec = {personId, personUrl, [1, 2, 0]}
+      // We have fetchSpec = {personId, personUrl, [1, 2, 0], maxPersonsToFetch}
       // For each generation, we need an array of person IDs for that generation,
-      // then we need to ensure that we have all the persons fetched for each generation of descendants
+      // then we need to ensure that we have all the persons fetched for each generation of descendants.
       // If we get to where we have IDs for someone, but they are not fetched yet,
       //   then we need to create a new FetchSpec for them with their ID, and their trimmed-down downstream array.
       if (!gxPersonMap.has(fetchSpec.personId)) {
@@ -276,13 +296,15 @@ function receivePersons(gx, fetchSpecs) {
       for (let gen = 0; gen < fetchSpec.downCounts.length; gen++) {
         // Down count for all the persons in this generation
         let downCount = fetchSpec.downCounts[gen];
-        //let remainingDownCounts = gen >= fetchSpec.downCounts.length - 1 ? [] : fetchSpec.downCounts.slice(gen + 1);
-        //addNeededFetchSpecs(remainingFetchSpecs, generationPersonIds, downCount, remainingDownCounts, fetchSpec);
         for (let personId of generationPersonIds) {
-          addNeededFetchSpecsForSpouseAndChildren(fetchSpecMap, personId, downCount, fetchSpec.downCounts.slice(gen), fetchSpec);
+          addNeededFetchSpecsForSpouseAndChildren(fetchSpecMap, personId, downCount, fetchSpec.downCounts.slice(gen));
         }
         generationPersonIds = getAllParentIds(generationPersonIds);
       }
+    }
+
+    if (FetchSpec.prototype.maxPrefetch > (masterGx.persons.length + fetchSpecMap.size)) {
+      addAllNeededOneHops();
     }
     return Array.from(fetchSpecMap.values());
   }
@@ -582,6 +604,7 @@ FetchSpec.prototype.makeFetchSpec = function(personId, downCounts) {
 
 FetchSpec.prototype.sessionId = null;
 FetchSpec.prototype.exampleUrl = null;
+FetchSpec.prototype.maxPrefetch = 0;
 
 /**
  * Constructor for a FetchSpec object, which specifies who to fetch from a lineage-linked GedcomX API such as Family Tree or LLS.
@@ -591,19 +614,24 @@ FetchSpec.prototype.exampleUrl = null;
  *   For each generation, .5 down is the person's spouse, and 1 down is spouse + children.
  * @param sessionId - Session ID to use for fetching (if null, will use the last session ID that was provided)
  * @param shouldSelect - Flag for whether to select the person after they are loaded (default = false)
+ * @param maxPrefetch - Max number of persons to fetch recursively (after doing any downCounts).
  * @constructor
  */
-function FetchSpec(personId, personUrl, downCounts, sessionId, shouldSelect) {
+function FetchSpec(personId, personUrl, downCounts, sessionId, shouldSelect, maxPrefetch) {
   this.personId = personId ? personId : getPersonIdFromUrl(personUrl);
   this.personUrl = personUrl ? personUrl : FetchSpec.prototype.exampleUrl.match(/(.*[:\/])([-A-Z0-9]+)/)[1] + personId;
   this.downCounts = downCounts ? downCounts : []; //ensure non-null array
   this.sessionId = sessionId ? sessionId : FetchSpec.prototype.sessionId;
   this.shouldSelect = shouldSelect;
+  this.maxPrefetch = maxPrefetch ? maxPrefetch : FetchSpec.prototype.maxPrefetch;
   if (!FetchSpec.prototype.sessionId) {
     FetchSpec.prototype.sessionId = sessionId;
   }
   if (!FetchSpec.prototype.exampleUrl) {
     FetchSpec.prototype.exampleUrl = personUrl;
+  }
+  if (maxPrefetch && !FetchSpec.prototype.maxPrefetch) {
+    FetchSpec.prototype.maxPrefetch = maxPrefetch;
   }
 }
 
