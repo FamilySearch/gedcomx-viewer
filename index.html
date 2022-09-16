@@ -912,6 +912,10 @@
         sd = {};
         sd.id = generateLocalId("sd_");
         doc.description = "#" + sd.id;
+        if (!doc.sourceDescriptions) {
+          doc.sourceDescriptions = [];
+        }
+        doc.sourceDescriptions.push(sd);
       }
 
       let title = $("#edit-record-metadata-title").val();
@@ -2191,7 +2195,7 @@
         setRecordSourceDocument(backup.text, backup.filename);
       }
       updateRecord(backup.doc, backup.url, false, true, true);
-      $("#download-gx").attr("download", backup.filename);
+      $("#download-gx").attr("download", backup.filename ? backup.filename : "gx.json");
     }
 
     function clearRecord() {
@@ -2212,15 +2216,17 @@
         let recordSet = recordOrRecordSet.records ? recordOrRecordSet : {"records": [recordOrRecordSet]}
         let sourceFileElement = $("#source-file");
         setRecordSourceDocument(null, filename);
+        let recordIndex = 1;
         for (let doc of recordSet.records) {
           doc = fixGedcomx(doc);
           let sourceDocument = getSourceDocument(doc);
-          let textSection = sourceDocument ? makeTextSection(null, sourceDocument.text) : null;
+          let textSection = makeTextSection(null, sourceDocument ? sourceDocument.text : "Record " + recordIndex);
           if (textSection) {
             sourceFileElement.append(textSection);
           }
           let recordInfo = new RecordInfo(textSection ? textSection.id : null, doc);
           recordInfos.push(recordInfo);
+          recordIndex++;
         }
         if (recordInfos.length > 0) {
           currentRecordIndex = 0;
@@ -2248,7 +2254,7 @@
               return;
             }
             importRecordSet(recordSet, file.name);
-            $("#download-gx").attr("download", file.name);
+            $("#download-gx").attr("download", file.name ? file.name : "gx.json");
           }
         })(f);
 

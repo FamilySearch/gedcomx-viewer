@@ -259,7 +259,7 @@ function getFirst(array) {
  * @param doc - GedcomX document (e.g., for a persona or record)
  * @param sourceIdOrUrl - The local ID (with or without "#") or full "about" URL for the SourceDescription being sought.
  *        (If null, then use the document's "description" attribute to find the "main" source description from the doc).
- * @returns {*}
+ * @returns SourceDescription object, or null if it could not be found.
  */
 function getSourceDescription(doc, sourceIdOrUrl) {
   let source = null;
