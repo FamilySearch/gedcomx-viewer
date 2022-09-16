@@ -6,7 +6,7 @@ function empty(s) {
   return s === undefined || s === null || s.length === 0;
 }
 
-function card(sectionName, sectionContent, level, addHook, editHook) {
+function card(sectionName, sectionContent, level, addHook, editHook, copyHook) {
   level = level || 2;
   let title = $("<h" + level + "/>", {class: "card-title card-header"}).append(span().text(sectionName));
   if (addHook) {
@@ -14,6 +14,9 @@ function card(sectionName, sectionContent, level, addHook, editHook) {
   }
   if (editHook) {
     title = title.append(editButton(editHook));
+  }
+  if (copyHook) {
+    title = title.append(copyButton(copyHook));
   }
   return div({class: "card m-1 p-0"})
     .append(div({class:"card-body p-0"})
@@ -163,11 +166,13 @@ function buildRecordUI(doc, url, editHooks) {
   }
 
   let hookToEditRecordMetadata = null;
+  let hookToCopyRecordMetadata = null;
   if (editHooks.editRecordMetadata) {
     hookToEditRecordMetadata = function() {editHooks.editRecordMetadata(recordMetadata)};
+    hookToCopyRecordMetadata = function() {editHooks.copyRecordMetadata(doc)};
   }
 
-  record.append(card("Metadata", dl(recordMetadata), 5, null, hookToEditRecordMetadata));
+  record.append(card("Metadata", dl(recordMetadata), 5, null, hookToEditRecordMetadata, hookToCopyRecordMetadata));
 
   // Map of local person id (p_1234567) to index (1, 2, 3...)
   let idMap = {};

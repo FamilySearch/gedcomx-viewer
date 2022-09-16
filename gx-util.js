@@ -256,7 +256,7 @@ function getFirst(array) {
 
 /**
  * Find the SourceDescription object for the given source ID or URL (i.e., from the document's root "description" attribute)
- * @param doc - GedcomX document (e.g., for a persona or record)
+ * @param doc - GedcomX document (e.g., for a persona or record). If null, a null sourceDescription will be returned.
  * @param sourceIdOrUrl - The local ID (with or without "#") or full "about" URL for the SourceDescription being sought.
  *        (If null, then use the document's "description" attribute to find the "main" source description from the doc).
  * @returns SourceDescription object, or null if it could not be found.
@@ -264,19 +264,21 @@ function getFirst(array) {
 function getSourceDescription(doc, sourceIdOrUrl) {
   let source = null;
 
-  if (!sourceIdOrUrl) {
-    sourceIdOrUrl = doc.description;
-  }
-  if (doc && sourceIdOrUrl) {
-    if (sourceIdOrUrl.charAt(0) === '#') {
-      sourceIdOrUrl = sourceIdOrUrl.substring(1);
+  if (doc) {
+    if (!sourceIdOrUrl) {
+      sourceIdOrUrl = doc.description;
     }
+    if (sourceIdOrUrl) {
+      if (sourceIdOrUrl.charAt(0) === '#') {
+        sourceIdOrUrl = sourceIdOrUrl.substring(1);
+      }
 
-    if (doc.sourceDescriptions) {
-      for (let srcDesc of doc.sourceDescriptions) {
-        if (srcDesc.about === sourceIdOrUrl || srcDesc.id === sourceIdOrUrl) {
-          source = srcDesc;
-          break;
+      if (doc.sourceDescriptions) {
+        for (let srcDesc of doc.sourceDescriptions) {
+          if (srcDesc.about === sourceIdOrUrl || srcDesc.id === sourceIdOrUrl) {
+            source = srcDesc;
+            break;
+          }
         }
       }
     }

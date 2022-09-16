@@ -905,9 +905,10 @@
       return relationship;
     }
 
-    function editRecordMetadata() {
-      let doc = editor.get();
-      let sd = getSourceDescription(doc, doc.description);
+    // Get the "main" source description for the given GedcomX document, i.e., the one pointed at by "description".
+    // If there isn't one, create it, give it an ID, set doc.description to point at it, and add it to the list of source descriptions.
+    function getOrAddMainSourceDescription(doc) {
+      let sd = getSourceDescription(doc);
       if (!sd) {
         sd = {};
         sd.id = generateLocalId("sd_");
@@ -917,7 +918,12 @@
         }
         doc.sourceDescriptions.push(sd);
       }
+      return sd;
+    }
 
+    function editRecordMetadata() {
+      let doc = editor.get();
+      let sd = getOrAddMainSourceDescription(doc);
       let title = $("#edit-record-metadata-title").val();
       if (title) {
         if (!sd.titles || sd.titles.length === 0) {
@@ -980,6 +986,39 @@
 
       updateRecord(doc);
       $("#edit-record-metadata").modal("hide");
+    }
+
+    editHooks.copyRecordMetadata = function(gxRecord) {
+      function hasCoverage(sourceDescription) {
+        return sourceDescription && sourceDescription.coverage && sourceDescription.coverage.length > 0;
+      }
+
+      // Return the first coverage in the given record's main source description, if any, or else null.
+      function getCoverage(gxRecord) {
+        let sd = getSourceDescription(gxRecord);
+        return hasCoverage(sd) ? sd.coverage[0] : null;
+      }
+
+      function setCoverage(gxRecord, coverage) {
+        let sd = getOrAddMainSourceDescription(gxRecord);
+        sd.coverage = [coverage];
+      }
+
+      let coverage = getCoverage(gxRecord);
+
+      if (!coverage) {
+        for (let recordInfo of recordInfos) {
+          coverage = getCoverage(recordInfo.gxRecord);
+          if (coverage) {
+            break;
+          }
+        }
+      }
+      if (coverage) {
+        for (let recordInfo of recordInfos) {
+          setCoverage(recordInfo.gxRecord, coverage);
+        }
+      }
     }
 
     editHooks.editRecordMetadata =  function(metadata) {
@@ -2650,6 +2689,7 @@
                       <li>Type Delete at the beginning of one section to merge it into the previous one.</li>
                       <li>Click or Tab/Shift-Tab to select a text section. The corresponding record will display.</li>
                       <li>Drag a person from the relationship graph to a text section to move that person (and all connected relatives) to that section's record.</li>
+                      <li>Metadata "copy" (clipboard) icon copies the current record's metadata to all others. (Or if this record doesn't have it, copies the metadata of the first record that has metadata to all others)</li>
                     </ul>
                   </li>
                   <li>Select text before clicking the "new person" button to pre-populate the person box with that person's name.
