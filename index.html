@@ -128,14 +128,20 @@
     let entityChildWindow;
     let dirty = false;
 
+    function makeEmptyRecord() {
+      let gxRecord = {};
+      getOrAddMainSourceDescription(gxRecord);
+      return gxRecord;
+    }
+    
     function RecordInfo(sectionId, gxRecord) {
-      this.gxRecord = gxRecord ? gxRecord : {};
+      this.gxRecord = hasRecordData(gxRecord) ? gxRecord : makeEmptyRecord();
 
       // Get an array of (lower case) full text strings from all the name forms of all the people in the given record.
-      function getRecordNames(gxRecord) {
+      function getRecordNames(doc) {
         let names = [];
-        if (gxRecord.persons) {
-          for (let person of gxRecord.persons) {
+        if (doc.persons) {
+          for (let person of doc.persons) {
             if (person.names) {
               for (let name of person.names) {
                 if (name.nameForms) {
@@ -152,7 +158,7 @@
         return names;
       }
 
-      this.names = getRecordNames(gxRecord);
+      this.names = getRecordNames(this.gxRecord);
       this.summary = this.names.length > 0 ? this.names[0] : "<NoNames>";
       // id of contenteditable <div> that corresponds to this record (if any so far).
       this.sectionId = sectionId;
@@ -328,7 +334,7 @@
     //   }
     // }
 
-    // Get an array of o
+    // Get HTML of the text sections.
     function getTextSections() {
       let sourceFileElement = $("#source-file")[0];
       if (sourceFileElement) {
@@ -339,11 +345,16 @@
       }
     }
 
+    // Tell whether the given GedcomX document has data, beyond its own SourceDescription.
+    function hasRecordData(doc) {
+      return doc && (Object.keys(doc).length > 2 || !isEmpty(doc.persons) || !isEmpty(doc.documents));
+    }
+
     /**
      * Show the source of a record. There is a "source-file" DIV in the HTML that contains one 'section' that corresponds to each record.
      * Usually there is just one text section and one GedcomX record.
      * But if a "¶" is included in the original text, or is typed at any time (or cmd/ctrl-Enter typed), then additional sections are added for each "¶".
-     * The "¶" is removed and not displayed. But if 'delete' is typed at the end of a section, then it is joined with the previous section.
+     * The "¶" is removed and not displayed. But if 'delete' is typed at the beginning of a section, then it is joined with the previous section.
      * When gathering the text from all the sections, each section is assumed to be separated by a newline followed by a "¶" character.
      * Each text section always corresponds to a RecordInfo object in the global recordInfos[] array, which in turn points back at this text section.
      * @param text The text to show.
@@ -370,16 +381,16 @@
 
       if (text) {
         let sectionDiv = makeTextSection(null, text);
-        // Clear sectionId on all recordInfos, and remove any that have empty gedcomx objects (like "{}").
+        // Clear sectionId on all recordInfos, and remove any that have empty gedcomx objects.
         recordInfos = recordInfos.filter(function(recordInfo) {
           recordInfo.sectionId = null;
-          return recordInfo.gxRecord && Object.keys(recordInfo.gxRecord).length > 0;
+          return hasRecordData(recordInfo.gxRecord);
         });
         if (recordInfos.length > 0) {
           recordInfos[0].sectionId = sectionDiv.id;
         }
         else {
-          recordInfos = [new RecordInfo(sectionDiv.id, {})]
+          recordInfos = [new RecordInfo(sectionDiv.id)]
         }
         sourceFileElement.append(sectionDiv);
         if (text.includes("¶")) {
@@ -664,7 +675,7 @@
       let recordIndex2 = recordIndex1 + 1;
       //todo: Check the following record to see if (a) it has no section Id yet; and (b) its names appear in the given text section.
       // If so, then re-use the existing RecordInfo and point it at this sectionId. Otherwise, create a new RecordInfo with an empty record.
-      let newRecordInfo = new RecordInfo(sectionId2, {});
+      let newRecordInfo = new RecordInfo(sectionId2);
       recordInfos.splice(recordIndex2, 0, newRecordInfo);
     }
 
@@ -910,7 +921,9 @@
     function getOrAddMainSourceDescription(doc) {
       let sd = getSourceDescription(doc);
       if (!sd) {
-        sd = {};
+        sd = {
+          "resourceType" : "http://gedcomx.org/Record"
+        };
         sd.id = generateLocalId("sd_");
         doc.description = "#" + sd.id;
         if (!doc.sourceDescriptions) {
@@ -2304,7 +2317,7 @@
 
     function uploadSource(files) {
       if (!dirty || confirm("Clear the GedcomX and lose unsaved changes? (Cancel to keep GedcomX)")) {
-        updateRecord({}, null, false, true);
+        updateRecord(makeEmptyRecord(), null, false, true);
       }
       for (let i = 0, f; f = files[i]; i++) {
         let reader = new FileReader();
