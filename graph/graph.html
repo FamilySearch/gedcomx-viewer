@@ -38,6 +38,14 @@
       let url = pid ? "4:1:" + pid : urlParams.get('url');
       let sessionId = urlParams.get('sessionid');
       let prefetch = urlParams.get('prefetch'); // max number of persons to recursively fetch from a tree
+      let generations = urlParams.get('generations');
+      if (generations) {
+        generations = JSON.parse("[" + generations + "]");
+      }
+      else if (urlParams.get('big')) {
+        generations = [1, 2, 1.5, 1.5, 1.5, 1.5, 0, 0];
+      }
+      
       let isTree = false;
       if (url && url.includes(":")) {
         let matches = url.match(/.*1:1:(.*)/);
@@ -67,8 +75,7 @@
       }
 
       if (isTree) {
-        let isBig = false;
-        let fetchSpec = new FetchSpec(null, url, isBig ? [1, 2, 1.5, 1.5, 1.5, 1.5, 0, 0] : [1], sessionId, false, prefetch);
+        let fetchSpec = new FetchSpec(null, url, generations ? generations : [1], sessionId, false, prefetch);
         fetchPersonsAsync([fetchSpec]);
       }
       else {

@@ -12,6 +12,14 @@
           <li>or 'url=&lt;personUrl&gt;' for a Genealogies person URL.
             <ul><li>(use prefetch=100 to recursively prefetch up to 100 relatives to start with).</li></ul>
           </li>
+          <li>add "big=true" to get a bunch of relatives to start with.</li>
+          <li>or add something like "generations=2,1,1.5,1,0,0" to have that many generations of descendants for each generation back.
+            <ul>
+              <li>0 means just include that generation (of ancestors)</li>
+              <li>1 means children of that generation, so siblings, uncles, great-uncles, etc.</li>
+              <li>1.5 means spouses of that generation, so siblings and their spouses, or children and their spouses (but not children), etc.</li>
+            </ul>
+          </li>
         </ul>
       <li>Click grey arrows to expand relatives, and light grey ones to hide them.</li>
       <li>Shift-Cmd(or Ctrl)-click a person to open them in a new tab in FamilySearch <strong>Family Tree</strong>.</li>

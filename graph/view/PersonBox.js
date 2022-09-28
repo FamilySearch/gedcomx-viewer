@@ -382,8 +382,10 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
       return "<div id='" + indicatorId + "' class='" + indicatorClass + " " + hoverClass + "' onclick='clickIndicator(" + clickArgs + ");return false;'/>";
     }
 
-    let html = "<div class='personNode gender-" + personNode.gender + (duplicateOfBox ? " duplicate" : "") +
+    let html = "<div class='personNode gender-" + personNode.gender +
+        (duplicateOfBox ? " duplicate" : "") +
         (personNode.person.principal ? " principalPerson" : "") +
+        (personNode.person.living ? " livingPerson" : "") +
         "' id='" + personBoxId + "'>\n";
     let imageFile = PersonBox.prototype.genderImageMap[personNode.gender];
     // Use CDN to deliver these to avoid problems with different relative paths for different consumers.

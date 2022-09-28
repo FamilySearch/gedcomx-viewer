@@ -547,7 +547,7 @@ function toggleRelatives(key, shouldHide, selectedPersonIds) {
             needRecordUpdate = true;
           }
           if (!gxPersonMap.has(relativeId) && !fetchMap.has(relativeId)) {
-            let shouldSelect = !spouseIdsToNotSelect.includes(relativeId);
+            let shouldSelect = !spouseIdsToNotSelect || !spouseIdsToNotSelect.includes(relativeId);
             let fetchSpec = new FetchSpec(relativeId, null, [0], null, shouldSelect);
             fetchSpecs.push(fetchSpec);
             fetchMap.set(relativeId, fetchSpec);

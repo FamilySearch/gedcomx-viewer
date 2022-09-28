@@ -237,6 +237,10 @@ function handleGraphKeydown(e) {
           e.stopPropagation();
         }
         break;
+      case 'ESCAPE':
+        currentRelChart.clearSelectedPerson();
+        e.stopPropagation();
+        break;
     }
   }
 
