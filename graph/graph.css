@@ -15,7 +15,7 @@
 }
 
 .livingPerson {
-    background: #fcfff8;
+    background: #f8fdf2;
 }
 
 .principalPerson {
@@ -54,12 +54,12 @@
 }
 
 .given {
-    color: #0700ac;
+    color: #000000;
     font-weight: bold;
 }
 
 .surname {
-    color: #000000;
+    color: #400180;
     font-weight: bold;
 }
 

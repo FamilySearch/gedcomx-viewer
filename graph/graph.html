@@ -45,7 +45,10 @@
       else if (urlParams.get('big')) {
         generations = [1, 2, 1.5, 1.5, 1.5, 1.5, 0, 0];
       }
-      
+      if (urlParams.get('details') && urlParams.get('details') !== "false") {
+        defaultChartOptions.shouldDisplayDetails = true;
+      }
+
       let isTree = false;
       if (url && url.includes(":")) {
         let matches = url.match(/.*1:1:(.*)/);

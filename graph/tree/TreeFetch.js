@@ -35,6 +35,16 @@ function clearPersonCache() {
   childIdsMap.clear();
 }
 
+let defaultChartOptions = new ChartOptions(
+    {
+      isEditable: false,
+      isSelectable: true,
+      shouldShowConfidence: false,
+      shouldDisplayIds: false,
+      shouldDisplayDetails: false,
+      isDraggable: true
+    });
+
 function setUpHelp(treeHelpHtmlUrl) {
   if (!treeHelpHtmlUrl) {
     treeHelpHtmlUrl = "https://familysearch.github.io/gedcomx-viewer/graph/tree/tree-help.html";
@@ -392,15 +402,7 @@ function receivePersons(gx, fetchSpecs) {
     updateRecord(masterGx, null, false, true);
   }
   else {
-    let chartOptions = new ChartOptions(
-        {
-          isEditable: false,
-          isSelectable: true,
-          shouldShowConfidence: false,
-          shouldDisplayIds: false,
-          shouldDisplayDetails: false,
-          isDraggable: true
-        });
+    let chartOptions = defaultChartOptions;
     currentRelChart = buildRelGraph(masterGx, chartOptions);
   }
   for (let fetchSpec of fetchSpecs) {
