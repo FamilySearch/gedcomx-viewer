@@ -200,7 +200,7 @@ function getAgent(doc, ref) {
   if (ref && ref.startsWith("#")) {
     let id = ref.substr(1);
     if (doc.agents) {
-      for (let agent of agents) {
+      for (let agent of doc.agents) {
         if (agent.id === id) {
           return agent;
         }
