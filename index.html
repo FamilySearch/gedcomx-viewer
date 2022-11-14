@@ -105,6 +105,7 @@
           (User will have to split text section and drag other records over to them).
         - If multiple text sections, then create an empty record for each, and user must drag the records to the correct sections.
           (Eventually, create alignment code that looks at words in each section and names in each record to try to line them up)
+      - Create a record from scratch by adding persons and/or metadata => Create one RecordInfo object with no text section (yet).
       So a RecordInfo may have a null sectionId, but all text sections should have exactly one RecordInfo that points at it.
     */
     // Array of RecordInfo objects, one for each GedcomX record being edited, possibly from a multi-record article, such as a birth list.
@@ -230,7 +231,14 @@
       if (doc.records && doc.records.length > 0) {
         doc = doc.records[0];
       }
-      if (typeof recordInfos !== 'undefined' && currentRecordIndex >= 0 && currentRecordIndex < recordInfos.length) {
+      if (recordInfos === 'undefined') {
+        recordInfos = [];
+      }
+      if (recordInfos.length === 0) {
+        recordInfos.push(new RecordInfo(null, doc));
+        currentRecordIndex = 0;
+      }
+      else if (currentRecordIndex >= 0 && currentRecordIndex < recordInfos.length) {
         recordInfos[currentRecordIndex].gxRecord = doc;
       }
       dirty = !isClean;
