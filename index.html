@@ -129,14 +129,18 @@
     let entityChildWindow;
     let dirty = false;
 
-    function makeEmptyRecord() {
+    function makeEmptyRecord(defaultCoverage) {
       let gxRecord = {};
-      getOrAddMainSourceDescription(gxRecord);
+      let sd = getOrAddMainSourceDescription(gxRecord);
+      if (!sd.coverage && defaultCoverage) {
+        // Make a deep copy of defaultCoverage.
+        sd.coverage = JSON.parse(JSON.stringify(defaultCoverage));
+      }
       return gxRecord;
     }
     
-    function RecordInfo(sectionId, gxRecord) {
-      this.gxRecord = hasRecordData(gxRecord) ? gxRecord : makeEmptyRecord();
+    function RecordInfo(sectionId, gxRecord, defaultCoverage) {
+      this.gxRecord = hasRecordData(gxRecord) ? gxRecord : makeEmptyRecord(defaultCoverage);
 
       // Get an array of (lower case) full text strings from all the name forms of all the people in the given record.
       function getRecordNames(doc) {
@@ -358,6 +362,55 @@
       return doc && (Object.keys(doc).length > 2 || !isEmpty(doc.persons) || !isEmpty(doc.documents));
     }
 
+    // See if 'text' is an <NBX> file. If so, extract the date from the <DAT> tag, and the place from the parentheses in the <PAP> tag,
+    //   in order to get date & place "coverage" for this record.
+    // Then add these as Coverage to the record unless there is already date and/or place coverage there.
+    function addCoverageToRecord(gxRecord, text) {
+
+      function extractText(leftTag, rightTag, body) {
+        let pos1 = body.indexOf(leftTag);
+        if (pos1 >= 0) {
+          pos1 += leftTag.length;
+          let pos2 = body.indexOf(rightTag, pos1);
+          if (pos2 >= 0) {
+            return body.substring(pos1, pos2);
+          }
+        }
+        return null;
+      }
+
+      if (gxRecord && text.includes("<NBX>")) {
+        let sd = getSourceDescription(gxRecord);
+        if (sd && (!sd.coverage || sd.coverage.length === 0)) {
+          let coverage = {};
+          let date = coverage && coverage.temporal ? coverage.temporal.original : null;
+          let place = coverage && coverage.spatial ? coverage.spatial.original : null;
+          if (!date || !place) {
+            coverage = sd.coverage ? sd.coverage : {};
+            if (!date) {
+              date = extractText("<DAT>", "</DAT>", text);
+              if (date) {
+                date = normalizeDate(date);
+                coverage.temporal = {"original": date};
+                sd.coverage = [coverage];
+              }
+            }
+            if (!place) {
+              let paper = extractText("<PAP>", "</PAP>", text);
+              if (paper) {
+                let place = extractText("(", ")", paper);
+                if (place) {
+                  //todo: Convert two-letter state name into full state
+                  coverage.spatial = {"original": place};
+                  sd.coverage = [coverage];
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
     /**
      * Show the source of a record. There is a "source-file" DIV in the HTML that contains one 'section' that corresponds to each record.
      * Usually there is just one text section and one GedcomX record.
@@ -400,6 +453,10 @@
         else {
           recordInfos = [new RecordInfo(sectionDiv.id)]
         }
+        // If the text is an <NBX> file, then copy the date from <DAT>, and the place from <PAP>Paper name (Place)</PAP>,
+        //  into the coverage for the new Record (if it doesn't already have any)
+        addCoverageToRecord(recordInfos[0].gxRecord, text);
+
         sourceFileElement.append(sectionDiv);
         if (text.includes("¶")) {
           splitText(sectionDiv);
@@ -683,13 +740,25 @@
       let recordIndex2 = recordIndex1 + 1;
       //todo: Check the following record to see if (a) it has no section Id yet; and (b) its names appear in the given text section.
       // If so, then re-use the existing RecordInfo and point it at this sectionId. Otherwise, create a new RecordInfo with an empty record.
-      let newRecordInfo = new RecordInfo(sectionId2);
+      let newRecordInfo = new RecordInfo(sectionId2, null, getCoverageFromRecordInfo(recordInfos[recordIndex1]));
       recordInfos.splice(recordIndex2, 0, newRecordInfo);
+    }
+
+    // Get the coverage of the record in the given RecordInfo
+    function getCoverageFromRecordInfo(recordInfo) {
+      if (recordInfo && recordInfo.gxRecord && recordInfo.gxRecord.sourceDescriptions) {
+        for (let sd of recordInfo.gxRecord.sourceDescriptions) {
+          if (sd.coverage && sd.resourceType === "http://gedcomx.org/Record" && ("#" + sd.id) === recordInfo.gxRecord.description) {
+            return sd.coverage;
+          }
+        }
+      }
+      return null;
     }
 
     /**
      * Given a DIV for one text section, which probably has at least one "¶" in it,
-     * split all of the text in this DIV past each ¶ into its own new section DIV.
+     * split all the text in this DIV past each ¶ into its own new section DIV.
      * @param textSectionDiv - DOM node for a contenteditable text section.
      * @param shouldSelectNewNode - Flag for whether to set the newly-created node as the currently-selected one, and put focus on it.
      */
@@ -2327,7 +2396,8 @@
       if (!dirty || confirm("Clear the GedcomX and lose unsaved changes? (Cancel to keep GedcomX)")) {
         updateRecord(makeEmptyRecord(), null, false, true);
       }
-      for (let i = 0, f; f = files[i]; i++) {
+      for (let i = 0; i < files.length; i++) {
+        let f = files[i];
         let reader = new FileReader();
         reader.onload = (function(file) {
           return function(e) {

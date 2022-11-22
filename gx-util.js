@@ -418,3 +418,15 @@ function getImageArks(doc) {
 
   return imageArks;
 }
+
+/**
+ * Function to take an original day in 'month day, year' ("January 5, 1975") and normalize it to 'day month year' format (5 Jan 1975).
+ * @param origDate
+ */
+function normalizeDate(origDate) {
+  let match = origDate.match(/([A-Za-z]+) [ 0]*([0-9]+), *([0-9][0-9][0-9][0-9])/);
+  if (match.length > 3) {
+    return match[2] + " " + match[1] + " " + match[3];
+  }
+  return origDate;
+}
