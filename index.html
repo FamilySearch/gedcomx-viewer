@@ -487,6 +487,9 @@
      * @param name Name/title for the text.
      */
     function setRecordSourceDocument(text, name) {
+      if (text) {
+        text = text.replaceAll('&#034', '"').replaceAll("&#038;", "&").replaceAll("&#039;", "'");
+      }
       sourceDocumentText = text;
       sourceDocumentName = name;
       let sourceFileElement = $("#source-file");
@@ -1946,7 +1949,33 @@
       }
 
       updateRecord(doc);
+      // Uncheck the primary fact flag after use, since it is unlikely the next fact should also be primary.
+      $("#edit-person-fact-primary").prop("checked", false);
       $("#edit-person-fact").modal("hide");
+    }
+
+    function changeFactType() {
+      // The fact type was selected in the fact dialog box.
+      // If it was Obituary, and there is record coverage date and place,
+      // then copy those into the date and place by default (and check the 'primary' flag).
+      let factType = $("#new-person-fact-type").val();
+      if (factType === "http://gedcomx.org/Obituary") {
+        let coverages = getSourceDescription(editor.get()).coverage;
+        let firstCoverage = coverages && coverages.length > 0 ? coverages[0] : null;
+        let coverageDate = firstCoverage && firstCoverage.temporal ? firstCoverage.temporal.original : null;
+        let coveragePlace = firstCoverage && firstCoverage.spatial ? firstCoverage.spatial.original : null;
+        if (!isEmpty(coverageDate)) {
+          $("#new-person-fact-date").val(coverageDate);
+        }
+        if (!isEmpty(coveragePlace)) {
+          $("#new-person-fact-place").val(coveragePlace);
+        }
+        $("#new-person-fact-primary").prop("checked", true);
+        // If the record type in the metadata is not yet set, set it to Obituary.
+        if (firstCoverage && isEmpty(firstCoverage.recordType)) {
+          firstCoverage.recordType = "http://gedcomx.org/Obituary";
+        }
+      }
     }
 
     function copyPersonFact() {
@@ -2693,6 +2722,8 @@
 
       $("#add-person-button").click(updatePersonNameFromHighlight);
 
+      $("#new-person-fact-type").on("change", changeFactType);
+
       $(document).keydown(handleEditorKeydown);
 
       dragElement(document.getElementById("new-person"));
@@ -3267,6 +3298,7 @@
         <select class="form-control" id="new-person-fact-type">
           <option value="http://gedcomx.org/Birth">Birth</option>
           <option value="http://gedcomx.org/Death">Death</option>
+          <option value="http://gedcomx.org/Obituary">Obituary</option>
           <option disabled>──────────</option>
           <option value="http://gedcomx.org/Adoption">Adoption</option>
           <option value="http://gedcomx.org/AdultChristening">Adult Christening</option>
@@ -3322,7 +3354,6 @@
           <option value="http://gedcomx.org/Naturalization">Naturalization</option>
           <option value="http://gedcomx.org/NumberOfChildren">Number of Children</option>
           <option value="http://gedcomx.org/NumberOfMarriages">Number of Marriages</option>
-          <option value="http://gedcomx.org/Obituary">Obituary</option>
           <option value="http://gedcomx.org/Occupation">Occupation</option>
           <option value="http://gedcomx.org/Ordination">Ordination</option>
           <option value="http://gedcomx.org/Pardon">Pardon</option>
@@ -3380,6 +3411,7 @@
         <select class="form-control" id="edit-person-fact-type">
           <option value="http://gedcomx.org/Birth">Birth</option>
           <option value="http://gedcomx.org/Death">Death</option>
+          <option value="http://gedcomx.org/Obituary">Obituary</option>
           <option disabled>──────────</option>
           <option value="http://gedcomx.org/Adoption">Adoption</option>
           <option value="http://gedcomx.org/AdultChristening">Adult Christening</option>
@@ -3435,7 +3467,6 @@
           <option value="http://gedcomx.org/Naturalization">Naturalization</option>
           <option value="http://gedcomx.org/NumberOfChildren">Number of Children</option>
           <option value="http://gedcomx.org/NumberOfMarriages">Number of Marriages</option>
-          <option value="http://gedcomx.org/Obituary">Obituary</option>
           <option value="http://gedcomx.org/Occupation">Occupation</option>
           <option value="http://gedcomx.org/Ordination">Ordination</option>
           <option value="http://gedcomx.org/Pardon">Pardon</option>
