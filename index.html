@@ -1296,7 +1296,7 @@
     function updatePersonNameFromHighlight() {
       let selection = window.getSelection();
       if (selection) {
-        let selectedText = selection.toString();
+        let selectedText = selection.toString().replace(/[ ,;!]*$/, "").trim();
 
         let hasCommaAfterFirstPart = !!selectedText.match(/[A-Za-z]*,.*/);
         let splitTxt = selectedText.replace(/[,;()]/g, " ").replace(/  */g, " ").trim().split(" ");
