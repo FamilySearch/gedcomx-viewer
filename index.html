@@ -1907,7 +1907,10 @@
       }
 
       fact.type = $("#edit-person-fact-type").val();
-      fact.primary = $("#edit-person-fact-primary").is(":checked");
+      let $primaryFactCheckbox = $("#edit-person-fact-primary");
+      fact.primary = $primaryFactCheckbox.is(":checked");
+      // Uncheck the primary fact flag after use, since it is unlikely the next fact should also be primary.
+      $primaryFactCheckbox.prop("checked", false);
 
       let date = $("#edit-person-fact-date").val();
       if (date) {
@@ -1949,8 +1952,6 @@
       }
 
       updateRecord(doc);
-      // Uncheck the primary fact flag after use, since it is unlikely the next fact should also be primary.
-      $("#edit-person-fact-primary").prop("checked", false);
       $("#edit-person-fact").modal("hide");
     }
 
@@ -1960,8 +1961,12 @@
       // then copy those into the date and place by default (and check the 'primary' flag).
       let factType = $("#new-person-fact-type").val();
       if (factType === "http://gedcomx.org/Obituary") {
-        let coverages = getSourceDescription(editor.get()).coverage;
-        let firstCoverage = coverages && coverages.length > 0 ? coverages[0] : null;
+        let doc = getCurrentGx();
+        let sd = getSourceDescription(doc);
+        if (!sd.coverage || sd.coverage.length === 0) {
+          sd.coverage = [{}];
+        }
+        let firstCoverage = sd.coverage[0];
         let coverageDate = firstCoverage && firstCoverage.temporal ? firstCoverage.temporal.original : null;
         let coveragePlace = firstCoverage && firstCoverage.spatial ? firstCoverage.spatial.original : null;
         if (!isEmpty(coverageDate)) {
@@ -1973,8 +1978,11 @@
         $("#new-person-fact-primary").prop("checked", true);
         // If the record type in the metadata is not yet set, set it to Obituary.
         if (firstCoverage && isEmpty(firstCoverage.recordType)) {
+          // $("#edit-record-metadata-type").val("Obituary")
           firstCoverage.recordType = "http://gedcomx.org/Obituary";
+          let x=3;
         }
+        editor.set(doc);
       }
     }
 
