@@ -488,7 +488,10 @@
      */
     function setRecordSourceDocument(text, name) {
       if (text) {
-        text = text.replaceAll('&#034', '"').replaceAll("&#038;", "&").replaceAll("&#039;", "'");
+        if (sourceDocumentText) {
+          clearRecord();
+        }
+        text = text.replaceAll('&#034', '"').replaceAll("&#038;", "&").replaceAll("&#039;&#039;", '"').replaceAll("&#039;", "'");
       }
       sourceDocumentText = text;
       sourceDocumentName = name;
@@ -505,7 +508,7 @@
       if (name) {
         sourceFileElement.append($("<h1/>").append($("<small/>", {"class": "text-muted"}).text(name)));
         let gxDownloadNode = $("#download-gx");
-        gxDownloadNode.attr("download", name.replace(/(.txt)?$/, ".gx.json"));
+        gxDownloadNode.attr("download", name.replace(/(.txt|.nbx|.nbx.xml)?$/, ".gx.json"));
       }
 
       if (text) {
