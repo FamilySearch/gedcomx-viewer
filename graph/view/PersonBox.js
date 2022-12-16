@@ -210,7 +210,9 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
     let encodedInfo = getFactInfo(fact);
     if (encodedInfo) {
       let factTypeId = nextId("fact", relChartToGx, fact);
-      return "  <div class='fact'><span class='factType' id='" + factTypeId + "'>" + encode(getFactName(fact)) +
+      return "  <div class='fact'><span class='factType' id='" + factTypeId + "'>" +
+          (fact.primary ? "*" : "") +
+          encode(getFactName(fact)) +
           (qualifier ? " (" + encode(qualifier) + ")" : "") + (encodedInfo ? ":" : "") + "</span>" +
           (encodedInfo ? " <span class='factDatePlace'>" + encodedInfo + "</span>" : "") +
           "</div>\n";

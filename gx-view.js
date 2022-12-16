@@ -94,7 +94,7 @@ function getGenderClass(genderString) {
 
 function getBestNameValue(person) {
   if (!person.names || !person.names.length) {
-    return null;
+    return "?";
   }
 
   let name = person.names[0];

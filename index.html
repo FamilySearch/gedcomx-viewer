@@ -491,7 +491,7 @@
         if (sourceDocumentText) {
           clearRecord();
         }
-        text = text.replaceAll('&#034', '"').replaceAll("&#038;", "&").replaceAll("&#039;&#039;", '"').replaceAll("&#039;", "'");
+        text = text.replaceAll('&amp;', '&').replaceAll('&lt;', '<').replaceAll('&gt;', '>').replaceAll('&#034', '"').replaceAll("&#038;", "&").replaceAll("&#039;&#039;", '"').replaceAll("&#039;", "'");
       }
       sourceDocumentText = text;
       sourceDocumentName = name;
@@ -2435,6 +2435,8 @@
     function clearRecord() {
       if (!dirty || confirm("There are changes since the last download. Are you sure you want to clear the record?")) {
         setRecordSourceDocument(null);
+        recordInfos = [];
+        currentRecordIndex = -1;
         updateRecord({}, null, false, true);
       }
     }
@@ -2447,6 +2449,7 @@
     function importRecordSet(recordOrRecordSet, filename) {
       if (!dirty || confirm("There are changes since the last download. Are you sure you want to clear the record?")) {
         recordInfos = [];
+        currentRecordIndex = -1;
         let recordSet = recordOrRecordSet.records ? recordOrRecordSet : {"records": [recordOrRecordSet]}
         let sourceFileElement = $("#source-file");
         setRecordSourceDocument(null, filename);
