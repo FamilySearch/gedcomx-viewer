@@ -99,7 +99,7 @@ function getBestNameValue(person) {
 
   let name = person.names[0];
   if (!name.nameForms || !name.nameForms.length) {
-    return null;
+    return '?';
   }
   let nameForm = name.nameForms[0];
   return formName(nameForm.fullText);
@@ -114,7 +114,7 @@ function getBestNameValue(person) {
         nameString += nameForm.parts[i].value;
       }
     }
-    return nameString;
+    return nameString.length === 0 ? '?' : nameString;
   }
 }
 

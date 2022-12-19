@@ -1296,6 +1296,19 @@
       }
     };
 
+    // Take an all-caps surname like SMITH and convert it to "title case" like "Smith".
+    // (If it already has lower case or 2 or less characters, then don't change it.)
+    function titleCaseIfNeeded(surname) {
+      let pieces = surname.split(' ');
+      for (let i = 0; i < pieces.length; i++) {
+        let piece = pieces[i];
+        if (piece.length > 2 && piece.search(/[a-z]/)) {
+          pieces[i] = piece.charAt(0).toUpperCase() + piece.toLowerCase().slice(1);
+        }
+      }
+      return pieces.join(' ');
+    }
+
     function updatePersonNameFromHighlight() {
       let selection = window.getSelection();
       if (selection) {
@@ -1322,7 +1335,7 @@
           suffixField.val(splitTxt.pop());
         }
         if (splitTxt.length >= 2) {
-          surnameField.val(hasCommaAfterFirstPart ? splitTxt.shift() : splitTxt.pop());
+          surnameField.val(titleCaseIfNeeded(hasCommaAfterFirstPart ? splitTxt.shift() : splitTxt.pop()));
         }
         if (splitTxt.length > 0) {
           givenField.val(splitTxt.join(" "));
@@ -3118,6 +3131,7 @@
         <select class="form-control" id="new-person-fact-multiple-type">
           <option value="http://gedcomx.org/Birth">Birth</option>
           <option value="http://gedcomx.org/Death">Death</option>
+          <option value="http://gedcomx.org/Residence">Residence</option>
           <option disabled>──────────</option>
           <option value="http://gedcomx.org/Adoption">Adoption</option>
           <option value="http://gedcomx.org/AdultChristening">Adult Christening</option>
@@ -3182,7 +3196,6 @@
           <option value="http://gedcomx.org/Property">Property</option>
           <option value="http://gedcomx.org/Race">Race</option>
           <option value="http://gedcomx.org/Religion">Religion</option>
-          <option value="http://gedcomx.org/Residence">Residence</option>
           <option value="http://gedcomx.org/Retirement">Retirement</option>
           <option value="http://gedcomx.org/Stillbirth">Stillbirth</option>
           <option value="http://gedcomx.org/TaxAssessment">Tax Assessment</option>
