@@ -1222,57 +1222,84 @@
     };
 
     function addPerson() {
-      let person = {};
-      person.id = "p_999" + Math.floor(Math.random() * Math.floor(1000000000));
-      person.extracted = true;
-      person.principal = $("#new-person-principal").is(":checked");
-      person.gender = {};
-      person.gender.type = $("input[name=new-person-gender]:checked").val();
-      person.names = [];
-      person.facts = [];
-      person.fields = [];
-
-      let name = {};
-      name.id = generateLocalId("n_");
-      name.type = null;
-      name.nameForms = [];
-
-      let nameForm = {};
-      let prefixes = $("#new-person-prefixes").val();
-      let givenNames = $("#new-person-given-names").val();
-      let surnames = $("#new-person-surnames").val();
-      let suffixes = $("#new-person-suffixes").val();
-
-      nameForm.fullText = [prefixes, givenNames, surnames, suffixes].filter(Boolean).join(" ");
-      nameForm.parts = [];
-
-      addPart(prefixes, "Prefix");
-      addPart(givenNames, "Given");
-      addPart(surnames, "Surname");
-      addPart(suffixes, "Suffix");
-
-      function addPart(value, type) {
-        if (value) {
-          let part = {};
-          part.type = "http://gedcomx.org/" + type;
-          part.value = value;
-          nameForm.parts.push(part);
+      // Create a person object from #<idPrefix>-principal/-prefixes/-given-names/-surnames/-suffixes.
+      // If "mustHaveName" is true, then return null if there is not at least a given name or surname.
+      function makePersonFromForm(idPrefix, isSpouse) {
+        // Add the given text value to a new name part of the given type to 'nameForm'.
+        function addPart(value, type) {
+          if (value) {
+            let part = {};
+            part.type = "http://gedcomx.org/" + type;
+            part.value = value;
+            nameForm.parts.push(part);
+          }
         }
-      }
 
-      name.nameForms.push(nameForm);
-      person.names.push(name);
+        let nameForm = {};
+        let prefixes = $("#" + idPrefix + "-prefixes").val();
+        let givenNames = $("#" + idPrefix + "-given-names").val();
+        let surnames = $("#" + idPrefix + "-surnames").val();
+        let suffixes = $("#" + idPrefix + "-suffixes").val();
+        if (isSpouse && !givenNames && !surnames) {
+          return null;
+        }
+
+        let person = {};
+        person.id = "p_999" + Math.floor(Math.random() * Math.floor(1000000000));
+        person.extracted = true;
+        person.principal = $("#" + idPrefix + "-principal").is(":checked");
+        if (!isSpouse) {
+          person.gender = {};
+          person.gender.type = $("input[name=new-person-gender]:checked").val();
+        }
+        person.names = [];
+        person.facts = [];
+        person.fields = [];
+
+        let name = {};
+        name.id = generateLocalId("n_");
+        name.type = null;
+        name.nameForms = [];
+
+        nameForm.fullText = [prefixes, givenNames, surnames, suffixes].filter(Boolean).join(" ");
+        nameForm.parts = [];
+
+        addPart(prefixes, "Prefix");
+        addPart(givenNames, "Given");
+        addPart(surnames, "Surname");
+        addPart(suffixes, "Suffix");
+
+        name.nameForms.push(nameForm);
+        person.names.push(name);
+
+        return person;
+      }
 
       let doc = editor.get();
       if (!doc.persons) {
         doc.persons = [];
       }
+
+      let person = makePersonFromForm("new-person", false);
       doc.persons.push(person);
-      updateRecord(doc);
+      let spouse = makePersonFromForm("new-spouse", true);
+      if (spouse != null) {
+        let isPersonMale = PersonNode.prototype.getGenderCode(person) === "M";
+        let isPersonFemale = PersonNode.prototype.getGenderCode(person) === "F";
+        if (isPersonMale || isPersonFemale) {
+          spouse.gender = {};
+          spouse.gender.type = isPersonMale ? GX_FEMALE : GX_MALE;
+        }
+        doc.persons.push(spouse);
+        let person1Id = isPersonFemale ? spouse.id : person.id;
+        let person2Id = isPersonFemale ? person.id : spouse.id;
+        makeRelationshipBetweenP1P2(doc, GX_COUPLE, person1Id, person2Id);
+      }
       $("#new-person").modal("hide");
-      $("#new-person-form").children().find("input[type=text]").each(function() {
+      $("#new-person").children().find("input[type=text]").each(function() {
         $(this).val("");
       });
+      updateRecord(doc);
     }
 
     editHooks.addPerson = function() {
@@ -1311,18 +1338,17 @@
 
     function updatePersonNameFromHighlight() {
       let selection = window.getSelection();
-      if (selection) {
-        let selectedText = selection.toString().replace(/[ ,;!]*$/, "").trim();
 
-        let hasCommaAfterFirstPart = !!selectedText.match(/[A-Za-z]*,.*/);
-        let splitTxt = selectedText.replace(/[,;()]/g, " ").replace(/  */g, " ").trim().split(" ");
+      function setNamePartFields(fieldIdPrefix, fullNameText) {
+        let hasCommaAfterFirstPart = !!fullNameText.match(/[A-Za-z]*,.*/);
+        let splitTxt = fullNameText.replace(/[,;()]/g, " ").replace(/  */g, " ").trim().split(" ");
 
-        let prefixField = $("#new-person-prefixes");
-        let givenField = $("#new-person-given-names");
-        let surnameField = $("#new-person-surnames");
-        let suffixField = $("#new-person-suffixes");
+        let prefixField  = $("#" + fieldIdPrefix + "-prefixes");
+        let givenField   = $("#" + fieldIdPrefix + "-given-names");
+        let surnameField = $("#" + fieldIdPrefix + "-surnames");
+        let suffixField  = $("#" + fieldIdPrefix + "-suffixes");
 
-        // Clear all four fields so we don't get anything dangling from last time.
+        // Clear all four fields, so we don't get anything dangling from last time.
         prefixField.val("");
         givenField.val("");
         surnameField.val("");
@@ -1334,22 +1360,123 @@
         if (splitTxt.length > 0 && isSuffix(splitTxt[splitTxt.length - 1])) {
           suffixField.val(splitTxt.pop());
         }
-        if (splitTxt.length >= 2) {
-          surnameField.val(titleCaseIfNeeded(hasCommaAfterFirstPart ? splitTxt.shift() : splitTxt.pop()));
+        if (splitTxt.length >= 2 && !isInitial(splitTxt[splitTxt.length - 1])) {
+          surnameField.val(titleCaseIfNeeded(hasCommaAfterFirstPart ? splitTxt.shift() : splitTxt.pop().replaceAll("+", " ")));
         }
         if (splitTxt.length > 0) {
           givenField.val(splitTxt.join(" "));
         }
-        // }
+      }
+
+      // Return an array with 2 names, if the 'andNames' can be split, or 1 name, if not. Join maiden name and married surname with "+"
+      // These names should just split on " and ":
+      //   "Carol Van Ness Holiman and Richard Eugene Holiman" => ["Carol Van Ness Holiman", "Richard Eugene Holiman"]
+      //   "Frances P. Scholl and Mark J. Siefring" => ["Frances P. Scholl", "Mark J. Siefring"]
+      //   "Rachel Kiskaddon and Youssef El Haddad" => ["Rachel Kiskaddon", "Youssef El Haddad"]
+      //   "Francisco J Perez, Jr. and Irma Rios" => ["Francisco J Perez, Jr.", "Irma Rios"]
+      //   "BEILER, John L. and Mima K. Ronks" => ["BEILER, John L.", "Mima K. Ronks"]
+      // And these cases should transfer a surname:
+      //   "Allison and Stephen Gillaspy" => ["Allison Gillaspy", "Stephen Gillaspy"]
+      //   "Fred and Judy (Turner) Smith" => ["Fred Smith", "Judy Turner+Smith"]
+      //   "Mr. Dwayne and Mrs. Regina Satterfield" => ["Mr. Dwayne Satterfield", "Mrs. Regina Satterfield"]
+      //   "BEILER, Reuban and Sadie Ann (Stoltzfus)" => ["BEILER, Reuban", "BEILER, Sadie Ann Stoltzfus+BEILER"]
+      //   "DALBEY, Timothy J. and Kristyn" => ["DALBEY, Timothy J.", "Kristyn DALBEY"]
+      function splitAndNames(andNames) {
+        function getSurname(fullName) {
+          let pieces = fullName.split(" ");
+          // Remove prefix and suffix strings from the array
+          if (pieces.length > 0 && isPrefix(pieces[0])) {
+            pieces.shift();
+          }
+          if (pieces.length > 0 && isSuffix(pieces[pieces.length - 1])) {
+            pieces.pop();
+          }
+          if (pieces.length > 0 && isInitial(pieces[pieces.length - 1])) {
+            // Ends with an initial, so there is no surname.
+            return null;
+          }
+          return pieces.length >= 2 ? pieces[pieces.length - 1] : null;
+        }
+
+        let parts = andNames.split(" and ");
+        if (parts.length === 2) {
+          let a = parts[0];
+          let b = parts[1];
+          // Get surname A from "Jones, Bob" or "Bob Jones"
+          let surnameBeforeCommaMatch = a.match(/([A-Za-z]*)(,.*)/);
+          let surnameBeforeComma = surnameBeforeCommaMatch ? surnameBeforeCommaMatch[1] : null;
+          let surnameA = surnameBeforeComma ? surnameBeforeComma : getSurname(a);
+          // Look for maiden name like "Judy (Turner)" or "Judy (Turner) Smith"
+          let maidenSurnameMatch = b.match(/(.*)\(([A-Za-z]*)\)( [A-Za-z][A-Za-z].*)?/);
+          if (maidenSurnameMatch) {
+            let firstPart = maidenSurnameMatch[1]; // Judy...
+            let maidenSurname = maidenSurnameMatch[2]; // Turner from (Turner)
+            let surnameB = maidenSurnameMatch[3] ? maidenSurnameMatch[3].trim() : null; // Smith, if present
+            if (surnameB) {
+              // We have both a maiden name and a surname, so convert from "Judy (Turner) Smith" to "Judy Turner+Smith"
+              //   so that the combined surname will end up in the Surname field (with "+" turned back into " ")
+              //   instead of the maiden name being misinterpreted as a given name piece.
+              b = firstPart + maidenSurname + "+" + surnameB;
+              // We have a surname in B but not A (as in Fred and Judy (Turner) Smith), so add the surname to a (like Fred Smith)
+              if (!surnameA) {
+                a = a + " " + surnameB;
+              }
+            }
+            else if (surnameBeforeComma) {
+              // We have a surname before comma in A (like "Smith, Fred and Judy (Turner)"),
+              //  so add a's surname to b (like "Judy Turner+Smith"). The "+" will be removed later, but this keeps the maiden name
+              //  and husband's surname both in the surname field.
+              b = firstPart + maidenSurname + "+" + surnameA;
+            }
+            else {
+              // No married surname from husband nor in b, so use maiden surname as normal surname.
+              b = firstPart + maidenSurname;
+            }
+          }
+          else {
+            // No maiden surname.
+            let surnameB = getSurname(b);
+            if (surnameBeforeComma && !surnameB) {
+              // Handle Smith, Bob and Judy => "Smith, Bob" and "Judy Smith"
+              b = b + " " + surnameBeforeComma;
+            }
+            else if (surnameB && !surnameA) {
+              // Handle Bob and Judy Smith => "Bob Smith" and "Judy Smith"
+              a = a + " " + surnameB;
+            }
+          }
+          return [a, b];
+        }
+        else {
+          return [andNames];
+        }
+      }
+
+
+      if (selection) {
+        let selectedText = selection.toString().replace(/[ ,;!]*$/, "").trim();
+        if (selectedText.includes(" and ")) {
+          let twoNames = splitAndNames(selectedText);
+          selectedText = twoNames[0];
+          if (twoNames.length === 2) {
+            setNamePartFields("new-spouse", twoNames[1]);
+          }
+        }
+        setNamePartFields("new-person", selectedText);
       }
     }
 
     function isPrefix(prefix) {
-      return prefix.toLowerCase().match("(mr|mrs|miss|rev|fr|dr|dra|infant|baby)\\.?$");
+      return prefix.match(/(mr|mrs|miss|rev|fr|dr|dra|infant|baby)[.]?$/i);
     }
 
     function isSuffix(suffix) {
-      return suffix.toLowerCase().match("(jr|sr|iv|ii+|vii+|xi|senr|senior|junior|junr)\\.?$");
+      return suffix.match(/(jr|sr|iv|ii+|vii+|xi|senr|senior|junior|junr)[.]?$/i);
+    }
+
+    // Tell whether the 'initial' string is a single capital letter with an optional period.
+    function isInitial(initial) {
+      return initial.match(/[A-Z][.]?$/);
     }
 
     editHooks.removePerson = function (pid) {
@@ -1380,11 +1507,24 @@
       showError("Unable to delete person: invalid person id: " + pid);
     };
 
-    function addRelationship() {
-      let doc = editor.get();
+    function makeRelationshipBetweenP1P2(doc, relationshipType, pid1, pid2) {
+      let relationship = {};
+      relationship.id = generateLocalId("r_");
+      relationship.type = relationshipType;
+      relationship.person1 = {};
+      relationship.person1.resourceId = pid1;
+      relationship.person1.resource = "#" + pid1;
+      relationship.person2 = {};
+      relationship.person2.resourceId = pid2;
+      relationship.person2.resource = "#" + pid2;
       if (!doc.relationships) {
         doc.relationships = [];
       }
+      doc.relationships.push(relationship);
+    }
+
+    function addRelationship() {
+      let doc = editor.get();
 
       let pids1 = $("#new-relationship-person-1").val();
       pids1 = pids1 || [];
@@ -1394,19 +1534,10 @@
         let pid1 = pids1[i];
         for (let j = 0; j < pids2.length; j++) {
           let pid2 = pids2[j];
-          let relationship = {};
-          relationship.id = generateLocalId("r_");
-          relationship.type = $("#new-relationship-type").val();
-          relationship.person1 = {};
-          relationship.person1.resourceId = pid1;
-          relationship.person1.resource = "#" + pid1;
-          relationship.person2 = {};
-          relationship.person2.resourceId = pid2;
-          relationship.person2.resource = "#" + pid2;
-          doc.relationships.push(relationship);
+          let relationshipType = $("#new-relationship-type").val();
+          makeRelationshipBetweenP1P2(doc, relationshipType, pid1, pid2);
         }
       }
-
 
       updateRecord(doc);
       $("#new-relationship").modal("hide");
@@ -3006,6 +3137,21 @@
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
         <button id="add-new-person" type="button" class="btn btn-primary">Add Person</button>
+      </div>
+      <div class="modal-body" id="new-spouse-form">
+        ---(Optional spouse:)---<br/>
+        <label for="new-spouse-prefixes">Prefix(es)</label>
+        <input id="new-spouse-prefixes" type="text" class="form-control"/>
+        <label for="new-spouse-given-names">Given Name(s)</label>
+        <input id="new-spouse-given-names" type="text" class="form-control"/>
+        <label for="new-spouse-surnames">Surname(s)</label>
+        <input id="new-spouse-surnames" type="text" class="form-control"/>
+        <label for="new-spouse-suffixes">Suffix(es)</label>
+        <input id="new-spouse-suffixes" type="text" class="form-control"/>
+        <div class="form-check">
+          <input class="form-check-input" id="new-spouse-principal" type="checkbox" value=""/>
+          <label class="form-check-label" for="new-spouse-principal">Principal</label>
+        </div>
       </div>
     </div>
   </div>
