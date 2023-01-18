@@ -255,8 +255,9 @@ function buildPersonUI(doc, person, idMap, path, editHooks) {
     personCardBodyContent.append(div({class: "col"}).append(card("Names", span().text("(None)"), 5, function () { editHooks.addName(person.id); })));
   }
 
-  if (person.facts && person.facts.length > 0) {
-    let facts = buildFactsUI(person, person.facts, path + ".facts", editHooks);
+  let ageFields = person.fields ? person.fields.filter(function(field) {return field.type === GX_AGE}) : [];
+  if ((person.facts && person.facts.length > 0) || ageFields.length > 0) {
+    let facts = buildFactsUI(person, person.facts, path + ".facts", editHooks, false, ageFields.length > 0 ? person.fields : null, path + ".fields");
     let addFactHook = null;
     if (editHooks.addPersonFact) {
       addFactHook = function () { editHooks.addPersonFact(person.id); };
@@ -374,7 +375,18 @@ function buildNamePartsUI(parts, path) {
   return fs;
 }
 
-function buildFactsUI(subject, facts, path, editHooks, isRelationship) {
+/**
+ * Build a facts UI table
+ * @param subject - Person or Relationship that has a list of facts
+ * @param facts - List of Facts for that person or relationship (can be null)
+ * @param path - JSON path describing the path to this set of fields
+ * @param editHooks - Object of various possible edit hooks for editing, copying or deleting these facts
+ * @param isRelationship - Flag for whether this is for relationships
+ * @param fields - Array of fields, some of which may be Age fields (or null if none)
+ * @param fieldsPath - JSON Path for the set of fields.
+ * @returns {*|jQuery|HTMLElement}
+ */
+function buildFactsUI(subject, facts, path, editHooks, isRelationship, fields, fieldsPath) {
   let factsUI = $("<table/>", {class: "facts table table-sm"});
   let valueNeeded = false;
   let ageNeeded = false;
@@ -383,6 +395,9 @@ function buildFactsUI(subject, facts, path, editHooks, isRelationship) {
   let editFactFn = isRelationship ? editHooks.editRelationshipFact : editHooks.editPersonFact;
   let copyFactFn = isRelationship ? null : editHooks.copyPersonFact;
 
+  if (! facts) {
+    facts = [];
+  }
   for (let fact of facts) {
     if (fact.value) {
       valueNeeded = true;
@@ -399,6 +414,10 @@ function buildFactsUI(subject, facts, path, editHooks, isRelationship) {
       }
     }
   }
+  if (!fields) {
+    fields = [];
+  }
+  ageNeeded |= fields.length > 0;
 
   let row = $("<tr/>").append($("<th>Type</th>")).append($("<th>Date</th>")).append($("<th>Place</th>"));
   if (valueNeeded) {
@@ -479,7 +498,68 @@ function buildFactsUI(subject, facts, path, editHooks, isRelationship) {
 
     f.appendTo(body);
   }
+
+  // If age fields exist on this person, add those into the "Facts" list as well.
+  for(let i = 0; i < fields.length; i++) {
+    let field = fields[i];
+    if (!field.type.endsWith("/Age")) {
+      continue; // skip any fields that aren't Age fields.
+    }
+    let fieldPath = fieldsPath + '[' + i + ']';
+    let f = $("<tr/>");
+
+    f.append($("<td/>", {class: "fact-type text-nowrap", "json-node-path" : fieldPath + ".type"}).text(parseType(field.type)));
+    f.append($("<td/>", {class: "fact-date text-nowrap", "json-node-path" : fieldPath + ".date"}).text(""));
+    f.append($("<td/>", {class: "fact-place", "json-node-path" : fieldPath + ".place"}).text(""));
+    if (valueNeeded) {
+      f.append($("<td/>", {class: "fact-value", "json-node-path": fieldPath + ".value"}).text(""));
+    }
+    if (ageNeeded) { // should always be true
+      let ageValueIndex = getMostOriginalValueIndex(field);
+      let age = ageValueIndex >= 0 ? field.values[ageValueIndex].text : "?";
+      f.append($("<td/>", {class: "fact-age text-nowrap", "json-node-path": fieldPath + ".values[" + ageValueIndex + "]"}).text(age));
+    }
+    if (causeNeeded) {
+      f.append($("<td/>", {class: "fact-cause text-nowrap"}).text(""));
+    }
+
+    if (removeFactFn || editFactFn || copyFactFn) {
+      let editCell = $("<td/>", {class: "text-nowrap"});
+
+      if (editFactFn) {
+        editCell.append(editFactButton(subject, field, editFactFn));
+      }
+      // No "copy" hook, because we don't want to copy an age from one person to another. Very rarely would that be helpful.
+
+      if (removeFactFn) {
+        editCell.append(removeFactButton(subject, field, removeFactFn));
+      }
+
+      f.append(editCell);
+    }
+
+    f.appendTo(body);
+  }
   return factsUI;
+}
+
+// Get the "Original" field value text, if any; or else the "Interpeted" one, if any; or else -1 if no values available.
+function getMostOriginalValueIndex(field) {
+  let interpreted = -1;
+  if (field && field.values) {
+    for (let i = 0; i < field.values.length; i++) {
+      let value = field.values[i];
+      if (value.text && value.text.length > 0) {
+        if (value.type === GX_ORIGINAL) {
+          return i;
+        }
+        else {
+          interpreted = i;
+        }
+      }
+    }
+  }
+  return interpreted;
 }
 
 function editFactButton(subject, fact, editFactFn) {
@@ -494,9 +574,9 @@ function copyFactButton(subject, fact, copyFactFn) {
   });
 }
 
-function removeFactButton(subject, fact, removeFactFn) {
+function removeFactButton(subject, factOrField, removeFactFn) {
   return removeButton(function () {
-    removeFactFn(subject.id, fact.id);
+    removeFactFn(subject.id, factOrField.id);
   });
 }
 
