@@ -1240,6 +1240,7 @@
         let givenNames = $("#" + idPrefix + "-given-names").val();
         let surnames = $("#" + idPrefix + "-surnames").val();
         let suffixes = $("#" + idPrefix + "-suffixes").val();
+        let age = $("#" + idPrefix + "-age").val();
         if (isSpouse && !givenNames && !surnames) {
           return null;
         }
@@ -1255,6 +1256,9 @@
         person.names = [];
         person.facts = [];
         person.fields = [];
+        if (age && age.length > 0) {
+          person.fields.push(makeAgeField(age));
+        }
 
         let name = {};
         name.id = generateLocalId("n_");
@@ -1341,19 +1345,30 @@
       let selection = window.getSelection();
 
       function setNamePartFields(fieldIdPrefix, fullNameText) {
+        // See if the fullNameText ends with ", #" like "Fred Jones, 39", in which case the number is stripped off and used as an age.
+        // (If a place name follows the age, it is quietly ignored. This handles cases like "Fred Jones, 32, Los Angeles")
+        let ageMatch = fullNameText.match(/(.*), *([0-9]+)[ .,"']*([A-Za-z].*)?[ ,"'.]*$/);
+        let age = "";
+        if (ageMatch) {
+          fullNameText = ageMatch[1];
+          age = ageMatch[2];
+        }
+
         let hasCommaAfterFirstPart = !!fullNameText.match(/[A-Za-z]*,.*/);
-        let splitTxt = fullNameText.replace(/[,;()]/g, " ").replace(/  */g, " ").trim().split(" ");
+        let splitTxt = fullNameText.replace(/[,;()]/g, " ").replace(/ +/g, " ").trim().split(" ");
 
         let prefixField  = $("#" + fieldIdPrefix + "-prefixes");
         let givenField   = $("#" + fieldIdPrefix + "-given-names");
         let surnameField = $("#" + fieldIdPrefix + "-surnames");
         let suffixField  = $("#" + fieldIdPrefix + "-suffixes");
+        let ageField     = $("#" + fieldIdPrefix + "-age");
 
-        // Clear all four fields, so we don't get anything dangling from last time.
+        // Clear all five fields, so we don't get anything dangling from last time.
         prefixField.val("");
         givenField.val("");
         surnameField.val("");
         suffixField.val("");
+        ageField.val(age);
 
         if (splitTxt.length > 0 && isPrefix(splitTxt[0])) {
           prefixField.val(splitTxt.shift());
@@ -1376,6 +1391,7 @@
       //   "Rachel Kiskaddon and Youssef El Haddad" => ["Rachel Kiskaddon", "Youssef El Haddad"]
       //   "Francisco J Perez, Jr. and Irma Rios" => ["Francisco J Perez, Jr.", "Irma Rios"]
       //   "BEILER, John L. and Mima K. Ronks" => ["BEILER, John L.", "Mima K. Ronks"]
+      //   "John L. Smith, 52, Los Angeles and Judy Turner, 33, Little Rock" => ["John L. Smith, 52, Los Angeles", "Judy Turner, 33, Little Rock"]
       // And these cases should transfer a surname:
       //   "Allison and Stephen Gillaspy" => ["Allison Gillaspy", "Stephen Gillaspy"]
       //   "Fred and Judy (Turner) Smith" => ["Fred Smith", "Judy Turner+Smith"]
@@ -1454,6 +1470,7 @@
       }
 
 
+      let needToClearSpouse = true;
       if (selection) {
         let selectedText = selection.toString().replace(/[ ,;!]*$/, "").trim();
         if (selectedText.includes(" and ")) {
@@ -1461,9 +1478,13 @@
           selectedText = twoNames[0];
           if (twoNames.length === 2) {
             setNamePartFields("new-spouse", twoNames[1]);
+            needToClearSpouse = false;
           }
         }
         setNamePartFields("new-person", selectedText);
+      }
+      if (needToClearSpouse) {
+        setNamePartFields("new-spouse", "");
       }
     }
 
@@ -3187,6 +3208,10 @@
         <div class="form-check">
           <input class="form-check-input" id="new-person-principal" type="checkbox" value=""/>
           <label class="form-check-label" for="new-person-principal">Principal</label>
+          <span style="float: right">
+            <label for="new-person-age">Age</label>
+            <input id="new-person-age" type="text" style="width: 80px; display:inline" class="form-control">
+          </span>
         </div>
         <div class="form-check">
           <input class="form-check-input" id="new-person-male" type="radio" name="new-person-gender" value="http://gedcomx.org/Male"/>
@@ -3218,6 +3243,10 @@
         <div class="form-check">
           <input class="form-check-input" id="new-spouse-principal" type="checkbox" value=""/>
           <label class="form-check-label" for="new-spouse-principal">Principal</label>
+          <span style="float: right">
+            <label for="new-spouse-age">Age</label>
+            <input id="new-spouse-age" type="text" style="width: 80px; display:inline" class="form-control">
+          </span>
         </div>
       </div>
     </div>
