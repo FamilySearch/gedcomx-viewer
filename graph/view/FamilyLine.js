@@ -206,7 +206,7 @@ FamilyLine.prototype.arrangeLines = function(lines) {
   let pushMap = [];
   // Map of lineIndex -> depth for that line.  (May be updated as new lines are introduced and "push" the others out)
   let lineDepthMap = [];
-  // Array of lines indexes that overlap the previous line, including the previous line, arranged from left to right.
+  // Array of line indexes that overlap the previous line, including the previous line, arranged from left to right.
   let overlapList = [];
   for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
     // Look through the list of overlapping lines, and remove any that do not overlap 'line'.
@@ -219,9 +219,10 @@ FamilyLine.prototype.arrangeLines = function(lines) {
       } else {
         // The line at 'depth' no longer overlaps any more lines from here on down, so remove it from the list.
         overlapList.splice(overlapIndex, 1);
+        overlapIndex--;
       }
     }
-    // Add line to the end of the overlap list so it can be considered by the next element.
+    // Add line to the end of the overlap list, so it can be considered by the next element.
     overlapList.push(lineIndex);
     // Keep track of what the rightmost overlapping line is for each line (i.e., which one it "pushes" on)
     if (closestLineIndex !== undefined) {

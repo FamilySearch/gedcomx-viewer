@@ -197,7 +197,7 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
     }
     addIfNotEmpty(getFactDate(fact), parts, factNamePrefix + "-date", fact.date);
     addIfNotEmpty(getFactPlace(fact), parts, factNamePrefix + "-place", fact.place);
-    return parts.length === 0 ? undefined : parts.join("; ");
+    return parts.join("; ");
   }
 
   /**
@@ -208,16 +208,13 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
    */
   function getFactHtml(fact, qualifier) {
     let encodedInfo = getFactInfo(fact);
-    if (encodedInfo) {
-      let factTypeId = nextId("fact", relChartToGx, fact);
-      return "  <div class='fact'><span class='factType' id='" + factTypeId + "'>" +
-          (fact.primary ? "*" : "") +
-          encode(getFactName(fact)) +
-          (qualifier ? " (" + encode(qualifier) + ")" : "") + (encodedInfo ? ":" : "") + "</span>" +
-          (encodedInfo ? " <span class='factDatePlace'>" + encodedInfo + "</span>" : "") +
-          "</div>\n";
-    }
-    return "";
+    let factTypeId = nextId("fact", relChartToGx, fact);
+    return "  <div class='fact'><span class='factType' id='" + factTypeId + "'>" +
+      (fact.primary ? "*" : "") +
+      encode(getFactName(fact)) +
+      (qualifier ? " (" + encode(qualifier) + ")" : "") + (encodedInfo ? ":" : "") + "</span>" +
+      (encodedInfo ? " <span class='factDatePlace'>" + encodedInfo + "</span>" : "") +
+      "</div>\n";
   }
 
   function getFactsHtml(factsContainer, prefix) {
