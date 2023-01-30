@@ -491,7 +491,15 @@
         if (sourceDocumentText) {
           clearRecord();
         }
-        text = text.replaceAll('&amp;', '&').replaceAll('&lt;', '<').replaceAll('&gt;', '>').replaceAll('&#034', '"').replaceAll("&#038;", "&").replaceAll("&#039;&#039;", '"').replaceAll("&#039;", "'");
+        text = text
+            .replaceAll('&amp;', '&')
+            .replaceAll('&lt;', '<')
+            .replaceAll('&gt;', '>')
+            .replaceAll('&#034', '"')
+            .replaceAll("&#038;", "&")
+            .replaceAll("&#039;&#039;", '"')
+            .replaceAll("&#039;", "'")
+            .replaceAll("&#149;", "•");
       }
       sourceDocumentText = text;
       sourceDocumentName = name;
