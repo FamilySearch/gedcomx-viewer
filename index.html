@@ -1385,7 +1385,7 @@
       }
 
       // Return an array with 2 names, if the 'andNames' can be split, or 1 name, if not. Join maiden name and married surname with "+"
-      // These names should just split on " and ":
+      // These names should just split on " and " or on " to " (as in "Fred Jones to Judy Smith"):
       //   "Carol Van Ness Holiman and Richard Eugene Holiman" => ["Carol Van Ness Holiman", "Richard Eugene Holiman"]
       //   "Frances P. Scholl and Mark J. Siefring" => ["Frances P. Scholl", "Mark J. Siefring"]
       //   "Rachel Kiskaddon and Youssef El Haddad" => ["Rachel Kiskaddon", "Youssef El Haddad"]
@@ -1398,7 +1398,7 @@
       //   "Mr. Dwayne and Mrs. Regina Satterfield" => ["Mr. Dwayne Satterfield", "Mrs. Regina Satterfield"]
       //   "BEILER, Reuban and Sadie Ann (Stoltzfus)" => ["BEILER, Reuban", "BEILER, Sadie Ann Stoltzfus+BEILER"]
       //   "DALBEY, Timothy J. and Kristyn" => ["DALBEY, Timothy J.", "Kristyn DALBEY"]
-      function splitAndNames(andNames) {
+      function splitAndOrToNames(andNames) {
         function getSurname(fullName) {
           let pieces = fullName.split(" ");
           // Remove prefix and suffix strings from the array
@@ -1415,7 +1415,7 @@
           return pieces.length >= 2 ? pieces[pieces.length - 1] : null;
         }
 
-        let parts = andNames.split(" and ");
+        let parts = andNames.includes(" and ") ? andNames.split(" and ") : andNames.split(" to ");
         if (parts.length === 2) {
           let a = parts[0];
           let b = parts[1];
@@ -1473,8 +1473,8 @@
       let needToClearSpouse = true;
       if (selection) {
         let selectedText = selection.toString().replace(/[ ,;!]*$/, "").trim();
-        if (selectedText.includes(" and ")) {
-          let twoNames = splitAndNames(selectedText);
+        if (selectedText.includes(" and ") || selectedText.includes(" to ")) {
+          let twoNames = splitAndOrToNames(selectedText);
           selectedText = twoNames[0];
           if (twoNames.length === 2) {
             setNamePartFields("new-spouse", twoNames[1]);
@@ -1489,7 +1489,7 @@
     }
 
     function isPrefix(prefix) {
-      return prefix.match(/(mr|mrs|miss|rev|fr|dr|dra|infant|baby)[.]?$/i);
+      return prefix.match(/(mr|mrs|miss|ms|rev|fr|dr|dra|infant|baby)[.]?$/i);
     }
 
     function isSuffix(suffix) {
