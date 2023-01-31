@@ -111,11 +111,6 @@
     let recordInfos = [];
     let currentRecordIndex = 0; // Index in recordInfos[] of the currently-selected record.
 
-    //MAYBE: have an array of RecordInfo objects, each with:
-    //  - gxRecord
-    //  - Summary (name of first principal or first person in record)
-    //  - sectionId of corresponding text section, if identified. null => don't know what text section it goes with.
-
     // Current GedcomX record object, used by the pop-up bounding box window to get access to the record and image data.
     function getCurrentGx() {
       return editor.get();
