@@ -1372,14 +1372,19 @@
         suffixField.val("");
         ageField.val(age);
 
-        if (splitTxt.length > 0 && isPrefix(splitTxt[0])) {
-          prefixField.val(splitTxt.shift());
-        }
         if (splitTxt.length > 0 && isSuffix(splitTxt[splitTxt.length - 1])) {
           suffixField.val(splitTxt.pop());
         }
+        if (hasCommaAfterFirstPart && splitTxt.length > 1) {
+          let surname = splitTxt.shift();
+          splitTxt.push(surname);
+        }
+        if (splitTxt.length > 0 && isPrefix(splitTxt[0])) {
+          prefixField.val(splitTxt.shift());
+        }
         if (splitTxt.length >= 2 && !isInitial(splitTxt[splitTxt.length - 1])) {
-          surnameField.val(titleCaseIfNeeded(hasCommaAfterFirstPart ? splitTxt.shift() : splitTxt.pop().replaceAll("+", " ")));
+          let surname = titleCaseIfNeeded(splitTxt.pop().replaceAll("+", " "));
+          surnameField.val(surname);
         }
         if (splitTxt.length > 0) {
           givenField.val(splitTxt.join(" "));
@@ -1491,16 +1496,16 @@
     }
 
     function isPrefix(prefix) {
-      return prefix.match(/(mr|mrs|miss|ms|rev|fr|dr|dra|infant|baby)[.]?$/i);
+      return prefix.match(/^(mr|mrs|miss|ms|rev|fr|dr|dra|infant|baby)[.]?$/i);
     }
 
     function isSuffix(suffix) {
-      return suffix.match(/(jr|sr|iv|ii+|vii+|xi|senr|senior|junior|junr)[.]?$/i);
+      return suffix.match(/^(jr|sr|iv|ii+|vii+|xi|senr|senior|junior|junr)[.]?$/i);
     }
 
     // Tell whether the 'initial' string is a single capital letter with an optional period.
     function isInitial(initial) {
-      return initial.match(/[A-Z][.]?$/);
+      return initial.match(/^[A-Z][.]?$/);
     }
 
     editHooks.removePerson = function (pid) {
