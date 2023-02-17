@@ -1336,9 +1336,13 @@
       let pieces = surname.split(' ');
       for (let i = 0; i < pieces.length; i++) {
         let piece = pieces[i];
-        if (piece.length > 2 && piece.search(/[a-z]/)) {
-          pieces[i] = piece.charAt(0).toUpperCase() + piece.toLowerCase().slice(1);
+        if (piece.length > 2 && piece.search(/[a-z]/) < 0) {
+          piece = piece.charAt(0).toUpperCase() + piece.toLowerCase().slice(1);
         }
+        if (piece.length > 2 && piece.startsWith("Mc")) {
+          piece = piece.slice(0,2) + piece.charAt(2).toUpperCase() + piece.slice(3);
+        }
+        pieces[i] = piece;
       }
       return pieces.join(' ');
     }
