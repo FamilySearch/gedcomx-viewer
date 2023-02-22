@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Relationship Graph Demo</title>
+  <link rel="stylesheet" type="text/css" href="../graph/graph.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+
+  <script src="../graph/model/model-util.js"></script>
+  <script src="../graph/model/PersonNode.js"></script>
+  <script src="../graph/model/FamilyNode.js"></script>
+  <script src="../graph/model/RelationshipGraph.js"></script>
+
+  <script src="../gx-util.js"></script>
+  <script src="../gx-fix.js"></script>
+  <script src="../graph/view/Generation.js"></script>
+  <script src="../graph/view/LinkedHashSet.js"></script>
+  <script src="../graph/view/IntegerByRef.js"></script>
+  <script src="../graph/view/PersonBox.js"></script>
+  <script src="../graph/view/FamilyLine.js"></script>
+  <script src="../graph/view/ChartCompressor.js"></script>
+  <script src="../graph/view/RelationshipChart.js"></script>
+  <script src="../graph/view/RelChartBuilder.js"></script>
+  <script src="../graph/view/EditChart.js"></script>
+  <script src="../graph/tree/TreeFetch.js"></script>
+  <script src="../graph/graph.js"></script>
+  <script src="./flatParseSummary.js"></script>
+  <script src="./summaryToGx.js"></script>
+</head>
+<body>
+  <div id="help-area"></div>
+  <div id="rel-chart"></div>
+
+  <script>
+    function loadSummaryText(url) {
+      $.ajax({
+        beforeSend: function (request) {
+          request.setRequestHeader("Accept", "text/plain");
+        },
+        dataType: "text",
+        url: url,
+        success: function (summaryText) {
+          let summary = parseSummary(summaryText);
+          let sampleGx = summaryToGx(summary);
+          //todo: handle whole RecordSet, not just first record.
+          currentRelChart = buildRelGraph(sampleGx[0], new ChartOptions({isEditable: true, shouldShowConfidence: true, shouldDisplayIds: false}));
+        }
+      });
+    }
+
+    $(document).ready(function(){
+      let url = "summaries/004170709_00245_004170709_00246_REC1_Birth.txt";
+      loadSummaryText(url);
+      //todo: add logic to accept drop of summary text file, and display as GedcomX relgraph.
+    });
+
+    /**
+     * Redraw the chart with an updated GedcomX document.
+     * Note that record.html has "updateRecord(doc)" as well, so we're using the same function name for both.
+     * @param doc - GedcomX document to rebuild the chart with.
+     */
+    function updateRecord(doc) {
+      currentRelChart = buildRelGraph(doc, prevRelChartOptions(currentRelChart));
+     }
+  </script>
+</body>
+</html>
