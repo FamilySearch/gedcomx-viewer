@@ -2027,9 +2027,11 @@
         return;
       }
 
+      let numSelected = 0;
       for (let i = 0; i < pid.options.length; i++) {
         let pids = pid.options[i];
         if (pids.selected){
+          numSelected++;
           pids = pids.value;
           let person = getPerson(doc, pids);
           if (!person) {
@@ -2074,8 +2076,13 @@
           person.facts.push(fact);
         }
       }
-      updateRecord(doc);
-      $("#add-new-fact-multiple").modal("hide");
+      if (numSelected > 0) {
+        updateRecord(doc);
+        $("#add-new-fact-multiple").modal("hide");
+      }
+      else {
+        showError("Select at least one person, or select 'Close'.")
+      }
     }
 
     // Look through an array for an object with the given id element.

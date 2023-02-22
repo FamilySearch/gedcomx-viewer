@@ -82,3 +82,7 @@ pre {
 .sft-tag {
     color: #6c854e;
 }
+
+#alert {
+    z-index: 1100;
+}
