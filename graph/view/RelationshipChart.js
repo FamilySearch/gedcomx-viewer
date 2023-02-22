@@ -360,6 +360,7 @@ function RelationshipChart(relGraph, $relChartDiv, chartOptions) {
   this.height = 0;
   this.prevHeight = 0; // height of chart before last update
   this.chartCompressor = new ChartCompressor(this);
+  this.highlightsToProcess = [];
 
   if (this.isSelectable) {
     let relChart = this;

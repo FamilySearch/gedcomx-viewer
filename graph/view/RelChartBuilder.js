@@ -197,7 +197,7 @@ RelChartBuilder.prototype.getPersonNode = function(personId) {
 };
 
 /**
- * Add all of the PersonBoxes to relChart.personBoxes and relChart.personBoxMap (at least one per PersonNode in relChart,
+ * Add all the PersonBoxes to relChart.personBoxes and relChart.personBoxMap (at least one per PersonNode in relChart,
  *   plus extras if there are duplicates, such as when someone is somehow related more than one way).
  * Add FamilyLines to relChart.familyLines and relChart.familyLineMap.
  */
@@ -495,15 +495,15 @@ RelChartBuilder.prototype.correlateHighlights = function(doc, relToGx, imgToGx) 
   }
 
   function highlight(elements, myElement, elementsClass, myClass) {
-    if (!isEmpty(highlightsToProcess)) {
+    if (!isEmpty(this.relChart.highlightsToProcess)) {
       // Image viewer highlight elements don't exist when the graph is first being built, so wait until the first highlight is
       //  done before triggering that.
-      for (let h of highlightsToProcess) {
+      for (let h of this.relChart.highlightsToProcess) {
         $("#" + h.imgElement).hover(
             function() {h(h.relElements, h.imgElement, "record-highlight", null);},
             function() {unhighlight(h.relElements, h.imgElement, "record-highlight", null);});
       }
-      highlightsToProcess = []; // now handled, so clear it.
+      this.relChart.highlightsToProcess = []; // now handled, so clear it.
     }
     if (elements) {
       for (let element of elements) {
@@ -587,8 +587,6 @@ RelChartBuilder.prototype.correlateHighlights = function(doc, relToGx, imgToGx) 
 function isTreeGraph() {
   return typeof personAnalysisMap != 'undefined';
 }
-
-let highlightsToProcess = [];
 
 /**
  * Build a relationship chart (RelChart) from this RelChartBuilder's relationship graph, starting at the given person.
