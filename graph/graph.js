@@ -37,37 +37,6 @@ const GX_PARENT_CHILD = "http://gedcomx.org/ParentChild";
 
  */
 
-// Array of previous copies of the GedcomX before a set of changes was made.
-// [0] is the original GedcomX. Each time the graph is built, a copy of the latest GedcomX is added to the array (if isEditable is true).
-let gedcomxChangeHistory = [];
-// Position in gedcomxChangeHistory. Normally gedcomxChangePosition = gedcomxChangeHistory.length.
-// But if 'undo' has been done, it can be earlier. If 'redo' is done before any further changes, then it advances again.
-// If a change is made when this position is not at the end, then all following elements are removed.
-let gedcomxChangePosition = 0;
-let currentRelChart;
-
-function undoGraph() {
-  if (gedcomxChangePosition > 1) {
-    let gx = gedcomxChangeHistory[--gedcomxChangePosition - 1];
-    buildGraph(gx, prevRelChartOptions(currentRelChart));
-  }
-}
-
-function redoGraph() {
-  if (gedcomxChangePosition < gedcomxChangeHistory.length) {
-    let gx = gedcomxChangeHistory[gedcomxChangePosition++];
-    buildGraph(gx, prevRelChartOptions(currentRelChart));
-  }
-}
-
-function updateGraphUndo(gx) {
-  gedcomxChangeHistory[gedcomxChangePosition++] = JSON.parse(JSON.stringify(gx));
-  if (gedcomxChangePosition < gedcomxChangeHistory.length) {
-    // Did a change after doing multiple "undos". So ignore the rest of the change history.
-    gedcomxChangeHistory.length = gedcomxChangePosition;
-  }
-}
-
 /**
  * Create a RelationshipGraph, construct from that a RelationshipChart, and return it.
  * @param gx - GedcomX document to visualize
@@ -101,9 +70,6 @@ function buildRelGraph(gx, chartOptions) {
   try {
     let graph = new RelationshipGraph(gx, chartOptions.prevChart ? chartOptions.prevChart.chartId : null);
     let $relChartDiv = $("#rel-chart");
-    if (chartOptions.isEditable && !chartOptions.ignoreUndo) {
-      updateGraphUndo(gx);
-    }
     if (!currentRelChart) {
       $(document).keydown(handleGraphKeydown);
     }

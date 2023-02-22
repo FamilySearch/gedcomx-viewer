@@ -15,7 +15,7 @@
  * @param shouldDisplayDetails - Flag for whether to display person details (i.e., facts). Default = true;
  * @param shouldShowConfidence - Flag for whether to display the name, date and place confidence (when present)
  * @param shouldDisplayIds - Flag for whether to display person IDs
- * @param isTree - Flag for whether this is a tree view with dynamic relatives
+ * @param isUndo - Flag for whether this chart is being created as a result of an "undo" rather than an edit.
  * @constructor
  */
 function ChartOptions({ prevChart= null,
@@ -27,7 +27,8 @@ function ChartOptions({ prevChart= null,
                         shouldCompress = true,
                         shouldDisplayDetails = true,
                         shouldShowConfidence = false,
-                        shouldDisplayIds = false
+                        shouldDisplayIds = false,
+                        isUndo = false
                       } = {}) {
 
   this.prevChart = prevChart;
@@ -41,9 +42,10 @@ function ChartOptions({ prevChart= null,
   this.shouldDisplayIds = shouldDisplayIds;
   this.shouldDisplayDetails = shouldDisplayDetails;
   this.shouldCompress = shouldCompress;
+  this.isUndo = isUndo;
 }
 
-function prevRelChartOptions(prevRelChart, imgOverlayToGx) {
+function prevRelChartOptions(prevRelChart, imgOverlayToGx, isUndo) {
   return new ChartOptions({
     prevChart : prevRelChart,
     imgOverlayToGx: imgOverlayToGx,
@@ -54,7 +56,8 @@ function prevRelChartOptions(prevRelChart, imgOverlayToGx) {
     shouldCompress: prevRelChart.shouldCompress,
     shouldDisplayDetails: prevRelChart.shouldDisplayDetails,
     shouldShowConfidence: prevRelChart.shouldShowConfidence,
-    shouldDisplayIds: prevRelChart.shouldDisplayIds
+    shouldDisplayIds: prevRelChart.shouldDisplayIds,
+    isUndo: isUndo
   });
 }
 
@@ -313,6 +316,43 @@ RelationshipChart.prototype.setPreviousPositions = function(prevRelChart) {
   }
 };
 
+function initUndo(relChart, chartOptions) {
+  // Array of previous copies of the GedcomX before a set of changes was made.
+  // [0] is the original GedcomX. Each time the graph is built, a copy of the latest GedcomX is added to the array (if isEditable is true).
+  relChart.gedcomxChangeHistory = chartOptions.prevChart ? chartOptions.prevChart.gedcomxChangeHistory : [];
+  // Position in gedcomxChangeHistory. Normally gedcomxChangePosition = gedcomxChangeHistory.length.
+  // But if 'undo' has been done, it can be earlier. If 'redo' is done before any further changes, then it advances again.
+  // If a change is made when this position is not at the end, then all following elements are removed.
+  relChart.gedcomxChangePosition = chartOptions.prevChart ? chartOptions.prevChart.gedcomxChangePosition : 0;
+
+  if (!chartOptions.isUndo) {
+    relChart.gedcomxChangeHistory[relChart.gedcomxChangePosition++] = JSON.parse(JSON.stringify(relChart.relGraph.gx));
+    if (relChart.gedcomxChangePosition < relChart.gedcomxChangeHistory.length) {
+      // Did a change after doing multiple "undos". So ignore the rest of the change history.
+      relChart.gedcomxChangeHistory.length = relChart.gedcomxChangePosition;
+    }
+  }
+}
+
+function undoGraph() {
+  if (currentRelChart && currentRelChart.gedcomxChangePosition > 1) {
+    let gx = copyGedcomx(currentRelChart.gedcomxChangeHistory[--currentRelChart.gedcomxChangePosition - 1]);
+    buildRelGraph(gx, prevRelChartOptions(currentRelChart, null, true));
+  }
+}
+
+function redoGraph() {
+  if (currentRelChart && currentRelChart.gedcomxChangePosition < currentRelChart.gedcomxChangeHistory.length) {
+    let gx = copyGedcomx(currentRelChart.gedcomxChangeHistory[currentRelChart.gedcomxChangePosition++]);
+    buildRelGraph(gx, prevRelChartOptions(currentRelChart, null, true));
+  }
+}
+
+// Make a deep copy of a GedcomX object (or any other JSON object).
+function copyGedcomx(gx) {
+  return JSON.parse(JSON.stringify(gx));
+}
+
 /**
  * Constructor. Creates an empty RelationshipChart. Needs to be built up using RelChartBuilder.buildChart()
  * @param relGraph - RelationshipGraph to represent in the RelationshipChart
@@ -371,4 +411,9 @@ function RelationshipChart(relGraph, $relChartDiv, chartOptions) {
     this.selectedPersonBoxes = [];
     this.detailedPersonIds = new Set();
   }
+  initUndo(this, chartOptions);
 }
+
+let currentRelChart;
+
+
