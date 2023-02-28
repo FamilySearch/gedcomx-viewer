@@ -396,7 +396,7 @@
                 let place = extractText("(", ")", paper);
                 if (place) {
                   let result = place.match(/^(.* )?([A-Z][A-Z])$/);
-                  if (result.length > 2 && result[2]) {
+                  if (result && result.length > 2 && result[2]) {
                     let state = STATE_MAP[result[2]];
                     if (state) {
                       place = place.substring(0, place.length - 2) + state;
@@ -1360,6 +1360,8 @@
           fullNameText = ageMatch[1];
           age = ageMatch[2];
         }
+        // Remove "of <place name>"
+        fullNameText = fullNameText.replace(/ of [A-Z].*/, "");
 
         let hasCommaAfterFirstPart = !!fullNameText.match(/[A-Za-z]*,.*/);
         let splitTxt = fullNameText.replace(/[,;()]/g, " ").replace(/ +/g, " ").trim().split(" ");
@@ -1426,9 +1428,14 @@
           }
           return pieces.length >= 2 ? pieces[pieces.length - 1] : null;
         }
-
-        let parts = andNames.includes(" and ") ? andNames.split(" and ") : andNames.split(" to ");
-        if (parts.length === 2) {
+        let parts = null;
+        for (let s of [" and ", " & ", " to "]) {
+          if (andNames.includes(s)) {
+            parts = andNames.split(s);
+            break;
+          }
+        }
+        if (parts && parts.length === 2) {
           let a = parts[0];
           let b = parts[1];
           // Get surname A from "Jones, Bob" or "Bob Jones"
@@ -1485,7 +1492,7 @@
       let needToClearSpouse = true;
       if (selection) {
         let selectedText = selection.toString().replace(/[ ,;!]*$/, "").trim();
-        if (selectedText.includes(" and ") || selectedText.includes(" to ")) {
+        if (selectedText.includes(" and ") || selectedText.includes(" & ") || selectedText.includes(" to ")) {
           let twoNames = splitAndOrToNames(selectedText);
           selectedText = twoNames[0];
           if (twoNames.length === 2) {
