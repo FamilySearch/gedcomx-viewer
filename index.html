@@ -133,7 +133,7 @@
       }
       return gxRecord;
     }
-    
+
     function RecordInfo(sectionId, gxRecord, defaultCoverage) {
       this.gxRecord = hasRecordData(gxRecord) ? gxRecord : makeEmptyRecord(defaultCoverage);
 
@@ -1243,6 +1243,7 @@
         let givenNames = $("#" + idPrefix + "-given-names").val();
         let surnames = $("#" + idPrefix + "-surnames").val();
         let suffixes = $("#" + idPrefix + "-suffixes").val();
+        const role = $(`#${idPrefix}-role`).val();
         let age = $("#" + idPrefix + "-age").val();
         if (isSpouse && !givenNames && !surnames) {
           return null;
@@ -1261,6 +1262,9 @@
         person.fields = [];
         if (age && age.length > 0) {
           person.fields.push(makeAgeField(age));
+        }
+        if (role) {
+          person.fields.push(makeRoleField(role));
         }
 
         let name = {};
@@ -1950,9 +1954,19 @@
       };
     }
 
-    function getAge(field) {
-      let valueIndex = getMostOriginalValueIndex(field);
-      return valueIndex >= 0 ? field.values[valueIndex].text : null;
+    function getFieldValue(field) {
+      const valueIndex = getMostOriginalValueIndex(field);
+      return valueIndex >= 0 ? field.values[valueIndex].text : "";
+    }
+
+    function makeRoleField(role, id) {
+      return {
+        id: id ? id : generateLocalId("field_"),
+        type: "http://gedcomx.org/Role",
+        values: [{
+          text: role
+        }]
+      };
     }
 
     function addPersonFact() {
@@ -2019,6 +2033,10 @@
           person.facts = [];
         }
         person.facts.push(fact);
+      }
+      const role = $("#new-person-fact-role").val();
+      if (role) {
+        person.fields.push(makeRoleField(role));
       }
       updateRecord(doc);
       $("#new-person-fact").modal("hide");
@@ -2134,7 +2152,7 @@
       let age = $("#edit-person-fact-age").val();
       let $editPersonFactPrimary = $("#edit-person-fact-primary");
 
-      let factType = $("#edit-person-fact-type").val();
+      const factType = $("#edit-person-fact-type").val();
       if (factType.endsWith("/Age")) {
         let ageField = makeAgeField(age);
         // A fact or field was edited, but now it's just an Age field.
@@ -2154,6 +2172,14 @@
           }
           // Replace just the values of the returned object so it remains in the array and keeps its id.
           field.values = ageField.values;
+        }
+      } else if (factType === GX_ROLE) {
+        const roleField = findObjectWithId(person.fields, fid);
+        if (!roleField) {
+          showError("Cannot edit age: invalid field id: " + fid);
+        }
+        if (roleField?.values[0]?.text) {
+          roleField.values[0].text = $("#edit-person-fact-role").val();
         }
       }
       else {
@@ -2385,20 +2411,23 @@
         for (let i = 0; i < fact.qualifiers.length; i++) {
           let qualifier = fact.qualifiers[i];
           switch (qualifier.name) {
-            case "http://gedcomx.org/Age":
+            case GX_AGE:
               age = qualifier.value;
               break;
-            case "http://gedcomx.org/Cause":
+            case GX_CAUSE:
               cause = qualifier.value;
               break;
           }
         }
       }
       if (!age && fact.values) {
-        // Handle the case where 'fact' is really an age 'field' object. Find the first FieldValue with text and take that as the Age.
-        age = getAge(fact); // it's really a "field"
+        // Handle the case where 'fact' is really an age or role 'field' object. Find the first FieldValue with text and take that as the field value.
+        const fieldType = fact.type.substring(fact.type.lastIndexOf("/") + 1).toLowerCase();
+        const fieldValue = getFieldValue(fact);
+        $(`#edit-person-fact-${fieldType}`).val(fieldValue);
+      } else {
+        $("#edit-person-fact-age").val(age ? age : "");
       }
-      $("#edit-person-fact-age").val(age ? age : "");
       $("#edit-person-fact-cause").val(cause ? cause : "");
 
       $("#edit-person-fact").modal("show");
@@ -3232,6 +3261,8 @@
         <input id="new-person-surnames" type="text" class="form-control"/>
         <label for="new-person-suffixes">Suffix(es)</label>
         <input id="new-person-suffixes" type="text" class="form-control"/>
+        <label for="new-person-role">Role</label>
+        <input id="new-person-role" type="text" class="form-control"/>
         <div class="form-check">
           <input class="form-check-input" id="new-person-principal" type="checkbox" value=""/>
           <label class="form-check-label" for="new-person-principal">Principal</label>
@@ -3486,6 +3517,8 @@
       <input id="new-person-fact-place2" type="text" class="form-control"/>
       <label for="new-person-fact-value">Value</label>
       <input id="new-person-fact-value2" type="text" class="form-control"/>
+      <label for="new-person-fact-role">Role</label>
+      <input id="new-person-fact-role2" type="text" class="form-control"/>
       <label for="new-person-fact-age">Age</label>
       <input id="new-person-fact-age2" type="text" class="form-control"/>
       <label for="new-person-fact-cause">Cause</label>
@@ -3670,7 +3703,7 @@
         </select>
         <div class="form-check invalid-for-age">
           <input class="form-check-input invalid-for-age" id="new-person-fact-primary" type="checkbox" value=""/>
-          <label class="form-check-label" for="new-person-fact-primary">Primary</label>                       
+          <label class="form-check-label" for="new-person-fact-primary">Primary</label>
         </div>
         <label for="new-person-fact-date" class="invalid-for-age">Date</label>
         <input id="new-person-fact-date" type="text" class="form-control invalid-for-age"/>
@@ -3678,6 +3711,8 @@
         <input id="new-person-fact-place" type="text" class="form-control invalid-for-age"/>
         <label for="new-person-fact-value" class="invalid-for-age">Value</label>
         <input id="new-person-fact-value" type="text" class="form-control invalid-for-age"/>
+        <label for="new-person-fact-role" class="invalid-for-age">Role</label>
+        <input id="new-person-fact-role" type="text" class="form-control invalid-for-age"/>
         <label for="new-person-fact-age">Age</label>
         <input id="new-person-fact-age" type="text" class="form-control"/>
         <label for="new-person-fact-cause" class="invalid-for-age">Cause</label>
@@ -3775,6 +3810,7 @@
           <option value="http://gedcomx.org/Race">Race</option>
           <option value="http://gedcomx.org/Religion">Religion</option>
           <option value="http://gedcomx.org/Retirement">Retirement</option>
+          <option value="http://gedcomx.org/Role">Role</option>
           <option value="http://gedcomx.org/Stillbirth">Stillbirth</option>
           <option value="http://gedcomx.org/TaxAssessment">Tax Assessment</option>
           <option value="http://gedcomx.org/Tribe">Tribe</option>
@@ -3792,6 +3828,8 @@
         <input id="edit-person-fact-place" type="text" class="form-control invalid-for-age"/>
         <label for="edit-person-fact-value" class="invalid-for-age">Value</label>
         <input id="edit-person-fact-value" type="text" class="form-control invalid-for-age"/>
+        <label for="edit-person-fact-role" class="invalid-for-age">Role</label>
+        <input id="edit-person-fact-role" type="text" class="form-control invalid-for-age"/>
         <label for="edit-person-fact-age">Age</label>
         <input id="edit-person-fact-age" type="text" class="form-control"/>
         <label for="edit-person-fact-cause" class="invalid-for-age">Cause</label>

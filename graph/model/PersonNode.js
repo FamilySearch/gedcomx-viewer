@@ -12,6 +12,8 @@
 const GX_MALE = "http://gedcomx.org/Male";
 const GX_FEMALE = "http://gedcomx.org/Female";
 const GX_AGE = "http://gedcomx.org/Age";
+const GX_ROLE = "http://gedcomx.org/Role";
+const GX_CAUSE = "http://gedcomx.org/Cause";
 const GX_ORIGINAL = "http://gedcomx.org/Original";
 
 const GENDER_CODE_MALE = "M";
