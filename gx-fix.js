@@ -16,17 +16,33 @@ function generateLocalId(prefix) {
 }
 
 /**
- *  Fix the age at an event.
+ *  Add any missing ids for persons, facts, names, relationships and relationship facts.
+ *  Also, if any person ID has a space in it, replace it with an underscore in both the persons and the relationships.
  *
  *  @param doc The record to update.
  */
 function addLocalIds(doc) {
+  function replaceSpaces(s) {
+    return s.replaceAll(" ", "_");
+  }
+
+  function fixSpacesInPersonReference(personRef) {
+    if (personRef && personRef.resourceId && personRef.resourceId.includes(" ")) {
+      personRef.resourceId = personRef.resourceId.replaceAll(" ", "_");
+    }
+    if (personRef && personRef.resource && personRef.resource.includes(" ")) {
+      personRef.resource = personRef.resource.replaceAll(" ", "_");
+    }
+  }
+
   if (doc.persons) {
     for (let person of doc.persons) {
       if (!person.id) {
         person.id = generateLocalId("p_");
       }
-
+      if (person.id.includes(" ")) {
+        person.id = replaceSpaces(person.id);
+      }
       if (person.facts) {
         for (let fact of person.facts) {
           if (!fact.id) {
@@ -58,6 +74,9 @@ function addLocalIds(doc) {
           }
         }
       }
+
+      fixSpacesInPersonReference(relationship.person1);
+      fixSpacesInPersonReference(relationship.person2);
     }
   }
 }
