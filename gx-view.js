@@ -504,7 +504,7 @@ function buildFactsUI(subject, facts, path, editHooks, isRelationship, fields, f
   }
 
   // Add all fields to the "Facts" list
-  fields.forEach((field, index) => {
+  fields?.forEach((field, index) => {
     const fieldPath = `${fieldsPath}[${index}]`;
     let f = $("<tr/>");
 
