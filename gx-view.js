@@ -255,9 +255,13 @@ function buildPersonUI(doc, person, idMap, path, editHooks) {
     personCardBodyContent.append(div({class: "col"}).append(card("Names", span().text("(None)"), 5, function () { editHooks.addName(person.id); })));
   }
 
-  let ageFields = person.fields ? person.fields.filter(function(field) {return field.type === GX_AGE}) : [];
-  if ((person.facts && person.facts.length > 0) || ageFields.length > 0) {
-    let facts = buildFactsUI(person, person.facts, path + ".facts", editHooks, false, ageFields.length > 0 ? person.fields : null, path + ".fields");
+  const displayedFieldTypes = [
+    GX_AGE,
+    GX_ROLE
+  ];
+  const displayedFields = person?.fields?.filter(field => displayedFieldTypes.includes(field.type));
+  if ((person.facts && person.facts.length > 0) || (displayedFields && displayedFields.length > 0)) {
+    const facts = buildFactsUI(person, person.facts, path + ".facts", editHooks, false, displayedFields, path + ".fields");
     let addFactHook = null;
     if (editHooks.addPersonFact) {
       addFactHook = function () { editHooks.addPersonFact(person.id); };
@@ -382,14 +386,14 @@ function buildNamePartsUI(parts, path) {
  * @param path - JSON path describing the path to this set of fields
  * @param editHooks - Object of various possible edit hooks for editing, copying or deleting these facts
  * @param isRelationship - Flag for whether this is for relationships
- * @param fields - Array of fields, some of which may be Age fields (or null if none)
+ * @param fields - Array of fields that should be displayed (Age, Role) (can be undefined or null)
  * @param fieldsPath - JSON Path for the set of fields.
  * @returns {*|jQuery|HTMLElement}
  */
 function buildFactsUI(subject, facts, path, editHooks, isRelationship, fields, fieldsPath) {
   let factsUI = $("<table/>", {class: "facts table table-sm"});
   let valueNeeded = false;
-  let ageNeeded = false;
+  let fieldNeeded = fields && fields.length > 0;
   let causeNeeded = false;
   let removeFactFn = isRelationship ? editHooks.removeRelationshipFact : editHooks.removePersonFact;
   let editFactFn = isRelationship ? editHooks.editRelationshipFact : editHooks.editPersonFact;
@@ -405,26 +409,23 @@ function buildFactsUI(subject, facts, path, editHooks, isRelationship, fields, f
 
     if (fact.qualifiers) {
       for (let qualifier of fact.qualifiers) {
-        if (qualifier.name === "http://gedcomx.org/Age") {
-          ageNeeded = true;
+        if (qualifier.name === GX_AGE) {
+          fieldNeeded = true;
         }
-        if (qualifier.name === "http://gedcomx.org/Cause") {
+        if (qualifier.name === GX_CAUSE) {
           causeNeeded = true;
         }
       }
     }
   }
-  if (!fields) {
-    fields = [];
-  }
-  ageNeeded |= fields.length > 0;
 
   let row = $("<tr/>").append($("<th>Type</th>")).append($("<th>Date</th>")).append($("<th>Place</th>"));
   if (valueNeeded) {
     row.append($("<th>Value</th>"));
   }
-  if (ageNeeded) {
+  if (fieldNeeded) {
     row.append($("<th>Age</th>"));
+    row.append($("<th>Role</th>"));
   }
   if (causeNeeded) {
     row.append($("<th>Cause</th>"));
@@ -451,17 +452,20 @@ function buildFactsUI(subject, facts, path, editHooks, isRelationship, fields, f
     if (valueNeeded) {
       f.append($("<td/>", {class: "fact-value", "json-node-path": factPath + ".value"}).text(fact.value ? fact.value : ""));
     }
-    if (ageNeeded) {
+    if (fieldNeeded) {
       if (fact.qualifiers) {
         for (let j = 0; j < fact.qualifiers.length; j++) {
-          if (fact.qualifiers[j].name === "http://gedcomx.org/Age") {
-            f.append($("<td/>", {class: "fact-age text-nowrap", "json-node-path": factPath + ".qualifiers[" + j + "]"}).text(fact.qualifiers[j].value));
+          const qualifier = fact.qualifiers[j];
+          if (qualifier.name === GX_AGE) {
+            f.append($("<td/>", {class: "fact-age text-nowrap", "json-node-path": `${factPath}.qualifiers[${j}]`}).text(qualifier.value));
+            f.append($("<td/>", {class: "fact-role text-nowrap"}).text("")); // Basically empty padding
             break;
           }
         }
       }
       else {
         f.append($("<td/>", {class: "fact-age text-nowrap"}).text(""));
+        f.append($("<td/>", {class: "fact-role text-nowrap"}).text("")); // Basically empty padding
       }
     }
     if (causeNeeded) {
@@ -484,7 +488,7 @@ function buildFactsUI(subject, facts, path, editHooks, isRelationship, fields, f
       if (editFactFn) {
         editCell.append(editFactButton(subject, fact, editFactFn));
       }
-      
+
       if (copyFactFn) {
         editCell.append(copyFactButton(subject, fact, copyFactFn));
       }
@@ -499,13 +503,9 @@ function buildFactsUI(subject, facts, path, editHooks, isRelationship, fields, f
     f.appendTo(body);
   }
 
-  // If age fields exist on this person, add those into the "Facts" list as well.
-  for(let i = 0; i < fields.length; i++) {
-    let field = fields[i];
-    if (!field.type.endsWith("/Age")) {
-      continue; // skip any fields that aren't Age fields.
-    }
-    let fieldPath = fieldsPath + '[' + i + ']';
+  // Add all fields to the "Facts" list
+  fields.forEach((field, index) => {
+    const fieldPath = `${fieldsPath}[${index}]`;
     let f = $("<tr/>");
 
     f.append($("<td/>", {class: "fact-type text-nowrap", "json-node-path" : fieldPath + ".type"}).text(parseType(field.type)));
@@ -514,10 +514,18 @@ function buildFactsUI(subject, facts, path, editHooks, isRelationship, fields, f
     if (valueNeeded) {
       f.append($("<td/>", {class: "fact-value", "json-node-path": fieldPath + ".value"}).text(""));
     }
-    if (ageNeeded) { // should always be true
-      let ageValueIndex = getMostOriginalValueIndex(field);
-      let age = ageValueIndex >= 0 ? field.values[ageValueIndex].text : "?";
-      f.append($("<td/>", {class: "fact-age text-nowrap", "json-node-path": fieldPath + ".values[" + ageValueIndex + "]"}).text(age));
+    const fieldType = field?.type;
+    if (fieldType === GX_AGE) {
+      const ageValueIndex = getMostOriginalValueIndex(field);
+      const age = ageValueIndex >= 0 ? field.values[ageValueIndex].text : "?";
+      f.append($("<td/>", {class: "fact-age text-nowrap", "json-node-path": `${fieldPath}.values[${ageValueIndex}]`}).text(age));
+      f.append($("<td/>", {class: "fact-role text-nowrap", "json-node-path": `${fieldPath}`}).text("")); // Basically empty padding
+    } else if (fieldType === GX_ROLE) {
+      const role = field?.values[0]?.text;
+      if (role) {
+        f.append($("<td/>", {class: "fact-age text-nowrap", "json-node-path": `${fieldPath}`}).text("")); // Basically empty padding
+        f.append($("<td/>", {class: "fact-role text-nowrap", "json-node-path": `${fieldPath}.values[0].text`}).text(role));
+      }
     }
     if (causeNeeded) {
       f.append($("<td/>", {class: "fact-cause text-nowrap"}).text(""));
@@ -539,7 +547,7 @@ function buildFactsUI(subject, facts, path, editHooks, isRelationship, fields, f
     }
 
     f.appendTo(body);
-  }
+  });
   return factsUI;
 }
 

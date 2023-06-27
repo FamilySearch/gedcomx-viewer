@@ -141,6 +141,10 @@
     font-size: 70%;
 }
 
+.fieldValue {
+    color: black;
+}
+
 .personLine,.familyLine,.personDot {
     background-color: #8697b3;
     position: absolute;

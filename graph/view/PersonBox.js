@@ -230,6 +230,28 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
     return html;
   }
 
+  function getFieldsHtml(fields) {
+    if (isEmpty(fields)) {
+      return "";
+    }
+    return fields.map(field => {
+      const type = field?.type?.substring(field.type.lastIndexOf("/") + 1);
+      if (type !== "Role") {
+        return "";
+      }
+      return field.values.map(value => {
+        return (`<div class="fact">
+          <span class="factType">
+            ${type}: 
+            <span class="fieldValue">
+              ${value.text}
+            </span>
+          </span>
+        </div>\n`);
+      });
+    });
+  }
+
   /**
    * Tell whether the given array of parent FamilyNodes has more than
    * @param parentFamilies
@@ -309,6 +331,10 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
       }
     }
     return html;
+  }
+
+  function addFieldDivs(personNode) {
+    return getFieldsHtml(personNode?.person?.fields);
   }
 
   function addRelativeDivs(person) {
@@ -396,6 +422,7 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
     }
     if (shouldDisplayDetails) {
       html += addFactDivs(personNode);
+      html += addFieldDivs(personNode);
     }
     html += addRelativeDivs(personNode);
     if (isTreeGraph()) {
