@@ -1994,8 +1994,12 @@
           }
           person.fields.push(field);
         }
-      }
-      else {
+      } else if (factType === GX_ROLE) {
+        const role = $("#new-person-fact-role").val();
+        if (role) {
+          person.fields.push(makeRoleField(role));
+        }
+      } else {
         let fact = {};
         fact.id = generateLocalId("f_");
         fact.type = factType;
@@ -2034,14 +2038,42 @@
         }
         person.facts.push(fact);
       }
-      const role = $("#new-person-fact-role").val();
-      if (role) {
-        person.fields.push(makeRoleField(role));
-      }
       updateRecord(doc);
       $("#new-person-fact").modal("hide");
     }
 
+    function addFactToPerson(fact, person) {
+      let date = $("#new-person-fact-date2").val();
+      if (date) {
+        fact.date = {};
+        fact.date.original = date;
+      }
+
+      let place = $("#new-person-fact-place2").val();
+      if (place) {
+        fact.place = {};
+        fact.place.original = place;
+      }
+
+      let value = $("#new-person-fact-value2").val();
+      if (value) {
+        fact.value = value;
+      }
+
+      let age = $("#new-person-fact-age2").val();
+      if (age) {
+        fact.qualifiers = fact.qualifiers || [];
+        fact.qualifiers.push({name: "http://gedcomx.org/Age", value: age});
+      }
+
+      let cause = $("#new-person-fact-cause2").val();
+      if (cause) {
+        fact.qualifiers = fact.qualifiers || [];
+        fact.qualifiers.push({name: "http://gedcomx.org/Cause", value: cause});
+      }
+
+      person.facts.push(fact);
+    }
 
     function addPersonFactMultiple() {
       let doc = editor.get();
@@ -2052,61 +2084,36 @@
         return;
       }
 
-      let numSelected = 0;
-      for (let i = 0; i < pid.options.length; i++) {
-        let pids = pid.options[i];
-        if (pids.selected){
-          numSelected++;
-          pids = pids.value;
-          let person = getPerson(doc, pids);
+      const selectedPersons = Array.from(pid.options)
+              .filter(option => option.selected)
+              .map(selectedOption => getPerson(doc, selectedOption.value));
+      if (selectedPersons.length === 0) {
+        showError("Select at least one person, or select 'Close'.");
+      } else {
+        selectedPersons.forEach(person => {
           if (!person) {
             showError("Cannot add fact: invalid person id: " + pid);
             return;
           }
 
-          let fact = {};
-          fact.id = generateLocalId("f_");
-          fact.type = $("#new-person-fact-multiple-type").val();
-          fact.primary = $("#new-person-fact-primary2").is(":checked");
-
-          let date = $("#new-person-fact-date2").val();
-          if (date) {
-            fact.date = {};
-            fact.date.original = date;
+          const role = $("#new-person-fact-role2").val();
+          if (role) {
+            person.fields.push(makeRoleField(role));
           }
 
-          let place = $("#new-person-fact-place2").val();
-          if (place) {
-            fact.place = {};
-            fact.place.original = place;
-          }
+          const fact = {
+            id: generateLocalId("f_"),
+            type: $("#new-person-fact-multiple-type").val(),
+            primary: $("#new-person-fact-primary2").is(":checked")
+          };
 
-          let value = $("#new-person-fact-value2").val();
-          if (value) {
-            fact.value = value;
+          const isField = fact.type === GX_ROLE;
+          if (!isField) {
+            addFactToPerson(fact, person);
           }
-
-          let age = $("#new-person-fact-age2").val();
-          if (age) {
-            fact.qualifiers = fact.qualifiers || [];
-            fact.qualifiers.push({name: "http://gedcomx.org/Age", value: age});
-          }
-
-          let cause = $("#new-person-fact-cause2").val();
-          if (cause) {
-            fact.qualifiers = fact.qualifiers || [];
-            fact.qualifiers.push({name: "http://gedcomx.org/Cause", value: cause});
-          }
-
-          person.facts.push(fact);
-        }
-      }
-      if (numSelected > 0) {
+        });
         updateRecord(doc);
         $("#add-new-fact-multiple").modal("hide");
-      }
-      else {
-        showError("Select at least one person, or select 'Close'.")
       }
     }
 
@@ -3497,6 +3504,7 @@
           <option value="http://gedcomx.org/Race">Race</option>
           <option value="http://gedcomx.org/Religion">Religion</option>
           <option value="http://gedcomx.org/Retirement">Retirement</option>
+          <option value="http://gedcomx.org/Role">Role</option>
           <option value="http://gedcomx.org/Stillbirth">Stillbirth</option>
           <option value="http://gedcomx.org/TaxAssessment">Tax Assessment</option>
           <option value="http://gedcomx.org/Tribe">Tribe</option>
@@ -3694,6 +3702,7 @@
           <option value="http://gedcomx.org/Race">Race</option>
           <option value="http://gedcomx.org/Religion">Religion</option>
           <option value="http://gedcomx.org/Retirement">Retirement</option>
+          <option value="http://gedcomx.org/Role">Role</option>
           <option value="http://gedcomx.org/Stillbirth">Stillbirth</option>
           <option value="http://gedcomx.org/TaxAssessment">Tax Assessment</option>
           <option value="http://gedcomx.org/Tribe">Tribe</option>
