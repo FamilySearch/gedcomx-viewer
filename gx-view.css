@@ -86,3 +86,9 @@ pre {
 #alert {
     z-index: 1100;
 }
+
+.h1-link {
+    font-size: 20px;
+    font-weight: normal;
+    text-decoration: none;
+}

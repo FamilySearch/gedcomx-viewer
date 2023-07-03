@@ -6,7 +6,7 @@ function empty(s) {
   return s === undefined || s === null || s.length === 0;
 }
 
-function card(sectionName, sectionContent, level, addHook, editHook, copyHook) {
+function card(sectionName, sectionContent, level, addHook, editHook, copyHook, sectionId) {
   level = level || 2;
   let title = $("<h" + level + "/>", {class: "card-title card-header"}).append(span().text(sectionName));
   if (addHook) {
@@ -18,7 +18,7 @@ function card(sectionName, sectionContent, level, addHook, editHook, copyHook) {
   if (copyHook) {
     title = title.append(copyButton(copyHook));
   }
-  return div({class: "card m-1 p-0"})
+  return div(sectionId == null ? {class: "card m-1 p-0"} : {class: "card m-1 p-0", id: sectionId})
     .append(div({class:"card-body p-0"})
     .append(title)
     .append(div({class: "card-text p-3"}).append(sectionContent)));
@@ -40,6 +40,10 @@ function div(attrs) {
 
 function span(attrs) {
   return $("<span/>", attrs);
+}
+
+function href(attrs) {
+  return $("<a/>", attrs);
 }
 
 function addButton(hook) {
@@ -126,7 +130,7 @@ function getBestNameValue(person) {
 function buildRecordUI(doc, url, editHooks) {
   editHooks = editHooks || {};
   let record = div({ id: "record"});
-  record.append($("<h1/>").append(span().text("Record ")));
+  record.append($("<h1/>").append(span().text("Record   ").append(href({href: '#relationships-card', class: 'h1-link'}).text("Go to relationships"))));
 
   if (isSour(doc)) {
     record.append($("<h4/>", {class: "alert alert-warning", role:"alert"}).append(span({class: "oi oi-warning mr-2"})).append(span().text("Record is sour!")));
@@ -187,7 +191,7 @@ function buildRecordUI(doc, url, editHooks) {
     record.append(card("Persons", buildPersonsUI(doc, idMap, path, editHooks), 2, editHooks.addPerson));
   }
   if (doc.relationships) {
-    record.append(card("Relationships", buildRelationshipsUI(doc, idMap, path, editHooks), 2, editHooks.addRelationship));
+    record.append(card("Relationships", buildRelationshipsUI(doc, idMap, path, editHooks), 2, editHooks.addRelationship, null, null, "relationships-card"));
   }
   if (doc.fields) {
     //hide fields for now
