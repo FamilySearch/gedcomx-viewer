@@ -186,7 +186,7 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
     }
   }
 
-  // Get string containing a semi-colon separated list of the value, date and place, if any. Return 'undefined' if none of those exist
+  // Get string containing a semicolon separated list of the value, date and place, if any. Return 'undefined' if none of those exist
   // (e.g., for a fact like "AdoptiveParent" with no value, date or place).
   function getFactInfo(fact) {
     let parts = [];
@@ -236,7 +236,7 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
     }
     return fields.map(field => {
       const type = field?.type?.substring(field.type.lastIndexOf("/") + 1);
-      if (type !== "Role") {
+      if (type !== "Role" && type !== "Age") {
         return "";
       }
       return field.values.map(value => {
