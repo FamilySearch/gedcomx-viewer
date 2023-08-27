@@ -169,6 +169,11 @@ function buildRecordUI(doc, url, editHooks) {
     }
   }
 
+  let certificateNumber = findRecordNumber(doc);
+  if (certificateNumber) {
+    recordMetadata["Certificate Number"] = certificateNumber;
+  }
+
   let hookToEditRecordMetadata = null;
   let hookToCopyRecordMetadata = null;
   if (editHooks.editRecordMetadata) {
@@ -198,6 +203,21 @@ function buildRecordUI(doc, url, editHooks) {
     //record.append(card("Fields", buildFieldsUI(doc.fields, path + ".fields")));
   }
   return record;
+}
+
+function findRecordNumber(doc) {
+  if (doc.fields) {
+    for (let field of doc.fields) {
+      if (field.type === "http://familysearch.org/types/fields/SourceCertificateType" 
+          || field.type === "http://familysearch.org/types/fields/SourceCertificateNbr"
+          || field.type === "http://familysearch.org/types/fields/SourceEntryNbr") {
+        if (field.values && field.values.length > 0) {
+          return field.values[0].text;
+        }
+      }
+    }
+  }
+  return null;
 }
 
 function isSour(doc) {
