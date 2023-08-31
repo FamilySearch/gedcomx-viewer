@@ -6,7 +6,6 @@ function fixGedcomx(gx) {
   }
 
   addLocalIds(gx);
-  fixAge(gx);
   fixExplicitNameType(gx);
   return gx;
 }
@@ -77,72 +76,6 @@ function addLocalIds(doc) {
 
       fixSpacesInPersonReference(relationship.person1);
       fixSpacesInPersonReference(relationship.person2);
-    }
-  }
-}
-
-/**
- *  Fix the age at an event.
- *
- *  @param doc The record to update.
- */
-function fixAge(doc) {
-  let sd = getSourceDescription(doc, doc.description);
-  let isObituary = sd && sd.coverage && sd.coverage.length > 0 && sd.coverage[0].recordType === "http://gedcomx.org/Obituary";
-
-  if (doc.persons) {
-    for (let person of doc.persons) {
-      let age = null;
-      if (person.fields) {
-        for (let personField of person.fields) {
-          if (personField.type === "http://gedcomx.org/Age") {
-            let ageField = personField;
-            if (ageField.values) {
-              for (let fieldValue of ageField.values) {
-                if (fieldValue.type === "http://gedcomx.org/Original") {
-                  age = fieldValue.text;
-                  break;
-                }
-              }
-            }
-            break;
-          }
-        }
-      }
-
-      if (age && person.facts) {
-        let ageAdded = false;
-        for (let fact of person.facts) {
-          if ((isObituary && fact.type === "http://gedcomx.org/Death") || (!isObituary &&fact.primary)) {
-            if (!fact.qualifiers) {
-              fact.qualifiers = [];
-            }
-
-            let addAge = true;
-            for (let qualifier of fact.qualifiers) {
-              if (qualifier.name === "http://gedcomx.org/Age") {
-                ageAdded = true;
-                addAge = false;
-                break;
-              }
-            }
-
-            if (addAge) {
-              fact.qualifiers.push({name: "http://gedcomx.org/Age", value: age});
-              ageAdded = true;
-              break;
-            }
-          }
-        }
-
-        if (!ageAdded && isObituary) {
-          let fact = {
-            type: "http://gedcomx.org/Death",
-            qualifiers: [ { name: "http://gedcomx.org/Age", value: age } ]
-          };
-          person.facts.push(fact);
-        }
-      }
     }
   }
 }
