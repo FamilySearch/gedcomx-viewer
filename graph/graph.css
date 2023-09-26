@@ -195,9 +195,9 @@
 /* Edit controls */
 .relX,.childX,.relPlus {
     position: absolute;
-    background-size: 8px 8px;
-    width: 8px;
-    height: 8px;
+    background-size: 12px 12px;
+    width: 12px;
+    height: 12px;
     z-index: 5;
 }
 
