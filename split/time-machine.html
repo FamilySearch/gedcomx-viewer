@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FamilySearch Time Machine</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="../gx-util.js"></script>
+    <script src="time-machine.js"></script>
+    <link rel="stylesheet" type="text/css" href="time-machine.css">
+</head>
+<body>
+
+<script type="text/javascript">
+  $(document).ready(function(){
+    let params = window.location.search;
+    let urlParams = new URLSearchParams(params);
+    let beta = urlParams.get('beta');
+    let url = urlParams.get('url');
+    if (!url) {
+      let personId = urlParams.get('pid');
+      if (personId) {
+        url = "https://" + (beta ? "beta" : "api") + ".familysearch.org/platform/tree/persons/" + personId + "/changes";
+      }
+    }
+
+    if (url) {
+      let sessionId = urlParams.get('sessionId');
+      buildChangeLogView(url, sessionId, $("#main-table"), $("#status"));
+    }
+  });
+</script>
+<div id="status"></div>
+<div id="main-table"></div>
+</body>
+</html>

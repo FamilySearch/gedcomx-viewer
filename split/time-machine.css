@@ -1,0 +1,51 @@
+.timestamp {
+    background-color: #fdfff8;
+}
+.date {
+    color: #1199cb;
+}
+.time {
+    color: #1199cb80;
+}
+th {
+    top: 0;
+    background-color: #f2ffeb;
+    position: sticky;
+    border: 1px solid #d3e8ca;
+}
+table {
+    border-spacing: 0 0;
+    border-collapse: collapse;
+}
+
+.between-cell {
+    background-color: #fdfff8;
+    border: 1px dashed #f1edea;
+}
+
+.between-cell.odd-ts, .timestamp.odd-ts {
+    background-color: #eff3e8;
+    border: 1px dashed #e5dcd5;
+}
+
+.empty-cell {
+    border: 1px dashed #f8f7f5;
+}
+
+.entry {
+    border: 1px solid #ccb475;
+    background-color: #fff8eb;
+}
+
+.entry.odd-ts {
+    background-color: #f5e8d7;
+}
+
+.entry-title {
+    color: #015b46;
+}
+
+#status {
+    color: #7211bb;
+}
+
