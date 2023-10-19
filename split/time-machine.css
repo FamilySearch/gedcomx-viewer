@@ -6,6 +6,7 @@
 }
 .time {
     color: #1199cb80;
+    font-size: small;
 }
 th {
     top: 0;
@@ -49,3 +50,27 @@ table {
     color: #7211bb;
 }
 
+#details {
+    position: absolute;
+    background: #faf0e4;
+    border: 1px solid #d7c6bf;
+    border-radius: 5px;
+    box-shadow: 8px 8px 8px lightgray;
+    padding: 2px;
+    z-index: 100;
+}
+
+.contributor {
+    color: #8eafae;
+}
+.old-value {
+    color:darkred;
+}
+
+.new-value {
+    color: green;
+}
+
+.delete-value {
+    color:red;
+}

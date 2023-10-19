@@ -12,20 +12,25 @@
 
 <script type="text/javascript">
   $(document).ready(function(){
+    let $status = $("#status");
     let params = window.location.search;
     let urlParams = new URLSearchParams(params);
-    let beta = urlParams.get('beta');
+    let beta = urlParams.get('beta') || window.location.href.includes("beta.familysearch.org");
     let url = urlParams.get('url');
     if (!url) {
       let personId = urlParams.get('pid');
       if (personId) {
         url = "https://" + (beta ? "beta" : "api") + ".familysearch.org/platform/tree/persons/" + personId + "/changes";
       }
+      else {
+        $status.html("Log in to <a href='https://" + (beta ? "beta":"www") + ".familysearch.org' target='_blank'>FamilySearch</a> in another tab and then reload this page. (Or add 'sessionid=&lt;sessionId&gt;' to the URL).<br>" +
+          "Usage: time-machine.html?[beta=true&amp;]pid=&lt;personId&gt;[&amp;sessionId=&lt;sessionId&gt;]");
+      }
     }
 
     if (url) {
       let sessionId = urlParams.get('sessionId');
-      buildChangeLogView(url, sessionId, $("#main-table"), $("#status"));
+      buildChangeLogView(url, sessionId, $("#main-table"), $status);
     }
   });
 </script>
