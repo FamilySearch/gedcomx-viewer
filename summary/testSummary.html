@@ -44,13 +44,13 @@
           let summary = parseSummary(summaryText);
           let sampleGx = summaryToGx(summary);
           //todo: handle whole RecordSet, not just first record.
-          currentRelChart = buildRelGraph(sampleGx[0], new ChartOptions({isEditable: true, shouldShowConfidence: true, shouldDisplayIds: false}));
+          buildMultipleRelGraphs(sampleGx, new ChartOptions({isEditable: true, shouldShowConfidence: true, shouldDisplayIds: false}));
         }
       });
     }
 
     $(document).ready(function(){
-      let url = "summaries/004170709_00245_004170709_00246_REC1_Birth.txt";
+      let url = "summaries/004191254_00338_REC2_Birth.txt";
       loadSummaryText(url);
       //todo: add logic to accept drop of summary text file, and display as GedcomX relgraph.
     });
@@ -61,8 +61,8 @@
      * @param doc - GedcomX document to rebuild the chart with.
      */
     function updateRecord(doc) {
-      currentRelChart = buildRelGraph(doc, prevRelChartOptions(currentRelChart));
-     }
+      buildRelGraph(doc, prevRelChartOptions(currentRelChart));
+    }
   </script>
 </body>
 </html>

@@ -494,7 +494,8 @@
             .replaceAll("&#038;", "&")
             .replaceAll("&#039;&#039;", '"')
             .replaceAll("&#039;", "'")
-            .replaceAll("&#149;", "•");
+            .replaceAll("&#149;", "•")
+            .replaceAll("&#8226;", "•");
       }
       sourceDocumentText = text;
       sourceDocumentName = name;
@@ -1103,7 +1104,7 @@
       }
 
       let type = $("#edit-record-metadata-type").val();
-      if (type) {
+      if (type && type !== "http://gedcomx.org/" + type) {
         sd.coverage[0].recordType = "http://gedcomx.org/" + type;
       }
 
@@ -1403,7 +1404,7 @@
       }
 
       // Return an array with 2 names, if the 'andNames' can be split, or 1 name, if not. Join maiden name and married surname with "+"
-      // These names should just split on " and " or on " to " (as in "Fred Jones to Judy Smith"):
+      // These names should just split on " and " or on " to " or " v. " (as in "Fred Jones to Judy Smith" or "Fred Jones v. Judy Smith" in divorce):
       //   "Carol Van Ness Holiman and Richard Eugene Holiman" => ["Carol Van Ness Holiman", "Richard Eugene Holiman"]
       //   "Frances P. Scholl and Mark J. Siefring" => ["Frances P. Scholl", "Mark J. Siefring"]
       //   "Rachel Kiskaddon and Youssef El Haddad" => ["Rachel Kiskaddon", "Youssef El Haddad"]
@@ -1433,7 +1434,7 @@
           return pieces.length >= 2 ? pieces[pieces.length - 1] : null;
         }
         let parts = null;
-        for (let s of [" and ", " & ", " to "]) {
+        for (let s of [" and ", " & ", " to ", " v. "]) {
           if (andNames.includes(s)) {
             parts = andNames.split(s);
             break;
@@ -1496,7 +1497,7 @@
       let needToClearSpouse = true;
       if (selection) {
         let selectedText = selection.toString().replace(/[ ,;!]*$/, "").trim();
-        if (selectedText.includes(" and ") || selectedText.includes(" & ") || selectedText.includes(" to ")) {
+        if (selectedText.includes(" and ") || selectedText.includes(" & ") || selectedText.includes(" to ") || selectedText.includes(" v. ")) {
           let twoNames = splitAndOrToNames(selectedText);
           selectedText = twoNames[0];
           if (twoNames.length === 2) {
@@ -2277,7 +2278,6 @@
         if (firstCoverage && isEmpty(firstCoverage.recordType)) {
           // $("#edit-record-metadata-type").val("Obituary")
           firstCoverage.recordType = "http://gedcomx.org/Obituary";
-          let x=3;
         }
         editor.set(doc);
       }

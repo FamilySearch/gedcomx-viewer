@@ -57,30 +57,44 @@ function buildGraph(gx, isEditable, prevChart, ignoreUndo, imgOverlayToGx, isDra
   }));
 }
 
+function buildMultipleRelGraphs(gxRecordSet, chartOptions) {
+  let $relChartDiv = $("#rel-chart");
+  let recordId = 0;
+  for (let gx of gxRecordSet) {
+    let subChartId = "record-" + recordId;
+    $relChartDiv.append("<div id='" + subChartId + "></div>");
+    buildRelGraph(gx, chartOptions, subChartId);
+    $relChartDiv.append("<hr>");
+    recordId++;
+  }
+}
+
 /**
  * Create a RelationshipGraph, construct from that a RelationshipChart, and return it.
  * @param gx - GedcomX document to visualize
  * @param chartOptions - ChartOptions object
+ * @param relChartDiv - optional HTML div ID of the div where the relationship chart will go (default="rel-chart")
  * @returns {RelationshipChart}
  */
-function buildRelGraph(gx, chartOptions) {
+function buildRelGraph(gx, chartOptions, relChartDiv='rel-chart') {
   if (!chartOptions.imgOverlayToGx && chartOptions.prevChart) {
     chartOptions.imgOverlayToGx = chartOptions.prevChart.imgOverlayToGx; // in case this is non-null.
   }
   try {
     let graph = new RelationshipGraph(gx, chartOptions.prevChart ? chartOptions.prevChart.chartId : null);
-    let $relChartDiv = $("#rel-chart");
+    let $relChartDiv = $("#" + relChartDiv);
     if (!currentRelChart) {
       $(document).keydown(handleGraphKeydown);
     }
     let relChartBuilder = new RelChartBuilder(graph, $relChartDiv, chartOptions);
-    currentRelChart = relChartBuilder.buildChart(chartOptions.prevChart, chartOptions.imgOverlayToGx);
-    $relChartDiv.width(currentRelChart.width);
-    $relChartDiv.height(currentRelChart.height);
+    let relChart = relChartBuilder.buildChart(chartOptions.prevChart, chartOptions.imgOverlayToGx);
+    $relChartDiv.width(relChart.width);
+    $relChartDiv.height(relChart.height);
     if (chartOptions.isDraggable) {
       $relChartDiv.draggable();
     }
-    return currentRelChart;
+    currentRelChart = relChart;
+    return relChart;
   }
   catch (err) {
     console.log(err);
@@ -105,10 +119,11 @@ function findPersonIndex(gxPersons, personId) {
 }
 
 let shouldCollapse = true;
+let shouldShowAllNames = true;
 
-function allSelectedPersonsHaveDetails() {
-  for (let personBox of currentRelChart.selectedPersonBoxes) {
-    if (!currentRelChart.detailedPersonIds.has(personBox.personNode.personId)) {
+function allSelectedPersonsHaveDetails(relChart) {
+  for (let personBox of relChart.selectedPersonBoxes) {
+    if (!relChart.detailedPersonIds.has(personBox.personNode.personId)) {
       return false;
     }
   }
@@ -116,22 +131,22 @@ function allSelectedPersonsHaveDetails() {
 }
 
 function handleGraphKeydown(e) {
-  if ($(document.activeElement).is(":input,[contenteditable]") || !currentRelChart) {
+  let relChart = currentRelChart;
+  if ($(document.activeElement).is(":input,[contenteditable]") || !relChart) {
     // ignore keydown events in input boxes or contenteditable sections. Those already handle cmd/ctrl-Z for undo/redo on their own.
     return;
   }
   let key = e.key.toUpperCase();
-
-  if (!currentRelChart.ignoreUndo && (e.ctrlKey || e.metaKey)) {
+  if (!relChart.ignoreUndo && (e.ctrlKey || e.metaKey)) {
     // Handle ctrl/cmd keydown
     if ((key === 'Z' && e.shiftKey) || key === 'Y') {
       // Ctrl/Cmd-shift Z or Cmd-Y => Redo
-      redoGraph();
+      redoGraph(relChart);
       e.stopPropagation();
     }
     else if (key === 'Z') { // lower-case z, no shift
       // Ctrl/Cmd-Z => Undo
-      undoGraph();
+      undoGraph(relChart);
       e.stopPropagation();
     }
   }
@@ -139,43 +154,51 @@ function handleGraphKeydown(e) {
     switch (key) {
       case 'L':
         shouldCollapse = !shouldCollapse;
-        updateRecord(currentRelChart.getGedcomX());
+        updateRecord(relChart.getGedcomX());
+        e.stopPropagation();
+        break;
+      case 'N':
+        shouldShowAllNames = !shouldShowAllNames;
+        updateRecord(relChart.getGedcomX());
         e.stopPropagation();
         break;
       case 'R':
         if (e.shiftKey) {
-          let currentGx = currentRelChart.getGedcomX();
+          let currentGx = relChart.getGedcomX();
           removeRedundantRelationships(currentGx);
         }
         else {
           if (typeof masterGx != 'undefined') {
-            refreshMasterGx();
+            refreshMasterGx(relChart);
           }
         }
         e.stopPropagation();
         break;
+      case '9':
+        removeAllRelationships(relChart.getGedcomX());
+        break;
       case 'I':
-        currentRelChart.shouldDisplayIds = !currentRelChart.shouldDisplayIds;
-        updateRecord(currentRelChart.getGedcomX());
+        relChart.shouldDisplayIds = !relChart.shouldDisplayIds;
+        updateRecord(relChart.getGedcomX());
         e.stopPropagation();
         break;
       case 'D':
-        if (currentRelChart.selectedPersonBoxes.length > 0) {
-          if (e.shiftKey || allSelectedPersonsHaveDetails()) {
-            for (let personBox of currentRelChart.selectedPersonBoxes) {
-              currentRelChart.detailedPersonIds.delete(personBox.personNode.personId);
+        if (relChart.selectedPersonBoxes.length > 0) {
+          if (e.shiftKey || allSelectedPersonsHaveDetails(relChart)) {
+            for (let personBox of relChart.selectedPersonBoxes) {
+              relChart.detailedPersonIds.delete(personBox.personNode.personId);
             }
           }
           else {
-            for (let personBox of currentRelChart.selectedPersonBoxes) {
-              currentRelChart.detailedPersonIds.add(personBox.personNode.personId);
+            for (let personBox of relChart.selectedPersonBoxes) {
+              relChart.detailedPersonIds.add(personBox.personNode.personId);
             }
           }
         }
         else {
-          currentRelChart.shouldDisplayDetails = !currentRelChart.shouldDisplayDetails;
+          relChart.shouldDisplayDetails = !relChart.shouldDisplayDetails;
         }
-        updateRecord(currentRelChart.getGedcomX());
+        updateRecord(relChart.getGedcomX());
         e.stopPropagation();
         break;
       case 'P':
@@ -184,14 +207,14 @@ function handleGraphKeydown(e) {
       case 'B':
       case 'M':
         if (typeof toggleRelatives != 'undefined') {
-          toggleRelatives(key, e.shiftKey, getPersonIdsOfPersonBoxes(currentRelChart.selectedPersonBoxes));
+          toggleRelatives(key, e.shiftKey, getPersonIdsOfPersonBoxes(relChart.selectedPersonBoxes));
           e.stopPropagation();
         }
         break;
       case '1':
         if (typeof masterGx != 'undefined' && masterGx && masterGx.persons && masterGx.persons.length > 1 &&
-            currentRelChart.selectedPersonBoxes && currentRelChart.selectedPersonBoxes.length === 1) {
-          let selectedPersonIndex = findPersonIndex(masterGx.persons, currentRelChart.selectedPersonBoxes[0].personNode.personId);
+            relChart.selectedPersonBoxes && relChart.selectedPersonBoxes.length === 1) {
+          let selectedPersonIndex = findPersonIndex(masterGx.persons, relChart.selectedPersonBoxes[0].personNode.personId);
           if (selectedPersonIndex > 0) {
             masterGx.persons[0].principal = false;
             let temp = masterGx.persons[selectedPersonIndex];
@@ -204,7 +227,7 @@ function handleGraphKeydown(e) {
         }
         break;
       case 'ESCAPE':
-        currentRelChart.clearSelectedPerson();
+        relChart.clearSelectedPerson();
         e.stopPropagation();
         break;
     }

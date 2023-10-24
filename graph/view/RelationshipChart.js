@@ -334,17 +334,17 @@ function initUndo(relChart, chartOptions) {
   }
 }
 
-function undoGraph() {
-  if (currentRelChart && currentRelChart.gedcomxChangePosition > 1) {
-    let gx = copyGedcomx(currentRelChart.gedcomxChangeHistory[--currentRelChart.gedcomxChangePosition - 1]);
-    buildRelGraph(gx, prevRelChartOptions(currentRelChart, null, true));
+function undoGraph(relChart) {
+  if (relChart && relChart.gedcomxChangePosition > 1) {
+    let gx = copyGedcomx(relChart.gedcomxChangeHistory[--relChart.gedcomxChangePosition - 1]);
+    buildRelGraph(gx, prevRelChartOptions(relChart, null, true));
   }
 }
 
-function redoGraph() {
-  if (currentRelChart && currentRelChart.gedcomxChangePosition < currentRelChart.gedcomxChangeHistory.length) {
-    let gx = copyGedcomx(currentRelChart.gedcomxChangeHistory[currentRelChart.gedcomxChangePosition++]);
-    buildRelGraph(gx, prevRelChartOptions(currentRelChart, null, true));
+function redoGraph(relChart) {
+  if (relChart && relChart.gedcomxChangePosition < relChart.gedcomxChangeHistory.length) {
+    let gx = copyGedcomx(relChart.gedcomxChangeHistory[relChart.gedcomxChangePosition++]);
+    buildRelGraph(gx, prevRelChartOptions(relChart, null, true));
   }
 }
 

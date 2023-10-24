@@ -70,7 +70,13 @@
           } ]
         } ]
       } ]
-    } ]
+    },
+    {
+      "confidence" : "http://confidence/100",
+      "nameForms" : [ {
+        "fullText" : "Manuel da big queso Quesadilla"
+        } ]
+    }]
   }, {
     "id" : "r1p2",
     "principal" : true,

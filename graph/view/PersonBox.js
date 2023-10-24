@@ -98,7 +98,7 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
       for (let name of person.names) {
         if (name.nameForms) {
           for (let form of name.nameForms) {
-            if (form.fullText) {
+            if (form.fullText && (isFirstFullName || shouldShowAllNames)) {
               let elementId = nextId("name", relChartToGx, name);
               if (form.parts) {
                 const namePartSpans = form.parts.map(part => {

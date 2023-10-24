@@ -138,7 +138,7 @@ function getPersonUrl(gxPerson) {
 
 /**
  * Having received a GedcomX payload, add the new persons over to the main GedcomX object and on to the relationship chart.
- * If all of the persons in the given fetchSpecs have now arrived (either because we did a single multi-person Family Tree call,
+ * If all the persons in the given fetchSpecs have now arrived (either because we did a single multi-person Family Tree call,
  *   or because this is the last of the FetchSpecs to come through) then recurse to additional persons that need to be fetched.
  * @param gx - GedcomX received for the given fetchSpecs
  * @param fetchSpecs - Array of {personUrl, [downGenerations...]} to be fetched.
@@ -162,7 +162,7 @@ function receivePersons(gx, fetchSpecs) {
     if (masterGx == null) {
       masterGx = { persons: [], relationships: []};
     }
-    // Add all of the persons and relationships in gx to masterGx
+    // Add all the persons and relationships in gx to masterGx
     for (const person of gx.persons) {
       let existingPerson = gxPersonMap.get(person.id);
       if (existingPerson) {
@@ -258,7 +258,7 @@ function receivePersons(gx, fetchSpecs) {
       }
     }
 
-    // Get a Set of all of the parent IDs for all of the given child ids.
+    // Get a Set of all the parent IDs for all the given child ids.
     function getAllParentIds(childPersonIds) {
       let allParentIds = new Set();
       for (const personId of childPersonIds) {
@@ -402,8 +402,7 @@ function receivePersons(gx, fetchSpecs) {
     updateRecord(masterGx, null, false, true);
   }
   else {
-    let chartOptions = defaultChartOptions;
-    currentRelChart = buildRelGraph(masterGx, chartOptions);
+    buildRelGraph(masterGx, defaultChartOptions);
   }
   for (let fetchSpec of fetchSpecs) {
     if (fetchSpec.shouldSelect) {
@@ -439,13 +438,13 @@ function getFirstPersonId() {
   return masterGx.persons[0].id;
 }
 
-function refreshMasterGx() {
+function refreshMasterGx(relChart) {
   let fetchSpecs = [];
 
-  if (currentRelChart) {
+  if (relChart) {
     let firstPersonId = masterGx && masterGx.persons && masterGx.persons.length > 0 ? masterGx.persons[0].id : null;
     let firstPersonPosition = -1;
-    for (let personBox of currentRelChart.personBoxes) {
+    for (let personBox of relChart.personBoxes) {
       let personId = personBox.personNode.personId;
       let personUrl = getPersonUrl(personBox.personNode.person);
       let fetchSpec = new FetchSpec(personId, personUrl, [0], null);

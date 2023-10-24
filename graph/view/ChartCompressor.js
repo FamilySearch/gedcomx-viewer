@@ -55,7 +55,7 @@ function ChartCompressor(relChart) {
  * @param minMove - Object containing "value" element, which is smallest amount that 'group' can move before bumping into someone who isn't in the group.
  *                  null => no constraint found yet. "value" may be updated.
  * @param group - "LinkedHashSet" of person IDs that is moving down the chart looking for who it might bump into.
- * @return Boolean: true if the 'other' person is not already part of 'group' (and thus should remain part of group's "front")
+ * @return true if the 'other' person is not already part of 'group' (and thus should remain part of group's "front")
  */
 ChartCompressor.prototype.checkBump = function(personBox, otherBox, bumpedSet, minMove, group) {
   if (!otherBox || group.contains(otherBox.personBoxId)) {
@@ -286,7 +286,7 @@ ChartCompressor.prototype.translateVertical = function(personBoxes) {
 };
 
 ChartCompressor.prototype.pushPeopleDown = function(personBoxes) {
-  // Map of personBox.personBoxId to the BumpGroup that that PersonBox become part of.
+  // Map of personBox.personBoxId to the BumpGroup that each PersonBox becomes part of.
   let bumpGroupMap = {};
 
   // Go through the list of persons.  Move each person down as far as possible until a constraint is violated,

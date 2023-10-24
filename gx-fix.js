@@ -149,6 +149,11 @@ function fixExplicitNameType(gx) {
   }
 }
 
+function removeAllRelationships(gx) {
+  gx.relationships = [];
+  updateRecord(gx);
+}
+
 /**
  * Remove relationships that are already covered by existing couple and parent-child relationships.
  * For example, remove "brother" relationship if the two people already have the same parent;
