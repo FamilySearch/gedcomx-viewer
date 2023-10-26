@@ -74,3 +74,41 @@ table {
 .delete-value {
     color:red;
 }
+
+.change-reason {
+    color: #4d7e93;
+}
+
+.change-message {
+    color: #774d93
+}
+
+.old-value > .change-message {
+    color: #934d72
+}
+
+.new-value > .change-message {
+    color: #4d9383
+}
+.child-rel {
+    border: 1px solid grey;
+}
+
+.child-rel tr td {
+    border: 1px solid lightgrey;
+    padding: 4px;
+}
+
+.merged-from {
+    color: #007580;
+}
+
+.note-redundant-subject {
+    color: #bea4da;
+}
+.note-subject {
+    color: #400180;
+}
+.note {
+    color: #400180;
+}
