@@ -208,13 +208,14 @@ function makeChangeLogHtml(context, changeLogMap, $mainTable) {
   html += "</tr>\n";
   let prevTimestamp = null;
   let evenTimestampGroup = true;
+  let entryIndex = 0;
   for (let entry of allEntries) {
     if (entry.updated !== prevTimestamp) {
       evenTimestampGroup = !evenTimestampGroup;
     }
     let rowClass = evenTimestampGroup ? " even-ts" : " odd-ts";
 
-    html += "<tr></tr><td class='timestamp" + rowClass + "'>" + (entry.updated !== prevTimestamp ? formatTimestamp(entry.updated) : "") + "</td>";
+    html += "<tr></tr><td onclick='displayRecords(this, " + entryIndex + ")' class='timestamp" + rowClass + "'>" + (entry.updated !== prevTimestamp ? formatTimestamp(entry.updated) : "") + "</td>";
     if (entry.column > maxColumns) {
       maxColumns = entry.column;
     }
@@ -338,7 +339,7 @@ function combineEntries(mainPersonId, changeLogMap, personIds, personMinMaxTs) {
   function isPersonAction(action, entry) {
     return entry && entry.changeInfo
       && extractType(entry.changeInfo[0].objectType) === "Person"
-      && extractType(entry.changeInfo[0].operation) === action);
+      && extractType(entry.changeInfo[0].operation) === action;
   }
 
   let firstTimestamps = [];
@@ -823,3 +824,43 @@ function assume(assumption) {
     throw new Error("Violated assumption.");
   }
 }
+
+function displayRecords(element, entryIndex) {
+  let gedcomxColumns = buildGedcomxColumns(entryIndex);
+}
+
+function buildGedcomxColumns(entryIndex) {
+  // Map of column# -> GedcomX object for that column
+  let columnGedcomxMap = {};
+  // Move entryIndex to the top of the list of changes that were all done at the same time.
+  while (entryIndex > 0 && entries[entryIndex - 1].updated === entries[entryIndex].updated) {
+    entryIndex--;
+  }
+  // Apply each change to the gedcomx at that entry's column.
+  for (let i = allEntries.length - 1; i >= entryIndex; i--) {
+    let entry = allEntries[i];
+    let gedcomx = columnGedcomxMap[entry.column];
+    if (!gedcomx) {
+      gedcomx = getInitialGedcomx(entry.personId);
+      columnGedcomxMap[entry.column] = gedcomx;
+    }
+    updateGedcomx(gedcomx, entry);
+  }
+}
+
+function getInitialGedcomx(personId) {
+  return { "persons": [
+    {"id": entry.personId,
+      "identifiers": {
+        "http://gedcomx.org/Primary": [
+          "https://familiysearch.org/ark:/61903/4:1:/" + personId
+        ]
+      }
+    }
+  ] };
+}
+
+function updateGedcomx(gedcomx, entry) {
+
+}
+
