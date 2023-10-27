@@ -232,6 +232,7 @@ function makeChangeLogHtml(context, changeLogMap, $mainTable) {
     }
     html += "</tr>\n";
     prevTimestamp = entry.updated;
+    entryIndex++;
   }
 
   html += "</table>";
@@ -299,6 +300,7 @@ function extractPersonId(url) {
 function combineEntries(mainPersonId, changeLogMap, personIds, personMinMaxTs) {
 
   // Sort by "updated" timestamp (newest first), and then by person column, with the main person ID first.
+  // Sort Person Create to the bottom and Person Delete to the top.
   // Use entry.id as the tie-breaker
   function compareTimestamp(a, b) {
     if (a.updated < b.updated) {
@@ -309,11 +311,8 @@ function combineEntries(mainPersonId, changeLogMap, personIds, personMinMaxTs) {
     }
     // Equal timestamps, so put main person first.
     if (a.personId !== b.personId) {
-      if (a.personId === mainPersonId) {
-        return -1;
-      }
-      if (b.personId === mainPersonId) {
-        return 1;
+      if (a.personId === mainPersonId || b.personId === mainPersonId) {
+        return a.personId === mainPersonId ? -1 : 1;
       }
       let columnA = a.personId in personColumnMap ? personColumnMap[a.personId] : null;
       let columnB = b.personId in personColumnMap ? personColumnMap[b.personId] : null;
@@ -322,8 +321,24 @@ function combineEntries(mainPersonId, changeLogMap, personIds, personMinMaxTs) {
       }
       return a.personId.localeCompare(b.personId);
     }
+    // Same person, same timestamp. So make cure Delete < other < Create
+    if (isPersonAction("Create", a) || isPersonAction("Create", b)) {
+      return isPersonAction("Create", a) ? 1 : -1;
+    }
+    if (isPersonAction("Merge", a) || isPersonAction("Merge", b)) {
+      return isPersonAction("Merge", a) ? 1 : -1;
+    }
+    if (isPersonAction("Delete", a) || isPersonAction("Delete", b)) {
+      return isPersonAction("Delete", a) ? -1 : 1;
+    }
     // Same timestamp and person ID; so use that person's original change log order.
     return a.originalIndex - b.originalIndex;
+  }
+
+  function isPersonAction(action, entry) {
+    return entry && entry.changeInfo
+      && extractType(entry.changeInfo[0].objectType) === "Person"
+      && extractType(entry.changeInfo[0].operation) === action);
   }
 
   let firstTimestamps = [];
