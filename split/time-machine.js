@@ -215,7 +215,14 @@ function makeChangeLogHtml(context, changeLogMap, $mainTable) {
     }
     let rowClass = evenTimestampGroup ? " even-ts" : " odd-ts";
 
-    html += "<tr></tr><td onclick='displayRecords(this, " + entryIndex + ")' class='timestamp" + rowClass + "'>" + (entry.updated !== prevTimestamp ? formatTimestamp(entry.updated) : "") + "</td>";
+    html += "<tr>";
+    if (entry.updated !== prevTimestamp) {
+      // Combine all cells with the same timestamp into a single cell.
+      let rowspan = numRowsWithSameTimestamp(allEntries, entryIndex);
+      let rowspanHtml = rowspan > 1 ? "rowspan='" + rowspan + "' " : "";
+      html += "<td " + rowspanHtml + "onclick='displayRecords(this, " + entryIndex + ")' class='timestamp" + rowClass + "'>" + formatTimestamp(entry.updated) + "</td>";
+    }
+
     if (entry.column > maxColumns) {
       maxColumns = entry.column;
     }
@@ -238,6 +245,15 @@ function makeChangeLogHtml(context, changeLogMap, $mainTable) {
 
   html += "</table>";
   $mainTable.html(html);
+}
+
+function numRowsWithSameTimestamp(allEntries, entryIndex) {
+  let timestamp = allEntries[entryIndex].updated;
+  let differentIndex = entryIndex + 1;
+  while (differentIndex < allEntries.length && allEntries[differentIndex].updated === timestamp) {
+    differentIndex++;
+  }
+  return differentIndex - entryIndex;
 }
 
 function getEntryHtml(entry) {
@@ -598,7 +614,7 @@ function getMergedIntoMessage(removedPersonId, timestamp) {
 }
 
 function hasFact(person, key="facts") {
-  return person && person[key] && person[key].length > 0;
+  return person && key && person[key] && person[key].length > 0;
 }
 
 function getFactHtml(entity, key="facts") {
@@ -645,8 +661,8 @@ function getCoupleRelationshipHtml(coupleRelationship, personId, timestamp) {
   }
   let interpretation = interpretCoupleRelationship(coupleRelationship, personId);
   let html = "<table class='child-rel'>";
-  html += getRelativeRow(coupleRelationship, "person1", interpretation, timestamp);
-  html += getRelativeRow(coupleRelationship, "person2", interpretation, timestamp);
+  html += getRelativeRow(coupleRelationship, "person1", interpretation, timestamp, "facts");
+  html += getRelativeRow(coupleRelationship, "person2", interpretation, timestamp, null);
   html += "</table>\n" + getChangeMessage(coupleRelationship);
 
   return html;
@@ -833,7 +849,7 @@ function buildGedcomxColumns(entryIndex) {
   // Map of column# -> GedcomX object for that column
   let columnGedcomxMap = {};
   // Move entryIndex to the top of the list of changes that were all done at the same time.
-  while (entryIndex > 0 && entries[entryIndex - 1].updated === entries[entryIndex].updated) {
+  while (entryIndex > 0 && allEntries[entryIndex - 1].updated === allEntries[entryIndex].updated) {
     entryIndex--;
   }
   // Apply each change to the gedcomx at that entry's column.
@@ -846,11 +862,12 @@ function buildGedcomxColumns(entryIndex) {
     }
     updateGedcomx(gedcomx, entry);
   }
+  return columnGedcomxMap;
 }
 
 function getInitialGedcomx(personId) {
   return { "persons": [
-    {"id": entry.personId,
+    {"id": personId,
       "identifiers": {
         "http://gedcomx.org/Primary": [
           "https://familiysearch.org/ark:/61903/4:1:/" + personId
