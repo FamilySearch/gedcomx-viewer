@@ -293,10 +293,10 @@ function removeRedundantRelationships(gx) {
           remove = hasRelative(p1, p2, parentChildMap, spouseMap);
           break;
         case "Grandparent":
-          remove = hasRelative(p1, p2, childParentMap, childParentMap);
+          remove = hasRelative(p1, p2, parentChildMap, parentChildMap);
           break;
         case "GreatGrandparent":
-          remove = hasRelative(p1, p2, childParentMap, childParentMap, childParentMap);
+          remove = hasRelative(p1, p2, parentChildMap, parentChildMap, parentChildMap);
           break;
         case "AuntOrUncle":
           remove = hasRelative(p1, p2, childParentMap, parentChildMap, parentChildMap);
