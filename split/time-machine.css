@@ -113,3 +113,40 @@ table {
 .note {
     color: #400180;
 }
+
+#tabs ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #dec49e;
+}
+
+#tabs ul li {
+    float: left;
+    border: 1px solid #eee3d3;
+}
+
+/*#tabs ul li a:hover {*/
+/*    background-color: #e7d1bc;*/
+/*}*/
+
+#tabs ul li a:hover {
+    background-color: #d5b398;
+}
+
+.ui-tabs-active, .ui-tabs-active:hover {
+    background-color: #c7966d;
+}
+
+#tabs ul li a {
+    display: block;
+    color: black;
+    padding: 8px;
+    text-decoration: none;
+    text-align: center;
+}
+
+.ui-widget-header {
+    border: 2px solid black;
+}

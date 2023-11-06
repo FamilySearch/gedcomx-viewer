@@ -200,8 +200,27 @@ function makeChangeLogHtml(context, changeLogMap, $mainTable) {
   let personMinMaxTs = {};
   let personIds = [];
   let allEntries = combineEntries(context.personId, changeLogMap, personIds, personMinMaxTs);
-  let maxColumns = 0;
-  let html = "<div id='details'></div>\n<table><tr><th>Timestamp</th>";
+  let html =
+    "<div id='tabs'><ul>\n" +
+    "  <li><a href='#change-logs-table'><span>Change Logs</span></a></li>\n" +
+    "  <li><a href='#merge-hierarchy'><span>Merge view</span></a></li>\n" +
+    "  <li><a href='#sources-grid'><span>Sources view</span></a></li>\n" +
+    "</ul>\n" +
+    "<div id ='change-logs-table'>" + getChangeLogTableHtml(allEntries, personIds, personMinMaxTs) + "</div>\n" +
+    "<div id='merge-hierarchy'>" + getMergeHierarchyHtml() + "</div>\n" +
+    "<div id='sources-grid'>Sources grid...</div>\n" +
+    "<div id='details'></div>\n";
+  html += "</div>";
+  $mainTable.html(html);
+  $("#tabs").tabs();
+}
+
+function getMergeHierarchyHtml() {
+  return "Merge history...";
+}
+
+function getChangeLogTableHtml(allEntries, personIds, personMinMaxTs) {
+  let html = "<table><tr><th>Timestamp</th>";
   for (let personId of personIds) {
     html += "<th class='person-id'>" + personId + "</th>";
   }
@@ -223,9 +242,6 @@ function makeChangeLogHtml(context, changeLogMap, $mainTable) {
       html += "<td " + rowspanHtml + "onclick='displayRecords(this, " + entryIndex + ")' class='timestamp" + rowClass + "'>" + formatTimestamp(entry.updated) + "</td>";
     }
 
-    if (entry.column > maxColumns) {
-      maxColumns = entry.column;
-    }
     for (let column = 0; column < personIds.length; column++) {
       let personId = personIds[column];
       if (column === entry.column) {
@@ -244,7 +260,7 @@ function makeChangeLogHtml(context, changeLogMap, $mainTable) {
   }
 
   html += "</table>";
-  $mainTable.html(html);
+  return html;
 }
 
 function numRowsWithSameTimestamp(allEntries, entryIndex) {
