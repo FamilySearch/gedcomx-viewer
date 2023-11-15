@@ -2794,18 +2794,21 @@
 
     function uploadSource(files) {
       if (!dirty || confirm("Clear the GedcomX and lose unsaved changes? (Cancel to keep GedcomX)")) {
+        recordInfos = [];
+        currentRecordIndex = -1;
+        relChart = null; // clear out any previous RelationshipChart
         updateRecord(makeEmptyRecord(), null, false, true);
-      }
-      for (let i = 0; i < files.length; i++) {
-        let f = files[i];
-        let reader = new FileReader();
-        reader.onload = (function(file) {
-          return function(e) {
-            setRecordSourceDocument(e.target.result, file.name);
-          }
-        })(f);
+        for (let i = 0; i < files.length; i++) {
+          let f = files[i];
+          let reader = new FileReader();
+          reader.onload = (function(file) {
+            return function(e) {
+              setRecordSourceDocument(e.target.result, file.name);
+            }
+          })(f);
 
-        reader.readAsText(f);
+          reader.readAsText(f);
+        }
       }
     }
 
