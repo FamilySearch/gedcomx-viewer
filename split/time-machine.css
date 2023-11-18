@@ -150,3 +150,24 @@ table {
 .ui-widget-header {
     border: 2px solid black;
 }
+
+.indent {
+    border: 1px solid #d1decb;
+    background-color: #f9fdf2;
+    width: 20px;
+}
+
+.merge-id {
+    border: 1px solid #dccbb5;
+    background-color: #f1e9da;
+}
+
+.end-gx {
+    border: 1px solid #dad9ce;
+    background-color: #faf8eb
+}
+
+.identity-gx {
+    border: 1px solid #cedace;
+    background-color: #ebfaeb
+}
