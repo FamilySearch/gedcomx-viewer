@@ -1620,6 +1620,12 @@ function updateGedcomx(gedcomx, entry) {
       case "Delete-Couple":
         removeFromListByPrimaryIdentifier(gedcomx, "relationships", entry.content.gedcomx);
         break;
+      case "Create-SourceReference":
+      case "Update-SourceReference":
+      case "Delete-SourceReference":
+        let existingRelationship = findEntityByPrimaryIdentifier(gedcomx.relationships, getPrimaryIdentifier(resultingRelationship));
+        doInList(existingRelationship, "sources", resultingRelationship, operation);
+        break;
       default:
         console.log("Unimplemented change log entry type: " + combo + " for Couple relationship");
     }
@@ -1651,6 +1657,12 @@ function updateGedcomx(gedcomx, entry) {
         break;
       case "Delete-ChildAndParentsRelationship":
         removeFromListByPrimaryIdentifier(gedcomx, CHILD_REL, entry.content.gedcomx);
+        break;
+      case "Create-SourceReference":
+      case "Update-SourceReference":
+      case "Delete-SourceReference":
+        let existingRelationship = findEntityByPrimaryIdentifier(gedcomx[CHILD_REL], getPrimaryIdentifier(resultingRelationship));
+        doInList(existingRelationship, "sources", resultingRelationship, operation);
         break;
       default:
         console.log("Unimplemented change log entry type: " + combo + " for ChildAndParentsRelationship");
