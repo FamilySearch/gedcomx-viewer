@@ -10,6 +10,201 @@ function fixGedcomx(gx) {
   return gx;
 }
 
+function parseYearFromDateString(dateString) {
+  if (dateString) {
+    let dateObject = parseDate(dateString);
+    if (dateObject && dateObject.year) {
+      return dateObject.year;
+    }
+  }
+  return null;
+}
+
+function getRecordYear(gx) {
+  function getPrimaryFactYear(factsContainer) {
+    for (let entity of factsContainer) {
+      for (let fact of getList(entity, "facts")) {
+        if (fact.primary && fact.date) {
+          let year = parseYearFromDateString(fact.date.original);
+          if (year) {
+            return year;
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+  // Check persons and relationships for primary fact year
+  let year = getPrimaryFactYear(getList(gx, "persons"));
+  if (!year) {
+    year = getPrimaryFactYear(getList(gx, "relationships"));
+  }
+  // Check record coverage for date
+  if (!year && gx.sourceDescriptions) {
+    for (let sd of gx.sourceDescriptions) {
+      if (sd.type === "http://gedcomx.org/Record" && sd.coverage) {
+        for (let coverage of sd.coverage) {
+          if (coverage.temporal) {
+            year = parseYearFromDateString(coverage.temporal.original)
+            if (year) {
+              return year;
+            }
+          }
+        }
+      }
+    }
+  }
+  // Check documents for NBX with <DAT>publication date</DAT>
+  if (!year && gx.documents) {
+    for (let document of gx.documents) {
+      if (document.text && document.text.contains("<NBX>")) {
+        let match = document.text.match(/<DAT>([^<]*)<\/DAT>/);
+        if (match) {
+          year = parseYearFromDateString(match[1]);
+          if (year) {
+            return year;
+          }
+        }
+      }
+    }
+  }
+  return year;
+}
+
+// Ensure that anyone with an age has at least an estimated birth year.
+// - First use an age from a qualifier on an event with a date.
+// - Next use an age field and the date of the primary event, if any, or else the record date.
+// Also, REMOVE an estimated birth year (i.e., with "about" on date, and/or a PR_EST_BIR_DATE field)
+//   when another birth event is also there.
+function updateEstimatedBirthYear(gx) {
+  function countBirthFacts(person) {
+    let numBirthFacts = 0;
+    for (let fact of getList(person, "facts")) {
+      if (fact.type && fact.type.endsWith("/Birth") && fact.date) {
+        numBirthFacts++;
+      }
+    }
+    return numBirthFacts;
+  }
+
+  function findEstimatedBirthFact(facts) {
+    function hasLabelId(fact, labelId) {
+      for (let field of getList(fact, "fields")) {
+        for (let fieldValue of getList(field.values)) {
+          if (fieldValue.labelId === labelId) {
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+
+    for (let f = 0; f < facts.length; f++) {
+      let fact = facts[f];
+      if (fact.type && fact.type.endsWith("/Birth") && fact.date && fact.date.original && !fact.place) {
+        if (fact.date.original.startsWith("about") || hasLabelId(fact, "PR_EST_BIR_DATE")) {
+          return f;
+        }
+      }
+    }
+    return -1;
+  }
+
+  function addEstimatedBirthFact(person, birthYear) {
+    if (!person.facts) {
+      person.facts = [];
+    }
+    let estBirthYear = "about " + birthYear;
+    person.facts.push({
+      "type": "http://gedcomx.org/Birth",
+      "date": {
+        "original": estBirthYear,
+        "fields": [ {
+          "type": "http://gedcomx.org/Date",
+          "values": [ {
+            "type": "http://gedcomx.org/Interpreted",
+            "labelId": "PR_EST_BIR_DATE",
+            "text": estBirthYear
+          } ]
+        } ]
+      }
+    });
+  }
+
+  if (!gx) {
+    return;
+  }
+  let recordDate = getRecordYear(gx);
+  for (let person of getList(gx, "persons")) {
+    let numBirthFacts = countBirthFacts(person);
+    if (numBirthFacts === 0) {
+      let birthYear = estimateBirthYearFromPersonAge(person, recordDate);
+      if (birthYear) {
+        addEstimatedBirthFact(person, birthYear);
+      }
+    }
+    else if (numBirthFacts > 1) {
+      let estimatedBirthFactIndex = findEstimatedBirthFact(person.facts);
+      if (estimatedBirthFactIndex >= 0) {
+        person.facts.splice(estimatedBirthFactIndex, 1);
+      }
+    }
+  }
+}
+
+function estimateBirthYearFromPersonAge(person, recordDate) {
+  function parseAge(yr) {
+    return yr && yr.match(/^\d+$/) ? yr : null;
+  }
+
+  function getAgeFromFields(person) {
+    for (let field of getList(person, "fields")) {
+      if (field.type && field.type.endsWith("/Age") && field.values) {
+        for (let fieldValue of field.values) {
+          let fieldAge = parseAge(fieldValue.text);
+          if (fieldAge) {
+            return fieldAge;
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+  function getQualifierAge(fact) {
+    for (let q of getList(fact, "qualifiers")) {
+      if (q.name.endsWith("/Age")) {
+        let age = parseAge(q.value);
+        if (age) {
+          return age;
+        }
+      }
+    }
+    return null;
+  }
+
+  let age = getAgeFromFields(person);
+  let estimatedBirthYear = null;
+  for (let fact of getList(person, "facts")) {
+    let qualifierAge = getQualifierAge(fact);
+    if (qualifierAge) {
+      age = qualifierAge;
+      let date= fact.date ? parseDate(fact.date.original) : null;
+      if (date && date.year) {
+        estimatedBirthYear = date.year - age;
+      }
+    }
+  }
+  if (age && !estimatedBirthYear) {
+    let date = parseDate(recordDate);
+    if (date && date.year) {
+      estimatedBirthYear = date.year - age;
+    }
+  }
+  return estimatedBirthYear;
+}
+
 function generateLocalId(prefix) {
   return (prefix ? prefix : "") + Math.random().toString(36).substr(2, 9);
 }
