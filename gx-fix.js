@@ -117,17 +117,10 @@ function updateEstimatedBirthYear(gx) {
     }
     let estBirthYear = "about " + birthYear;
     person.facts.push({
+      "id": generateLocalId("f_"),
       "type": "http://gedcomx.org/Birth",
       "date": {
-        "original": estBirthYear,
-        "fields": [ {
-          "type": "http://gedcomx.org/Date",
-          "values": [ {
-            "type": "http://gedcomx.org/Interpreted",
-            "labelId": "PR_EST_BIR_DATE",
-            "text": estBirthYear
-          } ]
-        } ]
+        "original": estBirthYear
       }
     });
   }
