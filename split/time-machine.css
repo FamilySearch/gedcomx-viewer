@@ -9,6 +9,10 @@
     color: #1199cb80;
     font-size: small;
 }
+.relative-id {
+    color: #bb8a77;
+    font-size: small;
+}
 th {
     top: 0;
     background-color: #f2ffeb;
@@ -154,10 +158,15 @@ table {
 .indent {
     border: 1px solid #d1decb;
     background-color: #f9fdf2;
-    width: 20px;
+    width: 5px;
 }
 
 .merge-id {
+    border: 1px solid #dccbb5;
+    background-color: #eff1da;
+}
+
+.merge-id-dup {
     border: 1px solid #dccbb5;
     background-color: #f1e9da;
 }
@@ -169,5 +178,34 @@ table {
 
 .identity-gx {
     border: 1px solid #cedace;
-    background-color: #ebfaeb
+    background-color: #f3f8f3
+}
+
+.main-row {
+    border-top: 2px solid #add2ad;
+}
+
+.parent {
+    color: darkblue;
+}
+.spouse {
+    color: #48008b;
+}
+.child {
+    color: #7a6e00;
+}
+.fact-type {
+    font-size: small;
+    color: #5e7283;
+}
+.date {
+    color: darkblue;
+    font-size: 14px;
+}
+.place {
+    color: darkgreen;
+    font-size: 12px;
+}
+.sub-row {
+    border-top: 1px dashed grey;
 }

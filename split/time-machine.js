@@ -1,3 +1,11 @@
+// Future: Make these options in the UI so we can switch between them.
+// Flag for whether to show resulting merge nodes in the hierarchy
+let shouldIncludeMergeNodes = false;
+// Flag for whether to include 'identity' (up to 24 hours after creation or 2012 + 2015 source attachments)
+// and also 'latest' (just before merge).
+// (We may need another view which is "just before last merge for this ID" if not including merge nodes.
+let shouldIncludeBeforeAfter = false;
+
 // IDs to try out:
 //   LZBY-X8J - Clarence Gray. 5 PIDs that all merge into the same one.
 //   9HMF-2S1 - Alice Moore. Example from Kathryn
@@ -393,7 +401,7 @@ function combineEntries(mainPersonId, changeLogMap, personIds, personMinMaxTs) {
       }
       return a.personId.localeCompare(b.personId);
     }
-    // Same person, same timestamp. So make cure Delete < other < Create
+    // Same person, same timestamp. So make sure Delete < other < Create
     if (isPersonAction("Create", a) || isPersonAction("Create", b)) {
       return isPersonAction("Create", a) ? 1 : -1;
     }
@@ -459,12 +467,12 @@ function markMergePersonIds(entries) {
       let survivorId = getPersonId(findPersonByLocalId(entry, changeInfo.resulting.resourceId));
       let duplicateId = getPersonId(findPersonByLocalId(entry, changeInfo.removed.resourceId));
       for (let j = i; j >= 0 && entries[j].updated === entry.updated; j--) {
-        entries[i].mergeSurvivorId = survivorId;
-        entries[i].mergeDuplicateId = duplicateId;
+        entries[j].mergeSurvivorId = survivorId;
+        entries[j].mergeDuplicateId = duplicateId;
       }
-      for (let j = i + 1; j >= 0 && entries[j].updated === entry.updated; j++) {
-        entries[i].mergeSurvivorId = survivorId;
-        entries[i].mergeDuplicateId = duplicateId;
+      for (let j = i + 1; j < entries.length && entries[j].updated === entry.updated; j++) {
+        entries[j].mergeSurvivorId = survivorId;
+        entries[j].mergeDuplicateId = duplicateId;
       }
     }
   }
@@ -714,16 +722,19 @@ function getFactHtml(fact) {
   let type = extractType(fact.type);
   let date = fact.date ? fact.date.original : null;
   let place = fact.place ? fact.place.original : null;
-  let text = (type ? type : "<unknown fact type>");
+  let html = "<span class='fact-type'>" + encode(type ? type : "<unknown fact type>");
   if (date || place) {
-    text += ": ";
+    html += ":</span> ";
     if (date && place) {
-      text += date + "; " + place;
+      html += "<span class='date'>" + encode(date + ";") + "</span> <span class='place'>" + encode(place) + "</span>";
     } else {
-      text += date ? date : place;
+      html += date ? "<span class='date'>" + encode(date) + "</span>" : "<span class='place'>" + encode(place) + "</span>";
     }
   }
-  return encode(text);
+  else {
+    html += "</span>";
+  }
+  return html;
 }
 
 function getChangeMessage(entity) {
@@ -750,7 +761,11 @@ function getCoupleRelationshipHtml(coupleRelationship, personId, timestamp) {
   html += getRelativeRow(coupleRelationship, "person1", interpretation, timestamp, "facts");
   html += getRelativeRow(coupleRelationship, "person2", interpretation, timestamp, null);
   html += "</table>\n" + getChangeMessage(coupleRelationship);
-
+  let id = getPrimaryIdentifier(coupleRelationship);
+  if (id) {
+    id = extractType(id);
+    html += "<br>" + encode("Rel id: " + id);
+  }
   return html;
 }
 
@@ -941,7 +956,8 @@ function assume(assumption) {
 }
 
 function displayRecords(element, entryIndex) {
-  let gedcomxColumns = buildGedcomxColumns(entryIndex);
+  //let gedcomxColumns = buildGedcomxColumns(entryIndex);
+  //todo...
 }
 
 function buildGedcomxColumns(entryIndex) {
@@ -971,6 +987,7 @@ class MergeNode {
     this.personId = personId;
     // When a person is merged, the "survivor" keeps the same person ID, but will have an incremented version #.
     this.version = survivorMergeNode ? survivorMergeNode.version + 1 : 1;
+    // First (earliest in time) entry. For a merged person, this is the person merge entry.
     this.firstEntry = null;
 
     let survivorGx = survivorMergeNode ? survivorMergeNode.getLatestGx() : null;
@@ -999,10 +1016,25 @@ class MergeNode {
    * @param entry
    */
   update(entry) {
+    function hasBeenLongEnough(entryTs, firstTs, entry) {
+      if (entryTs - firstTs > 24*3600*1000 && new Date(entryTs).getFullYear() > 2012) {
+        // It has been over 24 hours and after 2012 when a change was made.
+        // But also allow a source attachment in 2015, when extraction sources were auto-attached.
+        if (new Date(entryTs).getFullYear() === 2015) {
+          let changeInfo = entry.changeInfo[0];
+          return !(extractType(changeInfo.operation) === "Create" &&
+                   extractType(changeInfo.objectType) === "SourceReference" &&
+                   extractType(changeInfo.objectModifier) === "Person");
+        }
+        return true;
+      }
+      return false;
+    }
+
     if (!this.firstEntry) {
       this.firstEntry = entry;
     }
-    else if (!this.endGx && this.firstEntry && entry.updated - this.firstEntry > 24*3600*1000) {
+    else if (!this.endGx && this.firstEntry && hasBeenLongEnough(entry.updated, this.firstEntry.updated, entry)) {
       // We got an entry that is over 24 hours after the first one for this person,
       // so start applying changes to a new copy of the GedcomX that represents the "latest"
       // instead of the 'initial identity'.
@@ -1021,6 +1053,189 @@ class MergeNode {
   }
 }
 
+// ===============
+class PersonDisplay {
+  constructor(person, nameClass, coupleRelationship) {
+    this.name = "<span class='" + nameClass + "'>" + encode(getPersonName(person)) + "</span>";
+    if (nameClass !== "person") {
+      this.name += " <span class='relative-id'>(" + encode(person.id) + ")</span>";
+    }
+    this.facts = getFactListHtml(person);
+    let coupleFacts = coupleRelationship && coupleRelationship.type === "http://gedcomx.org/Couple" ? getFactListHtml(coupleRelationship) : null;
+    if (this.facts && coupleFacts) {
+      this.facts += "<br><span class='couple-facts'>" + coupleFacts + "</span>";
+    }
+  }
+}
+
+// ================
+class FamilyDisplay {
+  constructor(spouseDisplay) {
+    if (spouseDisplay) {
+      this.spouse = spouseDisplay;
+    }
+    this.children = [];
+  }
+}
+
+// ===============
+class MergeRow {
+  constructor(mergeNode, personId, gedcomx, endGedcomx, indent, maxIndent, isDupNode) {
+    let person = findPersonInGx(gedcomx, personId);
+    this.mergeNode = mergeNode;
+    this.personDisplay = new PersonDisplay(person, "person");
+    this.families = []; // Array of FamilyDisplay
+    this.fathers = []; // Array of PersonDisplay
+    this.mothers = []; // Array of PersonDisplay
+
+    // Map of spouseId -> FamilyDisplay for that spouse and children with that spouse.
+    // Also, "<none>" -> FamilyDisplay for list of children with no spouse.
+    let familyMap = {};
+    // Map of personId -> PersonDisplay for mothers and fathers.
+    let fatherMap = {};
+    let motherMap = {};
+    for (let relationship of getList(gedcomx, "relationships").concat(getList(gedcomx, CHILD_REL))) {
+      let isChildRel = isChildRelationship(relationship);
+      let spouseId = getSpouseId(relationship, personId);
+      if (spouseId === "<notParentInRel>") {
+        if (relationship.type === CHILD_REL && personId === getRelativeId(relationship, "child")) {
+          addParentToMap(fatherMap, gedcomx, getRelativeId(relationship, "parent1"), this.fathers);
+          addParentToMap(motherMap, gedcomx, getRelativeId(relationship, "parent2"), this.mothers);
+        }
+      }
+      else {
+        if (!spouseId && isChildRel) {
+          spouseId = "<none>";
+        }
+        let familyDisplay = familyMap[spouseId];
+        if (!familyDisplay) {
+          let spouseDisplay = spouseId === "<none>" ? null : new PersonDisplay(findPersonInGx(gedcomx, spouseId), "spouse", relationship);
+          familyDisplay = new FamilyDisplay(spouseDisplay, "spouse", relationship);
+          familyMap[spouseId] = familyDisplay;
+          this.families.push(familyDisplay);
+        }
+        if (isChildRel) {
+          let childId = getRelativeId(relationship, "child");
+          familyDisplay.children.push(new PersonDisplay(findPersonInGx(gedcomx, childId), "child")); // future: add lineage facts somehow.
+        }
+      }
+    }
+
+    if (endGedcomx) {
+      this.endRow = new MergeRow(null, mergeNode.personId, endGedcomx, null);
+    }
+    this.indent = indent;
+    this.maxIndent = maxIndent;
+    this.isDupNode = isDupNode;
+  }
+
+  getNumChildrenRows() {
+    let numChildrenRows = 0;
+    for (let family of this.families) {
+      if (family.children.length > 0) {
+        numChildrenRows += family.children.length;
+      }
+      else {
+        numChildrenRows += 1;
+      }
+    }
+    return numChildrenRows === 0 ? 1 : numChildrenRows;
+  }
+
+  getRowPersonCells(gedcomx, personId, rowClass, usedColumns) {
+    function addColumn(key, rowspan, content) {
+      if (usedColumns.has(key)) {
+        html += "<td class='" + rowClass + "'" + rowspan + ">" + (content ? content : "") + "</td>";
+      }
+    }
+
+    function combineParents(parents) {
+      let parentsList = [];
+      if (parents) {
+        for (let parent of parents) {
+          parentsList.push(parent.name);
+        }
+      }
+      return parentsList.join("<br>");
+    }
+
+    function startNewRowIfNotFirst(isFirst) {
+      if (!isFirst) {
+        html += "</tr>\n<tr>";
+      }
+      return false;
+    }
+
+    let rowspan = getRowspanParameter(this.getNumChildrenRows());
+    let html = "<td class='" + rowClass + "'" + rowspan + ">" + this.personDisplay.name + "</td>\n";
+    addColumn("person-facts", rowspan, this.personDisplay.facts);
+    addColumn("father-name", rowspan, combineParents(this.fathers));
+    addColumn("mother-name", rowspan, combineParents(this.mothers));
+    let isFirstSpouse = true;
+    if (this.families.length > 0) {
+      for (let spouseFamily of this.families) {
+        isFirstSpouse = startNewRowIfNotFirst(isFirstSpouse);
+        addColumn("spouse-name", getRowspanParameter(spouseFamily.children.length), spouseFamily.spouse ? spouseFamily.spouse.name : "");
+        addColumn("spouse-facts", getRowspanParameter(spouseFamily.children.length), spouseFamily.spouse ? spouseFamily.spouse.facts : "");
+        if (spouseFamily.children.length > 0) {
+          let isFirstChild = true;
+          for (let child of spouseFamily.children) {
+            isFirstChild = startNewRowIfNotFirst(isFirstChild);
+            addColumn("child-name", "", child.name);
+            addColumn("child-facts", "", child.facts);
+          }
+        } else {
+          addColumn("child-name", "", "");
+          addColumn("child-facts", "", "");
+        }
+      }
+    }
+    else {
+      addColumn("spouse-name", "", "");
+      addColumn("spouse-facts", "", "");
+      addColumn("child-name", "", "");
+      addColumn("child-facts", "", "");
+    }
+    return html;
+  }
+
+  // get HTML for this merge row
+  getHtml(usedColumns) {
+    let html = "";
+    html += "<tr class='main-row'>";
+
+    // Indentation and person id
+    let idRowSpan = getRowspanParameter(this.getNumChildrenRows() + (this.endRow ? this.endRow.getNumChildrenRows() : 0));
+    for (let i = 0; i < this.indent; i++) {
+      html += "<td class='indent'" + idRowSpan + ">&nbsp;</td>";
+    }
+    let versionedPersonId = this.mergeNode.personId + (this.mergeNode.version > 1 ? " (v" + this.mergeNode.version + ")" : "");
+    html += "<td class='merge-id" + (this.isDupNode ? "-dup" : "") + "'" + idRowSpan + " colspan='" + (1 + this.maxIndent - this.indent) + "'>"
+      + encode(versionedPersonId) + " " + formatTimestamp(this.mergeNode.firstEntry.updated) + "</td>";
+
+    // Person info
+    if (this.endRow) {
+      html += this.endRow.getRowPersonCells(this.mergeNode.endGx, this.mergeNode.personId, 'end-gx', usedColumns);
+      html += "</tr>\n<tr>";
+    }
+    html += this.getRowPersonCells(this.mergeNode.identityGx, this.mergeNode.personId, 'identity-gx', usedColumns);
+    html += "</tr>\n";
+    return html;
+  }
+}
+
+function addParentToMap(parentIdDisplayMap, parentId, gedcomx, parentList) {
+  if (parentId && !parentIdDisplayMap[parentId]) {
+    let parentDisplay = new PersonDisplay(findPersonInGx(gedcomx, parentId), "parent", null);
+    parentIdDisplayMap[parentId] = parentDisplay;
+    parentList.push(parentDisplay);
+  }
+}
+
+function getRowspanParameter(numRows) {
+  return numRows > 1 ? " rowspan='" + numRows + "'" : "";
+}
+
 // Go through all the change log entries, from earliest (at the end) to the most recent (at index [0]).
 // Update the GedcomX for each personId with each entry.
 // When a merge entry is found, merge the two MergeNodes into a new MergeNode (same person ID, but incremented 'version')
@@ -1031,6 +1246,10 @@ function getRootMergeNode(allEntries) {
 
   for (let i = allEntries.length - 1; i >= 0; i--) {
     let entry = allEntries[i];
+    if (extractType(getProperty(entry.changeInfo[0], "objectType")) === "NotAMatch") {
+      // Skip "NotAMatch" entries because they get added onto both people, even if one is already merged/tombstoned.
+      continue;
+    }
     let personId = entry.personId;
     let mergeNode = personNodeMap[personId];
     if (!mergeNode) {
@@ -1063,51 +1282,63 @@ function findMaxDepth(mergeNode) {
 
 // ==================================================
 // ===== Merge Hierarchy HTML =======================
+function buildMergeRows(mergeNode, indent, maxIndent, isDupNode, mergeRows) {
+  let isLeafNode = !mergeNode.dupNode;
+  if (shouldIncludeMergeNodes || isLeafNode) {
+    let mergeRow = new MergeRow(mergeNode, mergeNode.personId, mergeNode.identityGx, shouldIncludeBeforeAfter ? mergeNode.endGx : null, indent, maxIndent, isDupNode);
+    mergeRows.push(mergeRow);
+  }
+  if (!isLeafNode) {
+    buildMergeRows(mergeNode.dupNode, indent + 1, maxIndent, true, mergeRows);
+    buildMergeRows(mergeNode.prevNode, indent + 1, maxIndent, false, mergeRows);
+  }
+  return mergeRows;
+}
+
+// Get a set of columns that are needed for display in the table, as a set of Strings like "person/father/mother/spouse/child-name/facts"
+function findUsedColumns(mergeRows) {
+  let usedColumns = new Set();
+
+  function checkColumns(personDisplay, who) {
+    if (personDisplay) {
+      if (personDisplay.name) {
+        usedColumns.add(who + "-name");
+      }
+      if (personDisplay.facts) {
+        usedColumns.add(who + "-facts");
+      }
+    }
+  }
+
+  for (let mergeRow of mergeRows) {
+    checkColumns(mergeRow.personDisplay, "person");
+    for (let family of mergeRow.families) {
+      checkColumns(family.spouse, "spouse");
+      for (let child of getList(family, "children")) {
+        checkColumns(child, "child");
+      }
+    }
+  }
+  return usedColumns;
+}
+
 function getMergeHierarchyHtml(entries) {
   let rootMergeNode = getRootMergeNode(entries);
   let maxDepth = findMaxDepth(rootMergeNode);
-  let html = "<table><th colspan='" + maxDepth + "'>Person ID</th><th>Name</th><th>Facts</th><th>Father</th><th>Mother</th><th>Spouse</th>";
-  html += addMergeRows(rootMergeNode, 0, maxDepth - 1);
+  let mergeRows = buildMergeRows(rootMergeNode, 0, maxDepth - 1, false, []);
+  let usedColumns = findUsedColumns(mergeRows);
+  let html = "<table><th colspan='" + maxDepth + "'>Person ID</th><th>Name</th>"
+    + (usedColumns.has("person-facts") ? "<th>Facts</th>" : "")
+    + (usedColumns.has("father-name") ? "<th>Father</th>" : "")
+    + (usedColumns.has("mother-name") ? "<th>Mother</th>" : "")
+    + (usedColumns.has("spouse-name") ? "<th>Spouse</th>" : "")
+    + (usedColumns.has("spouse-facts") ? "<th>Spouse facts</th>" : "")
+    + (usedColumns.has("child-name") ? "<th>Children</th>" : "")
+    + (usedColumns.has("child-facts") ? "<th>Child facts</th>" : "");
+  for (let mergeRow of mergeRows) {
+    html += mergeRow.getHtml(usedColumns);
+  }
   html += "</table>\n";
-  return html;
-}
-
-function addMergeRows(mergeNode, indent, maxIndent) {
-  let html = "<tr>";
-
-  // Indentation and person id
-  let hasBothGx = mergeNode.identityGx && mergeNode.endGx;
-  let rowspan = hasBothGx ? " rowspan='2'" : "";
-  for (let i = 0; i < indent; i++) {
-    html += "<td class='indent'" + rowspan + ">&nbsp;</td>";
-  }
-  let versionedPersonId = mergeNode.personId + (mergeNode.version > 1 ? " (v" + mergeNode.version + ")" : "");
-  html += "<td class='merge-id'" + rowspan + " colspan='" + (1 + maxIndent - indent) + "'>" + encode(versionedPersonId) + "</td>";
-
-  // Person info
-  html += getPersonCells(mergeNode.endGx, mergeNode.personId, 'end-gx');
-  if (hasBothGx) {
-    html += "</tr>\n<tr>";
-  }
-  html += getPersonCells(mergeNode.identityGx, mergeNode.personId,'identity-gx') + "</tr>\n";
-
-  if (mergeNode.prevNode) {
-    html += addMergeRows(mergeNode.prevNode, indent + 1, maxIndent);
-    html += addMergeRows(mergeNode.dupNode, indent + 1, maxIndent);
-  }
-  return html;
-}
-
-function getPersonCells(gedcomx, personId, cellClass) {
-  let html = "";
-  if (gedcomx) {
-    let person = findPersonInGx(gedcomx, personId);
-    html += "<td class='" + cellClass + "'>" + encode(getPersonName(person)) + "</td>";
-    html += "<td class='" + cellClass + "'>" + getFactListHtml(person) + "</td>";
-    html += "<td class='" + cellClass + "'>" + getParentHtml(gedcomx, personId, "parent1") + "</td>";
-    html += "<td class='" + cellClass + "'>" + getParentHtml(gedcomx, personId, "parent2") + "</td>";
-    html += "<td class='" + cellClass + "'>" + getSpouseHtml(gedcomx, personId) + "</td>";
-  }
   return html;
 }
 
@@ -1119,11 +1350,17 @@ function getPersonName(person) {
 }
 
 function getFactListHtml(person) {
+  function isEmptyDeathFact(fact) {
+    return fact && fact.type === "http://gedcomx.org/Death" && !fact.date && !fact.place;
+  }
+
   let facts = [];
   for (let fact of getList(person, "facts")) {
-    let factHtml = getFactHtml(fact);
-    if (factHtml) {
-      facts.push(factHtml);
+    if (!isEmptyDeathFact(fact)) {
+      let factHtml = getFactHtml(fact);
+      if (factHtml) {
+        facts.push(factHtml);
+      }
     }
   }
   return combineHtmlLists(facts);
@@ -1141,19 +1378,26 @@ function getParentHtml(gedcomx, personId, parentNumber) {
   return combineHtmlLists(parents);
 }
 
-function getSpouseHtml(gedcomx, personId) {
-  let spouses = [];
-  for (let rel of getList(gedcomx, "relationships")) {
-    if (rel.type === "http://gedcomx.org/Couple") {
-      let isPerson1 = getRelativeId(rel, "person1") === personId;
-      let isPerson2 = getRelativeId(rel, "person2") === personId;
-      if (isPerson1 || isPerson2) {
-        let spouseId = getRelativeId(rel, isPerson1 ? "person2" : "person1");
-        addRelativeToList(spouses, spouseId, rel.updated);
-      }
+function getSpouseId(relationship, personId) {
+  if (relationship.type === "http://gedcomx.org/Couple") {
+    let isPerson1 = getRelativeId(relationship, "person1") === personId;
+    let isPerson2 = getRelativeId(relationship, "person2") === personId;
+    if (isPerson1 || isPerson2) {
+      return getRelativeId(relationship, isPerson1 ? "person2" : "person1");
     }
   }
-  return combineHtmlLists(spouses);
+  else if (isChildRelationship(relationship)) {
+    let isParent1 = getRelativeId(relationship, "parent1") === personId;
+    let isParent2 = getRelativeId(relationship, "parent2") === personId;
+    if (isParent1 || isParent2) {
+      return getRelativeId(relationship, isParent1 ? "parent2" : "parent1");
+    }
+  }
+  return "<notParentInRel>";
+}
+
+function isChildRelationship(relationship) {
+  return relationship && relationship.hasOwnProperty("child");
 }
 
 function combineHtmlLists(list) {
@@ -1171,7 +1415,7 @@ function getRelativeHtml(relativeId, timestamp) {
   if (!relativeId) {
     return "";
   }
-  return encode(getRelativeName(relativeId, timestamp));
+  return encode(getRelativeName(relativeId, timestamp)) + " <span class='relative-id'>(" + encode(relativeId) + ")</span>";
 }
 
 
@@ -1243,52 +1487,15 @@ function findPersonInGx(gedcomx, personId) {
  * @param date - Date string. Text before or after the date is ignored.
  * @returns dayNumber that can be used for date comparisons, or 0 if it could not be parsed.
  */
-function parseDate(date) {
-  function mapMonth(monthName) {
-    const monthMap = {"jan": 1, "feb": 2, "mar": 3, "apr": 4, "may": 5, "jun": 6, "jul": 7, "aug": 8, "sep": 9, "oct": 10, "nov": 11, "dec": 12};
-    return monthName ? monthMap[monthName.toLowerCase().slice(0, 3)] : null;
-  }
-
+function parseDateIntoNumber(date) {
   let dayNumber = 0;
-  if (date) {
-    let day = null;
-    let month = null;
-    let year = null;
-    // Match 3 July 1820
-    let match = date.match(/(?:(\d+ +)?([A-Za-z]+ +))?(\d\d\d\d)(?: +(BC|B\.C\.|BCE|B\.C\.E\.))?/);
-    if (match) {
-      day = match[1];
-      month = mapMonth(match[2]);
-      year = match[3];
-      if (match[4]) { // B.C.
-        year = -year;
-      }
-    }
-    else {
-      // Match July 3, 1820
-      match = date.match(/(?:([A-Za-z]+ +)(\d+,? )?)?(\d\d\d\d)(?: +(BC|B\.C\.|BCE|B\.C\.E\.))?/);
-      if (match) {
-        month = mapMonth(match[1]);
-        day = match[2];
-        year = match[3];
-      }
-      else {
-        // Match 7/3/1820, or 7/3/20, or 7/1820
-        match = date.match(/(\d\d?)\/(?:(\d\d?)\/)?(\d\d\d\d)/);
-        if (match) {
-          month = match[1];
-          day = match[2];
-          year = match[3];
-        }
-      }
-    }
-    if (year) {
-      dayNumber += 31 * 12 * year;
-      if (month) {
-        dayNumber += 31 * month;
-        if (day) {
-          dayNumber += day;
-        }
+  let dateObject = parseDate(date);
+  if (dateObject && dateObject.year) {
+    dayNumber += 31 * 12 * dateObject.year;
+    if (dateObject.month) {
+      dayNumber += 31 * dateObject.month;
+      if (dateObject.day) {
+        dayNumber += dateObject.day;
       }
     }
   }
@@ -1421,10 +1628,19 @@ function addToList(listHolder, listName, element) {
  * @param elementListContainer - Object (like a change log person) that has a list of the given name with a single entry.
  */
 function updateInList(listContainer, listName, elementListContainer) {
+  function hasSameId(a, b) {
+    if (a.hasOwnProperty("id") && a["id"] === elementWithId["id"]) {
+      return true;
+    }
+    let idA = getPrimaryIdentifier(a);
+    let idB = getPrimaryIdentifier(b);
+    return !!(idA && idA === idB);
+  }
+
   let elementWithId = elementListContainer[listName][0];
   let existingList = listContainer[listName];
   for (let i = 0; i < existingList.length; i++) {
-    if (existingList[i].hasOwnProperty("id") && existingList[i]["id"] === elementWithId["id"]) {
+    if (hasSameId(existingList[i], elementWithId)) {
       existingList[i] = elementWithId;
       return;
     }
@@ -1449,8 +1665,11 @@ function removeFromListByPrimaryIdentifier(listContainer, listName, elementListC
         return;
       }
     }
+    console.log("Failed to find element in " + listName + "[] with id " + identifierToRemove);
   }
-  console.log("Failed to find element in " + listName + "[] with id " + relationshipId);
+  else {
+    console.log("Failed to find list '" + listName + "'");
+  }
 }
 
 function removeFromListById(listContainer, listName, elementListContainer) {
@@ -1536,6 +1755,41 @@ function deleteFactFromRelationship(gedcomx, entry, relationshipListName, result
 }
 
 /**
+ * Add or update the persons in the gedcomx referenced by the given relationship (except the main personId).
+ * @param gedcomx - GedcomX to update
+ * @param entry - Change log entry for a relationship change. Includes a snapshot of the persons involved in the relationship.
+ * @param relationship - Relationship object found
+ */
+function updateRelatives(gedcomx, entry, relationship) {
+  function addRelativeIdToList(relativeKey) {
+    let relativeId = getRelativeId(relationship, relativeKey);
+    if (relativeId && relativeId !== entry.personId) {
+      relativeIds.push(relativeId);
+    }
+
+  }
+  let relativeIds = [];
+  addRelativeIdToList("person1");
+  addRelativeIdToList("person2");
+  addRelativeIdToList("parent1");
+  addRelativeIdToList("parent2");
+  addRelativeIdToList("child");
+  for (let relativeId of relativeIds) {
+    let relative = findPersonByLocalId(entry, relativeId);
+    let foundRelative = false;
+    for (let i = 0; i < gedcomx.persons.length && !foundRelative; i++) {
+      if (gedcomx.persons[i].id === relativeId) {
+        gedcomx.persons[i] = relative;
+        foundRelative = true;
+      }
+    }
+    if (!foundRelative) {
+      gedcomx.persons.push(relative);
+    }
+  }
+}
+
+/**
  * Apply one change log entry to the given GedcomX record in order to update it.
  * @param gedcomx - GedcomX record to update. Should already have the person for the entry, with the person identifier set.
  * @param entry - Change log entry to apply
@@ -1551,6 +1805,9 @@ function updateGedcomx(gedcomx, entry) {
 
   if (operation === "Merge" && objectType === "Person") {
     // Nothing really to do when a merge comes in.
+  }
+  else if (operation === "Delete" && entry.personId === entry.mergeDuplicateId) {
+    // Skip doing deletes off of the person being deleted during a merge, so we can see what they looked like before the merge.
   }
   else if (objectModifier === "Person" && objectType !== "NotAMatch") {
     let gxPerson = findPersonInGx(gedcomx, entry.personId);
@@ -1584,8 +1841,8 @@ function updateGedcomx(gedcomx, entry) {
         console.assert(extractType(entryPerson["facts"][0].type) === objectType, "Mismatched fact type in fact creation");
         addFact(gxPerson, entryPerson.facts[0]);
         break;
-      case "Update-(Fact)":
-        updateInList(gxPerson, "facts", entryPerson);
+      case "Delete-(Fact)":
+        doInList(gxPerson, "facts", entryPerson, operation);
         break;
       case "Create-Person":
         // Do nothing: We already have a GedcomX record with an empty person of this ID to start with.
@@ -1598,10 +1855,12 @@ function updateGedcomx(gedcomx, entry) {
   }
   else if (objectModifier === "Couple") {
     let resultingRelationship = findCoupleRelationship(entry, resultingId);
+    updateRelatives(gedcomx, entry, resultingRelationship);
     if (resultingRelationship.hasOwnProperty("facts") && resultingRelationship.facts.length === 1) {
       combo = operation + "-" + "(Fact)";
     }
     switch (combo) {
+      case "Restore-Couple":
       case "Create-Spouse1":
       case "Create-Spouse2":
       case "Update-Spouse1":
@@ -1632,11 +1891,14 @@ function updateGedcomx(gedcomx, entry) {
   }
   else if (objectModifier === "ChildAndParentsRelationship") {
     let resultingRelationship = findChildAndParentsRelationship(entry, resultingId);
+    updateRelatives(gedcomx, entry, resultingRelationship);
     let factKey = resultingRelationship.hasOwnProperty("parent1Facts") ? "parent1Facts" : "parent2Facts"
     if (resultingRelationship.hasOwnProperty(factKey) && resultingRelationship[factKey].length === 1) {
       combo = operation + "-" + "(Fact)";
     }
     switch(combo) {
+      case "Update-ChildAndParentsRelationship":
+      case "Restore-ChildAndParentsRelationship":
       case "Create-Parent1":
       case "Create-Parent2":
       case "Create-Child":

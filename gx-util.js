@@ -19,7 +19,7 @@ function imageArkToApid(imageArk) {
   /**
    * Compute the checksum of the given string as a 2-digit decimal number.
    * @param inString - StringBuilder containing the string to checksum.
-   * @return 2-digit checksum.
+   * @return two-digit checksum.
    */
   function computeChecksum(inString) {
     let MOD_ADLER = 65521;
@@ -172,6 +172,66 @@ function nextId(typeName, elementToGxMap, gxObject) {
   }
 
   return overlayId;
+}
+
+/**
+ * Attempt to parse a date using the formats 3 July 1820; July 3, 1820; and 7/3/1820.
+ * (Days and months are optional, i.e., "3 July 1820", "July 3, 1820", "July 1820", "1820", 7/3/1820 and 7/1820 are all ok.)
+ * (BC, B.C., BCE or B.C.E. can also be added to the end of the first two date formats).
+ * An object is returned like {"year": 1820, "month": 7, "day": 3}, where month is 1-12, day is 1-31, and month or day can be empty.
+ * @param date - Date string. Text before or after the date is ignored.
+ * @returns dayNumber that can be used for date comparisons, or 0 if it could not be parsed.
+ */
+function parseDate(date) {
+  function mapMonth(monthName) {
+    const monthMap = {"jan": 1, "feb": 2, "mar": 3, "apr": 4, "may": 5, "jun": 6, "jul": 7, "aug": 8, "sep": 9, "oct": 10, "nov": 11, "dec": 12};
+    return monthName ? monthMap[monthName.toLowerCase().slice(0, 3)] : null;
+  }
+
+  if (date) {
+    let day = null;
+    let month = null;
+    let year = null;
+    // Match 3 July 1820
+    let match = date.match(/(?:(\d+ +)?([A-Za-z]+ +))?(\d\d\d\d)(?: +(BC|B\.C\.|BCE|B\.C\.E\.))?/);
+    if (match) {
+      day = match[1];
+      month = mapMonth(match[2]);
+      year = match[3];
+      if (match[4]) { // B.C.
+        year = -year;
+      }
+    }
+    else {
+      // Match July 3, 1820
+      match = date.match(/(?:([A-Za-z]+ +)(\d+,? )?)?(\d\d\d\d)(?: +(BC|B\.C\.|BCE|B\.C\.E\.))?/);
+      if (match) {
+        month = mapMonth(match[1]);
+        day = match[2];
+        year = match[3];
+      }
+      else {
+        // Match 7/3/1820, or 7/3/20, or 7/1820
+        match = date.match(/(\d\d?)\/(?:(\d\d?)\/)?(\d\d\d\d)/);
+        if (match) {
+          month = match[1];
+          day = match[2];
+          year = match[3];
+        }
+      }
+    }
+    if (year) {
+      let date = {"year": year};
+      if (month) {
+        date.month = month;
+        if (day) {
+          date.day = day;
+        }
+      }
+      return date;
+    }
+  }
+  return null;
 }
 
 /**
