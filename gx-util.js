@@ -180,7 +180,7 @@ function nextId(typeName, elementToGxMap, gxObject) {
  * (BC, B.C., BCE or B.C.E. can also be added to the end of the first two date formats).
  * An object is returned like {"year": 1820, "month": 7, "day": 3}, where month is 1-12, day is 1-31, and month or day can be empty.
  * @param date - Date string. Text before or after the date is ignored.
- * @returns dayNumber that can be used for date comparisons, or 0 if it could not be parsed.
+ * @returns dateObject with year, optional month, and optional day; or null if it could not be parsed.
  */
 function parseDate(date) {
   function mapMonth(monthName) {
@@ -489,4 +489,15 @@ function normalizeDate(origDate) {
     return match[2] + " " + match[1] + " " + match[3];
   }
   return origDate;
+}
+
+/**
+ * Function to get a non-null list of the given name from the given container.
+ * Avoids having to check whether the container is null and whether the given list is null.
+ * @param container - Object that might contain a list of the given name.
+ * @param listName - Name of the list to return for the container.
+ * @returns {*|*[]} - List of the given name, if any, or and empty list [] if the container or list are null.
+ */
+function getList(container, listName) {
+  return container && container.hasOwnProperty(listName) && container[listName] ? container[listName] : [];
 }

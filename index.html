@@ -241,6 +241,7 @@
         recordInfos[currentRecordIndex].gxRecord = doc;
       }
       dirty = !isClean;
+      updateEstimatedBirthYear(doc);
       let backup = {
         "doc": doc,
         "url": url,

@@ -327,8 +327,7 @@ function getFactYear(fact) {
   if (date) {
     let matches = date.match(/(\d\d\d\d)/);
     if (matches && matches.length > 0) {
-      let year = matches[0];
-      return year;
+      return matches[0];
     }
   }
   return null;

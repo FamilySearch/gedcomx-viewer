@@ -1703,14 +1703,6 @@ function getFirst(list) {
   return list && list.length > 0 ? list[0] : null;
 }
 
-function getList(container, listName) {
-  return container && container.hasOwnProperty(listName) ? container[listName] : [];
-}
-
-function getFirstFromList(container, listName) {
-  return getFirst(getList(container, listName));
-}
-
 function copyObject(object) {
   return object ? JSON.parse(JSON.stringify(object)) : null;
 }
