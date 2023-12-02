@@ -58,7 +58,7 @@ function getRecordYear(gx) {
   // Check documents for NBX with <DAT>publication date</DAT>
   if (!year && gx.documents) {
     for (let document of gx.documents) {
-      if (document.text && document.text.contains("<NBX>")) {
+      if (document.text && document.text.includes("<NBX>")) {
         let match = document.text.match(/<DAT>([^<]*)<\/DAT>/);
         if (match) {
           year = parseYearFromDateString(match[1]);
