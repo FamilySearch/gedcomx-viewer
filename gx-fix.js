@@ -43,7 +43,7 @@ function getRecordYear(gx) {
   // Check record coverage for date
   if (!year && gx.sourceDescriptions) {
     for (let sd of gx.sourceDescriptions) {
-      if (sd.type === "http://gedcomx.org/Record" && sd.coverage) {
+      if (sd.resourceType === "http://gedcomx.org/Record" && sd.coverage) {
         for (let coverage of sd.coverage) {
           if (coverage.temporal) {
             year = parseYearFromDateString(coverage.temporal.original)
