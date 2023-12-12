@@ -204,12 +204,14 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
    * Create HTML for a div for the given fact, with the optional given qualifier.
    * @param fact - Fact to generate HTML for
    * @param qualifier - Qualifier to include after the fact type (e.g., "spouse 2" for "Marriage (spouse 2): 1820".
+   * @param labelClass - Optional css class to use for the fact type label, if not "factType".
    * @returns HTML string for a div for this fact.
    */
-  function getFactHtml(fact, qualifier) {
+  function getFactHtml(fact, qualifier, labelClass) {
     let encodedInfo = getFactInfo(fact);
     let factTypeId = nextId("fact", relChartToGx, fact);
-    return "  <div class='fact'><span class='factType' id='" + factTypeId + "'>" +
+    let factTypeClass = labelClass ? labelClass : "factType";
+    return "  <div class='fact'><span class='" + factTypeClass + "' id='" + factTypeId + "'>" +
       (fact.primary ? "*" : "") +
       encode(getFactName(fact)) +
       (qualifier ? " (" + encode(qualifier) + ")" : "") + (encodedInfo ? ":" : "") + "</span>" +
@@ -217,13 +219,13 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
       "</div>\n";
   }
 
-  function getFactsHtml(factsContainer, prefix) {
+  function getFactsHtml(factsContainer, prefix, labelClass) {
     let html = "";
     if (factsContainer) {
       let facts = factsContainer.facts;
       if (facts) {
         for (let fact of facts) {
-          html += getFactHtml(fact, prefix);
+          html += getFactHtml(fact, prefix, labelClass);
         }
       }
     }
@@ -313,7 +315,7 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
         //  A spouse FamilyNode that does not have both a father and a mother will not have a couple relationship with it, and will thus have no facts.
         if (spouseFamilyNode.father === personNode) {
           let spouseName = spouseFamilyNode.mother ? spouseFamilyNode.mother.name : null;
-          html += getFactsHtml(spouseFamilyNode.coupleRel, multipleSpouses ? spouseName : null);
+          html += getFactsHtml(spouseFamilyNode.coupleRel, multipleSpouses ? spouseName : null, "coupleFactType");
         }
       }
     }
