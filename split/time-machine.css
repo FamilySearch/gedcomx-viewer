@@ -131,10 +131,6 @@ table {
     border: 1px solid #eee3d3;
 }
 
-/*#tabs ul li a:hover {*/
-/*    background-color: #e7d1bc;*/
-/*}*/
-
 #tabs ul li a:hover {
     background-color: #d5b398;
 }
@@ -153,12 +149,6 @@ table {
 
 .ui-widget-header {
     border: 2px solid black;
-}
-
-.indent {
-    border: 1px solid #d1decb;
-    background-color: #f9fdf2;
-    width: 5px;
 }
 
 .merge-id {
@@ -180,11 +170,9 @@ table {
     border: 1px solid #cedace;
     background-color: #f3f8f3
 }
-
 .main-row {
-    border-top: 2px solid #add2ad;
+    border-bottom: 2px solid #add2ad;
 }
-
 .parent {
     color: darkblue;
 }
@@ -208,4 +196,29 @@ table {
 }
 .sub-row {
     border-top: 1px dashed grey;
+}
+
+.con-holder {
+    /* Workaround to get table in td to expand to full height */
+    height: 1px;
+}
+.connector-table {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    border: none;
+    border-spacing: 0;
+    border-collapse: collapse;
+}
+.con-O {
+    border: none;
+}
+.con-I, .con-L {
+    border: 2px #cca768;
+}
+.con-I {
+    border-style: none none none dashed;
+}
+.con-L {
+    border-style: none none dashed dashed;
 }
