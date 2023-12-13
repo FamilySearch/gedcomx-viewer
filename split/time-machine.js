@@ -262,10 +262,12 @@ function makeChangeLogHtml(context, changeLogMap, $mainTable) {
     "<div id='tabs'><ul>\n" +
     "  <li><a href='#change-logs-table'><span>Change Logs</span></a></li>\n" +
     "  <li><a href='#merge-hierarchy'><span>Merge view</span></a></li>\n" +
+    "  <li><a href='#flat-view'><span>Flat view</span></a></li>\n" +
     "  <li><a href='#sources-grid'><span>Sources view</span></a></li>\n" +
     "</ul>\n" +
     "<div id ='change-logs-table'>" + getChangeLogTableHtml(allEntries, personIds, personMinMaxTs) + "</div>\n" +
     "<div id='merge-hierarchy'>" + getMergeHierarchyHtml(allEntries) + "</div>\n" +
+    "<div id='flat-view'>" + getFlatViewHtml(allEntries) + "</div>\n" +
     "<div id='sources-grid'>Sources grid...</div>\n" +
     "<div id='details'></div>\n" +
     "<div id='rel-graphs-container'>\n" +
@@ -275,7 +277,16 @@ function makeChangeLogHtml(context, changeLogMap, $mainTable) {
   html += "</div>";
   $mainTable.html(html);
   $("#rel-graphs-container").hide();
-  $("#tabs").tabs({active: 1});
+  $("#tabs").tabs({active: 2});
+  // Prevent text from being selected when shift-clicking a row.
+  for (let eventType of ["keyup", "keydown"]) {
+    window.addEventListener(eventType, (e) => {
+      document.onselectstart = function() {
+        return !(e.shiftKey);
+      }
+    });
+  }
+  $(document).keydown(handleMergeKeypress);
 }
 
 function getChangeLogTableHtml(allEntries, personIds, personMinMaxTs) {
@@ -1099,10 +1110,41 @@ class FamilyDisplay {
   }
 }
 
+function handleMergeKeypress(event) {
+  if (event.key === "Escape") {
+    console.log("Pressed escape");
+  }
+}
+
+function handleRowClick(event, rowId) {
+  console.log("Clicked row " + rowId + (event.shiftKey ? " + shift" : "") + (event.ctrlKey ? " + ctrl" : "") + (event.metaKey ? " + meta" : ""));
+}
+
 // ===============
+let grouper;
+let nextMergeRowId = 0;
+const MERGE_ROW_ID_PREFIX = "mr-";
+
+class Grouper {
+  constructor(mergeRows, usedColumns, maxDepth) {
+    this.mergeGroups = [new MergeGroup("", mergeRows)];
+    this.usedColumns = usedColumns;
+    this.maxDepth = maxDepth;
+  }
+}
+
+class MergeGroup {
+  constructor(groupName, mergeRows) {
+    this.groupName = groupName;
+    this.mergeRows = mergeRows;
+  }
+}
+
 class MergeRow {
   constructor(mergeNode, personId, gedcomx, endGedcomx, indent, maxIndent, isDupNode) {
     let person = findPersonInGx(gedcomx, personId);
+    this.personId = personId;
+    this.id = nextMergeRowId++;
     this.mergeNode = mergeNode;
     this.personDisplay = new PersonDisplay(person, "person");
     this.families = []; // Array of FamilyDisplay
@@ -1225,7 +1267,7 @@ class MergeRow {
   }
 
   // get HTML for this merge row
-  getHtml(usedColumns) {
+  getHtml(usedColumns, shouldIndent) {
     function getIndentationHtml(indentCodes) {
       let indentHtml = "";
       for (let indentCode of indentCodes) {
@@ -1263,10 +1305,14 @@ class MergeRow {
     }
 
     let idRowSpan = getRowspanParameter(this.getNumChildrenRows() + (this.endRow ? this.endRow.getNumChildrenRows() : 0));
-    let html = "<tr>" + getIndentationHtml(this.indent.split(""));
-    let versionedPersonId = this.mergeNode.personId + (this.mergeNode.version > 1 ? " (v" + this.mergeNode.version + ")" : "");
+    let html = "<tr id='" + MERGE_ROW_ID_PREFIX + this.id + "' onclick='handleRowClick(event, " + this.id + ")'>";
+    if (shouldIndent) {
+      html += getIndentationHtml(this.indent.split(""));
+    }
+    let colspan = shouldIndent ? " colspan='" + (1 + this.maxIndent - this.indent.length) : "";
+    let versionedPersonId = this.mergeNode.personId + (shouldIndent && this.mergeNode.version > 1 ? " (v" + this.mergeNode.version + ")" : "");
     let bottomClass = " main-row";
-    html += "<td class='merge-id" + (this.isDupNode ? "-dup" : "") + bottomClass + "'" + idRowSpan + " colspan='" + (1 + this.maxIndent - this.indent.length) + "'>"
+    html += "<td class='merge-id" + (shouldIndent && this.isDupNode ? "-dup" : "") + bottomClass + "'" + idRowSpan + colspan + "'>"
       + encode(versionedPersonId) + " " + formatTimestamp(this.mergeNode.firstEntry.updated) + "</td>";
 
     // Person info
@@ -1348,16 +1394,19 @@ function findMaxDepth(mergeNode) {
  * @param maxIndent - maximum number of indentations for any merge node
  * @param isDupNode - Flag for whether this is a "duplicate" node (as opposed to the survivor of a merge)
  * @param mergeRows - Array of MergeRows to add to
+ * @param shouldIncludeMergeNodes - Flag for whether to include non-leaf-nodes in the resulting array.
  * @returns Array of MergeRow entries (i.e., the array mergeRows)
  */
-function buildMergeRows(mergeNode, indent, maxIndent, isDupNode, mergeRows) {
+function buildMergeRows(mergeNode, indent, maxIndent, isDupNode, mergeRows, shouldIncludeMergeNodes) {
   this.indent = indent;
-  let mergeRow = new MergeRow(mergeNode, mergeNode.personId, mergeNode.identityGx, shouldIncludeBeforeAfter ? mergeNode.endGx : null, indent, maxIndent, isDupNode);
-  mergeRows.push(mergeRow);
+  if (shouldIncludeMergeNodes || mergeNode.isLeafNode()) {
+    let mergeRow = new MergeRow(mergeNode, mergeNode.personId, mergeNode.identityGx, shouldIncludeBeforeAfter ? mergeNode.endGx : null, indent, maxIndent, isDupNode);
+    mergeRows.push(mergeRow);
+  }
   if (!mergeNode.isLeafNode()) {
     let indentPrefix = indent.length > 0 ? (indent.substring(0, indent.length - 1) + (isDupNode ? "I" : "O")) : "";
-    buildMergeRows(mergeNode.dupNode, indentPrefix + "T", maxIndent, true, mergeRows);
-    buildMergeRows(mergeNode.prevNode, indentPrefix + "L", maxIndent, false, mergeRows);
+    buildMergeRows(mergeNode.dupNode, indentPrefix + "T", maxIndent, true, mergeRows, shouldIncludeMergeNodes);
+    buildMergeRows(mergeNode.prevNode, indentPrefix + "L", maxIndent, false, mergeRows, shouldIncludeMergeNodes);
   }
   return mergeRows;
 }
@@ -1389,26 +1438,53 @@ function findUsedColumns(mergeRows) {
   return usedColumns;
 }
 
-function getMergeHierarchyHtml(entries) {
-  function getTableHeader() {
-    return "<table id='change-log-hierarchy'><th colspan='" + maxDepth + "'>Person ID</th><th>Name</th>"
-      + (usedColumns.has("person-facts") ? "<th>Facts</th>" : "")
-      + (usedColumns.has("father-name") ? "<th>Father</th>" : "")
-      + (usedColumns.has("mother-name") ? "<th>Mother</th>" : "")
-      + (usedColumns.has("spouse-name") ? "<th>Spouse</th>" : "")
-      + (usedColumns.has("spouse-facts") ? "<th>Spouse facts</th>" : "")
-      + (usedColumns.has("child-name") ? "<th>Children</th>" : "")
-      + (usedColumns.has("child-facts") ? "<th>Child facts</th>" : "");
-  }
-
+function getFlatViewHtml(entries) {
   let rootMergeNode = getRootMergeNode(entries);
   let maxDepth = findMaxDepth(rootMergeNode);
-  let mergeRows = buildMergeRows(rootMergeNode, "", maxDepth - 1, false, []);
+  let mergeRows = buildMergeRows(rootMergeNode, "", maxDepth - 1, false, [], false);
   let usedColumns = findUsedColumns(mergeRows);
 
-  let html = getTableHeader();
+  grouper = new Grouper(mergeRows, usedColumns, maxDepth);
+  return getMergeGroupsHtml();
+}
+
+function getMergeGroupsHtml() {
+  let html = getTableHeader(grouper.usedColumns, grouper.maxDepth, false);
+  let numColumns = html.match(/<th>/g).length;
+  for (let groupIndex = 0; groupIndex < grouper.mergeGroups.length; groupIndex++) {
+    let mergeGroup = grouper.mergeGroups[groupIndex];
+    if (groupIndex > 0) {
+      html += "<tr><td class='group-header' colspan='" + numColumns + "'>Group " + groupIndex + "</td></tr>\n";
+    }
+    for (let mergeRow of mergeGroup.mergeRows) {
+      html += mergeRow.getHtml(grouper.usedColumns, false);
+    }
+  }
+  html += "</table>\n";
+  return html;
+}
+
+function getTableHeader(usedColumns, maxDepth, shouldIndent) {
+  let colspan = shouldIndent ? " colspan='" + maxDepth + "'" : "";
+  return "<table id='change-log-hierarchy'><th" + colspan + ">Person ID</th><th>Name</th>"
+    + (usedColumns.has("person-facts") ? "<th>Facts</th>" : "")
+    + (usedColumns.has("father-name") ? "<th>Father</th>" : "")
+    + (usedColumns.has("mother-name") ? "<th>Mother</th>" : "")
+    + (usedColumns.has("spouse-name") ? "<th>Spouse</th>" : "")
+    + (usedColumns.has("spouse-facts") ? "<th>Spouse facts</th>" : "")
+    + (usedColumns.has("child-name") ? "<th>Children</th>" : "")
+    + (usedColumns.has("child-facts") ? "<th>Child facts</th>" : "");
+}
+
+function getMergeHierarchyHtml(entries) {
+  let rootMergeNode = getRootMergeNode(entries);
+  let maxDepth = findMaxDepth(rootMergeNode);
+  let mergeRows = buildMergeRows(rootMergeNode, "", maxDepth - 1, false, [], true);
+  let usedColumns = findUsedColumns(mergeRows);
+
+  let html = getTableHeader(usedColumns, maxDepth, true);
   for (let mergeRow of mergeRows) {
-    html += mergeRow.getHtml(usedColumns);
+    html += mergeRow.getHtml(usedColumns, true);
   }
   html += "</table>\n";
   return html;

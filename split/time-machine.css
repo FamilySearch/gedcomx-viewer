@@ -222,3 +222,7 @@ table {
 .con-L {
     border-style: none none dashed dashed;
 }
+.group-header {
+    background-color: white;
+    border-style: none;
+}
