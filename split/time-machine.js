@@ -1113,23 +1113,99 @@ class FamilyDisplay {
 function handleMergeKeypress(event) {
   if (event.key === "Escape") {
     console.log("Pressed escape");
+    grouper.deselectAll();
   }
 }
 
 function handleRowClick(event, rowId) {
   console.log("Clicked row " + rowId + (event.shiftKey ? " + shift" : "") + (event.ctrlKey ? " + ctrl" : "") + (event.metaKey ? " + meta" : ""));
+  if (event.shiftKey) {
+    grouper.selectUntil(rowId);
+  }
+  else {
+    grouper.toggleRow(rowId);
+  }
 }
 
 // ===============
 let grouper;
 let nextMergeRowId = 0;
 const MERGE_ROW_ID_PREFIX = "mr-";
+const ROW_SELECTION = 'selected';
+
+class RowLocation {
+  constructor(mergeRow, rowIndex, groupIndex) {
+    this.mergeRow = mergeRow;
+    this.rowIndex = rowIndex;
+    this.groupIndex = groupIndex;
+  }
+}
 
 class Grouper {
   constructor(mergeRows, usedColumns, maxDepth) {
     this.mergeGroups = [new MergeGroup("", mergeRows)];
     this.usedColumns = usedColumns;
     this.maxDepth = maxDepth;
+    this.prevSelectLocation = null;
+  }
+
+  findRow(rowId) {
+    for (let groupIndex = 0; groupIndex < this.mergeGroups.length; groupIndex++) {
+      let mergeRows = this.mergeGroups[groupIndex].mergeRows;
+      for (let rowIndex = 0; rowIndex < mergeRows.length; rowIndex++) {
+        let mergeRow = mergeRows[rowIndex];
+        if (mergeRow.id === rowId) {
+          return new RowLocation(mergeRow, rowIndex, groupIndex);
+        }
+      }
+    }
+    if (!rowLocation) {
+      console.log("Could not find row with id " + rowId);
+      return null;
+    }
+  }
+
+  toggleRow(rowId) {
+    let rowLocation = this.findRow(rowId);
+    if (rowLocation) {
+      rowLocation.mergeRow.toggleSelection();
+      if (rowLocation.mergeRow.isSelected) {
+        this.prevSelectLocation = rowLocation;
+      }
+    }
+  }
+
+  selectUntil(rowId) {
+    let rowLocation = this.findRow(rowId);
+    if (rowLocation) {
+      let g = rowLocation.groupIndex;
+      let r = rowLocation.rowIndex;
+      if (this.prevSelectLocation) {
+        if (this.prevSelectLocation.groupIndex < g) {
+          r = 0;
+        }
+        else if (this.prevSelectLocation.groupIndex > g) {
+          r = grouper.mergeGroups[g].mergeRows.length - 1;
+        }
+        else {
+          r = this.prevSelectLocation.rowIndex;
+        }
+        let startRow = Math.min(r, rowLocation.rowIndex);
+        let endRow = Math.max(r, rowLocation.rowIndex);
+        for (let rowIndex = startRow; rowIndex <= endRow; rowIndex++) {
+          let mergeRow = grouper.mergeGroups[g].mergeRows[rowIndex];
+          mergeRow.select();
+        }
+      }
+    }
+  }
+
+  deselectAll() {
+    for (let group of this.mergeGroups) {
+      for (let mergeRow of group.mergeRows) {
+        mergeRow.deselect();
+      }
+    }
   }
 }
 
@@ -1144,12 +1220,13 @@ class MergeRow {
   constructor(mergeNode, personId, gedcomx, endGedcomx, indent, maxIndent, isDupNode) {
     let person = findPersonInGx(gedcomx, personId);
     this.personId = personId;
-    this.id = nextMergeRowId++;
+    this.id = MERGE_ROW_ID_PREFIX + (nextMergeRowId++);
     this.mergeNode = mergeNode;
     this.personDisplay = new PersonDisplay(person, "person");
     this.families = []; // Array of FamilyDisplay
     this.fathers = []; // Array of PersonDisplay
     this.mothers = []; // Array of PersonDisplay
+    this.isSelected = false;
 
     // Map of spouseId -> FamilyDisplay for that spouse and children with that spouse.
     // Also, "<none>" -> FamilyDisplay for list of children with no spouse.
@@ -1205,7 +1282,7 @@ class MergeRow {
     return numChildrenRows === 0 ? 1 : numChildrenRows;
   }
 
-  getRowPersonCells(gedcomx, personId, rowClass, usedColumns, bottomClass) {
+  getRowPersonCells(gedcomx, personId, rowClass, usedColumns, bottomClass, allRowsClass) {
     function addColumn(key, rowspan, content, extraClass) {
       if (usedColumns.has(key)) {
         html += "<td class='" + rowClass + extraClass + "'" + rowspan + ">" + (content ? content : "") + "</td>";
@@ -1222,9 +1299,9 @@ class MergeRow {
       return parentsList.join("<br>");
     }
 
-    function startNewRowIfNotFirst(isFirst) {
+    function startNewRowIfNotFirst(isFirst, rowClass) {
       if (!isFirst) {
-        html += "</tr>\n<tr>";
+        html += "</tr>\n<tr" + (rowClass ? " class='" + rowClass + "' onclick='handleRowClick(event, \"" + rowClass + "\")'" : "") + ">";
       }
       return false;
     }
@@ -1238,7 +1315,7 @@ class MergeRow {
     if (this.families.length > 0) {
       for (let spouseIndex = 0; spouseIndex < this.families.length; spouseIndex++) {
         let spouseFamily = this.families[spouseIndex];
-        isFirstSpouse = startNewRowIfNotFirst(isFirstSpouse);
+        isFirstSpouse = startNewRowIfNotFirst(isFirstSpouse, allRowsClass);
         let familyBottomClass = spouseIndex === this.families.length - 1 ? bottomClass : "";
         addColumn("spouse-name", getRowspanParameter(spouseFamily.children.length), spouseFamily.spouse ? spouseFamily.spouse.name : "", familyBottomClass);
         addColumn("spouse-facts", getRowspanParameter(spouseFamily.children.length), spouseFamily.spouse ? spouseFamily.spouse.facts : "", familyBottomClass);
@@ -1246,7 +1323,7 @@ class MergeRow {
           let isFirstChild = true;
           for (let childIndex = 0; childIndex < spouseFamily.children.length; childIndex++) {
             let child = spouseFamily.children[childIndex];
-            isFirstChild = startNewRowIfNotFirst(isFirstChild);
+            isFirstChild = startNewRowIfNotFirst(isFirstChild, allRowsClass);
             let childBottomClass = childIndex === spouseFamily.children.length - 1 ? familyBottomClass : "";
             addColumn("child-name", "", child.name, childBottomClass);
             addColumn("child-facts", "", child.facts, childBottomClass);
@@ -1264,6 +1341,29 @@ class MergeRow {
       addColumn("child-facts", "", "", bottomClass);
     }
     return html;
+  }
+
+  toggleSelection() {
+    if (this.isSelected) {
+      this.deselect();
+    }
+    else {
+      this.select();
+    }
+  }
+
+  select() {
+    if (!this.isSelected) {
+      $("." + this.id).addClass(ROW_SELECTION);
+      this.isSelected = true;
+    }
+  }
+
+  deselect() {
+    if (this.isSelected) {
+      $("." + this.id).removeClass(ROW_SELECTION);
+      this.isSelected = false;
+    }
   }
 
   // get HTML for this merge row
@@ -1305,7 +1405,7 @@ class MergeRow {
     }
 
     let idRowSpan = getRowspanParameter(this.getNumChildrenRows() + (this.endRow ? this.endRow.getNumChildrenRows() : 0));
-    let html = "<tr id='" + MERGE_ROW_ID_PREFIX + this.id + "' onclick='handleRowClick(event, " + this.id + ")'>";
+    let html = "<tr class='" + this.id + "' onclick='handleRowClick(event, \"" + this.id + "\")'>";
     if (shouldIndent) {
       html += getIndentationHtml(this.indent.split(""));
     }
@@ -1317,10 +1417,10 @@ class MergeRow {
 
     // Person info
     if (this.endRow) {
-      html += this.endRow.getRowPersonCells(this.mergeNode.endGx, this.mergeNode.personId, 'end-gx', usedColumns, "");
+      html += this.endRow.getRowPersonCells(this.mergeNode.endGx, this.mergeNode.personId, 'end-gx', usedColumns, "", this.id);
       html += "</tr>\n<tr>";
     }
-    html += this.getRowPersonCells(this.mergeNode.identityGx, this.mergeNode.personId, 'identity-gx', usedColumns, bottomClass);
+    html += this.getRowPersonCells(this.mergeNode.identityGx, this.mergeNode.personId, 'identity-gx', usedColumns, bottomClass, this.id);
     html += "</tr>\n";
     return html;
   }

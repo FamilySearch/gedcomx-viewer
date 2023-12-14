@@ -168,7 +168,12 @@ table {
 
 .identity-gx {
     border: 1px solid #cedace;
+}
+.identity-gx {
     background-color: #f3f8f3
+}
+.selected * {
+    background-color: #fcfcaa;
 }
 .main-row {
     border-bottom: 2px solid #add2ad;
