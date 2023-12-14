@@ -231,3 +231,20 @@ table {
     background-color: white;
     border-style: none;
 }
+.group-name {
+    display: inline-block;
+    margin-left: 10px;
+    margin-right: 10px;
+}
+.close-button {
+    display: inline-block;
+    vertical-align: top;
+    color: darkred;
+    background-color: #decfb5;
+}
+.add-to-group-button {
+    display: inline-block;
+    vertical-align: top;
+    color: darkgreen;
+    background-color: #decfb5;
+}

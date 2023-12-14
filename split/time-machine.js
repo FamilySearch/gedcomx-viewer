@@ -1130,7 +1130,6 @@ function handleRowClick(event, rowId) {
 // ===============
 let grouper;
 let nextMergeRowId = 0;
-const MERGE_ROW_ID_PREFIX = "mr-";
 const ROW_SELECTION = 'selected';
 
 class RowLocation {
@@ -1143,10 +1142,19 @@ class RowLocation {
 
 class Grouper {
   constructor(mergeRows, usedColumns, maxDepth) {
-    this.mergeGroups = [new MergeGroup("", mergeRows)];
+    this.mergeGroups = [new MergeGroup("Group 1", mergeRows)];
     this.usedColumns = usedColumns;
     this.maxDepth = maxDepth;
     this.prevSelectLocation = null;
+  }
+
+  findGroup(groupId) {
+    for (let mergeGroup of this.mergeGroups) {
+      if (mergeGroup.groupId === groupId) {
+        return mergeGroup;
+      }
+    }
+    return null;
   }
 
   findRow(rowId) {
@@ -1207,10 +1215,36 @@ class Grouper {
       }
     }
   }
+
+  removeSelectedRows() {
+    let selectedRows = [];
+    for (let group of this.mergeGroups) {
+      for (let r = 0; r < group.mergeRows.length; r++) {
+        let mergeRow = group.mergeRows[r];
+        if (mergeRow.isSelected) {
+          mergeRow.deselect();
+          selectedRows.push(mergeRow);
+          group.mergeRows.splice(r, 1);
+          r--;
+        }
+      }
+    }
+    return selectedRows;
+  }
+
+  deleteGroup(groupId) {
+    for (let g = 0; g < this.mergeGroups.length; g++) {
+      let mergeGroup = this.mergeGroups[g];
+      if (mergeGroup.groupId === groupId && isEmpty(mergeGroup.mergeRows)) {
+        this.mergeGroups.splice(g, 1);
+      }
+    }
+  }
 }
 
 class MergeGroup {
   constructor(groupName, mergeRows) {
+    this.groupId = "mg-" + nextMergeRowId++;
     this.groupName = groupName;
     this.mergeRows = mergeRows;
   }
@@ -1220,7 +1254,7 @@ class MergeRow {
   constructor(mergeNode, personId, gedcomx, endGedcomx, indent, maxIndent, isDupNode) {
     let person = findPersonInGx(gedcomx, personId);
     this.personId = personId;
-    this.id = MERGE_ROW_ID_PREFIX + (nextMergeRowId++);
+    this.id = "mr-" + nextMergeRowId++;
     this.mergeNode = mergeNode;
     this.personDisplay = new PersonDisplay(person, "person");
     this.families = []; // Array of FamilyDisplay
@@ -1538,6 +1572,29 @@ function findUsedColumns(mergeRows) {
   return usedColumns;
 }
 
+// Function called when the "add group" button is clicked in the Flat view.
+// If any rows are selected, they are moved to the new group.
+// If this is only the second group, then the first group begins displaying its header.
+function addGroup() {
+  let mergeRows = grouper.removeSelectedRows();
+  let mergeGroup = new MergeGroup("Group " + (grouper.mergeGroups.length + 1), mergeRows);
+  grouper.mergeGroups.push(mergeGroup);
+  updateFlatViewHtml();
+}
+
+function addSelectedToGroup(groupId) {
+  let mergeGroup = grouper.findGroup(groupId);
+  if (mergeGroup) {
+    let selectedRows = grouper.removeSelectedRows();
+    mergeGroup.mergeRows.push(...selectedRows);
+    updateFlatViewHtml();
+  }
+}
+
+function updateFlatViewHtml() {
+  $("#flat-view").html(getGrouperHtml());
+}
+
 function getFlatViewHtml(entries) {
   let rootMergeNode = getRootMergeNode(entries);
   let maxDepth = findMaxDepth(rootMergeNode);
@@ -1545,22 +1602,39 @@ function getFlatViewHtml(entries) {
   let usedColumns = findUsedColumns(mergeRows);
 
   grouper = new Grouper(mergeRows, usedColumns, maxDepth);
-  return getMergeGroupsHtml();
+  return getGrouperHtml();
 }
 
-function getMergeGroupsHtml() {
+function updateGroupName(groupId) {
+  let mergeGroup = grouper.findGroup(groupId);
+  let $mergeGroupLabelNode = $("#" + mergeGroup.groupId);
+  mergeGroup.groupName = $mergeGroupLabelNode.text();
+}
+
+function deleteEmptyGroup(groupId) {
+  grouper.deleteGroup(groupId);
+  updateFlatViewHtml();
+}
+
+function getGrouperHtml() {
   let html = getTableHeader(grouper.usedColumns, grouper.maxDepth, false);
   let numColumns = html.match(/<th>/g).length;
   for (let groupIndex = 0; groupIndex < grouper.mergeGroups.length; groupIndex++) {
     let mergeGroup = grouper.mergeGroups[groupIndex];
-    if (groupIndex > 0) {
-      html += "<tr><td class='group-header' colspan='" + numColumns + "'>Group " + groupIndex + "</td></tr>\n";
+    if (grouper.mergeGroups.length > 1) {
+      html += "<tr class='group-header'><td class='group-header' colspan='" + numColumns + "'>"
+          + (isEmpty(mergeGroup.mergeRows.length) ? "<button class='close-button' onclick='deleteEmptyGroup(\"" + mergeGroup.groupId + "\")'>X</button>" : "")
+          + "<div class='group-name' contenteditable='true' id='" + mergeGroup.groupId
+          + "' onkeyup='updateGroupName(\"" + mergeGroup.groupId + "\")'>"
+          + encode(mergeGroup.groupName)
+          + "</div><button class='add-to-group-button' onclick='addSelectedToGroup(\"" + mergeGroup.groupId + "\")'>Add to group</button></td></tr>\n";
     }
     for (let mergeRow of mergeGroup.mergeRows) {
       html += mergeRow.getHtml(grouper.usedColumns, false);
     }
   }
   html += "</table>\n";
+  html += "<button id='add-group' onclick='addGroup()'>New group</button>\n";
   return html;
 }
 
