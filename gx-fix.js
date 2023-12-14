@@ -75,10 +75,10 @@ function getRecordYear(gx) {
 // Ensure that anyone with an age has at least an estimated birth year.
 // - First use an age from a qualifier on an event with a date.
 // - Next use an age field and the date of the primary event, if any, or else the record date.
-// Also, REMOVE an estimated birth year (i.e., with "about" on date, and/or a PR_EST_BIR_DATE field)
-//   when another birth event is also there.
+// Also, REMOVE an estimated birth year (i.e., with "about" on date
+//   when another birth event with a non-'about' date is also there.
 function updateEstimatedBirthYear(gx) {
-  function countBirthFacts(person) {
+  function countBirthFactsWithDates(person) {
     let numBirthFacts = 0;
     for (let fact of getList(person, "facts")) {
       if (fact.type && fact.type.endsWith("/Birth") && fact.date) {
@@ -89,26 +89,24 @@ function updateEstimatedBirthYear(gx) {
   }
 
   function findEstimatedBirthFact(facts) {
-    function hasLabelId(fact, labelId) {
-      for (let field of getList(fact, "fields")) {
-        for (let fieldValue of getList(field.values)) {
-          if (fieldValue.labelId === labelId) {
-            return true;
-          }
-        }
-      }
-      return false;
-    }
-
     for (let f = 0; f < facts.length; f++) {
       let fact = facts[f];
-      if (fact.type && fact.type.endsWith("/Birth") && fact.date && fact.date.original && !fact.place) {
-        if (fact.date.original.startsWith("about") || hasLabelId(fact, "PR_EST_BIR_DATE")) {
-          return f;
-        }
+      if (fact.type && fact.type.endsWith("/Birth") && fact.date && fact.date.original && fact.date.original.startsWith("about")) {
+        return f;
       }
     }
     return -1;
+  }
+
+  function findBirthFactWithOnlyPlace(person) {
+    if (person.facts) {
+      for (let fact of person.facts) {
+        if (fact.type === "http://gedcomx.org/Birth" && fact.place && !fact.date) {
+          return fact;
+        }
+      }
+    }
+    return null;
   }
 
   function addEstimatedBirthFact(person, birthYear) {
@@ -116,13 +114,19 @@ function updateEstimatedBirthYear(gx) {
       person.facts = [];
     }
     let estBirthYear = "about " + birthYear;
-    person.facts.push({
-      "id": generateLocalId("f_"),
-      "type": "http://gedcomx.org/Birth",
-      "date": {
-        "original": estBirthYear
-      }
-    });
+    let placeOnlyBirthFact = findBirthFactWithOnlyPlace(person);
+    if (placeOnlyBirthFact) {
+      placeOnlyBirthFact.date = {"original": estBirthYear};
+    }
+    else {
+      person.facts.push({
+        "id": generateLocalId("f_"),
+        "type": "http://gedcomx.org/Birth",
+        "date": {
+          "original": estBirthYear
+        }
+      });
+    }
   }
 
   if (!gx) {
@@ -130,17 +134,23 @@ function updateEstimatedBirthYear(gx) {
   }
   let recordDate = getRecordYear(gx);
   for (let person of getList(gx, "persons")) {
-    let numBirthFacts = countBirthFacts(person);
-    if (numBirthFacts === 0) {
+    let numBirthFactsWithDates = countBirthFactsWithDates(person);
+    if (numBirthFactsWithDates === 0) {
       let birthYear = estimateBirthYearFromPersonAge(person, recordDate);
       if (birthYear) {
         addEstimatedBirthFact(person, birthYear);
       }
     }
-    else if (numBirthFacts > 1) {
+    else if (numBirthFactsWithDates > 1) {
       let estimatedBirthFactIndex = findEstimatedBirthFact(person.facts);
       if (estimatedBirthFactIndex >= 0) {
-        person.facts.splice(estimatedBirthFactIndex, 1);
+        let fact = person.facts[estimatedBirthFactIndex];
+        if (fact.place) {
+          fact.date = null;
+        }
+        else {
+          person.facts.splice(estimatedBirthFactIndex, 1);
+        }
       }
     }
   }
