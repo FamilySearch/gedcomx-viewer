@@ -55,6 +55,7 @@ function buildChangeLogView(changeLogUrl, sessionId, $mainTable, $status) {
 
   // Map of personId -> array of change log entries for that person, most recent first.
   let changeLogMap = {};
+  // List of urls currently being fetched.
   let fetching = [];
 
   updateStatus($status, "Fetching change logs...");
@@ -133,16 +134,21 @@ function receiveChangeLog(gedcomx, personId, context, changeLogMap, fetching, $m
     fetchChangeLog(newMergeId, context, changeLogMap, fetching, $mainTable, $status);
   }
   if (fetching.length === 0) {
-    fetchRelativesAndSources(changeLogMap, $status, context);
     // All the change logs that needed to be fetched have now been fetched, and this is the last one.
-    // So kick off creating the table.
+    // So create the Html.
     makeChangeLogHtml(context, changeLogMap, $mainTable);
+    // Then, kick off the fetching of relatives and sources info, and update the table when done.
+    fetchRelativesAndSources(changeLogMap, $status, context);
   }
 }
 
 const CHILD_REL = "child-and-parents-relationships"
+const COUPLE_REL = "http://gedcomx.org/Couple"
+const PARENT_CHILD_REL = "http://gedcomx.org/ParentChild"
 
 function fetchRelativesAndSources(changeLogMap, $status, context) {
+  // Populate sourceMap[sourceUrl] = null, and relativeMap[relativeId] = null,
+  // so that the keys of these maps can be used to fill in the values.
   for (let personId of Object.keys(changeLogMap)) {
     let entries = changeLogMap[personId];
     for (let entry of entries) {
@@ -173,7 +179,7 @@ function fetchRelativesAndSources(changeLogMap, $status, context) {
       dataType: "json",
       url: sourceUrl,
       success:function(gedcomx){
-        receiveSourceDescription(gedcomx, $status, fetching, sourceUrl, sourceMap);
+        receiveSourceDescription(gedcomx, $status, context, fetching, sourceUrl, sourceMap);
       }
     });
   }
@@ -218,26 +224,102 @@ function gatherNames(gedcomx, timestamp, listName, personKeys) {
   }
 }
 
-function receiveSourceDescription(gedcomx, $status, fetching, sourceUrl, sourceMap) {
+class SourceInfo {
+  constructor(sd) {
+    this.title = ("titles" in sd && sd.titles.length && "value" in sd.titles[0]) ? sd.titles[0].value : "";
+    this.isExtraction = sd.resourceType === "FSREADONLY";
+    this.ark = ("about" in sd) ? sd.about : null;
+    this.gx = null;
+  }
+}
+
+function receiveSourceDescription(gedcomx, $status, context, fetching, sourceUrl, sourceMap) {
   if (gedcomx && "sourceDescriptions" in gedcomx && gedcomx.sourceDescriptions.length) {
-    let sd = gedcomx.sourceDescriptions[0];
-    let sourceInfo = {};
-    if ("titles" in sd && sd.titles.length && "value" in sd.titles[0]) {
-      sourceInfo.title = sd.titles[0].value;
-    }
-    if ("about" in sd) {
-      sourceInfo.ark = sd.about;
-    }
+    let sourceInfo = new SourceInfo(gedcomx.sourceDescriptions[0]);
     sourceMap[sourceUrl] = sourceInfo;
     fetching.splice(fetching.indexOf(sourceUrl), 1)
+    if (sourceInfo.ark.includes("ark:/61903/")) {
+      fetching.push(sourceInfo.ark);
+      // Got source description, which has the persona Ark, so now fetch that.
+      $.ajax({
+        beforeSend: function (request) {
+          request.setRequestHeader("Accept", "application/json");
+          // request.setRequestHeader("User-Agent", "ACE Record Fixer");
+          // request.setRequestHeader("Fs-User-Agent-Chain", "ACE Record Fixer");
+          if (context.sessionId) {
+            request.setRequestHeader("Authorization", "Bearer " + context.sessionId);
+          }
+        },
+        dataType: "json",
+        url: sourceInfo.ark,
+        success: function (gedcomx) {
+          receivePersona(gedcomx, $status, context, fetching, sourceInfo);
+        }
+      });
+    }
     if (fetching.length) {
       setStatus($status, "Fetching " + fetching.length + "/" + sourceMap.size + " sources...");
     }
     else {
-      //future: At this point, start fetching the GedcomX for all attached personas, and set sourceInfo.gx to it.
-      clearStatus($status);
+      finishedReceivingSources($status);
     }
   }
+}
+
+function getMainPersonaArk(gx) {
+  let sd = getSourceDescription(gx, null);
+  if (sd) {
+    if (sd.about) {
+      return sd.about;
+    }
+    return getIdentifier(sd);
+  }
+}
+
+function getCollectionName(gedcomx) {
+  let collectionTitle = "<no title>";
+  let sd = getSourceDescription(gedcomx, null);
+  while (sd) {
+    if (sd["resourceType"] === "http://gedcomx.org/Collection") {
+      if (sd.titles) {
+        for (let title of sd.titles) {
+          if (title.value) {
+            collectionTitle = title.value;
+            break;
+          }
+        }
+        break;
+      }
+    }
+    else {
+      sd = getSourceDescription(gedcomx, getFromPath(sd, "componentOf", "description"));
+    }
+  }
+  return collectionTitle;
+}
+
+function receivePersona(gedcomx, $status, context, fetching, sourceInfo) {
+  sourceInfo.gx = gedcomx;
+  fetching.splice(fetching.indexOf(sourceInfo.ark), 1);
+  let personaArk = getMainPersonaArk(gedcomx);
+  if (personaArk !== sourceInfo.ark) {
+    // This persona has been deprecated & forwarded or something, so update the 'ark' in sourceInfo to point to the new ark.
+    sourceInfo.ark = personaArk;
+    sourceInfo.collectionName = getCollectionName(gedcomx);
+  }
+  if (fetching.length) {
+    setStatus($status, "Fetching " + fetching.length + "/" + sourceMap.size + " sources...");
+  }
+  else {
+    finishedReceivingSources($status);
+  }
+}
+
+function finishedReceivingSources($status) {
+  clearStatus($status);
+  let sourcesHtml = getSourcesViewHtml();
+  $("#sources-grid").html(sourcesHtml);
+  makeTableHeadersDraggable();
 }
 
 // context - Map containing baseUrl, personId (of the main person), and optional "sessionId"
@@ -246,8 +328,8 @@ function formatTimestamp(ts) {
     return String(n).padStart(2, '0');
   }
   let date = new Date(ts);
-  return "<span class='date'>" + String(date.getFullYear()) + "-" + pad(date.getMonth() + 1) + "-" + pad(date.getDate()) +
-    "</span> <span class='time'>" + pad(date.getHours()) + ":" + pad(date.getMinutes()) + ":" + pad(date.getSeconds()) +
+  return "<span class='ts-date'>" + String(date.getFullYear()) + "-" + pad(date.getMonth() + 1) + "-" + pad(date.getDate()) +
+    "</span> <span class='ts-time'>" + pad(date.getHours()) + ":" + pad(date.getMinutes()) + ":" + pad(date.getSeconds()) +
     "." + String(ts).slice(String(ts).length - 3) + "</span>";
 }
 
@@ -277,7 +359,7 @@ function makeChangeLogHtml(context, changeLogMap, $mainTable) {
   html += "</div>";
   $mainTable.html(html);
   $("#rel-graphs-container").hide();
-  $("#tabs").tabs({active: 2});
+  $("#tabs").tabs({active: 3});
   // Prevent text from being selected when shift-clicking a row.
   for (let eventType of ["keyup", "keydown"]) {
     window.addEventListener(eventType, (e) => {
@@ -287,6 +369,36 @@ function makeChangeLogHtml(context, changeLogMap, $mainTable) {
     });
   }
   $(document).keydown(handleMergeKeypress);
+  makeTableHeadersDraggable();
+}
+
+let pressed = false;
+let start = undefined;
+let startX;
+let startWidth;
+
+function makeTableHeadersDraggable() {
+  $("table th").mousedown(function(e) {
+    start = $(this);
+    pressed = true;
+    startX = e.pageX;
+    startWidth = $(this).width();
+    $(start).addClass("resizing");
+  });
+
+  $(document).mousemove(function(e) {
+    if(pressed) {
+      $(start).width(startWidth+(e.pageX-startX));
+      e.preventDefault();
+    }
+  });
+
+  $(document).mouseup(function() {
+    if(pressed) {
+      $(start).removeClass("resizing");
+      pressed = false;
+    }
+  });
 }
 
 function getChangeLogTableHtml(allEntries, personIds, personMinMaxTs) {
@@ -753,9 +865,13 @@ function getFactHtml(fact) {
   let type = extractType(fact.type);
   let date = fact.date ? fact.date.original : null;
   let place = fact.place ? fact.place.original : null;
+  let value = fact.value ? fact.value : null;
   let html = "<span class='fact-type'>" + encode(type ? type : "<unknown fact type>");
-  if (date || place) {
+  if (date || place || value) {
     html += ":</span> ";
+    if (value) {
+      html += "<span class='value'>" + encode(value + (date || place ? ";" : "")) + "</span>";
+    }
     if (date && place) {
       html += "<span class='date'>" + encode(date + ";") + "</span> <span class='place'>" + encode(place) + "</span>";
     } else {
@@ -1093,7 +1209,7 @@ class PersonDisplay {
       this.name += " <span class='relative-id'>(" + encode(person.id) + ")</span>";
     }
     this.facts = getFactListHtml(person);
-    let coupleFacts = coupleRelationship && coupleRelationship.type === "http://gedcomx.org/Couple" ? getFactListHtml(coupleRelationship) : null;
+    let coupleFacts = coupleRelationship && coupleRelationship.type === COUPLE_REL ? getFactListHtml(coupleRelationship) : null;
     if (this.facts && coupleFacts) {
       this.facts += "<br><span class='couple-facts'>" + coupleFacts + "</span>";
     }
@@ -1113,11 +1229,16 @@ class FamilyDisplay {
 function handleMergeKeypress(event) {
   if (event.key === "Escape") {
     console.log("Pressed escape");
-    grouper.deselectAll();
+    for (let grouper of [mergeGrouper, flatGrouper, sourceGrouper]) {
+      if (grouper) {
+        grouper.deselectAll();
+      }
+    }
   }
 }
 
 function handleRowClick(event, rowId) {
+  let grouper = grouperMap[rowId];
   console.log("Clicked row " + rowId + (event.shiftKey ? " + shift" : "") + (event.ctrlKey ? " + ctrl" : "") + (event.metaKey ? " + meta" : ""));
   if (event.shiftKey) {
     grouper.selectUntil(rowId);
@@ -1128,8 +1249,15 @@ function handleRowClick(event, rowId) {
 }
 
 // ===============
-let grouper;
-let nextMergeRowId = 0;
+// Map of groupId -> Grouper object that the groupId is found in.
+let grouperMap = {};
+// Grouper objects to handle selection logic in each view.
+let mergeGrouper;
+let flatGrouper;
+let sourceGrouper;
+
+// Global id used for MergeRow, MergeGroup and Grouper.
+let nextPersonRowId = 0;
 const ROW_SELECTION = 'selected';
 
 class RowLocation {
@@ -1142,10 +1270,15 @@ class RowLocation {
 
 class Grouper {
   constructor(mergeRows, usedColumns, maxDepth) {
-    this.mergeGroups = [new MergeGroup("Group 1", mergeRows)];
+    this.id = "grouper-" + nextPersonRowId++;
+    this.mergeGroups = [new MergeGroup("Group 1", mergeRows, this)];
     this.usedColumns = usedColumns;
     this.maxDepth = maxDepth;
     this.prevSelectLocation = null;
+    for (let mergeRow of mergeRows) {
+      grouperMap[mergeRow.id] = this;
+    }
+    grouperMap[this.id] = this;
   }
 
   findGroup(groupId) {
@@ -1159,7 +1292,7 @@ class Grouper {
 
   findRow(rowId) {
     for (let groupIndex = 0; groupIndex < this.mergeGroups.length; groupIndex++) {
-      let mergeRows = this.mergeGroups[groupIndex].mergeRows;
+      let mergeRows = this.mergeGroups[groupIndex].personRows;
       for (let rowIndex = 0; rowIndex < mergeRows.length; rowIndex++) {
         let mergeRow = mergeRows[rowIndex];
         if (mergeRow.id === rowId) {
@@ -1193,7 +1326,7 @@ class Grouper {
           r = 0;
         }
         else if (this.prevSelectLocation.groupIndex > g) {
-          r = grouper.mergeGroups[g].mergeRows.length - 1;
+          r = this.mergeGroups[g].personRows.length - 1;
         }
         else {
           r = this.prevSelectLocation.rowIndex;
@@ -1201,7 +1334,7 @@ class Grouper {
         let startRow = Math.min(r, rowLocation.rowIndex);
         let endRow = Math.max(r, rowLocation.rowIndex);
         for (let rowIndex = startRow; rowIndex <= endRow; rowIndex++) {
-          let mergeRow = grouper.mergeGroups[g].mergeRows[rowIndex];
+          let mergeRow = this.mergeGroups[g].personRows[rowIndex];
           mergeRow.select();
         }
       }
@@ -1210,7 +1343,7 @@ class Grouper {
 
   deselectAll() {
     for (let group of this.mergeGroups) {
-      for (let mergeRow of group.mergeRows) {
+      for (let mergeRow of group.personRows) {
         mergeRow.deselect();
       }
     }
@@ -1219,12 +1352,12 @@ class Grouper {
   removeSelectedRows() {
     let selectedRows = [];
     for (let group of this.mergeGroups) {
-      for (let r = 0; r < group.mergeRows.length; r++) {
-        let mergeRow = group.mergeRows[r];
+      for (let r = 0; r < group.personRows.length; r++) {
+        let mergeRow = group.personRows[r];
         if (mergeRow.isSelected) {
           mergeRow.deselect();
           selectedRows.push(mergeRow);
-          group.mergeRows.splice(r, 1);
+          group.personRows.splice(r, 1);
           r--;
         }
       }
@@ -1235,7 +1368,7 @@ class Grouper {
   deleteGroup(groupId) {
     for (let g = 0; g < this.mergeGroups.length; g++) {
       let mergeGroup = this.mergeGroups[g];
-      if (mergeGroup.groupId === groupId && isEmpty(mergeGroup.mergeRows)) {
+      if (mergeGroup.groupId === groupId && isEmpty(mergeGroup.personRows)) {
         this.mergeGroups.splice(g, 1);
       }
     }
@@ -1243,48 +1376,108 @@ class Grouper {
 }
 
 class MergeGroup {
-  constructor(groupName, mergeRows) {
-    this.groupId = "mg-" + nextMergeRowId++;
+  constructor(groupName, personRows, grouper) {
+    this.groupId = "mg-" + nextPersonRowId++;
     this.groupName = groupName;
-    this.mergeRows = mergeRows;
+    this.personRows = personRows;
+    grouperMap[this.groupId] = grouper;
   }
 }
 
-class MergeRow {
-  constructor(mergeNode, personId, gedcomx, endGedcomx, indent, maxIndent, isDupNode) {
+// Row of data for a person and their 1-hop relatives (record persona or Family Tree person--either original identity or result of a merge)
+class PersonRow {
+  constructor(mergeNode, personId, gedcomx, endGedcomx, indent, maxIndent, isDupNode, grouper, collectionName) {
     let person = findPersonInGx(gedcomx, personId);
     this.personId = personId;
-    this.id = "mr-" + nextMergeRowId++;
+    this.collectionName = collectionName;
+    this.gedcomx = gedcomx;
+    this.id = "mr-" + nextPersonRowId++;
+    grouperMap[this.id] = grouper;
     this.mergeNode = mergeNode;
     this.personDisplay = new PersonDisplay(person, "person");
-    this.families = []; // Array of FamilyDisplay
-    this.fathers = []; // Array of PersonDisplay
+    this.families = []; // Array of FamilyDisplay, one per spouse (and children with that spouse), and one more for any children with no spouse.
+    this.fathers = []; // Array of PersonDisplay. Unknown-gender parents are also included here. (Note that parents are not paired up).
     this.mothers = []; // Array of PersonDisplay
     this.isSelected = false;
-
-    // Map of spouseId -> FamilyDisplay for that spouse and children with that spouse.
-    // Also, "<none>" -> FamilyDisplay for list of children with no spouse.
-    let familyMap = {};
     // Map of personId -> PersonDisplay for mothers and fathers.
     let fatherMap = {};
     let motherMap = {};
+    // Map of spouseId -> FamilyDisplay for that spouse and children with that spouse.
+    // Also, "<none>" -> FamilyDisplay for list of children with no spouse.
+    let familyMap = {};
+    this.handleCoupleAndTernaryRelationships(gedcomx, personId, fatherMap, motherMap, familyMap);
+    this.handleParentChildRelationships(gedcomx, personId, fatherMap, motherMap, familyMap);
+
+    if (endGedcomx) {
+      this.endRow = new PersonRow(null, personId, endGedcomx, null);
+    }
+    this.indent = indent;
+    this.maxIndent = maxIndent;
+    this.isDupNode = isDupNode;
+  }
+
+  handleParentChildRelationships(gedcomx, personId, fatherMap, motherMap, familyMap) {
+    // Map of childId to array of {parentId, parentChildRelationship}, not including when
+    let childParentsMap = this.buildChildParentsMap(gedcomx);
+
+    for (let [childId, parentIds] of childParentsMap) {
+      if (childId === personId) {
+        for (let parentIdAndRel of parentIds) {
+          let parentId = parentIdAndRel.parentId;
+          let parent = findPersonInGx(gedcomx, parentId);
+          let gender = getGender(parent);
+          let parentMap = gender === "Female" ? motherMap : fatherMap;
+          if (!parentMap[parentId]) {
+            addParentToMap(parentMap, gedcomx, parentId, gender === "Female" ? this.mothers : this.fathers);
+          }
+        }
+      } else {
+        // ParentChild relationship from the main person to this childId
+        let childRelOfPerson = this.getChildRelOfPerson(parentIds, personId);
+        let foundOtherParent = false;
+        if (childRelOfPerson) {
+          for (let parentIdAndRel of parentIds) {
+            let parentId = parentIdAndRel.parentId;
+            if (parentId !== personId) {
+              let familyDisplay = familyMap[parentId];
+              if (familyDisplay) {
+                // This child is a child of a spouse of the main person, so add it to that couple's family
+                familyDisplay.children.push(new PersonDisplay(findPersonInGx(gedcomx, childId), "child")); // future: add lineage facts somehow.
+                foundOtherParent = true;
+              }
+            }
+          }
+          if (!foundOtherParent) {
+            let familyDisplay = familyMap["<none>"];
+            if (!familyDisplay) {
+              familyDisplay = new FamilyDisplay(null);
+              familyMap["<none>"] = familyDisplay;
+              this.families.push(familyDisplay);
+            }
+            familyDisplay.children.push(new PersonDisplay(findPersonInGx(gedcomx, childId), "child")); // future: add lineage facts somehow.
+          }
+        }
+      }
+    }
+  }
+
+  handleCoupleAndTernaryRelationships(gedcomx, personId, fatherMap, motherMap, familyMap) {
     for (let relationship of getList(gedcomx, "relationships").concat(getList(gedcomx, CHILD_REL))) {
       let isChildRel = isChildRelationship(relationship);
       let spouseId = getSpouseId(relationship, personId);
       if (spouseId === "<notParentInRel>") {
-        if (relationship.type === CHILD_REL && personId === getRelativeId(relationship, "child")) {
+        if (personId === getRelativeId(relationship, "child")) {
           addParentToMap(fatherMap, gedcomx, getRelativeId(relationship, "parent1"), this.fathers);
           addParentToMap(motherMap, gedcomx, getRelativeId(relationship, "parent2"), this.mothers);
         }
-      }
-      else {
+      } else {
         if (!spouseId && isChildRel) {
           spouseId = "<none>";
         }
         let familyDisplay = familyMap[spouseId];
         if (!familyDisplay) {
           let spouseDisplay = spouseId === "<none>" ? null : new PersonDisplay(findPersonInGx(gedcomx, spouseId), "spouse", relationship);
-          familyDisplay = new FamilyDisplay(spouseDisplay, "spouse", relationship);
+          familyDisplay = new FamilyDisplay(spouseDisplay);
           familyMap[spouseId] = familyDisplay;
           this.families.push(familyDisplay);
         }
@@ -1294,13 +1487,37 @@ class MergeRow {
         }
       }
     }
+  }
 
-    if (endGedcomx) {
-      this.endRow = new MergeRow(null, mergeNode.personId, endGedcomx, null);
+  getChildRelOfPerson(parentIds, personId) {
+    let childRelOfPerson = null;
+    for (let parentIdAndRel of parentIds) {
+      if (parentIdAndRel.parentId === personId) {
+        childRelOfPerson = parentIdAndRel;
+      }
     }
-    this.indent = indent;
-    this.maxIndent = maxIndent;
-    this.isDupNode = isDupNode;
+    return childRelOfPerson;
+  }
+
+  buildChildParentsMap(gedcomx) {
+    let childParentsMap = new Map();
+    for (let relationship of getList(gedcomx, "relationships")) {
+      if (relationship.type === PARENT_CHILD_REL) {
+        let parentId = getRelativeId(relationship, "person1");
+        let childId = getRelativeId(relationship, "person2");
+        let parentIdAndRel = {
+          parentId: parentId,
+          parentChildRelationship: relationship
+        };
+        let parentIds = childParentsMap.get(childId);
+        if (parentIds) {
+          parentIds.push(parentIdAndRel);
+        } else {
+          childParentsMap.set(childId, [parentIdAndRel]);
+        }
+      }
+    }
+    return childParentsMap;
   }
 
   getNumChildrenRows() {
@@ -1400,6 +1617,15 @@ class MergeRow {
     }
   }
 
+  getRowLabel(shouldIncludeVersion) {
+    if (this.collectionName) {
+      return this.collectionName;
+    }
+    else {
+      return this.personId + (shouldIncludeVersion && this.mergeNode && this.mergeNode.version > 1 ? " (v" + this.mergeNode.version + ")" : "");
+    }
+  }
+
   // get HTML for this merge row
   getHtml(usedColumns, shouldIndent) {
     function getIndentationHtml(indentCodes) {
@@ -1444,23 +1670,24 @@ class MergeRow {
       html += getIndentationHtml(this.indent.split(""));
     }
     let colspan = shouldIndent ? " colspan='" + (1 + this.maxIndent - this.indent.length) : "";
-    let versionedPersonId = this.mergeNode.personId + (shouldIndent && this.mergeNode.version > 1 ? " (v" + this.mergeNode.version + ")" : "");
+
+    let rowLabel = this.getRowLabel(shouldIndent);
     let bottomClass = " main-row";
     html += "<td class='merge-id" + (shouldIndent && this.isDupNode ? "-dup" : "") + bottomClass + "'" + idRowSpan + colspan + "'>"
-      + encode(versionedPersonId) + " " + formatTimestamp(this.mergeNode.firstEntry.updated) + "</td>";
+      + encode(rowLabel) + " " + (this.mergeNode ? formatTimestamp(this.mergeNode.firstEntry.updated) : "") + "</td>";
 
     // Person info
     if (this.endRow) {
-      html += this.endRow.getRowPersonCells(this.mergeNode.endGx, this.mergeNode.personId, 'end-gx', usedColumns, "", this.id);
+      html += this.endRow.getRowPersonCells(this.endRow.gedcomx, this.personId, 'end-gx', usedColumns, "", this.id);
       html += "</tr>\n<tr>";
     }
-    html += this.getRowPersonCells(this.mergeNode.identityGx, this.mergeNode.personId, 'identity-gx', usedColumns, bottomClass, this.id);
+    html += this.getRowPersonCells(this.gedcomx, this.personId, 'identity-gx', usedColumns, bottomClass, this.id);
     html += "</tr>\n";
     return html;
   }
 }
 
-function addParentToMap(parentIdDisplayMap, parentId, gedcomx, parentList) {
+function addParentToMap(parentIdDisplayMap, gedcomx, parentId, parentList) {
   if (parentId && !parentIdDisplayMap[parentId]) {
     let parentDisplay = new PersonDisplay(findPersonInGx(gedcomx, parentId), "parent", null);
     parentIdDisplayMap[parentId] = parentDisplay;
@@ -1534,7 +1761,7 @@ function findMaxDepth(mergeNode) {
 function buildMergeRows(mergeNode, indent, maxIndent, isDupNode, mergeRows, shouldIncludeMergeNodes) {
   this.indent = indent;
   if (shouldIncludeMergeNodes || mergeNode.isLeafNode()) {
-    let mergeRow = new MergeRow(mergeNode, mergeNode.personId, mergeNode.identityGx, shouldIncludeBeforeAfter ? mergeNode.endGx : null, indent, maxIndent, isDupNode);
+    let mergeRow = new PersonRow(mergeNode, mergeNode.personId, mergeNode.identityGx, shouldIncludeBeforeAfter ? mergeNode.endGx : null, indent, maxIndent, isDupNode, null, null);
     mergeRows.push(mergeRow);
   }
   if (!mergeNode.isLeafNode()) {
@@ -1568,6 +1795,12 @@ function findUsedColumns(mergeRows) {
         checkColumns(child, "child");
       }
     }
+    for (let father of mergeRow.fathers) {
+      checkColumns(father, "father");
+    }
+    for (let mother of mergeRow.mothers) {
+      checkColumns(mother, "mother");
+    }
   }
   return usedColumns;
 }
@@ -1575,24 +1808,26 @@ function findUsedColumns(mergeRows) {
 // Function called when the "add group" button is clicked in the Flat view.
 // If any rows are selected, they are moved to the new group.
 // If this is only the second group, then the first group begins displaying its header.
-function addGroup() {
+function addGroup(grouperId) {
+  let grouper = grouperMap[grouperId];
   let mergeRows = grouper.removeSelectedRows();
-  let mergeGroup = new MergeGroup("Group " + (grouper.mergeGroups.length + 1), mergeRows);
+  let mergeGroup = new MergeGroup("Group " + (grouper.mergeGroups.length + 1), mergeRows, grouper);
   grouper.mergeGroups.push(mergeGroup);
-  updateFlatViewHtml();
+  updateFlatViewHtml(grouper);
 }
 
 function addSelectedToGroup(groupId) {
+  let grouper = grouperMap[groupId];
   let mergeGroup = grouper.findGroup(groupId);
   if (mergeGroup) {
     let selectedRows = grouper.removeSelectedRows();
-    mergeGroup.mergeRows.push(...selectedRows);
-    updateFlatViewHtml();
+    mergeGroup.personRows.push(...selectedRows);
+    updateFlatViewHtml(grouper);
   }
 }
 
-function updateFlatViewHtml() {
-  $("#flat-view").html(getGrouperHtml());
+function updateFlatViewHtml(grouper) {
+  $("#flat-view").html(getGrouperHtml(grouper));
 }
 
 function getFlatViewHtml(entries) {
@@ -1601,53 +1836,81 @@ function getFlatViewHtml(entries) {
   let mergeRows = buildMergeRows(rootMergeNode, "", maxDepth - 1, false, [], false);
   let usedColumns = findUsedColumns(mergeRows);
 
-  grouper = new Grouper(mergeRows, usedColumns, maxDepth);
-  return getGrouperHtml();
+  flatGrouper = new Grouper(mergeRows, usedColumns, maxDepth);
+  return getGrouperHtml(flatGrouper);
+}
+
+// Get an array of PersonRow, one per unique persona Ark (and its record) found in sourceMap.
+function buildPersonaRows() {
+  let personaIds = new Set();
+  let personaRows = [];
+
+  for (let sourceInfo of Object.values(sourceMap)) {
+    if (sourceInfo.ark && sourceInfo.gx) {
+      let personaId = findPersonInGx(sourceInfo.gx, shortenPersonArk(sourceInfo.ark)).id;
+      if (!personaIds.has(personaId)) {
+        personaRows.push(new PersonRow(null, personaId, sourceInfo.gx, null, 0, 0, false, null, sourceInfo.collectionName));
+        personaIds.add(personaId);
+      }
+    }
+  }
+  return personaRows;
+}
+
+function getSourcesViewHtml() {
+  let personaRows = buildPersonaRows();
+  let usedColumns = findUsedColumns(personaRows);
+  sourceGrouper = new Grouper(personaRows, usedColumns, 0);
+  return getGrouperHtml(sourceGrouper);
 }
 
 function updateGroupName(groupId) {
+  let grouper = grouperMap[groupId];
   let mergeGroup = grouper.findGroup(groupId);
   let $mergeGroupLabelNode = $("#" + mergeGroup.groupId);
   mergeGroup.groupName = $mergeGroupLabelNode.text();
 }
 
 function deleteEmptyGroup(groupId) {
+  let grouper = grouperMap[groupId];
   grouper.deleteGroup(groupId);
-  updateFlatViewHtml();
+  updateFlatViewHtml(grouper);
 }
 
-function getGrouperHtml() {
-  let html = getTableHeader(grouper.usedColumns, grouper.maxDepth, false);
+function getGrouperHtml(grouper, isSourceGroup) {
+  let html = getTableHeader(grouper.usedColumns, grouper.maxDepth, false, isSourceGroup);
   let numColumns = html.match(/<th>/g).length;
   for (let groupIndex = 0; groupIndex < grouper.mergeGroups.length; groupIndex++) {
-    let mergeGroup = grouper.mergeGroups[groupIndex];
+    let personGroup = grouper.mergeGroups[groupIndex];
     if (grouper.mergeGroups.length > 1) {
       html += "<tr class='group-header'><td class='group-header' colspan='" + numColumns + "'>"
-          + (isEmpty(mergeGroup.mergeRows.length) ? "<button class='close-button' onclick='deleteEmptyGroup(\"" + mergeGroup.groupId + "\")'>X</button>" : "")
-          + "<div class='group-name' contenteditable='true' id='" + mergeGroup.groupId
-          + "' onkeyup='updateGroupName(\"" + mergeGroup.groupId + "\")'>"
-          + encode(mergeGroup.groupName)
-          + "</div><button class='add-to-group-button' onclick='addSelectedToGroup(\"" + mergeGroup.groupId + "\")'>Add to group</button></td></tr>\n";
+          + (isEmpty(personGroup.personRows.length) ? "<button class='close-button' onclick='deleteEmptyGroup(\"" + personGroup.groupId + "\")'>X</button>" : "")
+          + "<div class='group-name' contenteditable='true' id='" + personGroup.groupId
+          + "' onkeyup='updateGroupName(\"" + personGroup.groupId + "\")'>"
+          + encode(personGroup.groupName)
+          + "</div><button class='add-to-group-button' onclick='addSelectedToGroup(\"" + personGroup.groupId + "\")'>Add to group</button></td></tr>\n";
     }
-    for (let mergeRow of mergeGroup.mergeRows) {
-      html += mergeRow.getHtml(grouper.usedColumns, false);
+    for (let personRow of personGroup.personRows) {
+      html += personRow.getHtml(grouper.usedColumns, false);
     }
   }
   html += "</table>\n";
-  html += "<button id='add-group' onclick='addGroup()'>New group</button>\n";
+  html += "<button id='add-group' onclick='addGroup(\"" + grouper.id + "\")'>New group</button>\n";
   return html;
 }
 
-function getTableHeader(usedColumns, maxDepth, shouldIndent) {
+function getTableHeader(usedColumns, maxDepth, shouldIndent, shouldUseCollectionHeader) {
   let colspan = shouldIndent ? " colspan='" + maxDepth + "'" : "";
-  return "<table id='change-log-hierarchy'><th" + colspan + ">Person ID</th><th>Name</th>"
-    + (usedColumns.has("person-facts") ? "<th>Facts</th>" : "")
-    + (usedColumns.has("father-name") ? "<th>Father</th>" : "")
-    + (usedColumns.has("mother-name") ? "<th>Mother</th>" : "")
-    + (usedColumns.has("spouse-name") ? "<th>Spouse</th>" : "")
-    + (usedColumns.has("spouse-facts") ? "<th>Spouse facts</th>" : "")
-    + (usedColumns.has("child-name") ? "<th>Children</th>" : "")
-    + (usedColumns.has("child-facts") ? "<th>Child facts</th>" : "");
+  return "<table id='change-log-hierarchy'><th" + colspan + ">"
+      + (shouldUseCollectionHeader ? "Collection" : "Person ID")
+      + "</th><th>Name</th>"
+      + (usedColumns.has("person-facts") ? "<th>Facts</th>" : "")
+      + (usedColumns.has("father-name") ? "<th>Father</th>" : "")
+      + (usedColumns.has("mother-name") ? "<th>Mother</th>" : "")
+      + (usedColumns.has("spouse-name") ? "<th>Spouse</th>" : "")
+      + (usedColumns.has("spouse-facts") ? "<th>Spouse facts</th>" : "")
+      + (usedColumns.has("child-name") ? "<th>Children</th>" : "")
+      + (usedColumns.has("child-facts") ? "<th>Child facts</th>" : "");
 }
 
 function getMergeHierarchyHtml(entries) {
@@ -1656,6 +1919,7 @@ function getMergeHierarchyHtml(entries) {
   let mergeRows = buildMergeRows(rootMergeNode, "", maxDepth - 1, false, [], true);
   let usedColumns = findUsedColumns(mergeRows);
 
+  mergeGrouper = new Grouper(mergeRows, usedColumns, maxDepth);
   let html = getTableHeader(usedColumns, maxDepth, true);
   for (let mergeRow of mergeRows) {
     html += mergeRow.getHtml(usedColumns, true);
@@ -1701,7 +1965,7 @@ function getParentHtml(gedcomx, personId, parentNumber) {
 }
 
 function getSpouseId(relationship, personId) {
-  if (relationship.type === "http://gedcomx.org/Couple") {
+  if (relationship.type === COUPLE_REL) {
     let isPerson1 = getRelativeId(relationship, "person1") === personId;
     let isPerson2 = getRelativeId(relationship, "person2") === personId;
     if (isPerson1 || isPerson2) {
@@ -1770,11 +2034,15 @@ function getProperty(object, path) {
   return object;
 }
 
+function shortenPersonArk(personArk) {
+  return personArk.replaceAll(/.*[/]/g, "").replaceAll(/^4:1:/g, "")
+}
+
 function getPersonId(person) {
   function getPersonIdOfType(type) {
     let identifiers = person.identifiers[type];
     if (identifiers && identifiers.length > 0) {
-      return identifiers[0].replaceAll(/.*[:/]/g, "");
+      return shortenPersonArk(identifiers[0]);
     }
   }
   let personId = getPersonIdOfType("http://gedcomx.org/Primary");
@@ -1791,7 +2059,7 @@ function findPersonInGx(gedcomx, personId) {
   if (gedcomx && personId && gedcomx.hasOwnProperty("persons")) {
     for (let person of gedcomx.persons) {
       let gxPersonId = getPersonId(person)
-      if (personId === gxPersonId) {
+      if (personId === gxPersonId || personId === person.id) {
         return person;
       }
     }
@@ -2244,5 +2512,17 @@ function updateGedcomx(gedcomx, entry) {
         console.log("Unimplemented change log entry type: " + combo + " for ChildAndParentsRelationship");
     }
   }
+}
+
+function getFromPath(obj, ...paths) {
+  for (let path of paths) {
+    if (obj && obj[path]) {
+      obj = obj[path];
+    }
+    else {
+      return null;
+    }
+  }
+  return obj;
 }
 

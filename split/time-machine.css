@@ -2,10 +2,10 @@
     background-color: #fdfff8;
     vertical-align: top;
 }
-.date {
+.ts-date {
     color: #1199cb;
 }
-.time {
+.ts-time {
     color: #1199cb80;
     font-size: small;
 }
@@ -198,6 +198,10 @@ table {
 .place {
     color: darkgreen;
     font-size: 12px;
+}
+.value {
+    color: #38008b;
+    font-size: 14px;
 }
 .sub-row {
     border-top: 1px dashed grey;
