@@ -4,24 +4,23 @@
 //   G2FN-RZY - Theoore Freise, which Robby and Karl were working on. Has lots of data and persons added after some merging.
 
 /* Still to do:
- - Show little lines in merge hierarchy.
  - Date/place in separate columns
  - Select rows
-   - Click to select/deselect
-   - Shift-click to multi-select
-   - Button or drag to move to new or existing group
+   - Drag to move to new or existing group
    - Double-click value to select everyone with that value
-   - Escape to deselect everyone.
  - Sort by column
    - Shift-click column header to sort by previous criteria and then by this column.
  - Combined "identity" (original) vs. "end" view.
    - Styles for (a) original identity data, (b) original data that was later deleted,
      (c) data added after original identity, (d) added data that was later deleted
  - Toolbar with options for:
-   - show/hide intermediate merge nodes.
-     - Option to show just what was added to those instead of repeating data from below.
- - Show attached sources
+   - Facts: all, vitals, none
+   - Children show/hide.
  - Collapse merge node (and summarize all info in that one row).
+ - Combined person/sources view.
+ - Ordinances
+ - Source view:
+   - Clickable collection titles.
 */
 
 // Flag for whether to include 'identity' (up to 24 hours after creation or 2012 + 2015 source attachments)
@@ -117,7 +116,6 @@ function receiveChangeLog(gedcomx, personId, context, changeLogMap, fetching, $m
     let logHtml = $status.html();
     logHtml = logHtml.replace("Fetching change log for " + personId, "Received change log for " + personId);
     $status.html(logHtml);
-    // $status.html($status.html().replace("Fetching change log for " + personId, "Received change log for " + personId));
   }
   fetching.splice(fetching.indexOf(personId), 1); // Remove personId from the fetching array
   let changeLogEntries = makeChangeLogEntries(gedcomx);
@@ -170,8 +168,6 @@ function fetchRelativesAndSources(changeLogMap, $status, context) {
     $.ajax({
       beforeSend: function(request) {
         request.setRequestHeader("Accept", "application/json");
-        // request.setRequestHeader("User-Agent", "ACE Record Fixer");
-        // request.setRequestHeader("Fs-User-Agent-Chain", "ACE Record Fixer");
         if (context.sessionId) {
           request.setRequestHeader("Authorization", "Bearer " + context.sessionId);
         }
@@ -401,6 +397,11 @@ function makeTableHeadersDraggable() {
       $(start).removeClass("resizing");
       pressed = false;
     }
+  });
+  // Also make it so that clicked hyperlinks don't propagate
+  $("a").click(function(e){
+    console.log("Got a hyperlink click. Stopping propagation...");
+    e.stopPropagation();
   });
 }
 
@@ -1390,10 +1391,11 @@ class MergeGroup {
 
 // Row of data for a person and their 1-hop relatives (record persona or Family Tree person--either original identity or result of a merge)
 class PersonRow {
-  constructor(mergeNode, personId, gedcomx, endGedcomx, indent, maxIndent, isDupNode, grouper, collectionName) {
+  constructor(mergeNode, personId, gedcomx, endGedcomx, indent, maxIndent, isDupNode, grouper, collectionName, personaArk) {
     let person = findPersonInGx(gedcomx, personId);
     this.personId = personId;
     this.collectionName = collectionName;
+    this.personaArk = personaArk;
     this.gedcomx = gedcomx;
     this.id = "mr-" + nextPersonRowId++;
     grouperMap[this.id] = grouper;
@@ -1621,12 +1623,15 @@ class PersonRow {
     }
   }
 
-  getRowLabel(shouldIncludeVersion) {
+  getRowLabelHtml(shouldIncludeVersion) {
     if (this.collectionName) {
-      return this.collectionName;
+      if (this.personaArk) {
+        return "<a href='" + this.personaArk + "' target='_blank'>" + encode(this.collectionName) + "</a>";
+      }
+      return encode(this.collectionName);
     }
     else {
-      return this.personId + (shouldIncludeVersion && this.mergeNode && this.mergeNode.version > 1 ? " (v" + this.mergeNode.version + ")" : "");
+      return encode(this.personId + (shouldIncludeVersion && this.mergeNode && this.mergeNode.version > 1 ? " (v" + this.mergeNode.version + ")" : ""));
     }
   }
 
@@ -1675,10 +1680,10 @@ class PersonRow {
     }
     let colspan = shouldIndent ? " colspan='" + (1 + this.maxIndent - this.indent.length) : "";
 
-    let rowLabel = this.getRowLabel(shouldIndent);
+    let rowLabel = this.getRowLabelHtml(shouldIndent);
     let bottomClass = " main-row";
     html += "<td class='merge-id" + (shouldIndent && this.isDupNode ? "-dup" : "") + bottomClass + "'" + idRowSpan + colspan + "'>"
-      + encode(rowLabel) + " " + (this.mergeNode ? formatTimestamp(this.mergeNode.firstEntry.updated) : "") + "</td>";
+      + rowLabel + " " + (this.mergeNode ? formatTimestamp(this.mergeNode.firstEntry.updated) : "") + "</td>";
 
     // Person info
     if (this.endRow) {
@@ -1854,7 +1859,7 @@ function buildPersonaRows() {
     if (sourceInfo.ark && sourceInfo.gx) {
       let personaId = findPersonInGx(sourceInfo.gx, shortenPersonArk(sourceInfo.ark)).id;
       if (!personaIds.has(personaId)) {
-        personaRows.push(new PersonRow(null, personaId, sourceInfo.gx, null, 0, 0, false, null, sourceInfo.collectionName));
+        personaRows.push(new PersonRow(null, personaId, sourceInfo.gx, null, 0, 0, false, null, sourceInfo.collectionName, sourceInfo.ark));
         personaIds.add(personaId);
       }
     }

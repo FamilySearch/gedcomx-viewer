@@ -252,3 +252,9 @@ table {
     color: darkgreen;
     background-color: #decfb5;
 }
+a:link {
+    text-decoration: none;
+}
+a:hover {
+    text-decoration: underline;
+}
