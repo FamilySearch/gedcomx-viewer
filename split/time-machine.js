@@ -318,7 +318,7 @@ function receivePersona(gedcomx, $status, context, fetching, sourceInfo) {
 function finishedReceivingSources($status) {
   clearStatus($status);
   let sourcesHtml = getSourcesViewHtml();
-  $("#sources-grid").html(sourcesHtml);
+  $("#" + SOURCES_VIEW).html(sourcesHtml);
   makeTableHeadersDraggable();
 }
 
@@ -336,6 +336,9 @@ function formatTimestamp(ts) {
 
 // ==================== HTML ===================================
 // changeLogMap - Map of personId -> GedcomX of the change log for that personId.
+const FLAT_VIEW = "flat-view";
+const SOURCES_VIEW = "sources-view";
+
 function makeChangeLogHtml(context, changeLogMap, $mainTable) {
   let personMinMaxTs = {};
   let personIds = [];
@@ -344,18 +347,18 @@ function makeChangeLogHtml(context, changeLogMap, $mainTable) {
     "<div id='tabs'><ul>\n" +
     "  <li><a href='#change-logs-table'><span>Change Logs</span></a></li>\n" +
     "  <li><a href='#merge-hierarchy'><span>Merge view</span></a></li>\n" +
-    "  <li><a href='#flat-view'><span>Flat view</span></a></li>\n" +
-    "  <li><a href='#sources-grid'><span>Sources view</span></a></li>\n" +
+    "  <li><a href='#" + FLAT_VIEW + "'><span>Flat view</span></a></li>\n" +
+    "  <li><a href='#" + SOURCES_VIEW + "'><span>Sources view</span></a></li>\n" +
     "</ul>\n" +
     "<div id ='change-logs-table'>" + getChangeLogTableHtml(allEntries, personIds, personMinMaxTs) + "</div>\n" +
     "<div id='merge-hierarchy'>" + getMergeHierarchyHtml(allEntries) + "</div>\n" +
-    "<div id='flat-view'>" + getFlatViewHtml(allEntries) + "</div>\n" +
-    "<div id='sources-grid'>Sources grid...</div>\n" +
-    "<div id='details'></div>\n" +
-    "<div id='rel-graphs-container'>\n" +
-    "  <div id='close-rel-graphs' onclick='hideRelGraphs()'>X</div>\n" +
-    "  <div id='rel-graphs'></div>\n" +
-    "</div>\n";
+    "<div id='" + FLAT_VIEW + "'>" + getFlatViewHtml(allEntries) + "</div>\n" +
+    "<div id='" + SOURCES_VIEW + "'>Sources grid...</div>\n" +
+    "<div id='details'></div>\n";// +
+    // "<div id='rel-graphs-container'>\n" +
+    // "  <div id='close-rel-graphs' onclick='hideRelGraphs()'>X</div>\n" +
+    // "  <div id='rel-graphs'></div>\n" +
+    // "</div>\n";
   html += "</div>";
   $mainTable.html(html);
   $("#rel-graphs-container").hide();
@@ -1269,8 +1272,9 @@ class RowLocation {
 }
 
 class Grouper {
-  constructor(mergeRows, usedColumns, maxDepth) {
+  constructor(mergeRows, usedColumns, maxDepth, tabId) {
     this.id = "grouper-" + nextPersonRowId++;
+    this.tabId = tabId;
     this.mergeGroups = [new MergeGroup("Group 1", mergeRows, this)];
     this.usedColumns = usedColumns;
     this.maxDepth = maxDepth;
@@ -1827,7 +1831,8 @@ function addSelectedToGroup(groupId) {
 }
 
 function updateFlatViewHtml(grouper) {
-  $("#flat-view").html(getGrouperHtml(grouper));
+  $("#" + grouper.tabId).html(getGrouperHtml(grouper));
+  makeTableHeadersDraggable();
 }
 
 function getFlatViewHtml(entries) {
@@ -1836,7 +1841,7 @@ function getFlatViewHtml(entries) {
   let mergeRows = buildMergeRows(rootMergeNode, "", maxDepth - 1, false, [], false);
   let usedColumns = findUsedColumns(mergeRows);
 
-  flatGrouper = new Grouper(mergeRows, usedColumns, maxDepth);
+  flatGrouper = new Grouper(mergeRows, usedColumns, maxDepth, FLAT_VIEW);
   return getGrouperHtml(flatGrouper);
 }
 
@@ -1860,8 +1865,8 @@ function buildPersonaRows() {
 function getSourcesViewHtml() {
   let personaRows = buildPersonaRows();
   let usedColumns = findUsedColumns(personaRows);
-  sourceGrouper = new Grouper(personaRows, usedColumns, 0);
-  return getGrouperHtml(sourceGrouper);
+  sourceGrouper = new Grouper(personaRows, usedColumns, 0, SOURCES_VIEW);
+  return getGrouperHtml(sourceGrouper, true);
 }
 
 function updateGroupName(groupId) {
