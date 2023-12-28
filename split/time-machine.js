@@ -19,8 +19,6 @@
  - Collapse merge node (and summarize all info in that one row).
  - Combined person/sources view.
  - Ordinances
- - Source view:
-   - Clickable collection titles.
 */
 
 // Flag for whether to include 'identity' (up to 24 hours after creation or 2012 + 2015 source attachments)
@@ -1207,9 +1205,9 @@ class MergeNode {
 
 // ===============
 class PersonDisplay {
-  constructor(person, nameClass, coupleRelationship) {
+  constructor(person, nameClass, coupleRelationship, shouldIncludeId) {
     this.name = "<span class='" + nameClass + "'>" + encode(getPersonName(person)) + "</span>";
-    if (nameClass !== "person") {
+    if (nameClass !== "person" && shouldIncludeId) {
       this.name += " <span class='relative-id'>(" + encode(person.id) + ")</span>";
     }
     this.facts = getFactListHtml(person);
@@ -1411,8 +1409,9 @@ class PersonRow {
     // Map of spouseId -> FamilyDisplay for that spouse and children with that spouse.
     // Also, "<none>" -> FamilyDisplay for list of children with no spouse.
     let familyMap = {};
-    this.handleCoupleAndTernaryRelationships(gedcomx, personId, fatherMap, motherMap, familyMap);
-    this.handleParentChildRelationships(gedcomx, personId, fatherMap, motherMap, familyMap);
+    let includePersonId = !collectionName;
+    this.handleCoupleAndTernaryRelationships(gedcomx, personId, fatherMap, motherMap, familyMap, includePersonId);
+    this.handleParentChildRelationships(gedcomx, personId, fatherMap, motherMap, familyMap, includePersonId);
 
     if (endGedcomx) {
       this.endRow = new PersonRow(null, personId, endGedcomx, null);
@@ -1422,7 +1421,7 @@ class PersonRow {
     this.isDupNode = isDupNode;
   }
 
-  handleParentChildRelationships(gedcomx, personId, fatherMap, motherMap, familyMap) {
+  handleParentChildRelationships(gedcomx, personId, fatherMap, motherMap, familyMap, includePersonId) {
     // Map of childId to array of {parentId, parentChildRelationship}, not including when
     let childParentsMap = this.buildChildParentsMap(gedcomx);
 
@@ -1434,7 +1433,7 @@ class PersonRow {
           let gender = getGender(parent);
           let parentMap = gender === "Female" ? motherMap : fatherMap;
           if (!parentMap[parentId]) {
-            addParentToMap(parentMap, gedcomx, parentId, gender === "Female" ? this.mothers : this.fathers);
+            addParentToMap(parentMap, gedcomx, parentId, gender === "Female" ? this.mothers : this.fathers, includePersonId);
           }
         }
       } else {
@@ -1448,7 +1447,7 @@ class PersonRow {
               let familyDisplay = familyMap[parentId];
               if (familyDisplay) {
                 // This child is a child of a spouse of the main person, so add it to that couple's family
-                familyDisplay.children.push(new PersonDisplay(findPersonInGx(gedcomx, childId), "child")); // future: add lineage facts somehow.
+                familyDisplay.children.push(new PersonDisplay(findPersonInGx(gedcomx, childId), "child", null, includePersonId)); // future: add lineage facts somehow.
                 foundOtherParent = true;
               }
             }
@@ -1460,21 +1459,21 @@ class PersonRow {
               familyMap["<none>"] = familyDisplay;
               this.families.push(familyDisplay);
             }
-            familyDisplay.children.push(new PersonDisplay(findPersonInGx(gedcomx, childId), "child")); // future: add lineage facts somehow.
+            familyDisplay.children.push(new PersonDisplay(findPersonInGx(gedcomx, childId), "child", null, includePersonId)); // future: add lineage facts somehow.
           }
         }
       }
     }
   }
 
-  handleCoupleAndTernaryRelationships(gedcomx, personId, fatherMap, motherMap, familyMap) {
+  handleCoupleAndTernaryRelationships(gedcomx, personId, fatherMap, motherMap, familyMap, includePersonId) {
     for (let relationship of getList(gedcomx, "relationships").concat(getList(gedcomx, CHILD_REL))) {
       let isChildRel = isChildRelationship(relationship);
       let spouseId = getSpouseId(relationship, personId);
       if (spouseId === "<notParentInRel>") {
         if (personId === getRelativeId(relationship, "child")) {
-          addParentToMap(fatherMap, gedcomx, getRelativeId(relationship, "parent1"), this.fathers);
-          addParentToMap(motherMap, gedcomx, getRelativeId(relationship, "parent2"), this.mothers);
+          addParentToMap(fatherMap, gedcomx, getRelativeId(relationship, "parent1"), this.fathers, includePersonId);
+          addParentToMap(motherMap, gedcomx, getRelativeId(relationship, "parent2"), this.mothers, includePersonId);
         }
       } else {
         if (!spouseId && isChildRel) {
@@ -1482,14 +1481,14 @@ class PersonRow {
         }
         let familyDisplay = familyMap[spouseId];
         if (!familyDisplay) {
-          let spouseDisplay = spouseId === "<none>" ? null : new PersonDisplay(findPersonInGx(gedcomx, spouseId), "spouse", relationship);
+          let spouseDisplay = spouseId === "<none>" ? null : new PersonDisplay(findPersonInGx(gedcomx, spouseId), "spouse", relationship, includePersonId);
           familyDisplay = new FamilyDisplay(spouseDisplay);
           familyMap[spouseId] = familyDisplay;
           this.families.push(familyDisplay);
         }
         if (isChildRel) {
           let childId = getRelativeId(relationship, "child");
-          familyDisplay.children.push(new PersonDisplay(findPersonInGx(gedcomx, childId), "child")); // future: add lineage facts somehow.
+          familyDisplay.children.push(new PersonDisplay(findPersonInGx(gedcomx, childId), "child", null, includePersonId)); // future: add lineage facts somehow.
         }
       }
     }
@@ -1696,9 +1695,9 @@ class PersonRow {
   }
 }
 
-function addParentToMap(parentIdDisplayMap, gedcomx, parentId, parentList) {
+function addParentToMap(parentIdDisplayMap, gedcomx, parentId, parentList, includePersonId) {
   if (parentId && !parentIdDisplayMap[parentId]) {
-    let parentDisplay = new PersonDisplay(findPersonInGx(gedcomx, parentId), "parent", null);
+    let parentDisplay = new PersonDisplay(findPersonInGx(gedcomx, parentId), "parent", null, includePersonId);
     parentIdDisplayMap[parentId] = parentDisplay;
     parentList.push(parentDisplay);
   }
