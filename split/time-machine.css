@@ -13,17 +13,26 @@
     color: #bb8a77;
     font-size: small;
 }
+table {
+    border-spacing: 0 0;
+    border-collapse: collapse;
+}
 th {
     top: 0;
     background-color: #f2ffeb;
     position: sticky;
     border: 1px solid #d3e8ca;
 }
-table {
-    border-spacing: 0 0;
-    border-collapse: collapse;
+.sort-date {
+    padding: 0 20px 0 0;
 }
-
+.sort-place {
+    color: #767699;
+    background-color: #e0eed8;
+    border: 1px solid #aecca0;
+    font-size: small;
+    font-family: sans-serif;
+}
 .between-cell {
     background-color: #fdfff8;
     border: 1px dashed #f1edea;

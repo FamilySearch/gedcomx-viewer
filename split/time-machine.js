@@ -286,13 +286,14 @@ function getCollectionName(gedcomx) {
       }
     }
     else {
-      sd = getSourceDescription(gedcomx, getFromPath(sd, "componentOf", "description"));
+      sd = getSourceDescription(gedcomx, getProperty(sd, "componentOf.description"));
     }
   }
   return collectionTitle;
 }
 
 function receivePersona(gedcomx, $status, context, fetching, sourceInfo) {
+  fixEventOrders(gedcomx);
   sourceInfo.gx = gedcomx;
   fetching.splice(fetching.indexOf(sourceInfo.ark), 1);
   let personaArk = getMainPersonaArk(gedcomx);
@@ -661,10 +662,6 @@ function showDetails(entryIndex){
 
 function hideDetails(){
   $("#details").hide();
-}
-
-function extractType(url) {
-  return url ? url.replaceAll(/.*\//g, "").replaceAll(/data:,/g, "") : null;
 }
 
 //============ Change Entry Logic =====================
@@ -1206,6 +1203,7 @@ class MergeNode {
 // ===============
 class PersonDisplay {
   constructor(person, nameClass, coupleRelationship, shouldIncludeId) {
+    this.person = person;
     this.name = "<span class='" + nameClass + "'>" + encode(getPersonName(person)) + "</span>";
     if (nameClass !== "person" && shouldIncludeId) {
       this.name += " <span class='relative-id'>(" + encode(person.id) + ")</span>";
@@ -1225,6 +1223,65 @@ class FamilyDisplay {
       this.spouse = spouseDisplay;
     }
     this.children = [];
+  }
+  sortChildren() {
+    function getBirthDateNumber(person) {
+      let dateNumber = null;
+      if (person.facts) {
+        for (let fact of person.facts) {
+          let type = extractType(fact.type);
+          if (type === 'Birth' || ((type === 'Christening' || type === 'Baptism') && !dateNumber)) {
+            let date = getFactDate(fact);
+            if (date) {
+              let newDateNumber = parseDateIntoNumber(date);
+              if (newDateNumber) {
+                dateNumber = newDateNumber;
+              }
+            }
+          }
+        }
+      }
+      return dateNumber;
+    }
+
+    if (this.children.length < 2) {
+      return;
+    }
+    // Move each child who has a birth date up before the first one who has a later birth date.
+    // This sorts the children such that (a) any with birth dates are in the right order, and
+    // (b) all other children remain otherwise in as much the same order as possible.
+    let childInfos = [];
+    let originalOrder = 0;
+    for (let child of this.children) {
+      childInfos.push({
+        child: child,
+        originalOrder: originalOrder++,
+        birthDateNum: getBirthDateNumber(child.person)
+      });
+    }
+    let movedChild = false;
+    for (let i = this.children.length - 1; i >= 0; i--) {
+      let childInfo = childInfos[i];
+      if (childInfo.birthDateNum) {
+        for (let prevIndex = i - 1; prevIndex >= 0; prevIndex--) {
+          let prevInfo = childInfos[prevIndex];
+          if (prevInfo.birthDateNum && prevInfo.birthDateNum > childInfo.birthDateNum) {
+            // delete childInfo from its current place in the array
+            childInfos.splice(i, 1);
+            // insert childInfo into its new place at 'prevIndex'
+            childInfos.splice(prevIndex, 0, childInfo);
+            i++; // make up for the i-- that is about to happen so that we don't skip an element that just moved into this spot.
+            movedChild = true;
+            break; // break out of the inner loop. If there's another even-earlier child, this element will get another chance to find it.
+          }
+        }
+      }
+    }
+    if (movedChild) {
+      for (let i = 0; i < childInfos.length; i++) {
+        this.children[i] = childInfos[i].child;
+      }
+    }
   }
 }
 
@@ -1282,6 +1339,12 @@ class Grouper {
       grouperMap[mergeRow.id] = this;
     }
     grouperMap[this.id] = this;
+  }
+
+  sort(columnName) {
+    for (let mergeGroup of this.mergeGroups) {
+      mergeGroup.sort(columnName);
+    }
   }
 
   findGroup(groupId) {
@@ -1385,12 +1448,36 @@ class MergeGroup {
     this.personRows = personRows;
     grouperMap[this.groupId] = grouper;
   }
+
+  sort(columnName) {
+    let origOrder = 1;
+    for (let personRow of this.personRows) {
+      personRow.origOrder = origOrder++;
+      personRow.setSortKey(columnName);
+    }
+    // Sort by sortKey, and then, if those are equal, by original order before the sort.
+    // (Future: remember how we sorted last time, and reverse order if sorted by that again).
+    this.personRows.sort(function(a, b){
+      if (isEmpty(a.sortKey) && !isEmpty(b.sortKey)) {
+        return 1;
+      }
+      if (isEmpty(b.sortKey) && !isEmpty(a.sortKey)) {
+        return -1;
+      }
+      let diff = a.sortKey.localeCompare(b.sortKey);
+      if (!diff) {
+        diff = a.origOrder - b.origOrder;
+      }
+      return diff;
+    });
+  }
 }
 
 // Row of data for a person and their 1-hop relatives (record persona or Family Tree person--either original identity or result of a merge)
 class PersonRow {
   constructor(mergeNode, personId, gedcomx, endGedcomx, indent, maxIndent, isDupNode, grouper, collectionName, personaArk) {
-    let person = findPersonInGx(gedcomx, personId);
+    this.sortKey = "";
+    this.person = findPersonInGx(gedcomx, personId);
     this.personId = personId;
     this.collectionName = collectionName;
     this.personaArk = personaArk;
@@ -1398,11 +1485,12 @@ class PersonRow {
     this.id = "mr-" + nextPersonRowId++;
     grouperMap[this.id] = grouper;
     this.mergeNode = mergeNode;
-    this.personDisplay = new PersonDisplay(person, "person");
+    this.personDisplay = new PersonDisplay(this.person, "person");
     this.families = []; // Array of FamilyDisplay, one per spouse (and children with that spouse), and one more for any children with no spouse.
     this.fathers = []; // Array of PersonDisplay. Unknown-gender parents are also included here. (Note that parents are not paired up).
     this.mothers = []; // Array of PersonDisplay
     this.isSelected = false;
+    this.origOrder = 0;
     // Map of personId -> PersonDisplay for mothers and fathers.
     let fatherMap = {};
     let motherMap = {};
@@ -1412,6 +1500,7 @@ class PersonRow {
     let includePersonId = !collectionName;
     this.handleCoupleAndTernaryRelationships(gedcomx, personId, fatherMap, motherMap, familyMap, includePersonId);
     this.handleParentChildRelationships(gedcomx, personId, fatherMap, motherMap, familyMap, includePersonId);
+    this.sortFamilies();
 
     if (endGedcomx) {
       this.endRow = new PersonRow(null, personId, endGedcomx, null);
@@ -1419,6 +1508,147 @@ class PersonRow {
     this.indent = indent;
     this.maxIndent = maxIndent;
     this.isDupNode = isDupNode;
+  }
+
+  sortFamilies() {
+    // Sort families by marriage date, and sort children within each family by child's birth date, or by original order when no date.
+    for (let family of this.families) {
+      family.sortChildren();
+    }
+  }
+  setSortKey(columnName) {
+    let sortKey = null;
+
+    function getFirstFactDate(factHolder) {
+      if (factHolder && factHolder.facts) {
+        for (let fact of factHolder.facts) {
+          if (fact.date && fact.date.original) {
+            let dayNumber = parseDateIntoNumber(fact.date.original);
+            return dayNumber ? dayNumber.toString() : "";
+          }
+        }
+      }
+      return "";
+    }
+
+    function getPlaceSortKey(place) {
+      if (place) {
+        let parts = place.split(",");
+        let newParts = [];
+        for (let i = parts.length - 1; i >= 0; i--) {
+          if (!parts[i].includes("United States")) {
+            newParts.push(parts[i].trim());
+          }
+        }
+        return newParts.join(", ");
+      }
+      return "";
+    }
+
+    function getFirstFactPlace(factHolder) {
+      if (factHolder && factHolder.facts) {
+        for (let fact of factHolder.facts) {
+          if (fact.place && fact.place.original) {
+            return getPlaceSortKey(fact.place.original);
+          }
+        }
+      }
+      return "";
+    }
+
+    function getFirstRelativeName(relatives) {
+      return isEmpty(relatives) ? "" : relatives[0].name;
+    }
+
+    function getFirstSpouseName(families) {
+      for (let family of families) {
+        if (family.spouse) {
+          let name = getPersonName(family.spouse.person);
+          if (name !== "<no name>") {
+            return name;
+          }
+        }
+      }
+      return "";
+    }
+
+    function getFirstSpouseFactDate(families) {
+      for (let family of families) {
+        if (family.spouse) {
+          let date = getFirstFactDate(family.spouse.person);
+          if (date) {
+            return date;
+          }
+        }
+      }
+      return "";
+    }
+
+    function getFirstSpouseFactPlace(families) {
+      for (let family of families) {
+        if (family.spouse) {
+          let place = getFirstFactPlace(family.spouse.person);
+          if (place) {
+            return place;
+          }
+        }
+      }
+      return "";
+    }
+
+    function getFirstChildName(families) {
+      for (let family of families) {
+        if (!isEmpty(family.children)) {
+          return family.children[0].name;
+        }
+      }
+      return "";
+    }
+
+    function getFirstChildFactDate(families) {
+      for (let family of families) {
+        for (let child of family.children) {
+          let date = getFirstFactDate(child.person);
+          if (date) {
+            return date;
+          }
+        }
+      }
+      return "";
+    }
+
+    function getFirstChildFactPlace(families) {
+      for (let family of families) {
+        for (let child of family.children) {
+          let place = getFirstFactPlace(child.person);
+          if (place) {
+            return place;
+          }
+        }
+      }
+      return "";
+    }
+
+    switch (columnName) {
+      case "collection":
+        sortKey = this.collectionName;
+        break;
+      case "person-id":
+        sortKey = this.personId;
+        break;
+      case "person-name":        sortKey = getPersonName(this.person);             break;
+      case "person-facts":       sortKey = getFirstFactDate(this.person);          break;
+      case "person-facts-place": sortKey = getFirstFactPlace(this.person);         break;
+      case "father-name":        sortKey = getFirstRelativeName(this.fathers);     break;
+      case "mother-name":        sortKey = getFirstRelativeName(this.mothers);     break;
+      case "spouse-name":        sortKey = getFirstSpouseName(this.families);      break;
+      case "spouse-facts":       sortKey = getFirstSpouseFactDate(this.families);  break;
+      case "spouse-facts-place": sortKey = getFirstSpouseFactPlace(this.families); break;
+      case "child-name":         sortKey = getFirstChildName(this.families);       break;
+      case "child-facts":        sortKey = getFirstChildFactDate(this.families);   break;
+      case "child-facts-place":  sortKey = getFirstChildFactPlace(this.families);  break;
+    }
+    this.sortKey = sortKey;
   }
 
   handleParentChildRelationships(gedcomx, personId, fatherMap, motherMap, familyMap, includePersonId) {
@@ -1886,8 +2116,8 @@ function deleteEmptyGroup(groupId) {
   updateFlatViewHtml(grouper);
 }
 
-function getGrouperHtml(grouper, isSourceGroup) {
-  let html = getTableHeader(grouper.usedColumns, grouper.maxDepth, false, isSourceGroup);
+function getGrouperHtml(grouper) {
+  let html = getTableHeader(grouper.usedColumns, grouper.maxDepth, false, grouper);
   let numColumns = html.match(/<th>/g).length;
   for (let groupIndex = 0; groupIndex < grouper.mergeGroups.length; groupIndex++) {
     let personGroup = grouper.mergeGroups[groupIndex];
@@ -1908,18 +2138,43 @@ function getGrouperHtml(grouper, isSourceGroup) {
   return html;
 }
 
-function getTableHeader(usedColumns, maxDepth, shouldIndent, shouldUseCollectionHeader) {
+function sortColumn(columnName, grouperId) {
+  let grouper = grouperMap[grouperId];
+  grouper.sort(columnName);
+  updateFlatViewHtml(grouper);
+}
+
+function getTableHeader(usedColumns, maxDepth, shouldIndent, grouper) {
+  function sortHeader(columnName, label, spanClass) {
+    return "<span "
+        + (spanClass ? "class='" + spanClass + "'" : "")
+        + (grouper ? "onclick='sortColumn(\"" + columnName + "\", \"" + grouper.id + "\")'" : "")
+        + ">" + encode(label) + "</span>";
+  }
+  function dpHtml(columnName, label) {
+    return sortHeader(columnName, label, "sort-date")
+    + (grouper ? "<span class='sort-place' onclick='sortColumn(\"" + columnName + "-place" + "\", \"" + grouper.id + "\")'>" + encode(" place ") + "</span>" : "");
+  }
+  function cell(columnName, label, alwaysInclude) {
+    if (alwaysInclude || usedColumns.has(columnName)) {
+      return "<th>"
+          + (columnName.endsWith("-facts") ? dpHtml(columnName, label) : sortHeader(columnName, label))
+          + "</th>";
+    }
+    return "";
+  }
+
   let colspan = shouldIndent ? " colspan='" + maxDepth + "'" : "";
   return "<table id='change-log-hierarchy'><th" + colspan + ">"
-      + (shouldUseCollectionHeader ? "Collection" : "Person ID")
-      + "</th><th>Name</th>"
-      + (usedColumns.has("person-facts") ? "<th>Facts</th>" : "")
-      + (usedColumns.has("father-name") ? "<th>Father</th>" : "")
-      + (usedColumns.has("mother-name") ? "<th>Mother</th>" : "")
-      + (usedColumns.has("spouse-name") ? "<th>Spouse</th>" : "")
-      + (usedColumns.has("spouse-facts") ? "<th>Spouse facts</th>" : "")
-      + (usedColumns.has("child-name") ? "<th>Children</th>" : "")
-      + (usedColumns.has("child-facts") ? "<th>Child facts</th>" : "");
+      + (grouper && grouper.tabId === SOURCES_VIEW ? sortHeader("collection", "Collection") : sortHeader("person-id", "Person ID"))
+      + cell("person-name", "Name", true)
+      + cell("person-facts", "Facts")
+      + cell("father-name", "Father")
+      + cell("mother-name", "Mother")
+      + cell("spouse-name", "Spouse")
+      + cell("spouse-facts", "Spouse facts")
+      + cell("child-name", "Children")
+      + cell("child-facts", "Child facts")
 }
 
 function getMergeHierarchyHtml(entries) {
@@ -1929,7 +2184,7 @@ function getMergeHierarchyHtml(entries) {
   let usedColumns = findUsedColumns(mergeRows);
 
   mergeGrouper = new Grouper(mergeRows, usedColumns, maxDepth);
-  let html = getTableHeader(usedColumns, maxDepth, true);
+  let html = getTableHeader(usedColumns, maxDepth, true, null);
   for (let mergeRow of mergeRows) {
     html += mergeRow.getHtml(usedColumns, true);
   }
@@ -2013,8 +2268,6 @@ function getRelativeHtml(relativeId, timestamp) {
   return encode(getRelativeName(relativeId, timestamp)) + " <span class='relative-id'>(" + encode(relativeId) + ")</span>";
 }
 
-
-
 // ====================================================================
 // ============ GedcomX manipuation (no HTML) =========================
 
@@ -2028,19 +2281,6 @@ function getInitialGedcomx(personId) {
       }
     }
   ] };
-}
-
-function getProperty(object, path) {
-  let parts = path.split(".");
-  for (let part of parts) {
-    if (object && object.hasOwnProperty(part)) {
-      object = object[part];
-    }
-    else {
-      return null;
-    }
-  }
-  return object;
 }
 
 function shortenPersonArk(personArk) {
@@ -2076,38 +2316,11 @@ function findPersonInGx(gedcomx, personId) {
   throw new Error("Could not find person with id " + personId);
 }
 
-/**
- * Attempt to parse a date using the formats 3 July 1820; July 3, 1820; and 7/3/1820.
- * (Days and months are optional, i.e., "3 July 1820", "July 3, 1820", "July 1820", "1820", 7/3/1820 and 7/1820 are all ok.)
- * (BC, B.C., BCE or B.C.E. can also be added to the end of the first two date formats).
- * A dayNumber is returned which is 12*31*year + 31*month + day. This is not meant to correspond to a real calendar,
- *   but is a number that can be used to compare two dates unambiguously without a lot of calendar arithmetic.
- * The dayNumber is 0 if it could not be parsed.
- * @param date - Date string. Text before or after the date is ignored.
- * @returns dayNumber that can be used for date comparisons, or 0 if it could not be parsed.
- */
-function parseDateIntoNumber(date) {
-  let dayNumber = 0;
-  let dateObject = parseDate(date);
-  if (dateObject && dateObject.year) {
-    dayNumber += 31 * 12 * dateObject.year;
-    if (dateObject.month) {
-      dayNumber += 31 * dateObject.month;
-      if (dateObject.day) {
-        dayNumber += dateObject.day;
-      }
-    }
-  }
-  return dayNumber;
-}
-
 // Compare two date strings, if they can both be parsed. Return -1 or 1 if they were both parsed and are different; or 0 otherwise.
 function compareDates(date1, date2) {
-  // Attempt to parse a few common date formats.
-  // 3 July 1820
-  let dateNum1 = parseDate(date1);
+  let dateNum1 = parseDateIntoNumber(date1);
   if (dateNum1) {
-    let dateNum2 = parseDate(date2);
+    let dateNum2 = parseDateIntoNumber(date2);
     if (dateNum2 && dateNum1 !== dateNum2) {
       return dateNum1 < dateNum2 ? -1 : 1;
     }
@@ -2118,7 +2331,6 @@ function compareDates(date1, date2) {
 // Return -1, 0 or 1 if fact1 is 'less than', equal to, or 'greater than' fact 2.
 // Sorts first by fact date, if there is one, and otherwise by type
 function compareFacts(fact1, fact2) {
-  const typeLevelMap = {"Birth" : -2, "Christening" : -1, "Baptism": -1, "Death": 1, "Burial" : 2, "Cremation": 2}
   let level1 = typeLevelMap[extractType(fact1["type"])];
   let level2 = typeLevelMap[extractType(fact2["type"])];
   level1 = level1 ? level1 : 0; // convert undefined to 0
@@ -2522,16 +2734,3 @@ function updateGedcomx(gedcomx, entry) {
     }
   }
 }
-
-function getFromPath(obj, ...paths) {
-  for (let path of paths) {
-    if (obj && obj[path]) {
-      obj = obj[path];
-    }
-    else {
-      return null;
-    }
-  }
-  return obj;
-}
-

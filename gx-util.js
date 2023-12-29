@@ -187,6 +187,9 @@ function parseDate(date) {
     const monthMap = {"jan": 1, "feb": 2, "mar": 3, "apr": 4, "may": 5, "jun": 6, "jul": 7, "aug": 8, "sep": 9, "oct": 10, "nov": 11, "dec": 12};
     return monthName ? monthMap[monthName.toLowerCase().slice(0, 3)] : null;
   }
+  function num(s) {
+    return s ? Number(s.trim()) : null;
+  }
 
   if (date) {
     let day = null;
@@ -195,9 +198,9 @@ function parseDate(date) {
     // Match 3 July 1820
     let match = date.match(/(?:(\d+ +)?([A-Za-z]+ +))?(\d\d\d\d)(?: +(BC|B\.C\.|BCE|B\.C\.E\.))?/);
     if (match) {
-      day = match[1];
+      day = num(match[1]);
       month = mapMonth(match[2]);
-      year = match[3];
+      year = num(match[3]);
       if (match[4]) { // B.C.
         year = -year;
       }
@@ -207,16 +210,16 @@ function parseDate(date) {
       match = date.match(/(?:([A-Za-z]+ +)(\d+,? )?)?(\d\d\d\d)(?: +(BC|B\.C\.|BCE|B\.C\.E\.))?/);
       if (match) {
         month = mapMonth(match[1]);
-        day = match[2];
-        year = match[3];
+        day = num(match[2]);
+        year = num(match[3]);
       }
       else {
         // Match 7/3/1820, or 7/3/20, or 7/1820
         match = date.match(/(\d\d?)\/(?:(\d\d?)\/)?(\d\d\d\d)/);
         if (match) {
-          month = match[1];
-          day = match[2];
-          year = match[3];
+          month = num(match[1]);
+          day = num(match[2]);
+          year = num(match[3]);
         }
       }
     }
@@ -312,6 +315,116 @@ function getFirst(array) {
     return array[0];
   }
   return null;
+}
+
+/**
+ * Attempt to parse a date using the formats 3 July 1820; July 3, 1820; and 7/3/1820.
+ * (Days and months are optional, i.e., "3 July 1820", "July 3, 1820", "July 1820", "1820", 7/3/1820 and 7/1820 are all ok.)
+ * (BC, B.C., BCE or B.C.E. can also be added to the end of the first two date formats).
+ * A dayNumber is returned which is 12*31*year + 31*month + day. This is not meant to correspond to a real calendar,
+ *   but is a number that can be used to compare two dates unambiguously without a lot of calendar arithmetic.
+ * The dayNumber is 0 if it could not be parsed.
+ * @param date - Date string. Text before or after the date is ignored.
+ * @returns number for a date that can be used for date comparisons, or 0 if it could not be parsed.
+ */
+function parseDateIntoNumber(date) {
+  let dayNumber = 0;
+  let dateObject = parseDate(date);
+  if (dateObject && dateObject.year) {
+    dayNumber += 10000 * dateObject.year;
+    if (dateObject.month) {
+      dayNumber += 100 * dateObject.month;
+      if (dateObject.day) {
+        dayNumber += dateObject.day;
+      }
+    }
+  }
+  return dayNumber;
+}
+
+const typeLevelMap = {"Birth" : -2, "Christening" : -1, "Baptism": -1, "Death": 1, "Burial" : 2, "Cremation": 2}
+
+function fixEventOrders(doc) {
+  function compareFactInfos(a, b) {
+    // Sort facts first by type (birth < chr < bap < death < bur < cremation)
+    //   then by date (earlier < later < none)
+    //   then by original order.
+    let diff = a.factLevel - b.factLevel;
+    if (!diff) {
+      let dateNumA = a.dateNum ? a.dateNum : 99999999;
+      let dateNumB = b.dateNum ? b.dateNum : 99999999;
+      diff = dateNumB - dateNumA;
+      if (!diff) {
+        diff = a.origOrder - b.origOrder;
+      }
+    }
+    return diff;
+  }
+
+  function getFactInfos(factHolder) {
+    function getFactLevel(fact) {
+      let factLevel = typeLevelMap[extractType(fact.type)];
+      return factLevel ? factLevel : 0;
+    }
+    let factInfos = [];
+    let origOrder = 0;
+    for (let fact of factHolder.facts) {
+      let factInfo = {
+        fact: fact,
+        factLevel: getFactLevel(fact),
+        origOrder: origOrder++,
+        dateNum: parseDateIntoNumber(getProperty(fact, "date.original"))
+      }
+      factInfos.push(factInfo);
+    }
+    return factInfos;
+  }
+
+  function fixEventOrder(factHolder) {
+    if (factHolder.facts && factHolder.facts.length > 1) {
+      let factInfos = getFactInfos(factHolder);
+      factInfos.sort(compareFactInfos);
+      for (let i = 0; i < factHolder.facts.length; i++) {
+        factHolder.facts[i] = factInfos[i].fact;
+      }
+    }
+  }
+
+  // fixEventOrders--------------
+  if (doc.persons) {
+    for (let person of doc.persons) {
+      fixEventOrder(person);
+    }
+  }
+  if (doc.relationships) {
+    for (let relationship of doc.relationships) {
+      fixEventOrder(relationship);
+    }
+  }
+}
+
+/**
+ * Convenience method to get a property from an object, or null if it doesn't exist, without having to check for null
+ *   at each step along a nested property.
+ * @param object - Object that might have the property
+ * @param path - dot-separated path to the property, like 'date.original'
+ * @returns property value, if it exists, or null if any of the attributes along the path do not exist.
+ */
+function getProperty(object, path) {
+  let parts = path.split(".");
+  for (let part of parts) {
+    if (object && object.hasOwnProperty(part)) {
+      object = object[part];
+    }
+    else {
+      return null;
+    }
+  }
+  return object;
+}
+
+function extractType(url) {
+  return url ? url.replaceAll(/.*\//g, "").replaceAll(/data:,/g, "") : null;
 }
 
 /**
