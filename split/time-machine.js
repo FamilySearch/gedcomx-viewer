@@ -1,15 +1,12 @@
 // IDs to try out:
-//   LZBY-X8J - Clarence Gray. 5 PIDs that all merge into the same one.
+//   LZBY-X8J - Clarence Gray. 5 PIDs that all merge into the same one. (Wife Bertha Nickell (later Bishop): L2DF-DRG)
 //   9HMF-2S1 - Alice Moore. Example from Kathryn
 //   G2FN-RZY - Theoore Freise, which Robby and Karl were working on. Has lots of data and persons added after some merging.
 
 /* Still to do:
- - Date/place in separate columns
  - Select rows
    - Drag to move to new or existing group
    - Double-click value to select everyone with that value
- - Sort by column
-   - Shift-click column header to sort by previous criteria and then by this column.
  - Combined "identity" (original) vs. "end" view.
    - Styles for (a) original identity data, (b) original data that was later deleted,
      (c) data added after original identity, (d) added data that was later deleted
@@ -19,6 +16,8 @@
  - Collapse merge node (and summarize all info in that one row).
  - Combined person/sources view.
  - Ordinances
+ - Memories
+ - Move "lollipops" (conclusions made after creation or merge) separately from identities.
 */
 
 // Flag for whether to include 'identity' (up to 24 hours after creation or 2012 + 2015 source attachments)
@@ -132,7 +131,7 @@ function receiveChangeLog(gedcomx, personId, context, changeLogMap, fetching, $m
   if (fetching.length === 0) {
     // All the change logs that needed to be fetched have now been fetched, and this is the last one.
     // So create the Html.
-    makeChangeLogHtml(context, changeLogMap, $mainTable);
+    makeMainHtml(context, changeLogMap, $mainTable);
     // Then, kick off the fetching of relatives and sources info, and update the table when done.
     fetchRelativesAndSources(changeLogMap, $status, context);
   }
@@ -331,22 +330,23 @@ function formatTimestamp(ts) {
 
 // ==================== HTML ===================================
 // changeLogMap - Map of personId -> GedcomX of the change log for that personId.
+const MERGE_VIEW = "merge-hierarchy";
 const FLAT_VIEW = "flat-view";
 const SOURCES_VIEW = "sources-view";
 
-function makeChangeLogHtml(context, changeLogMap, $mainTable) {
+function makeMainHtml(context, changeLogMap, $mainTable) {
   let personMinMaxTs = {};
   let personIds = [];
   let allEntries = combineEntries(context.personId, changeLogMap, personIds, personMinMaxTs);
   let html =
     "<div id='tabs'><ul>\n" +
     "  <li><a href='#change-logs-table'><span>Change Logs</span></a></li>\n" +
-    "  <li><a href='#merge-hierarchy'><span>Merge view</span></a></li>\n" +
+    "  <li><a href='#" + MERGE_VIEW + "'><span>Merge view</span></a></li>\n" +
     "  <li><a href='#" + FLAT_VIEW + "'><span>Flat view</span></a></li>\n" +
     "  <li><a href='#" + SOURCES_VIEW + "'><span>Sources view</span></a></li>\n" +
     "</ul>\n" +
     "<div id ='change-logs-table'>" + getChangeLogTableHtml(allEntries, personIds, personMinMaxTs) + "</div>\n" +
-    "<div id='merge-hierarchy'>" + getMergeHierarchyHtml(allEntries) + "</div>\n" +
+    "<div id='" + MERGE_VIEW + "'>" + getMergeHierarchyHtml(allEntries) + "</div>\n" +
     "<div id='" + FLAT_VIEW + "'>" + getFlatViewHtml(allEntries) + "</div>\n" +
     "<div id='" + SOURCES_VIEW + "'>Sources grid...</div>\n" +
     "<div id='details'></div>\n";// +
@@ -357,7 +357,7 @@ function makeChangeLogHtml(context, changeLogMap, $mainTable) {
   html += "</div>";
   $mainTable.html(html);
   $("#rel-graphs-container").hide();
-  $("#tabs").tabs({active: 3});
+  $("#tabs").tabs({active: 1});
   // Prevent text from being selected when shift-clicking a row.
   for (let eventType of ["keyup", "keydown"]) {
     window.addEventListener(eventType, (e) => {
@@ -424,7 +424,9 @@ function getChangeLogTableHtml(allEntries, personIds, personMinMaxTs) {
       // Combine all cells with the same timestamp into a single cell.
       let rowspan = numRowsWithSameTimestamp(allEntries, entryIndex);
       let rowspanHtml = rowspan > 1 ? "rowspan='" + rowspan + "' " : "";
-      html += "<td " + rowspanHtml + "onclick='displayRecords(this, " + entryIndex + ")' class='timestamp" + rowClass + "'>" + formatTimestamp(entry.updated) + "</td>";
+      html += "<td " + rowspanHtml +
+          //"onclick='displayRecords(this, " + entryIndex + ")' " +  (<== in case we implement this...)
+          "class='timestamp" + rowClass + "'>" + formatTimestamp(entry.updated) + "</td>";
     }
 
     for (let column = 0; column < personIds.length; column++) {
@@ -1101,30 +1103,30 @@ function assume(assumption) {
   }
 }
 
-function displayRecords(element, entryIndex) {
-  //let gedcomxColumns = buildGedcomxColumns(entryIndex);
-  //todo...
-}
+// function displayRecords(element, entryIndex) {
+//   let gedcomxColumns = buildGedcomxColumns(entryIndex);
+//   //future...
+// }
 
-function buildGedcomxColumns(entryIndex) {
-  // Map of column# -> GedcomX object for that column
-  let columnGedcomxMap = {};
-  // Move entryIndex to the top of the list of changes that were all done at the same time.
-  while (entryIndex > 0 && allEntries[entryIndex - 1].updated === allEntries[entryIndex].updated) {
-    entryIndex--;
-  }
-  // Apply each change to the gedcomx at that entry's column.
-  for (let i = allEntries.length - 1; i >= entryIndex; i--) {
-    let entry = allEntries[i];
-    let gedcomx = columnGedcomxMap[entry.column];
-    if (!gedcomx) {
-      gedcomx = getInitialGedcomx(entry.personId);
-      columnGedcomxMap[entry.column] = gedcomx;
-    }
-    updateGedcomx(gedcomx, entry);
-  }
-  return columnGedcomxMap;
-}
+// function buildGedcomxColumns(entryIndex) {
+//   // Map of column# -> GedcomX object for that column
+//   let columnGedcomxMap = {};
+//   // Move entryIndex to the top of the list of changes that were all done at the same time.
+//   while (entryIndex > 0 && allEntries[entryIndex - 1].updated === allEntries[entryIndex].updated) {
+//     entryIndex--;
+//   }
+//   // Apply each change to the gedcomx at that entry's column.
+//   for (let i = allEntries.length - 1; i >= entryIndex; i--) {
+//     let entry = allEntries[i];
+//     let gedcomx = columnGedcomxMap[entry.column];
+//     if (!gedcomx) {
+//       gedcomx = getInitialGedcomx(entry.personId);
+//       columnGedcomxMap[entry.column] = gedcomx;
+//     }
+//     updateGedcomx(gedcomx, entry);
+//   }
+//   return columnGedcomxMap;
+// }
 
 // ========== MergeNode =============================
 class MergeNode {
@@ -1158,7 +1160,7 @@ class MergeNode {
 
   /**
    * Update the GedcomX of this MergeNode with one change log entry.
-   * - If the entry is within 24 hours of the first entry, add it to 'identityGx'.
+   * - If the entry is within 24 hours of the first entry (or happened in 2012, during the Great Migration), add it to 'identityGx'.
    * - Otherwise, add it to 'endGx' (creating it from a copy of identityGx if it hasn't been created yet)
    * @param entry
    */
@@ -1182,7 +1184,7 @@ class MergeNode {
       this.firstEntry = entry;
     }
     else if (!this.endGx && this.firstEntry && hasBeenLongEnough(entry.updated, this.firstEntry.updated, entry)) {
-      // We got an entry that is over 24 hours after the first one for this person,
+      // We got an entry that is over 24 hours after the first one for this person (and after 2012),
       // so start applying changes to a new copy of the GedcomX that represents the "latest"
       // instead of the 'initial identity'.
       this.endGx = copyObject(this.identityGx);
@@ -1895,8 +1897,8 @@ class PersonRow {
               console.log("Error: Unrecognized indent code '" + indentCode + "'");
           }
           indentHtml += "<td class='con-holder' " + idRowSpan + "><table class='connector-table'>" +
-            "<tr><td class='con-O' rowspan='2'>&nbsp;</td><td class='" + upperClass + "'></td></tr>" +
-            "<tr><td class='" + lowerClass + "'></td></tr></table></td>";
+            "<tr><td class='con-O' rowspan='2'>&nbsp;</td><td class='" + upperClass + "'>&nbsp;</td></tr>" +
+            "<tr><td class='" + lowerClass + "'>&nbsp;</td></tr></table></td>";
         }
       }
       return indentHtml;
@@ -2294,9 +2296,9 @@ function getPersonId(person) {
       return shortenPersonArk(identifiers[0]);
     }
   }
-  let personId = getPersonIdOfType("http://gedcomx.org/Primary");
+  let personId = getPersonIdOfType("http://gedcomx.org/Persistent");
   if (!personId) {
-    personId = getPersonIdOfType("http://gedcomx.org/Persistent");
+    personId = getPersonIdOfType("http://gedcomx.org/Primary");
   }
   if (!personId) {
     throw new Error("No Primary or Persistent id for person.");
