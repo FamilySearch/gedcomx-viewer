@@ -195,35 +195,48 @@ function parseDate(date) {
     let day = null;
     let month = null;
     let year = null;
-    // Match 3 July 1820
-    let match = date.match(/(?:(\d+ +)?([A-Za-z]+ +))?(\d\d\d\d)(?: +(BC|B\.C\.|BCE|B\.C\.E\.))?/);
-    if (match) {
-      day = num(match[1]);
-      month = mapMonth(match[2]);
-      year = num(match[3]);
-      if (match[4]) { // B.C.
-        year = -year;
-      }
+    if (typeof date === 'number') {
+      year = date;
     }
     else {
-      // Match July 3, 1820
-      match = date.match(/(?:([A-Za-z]+ +)(\d+,? )?)?(\d\d\d\d)(?: +(BC|B\.C\.|BCE|B\.C\.E\.))?/);
+      // Match 3 July 1820
+      let match = date.match(/^ *(\d\d\d\d) *$/);
       if (match) {
-        month = mapMonth(match[1]);
-        day = num(match[2]);
-        year = num(match[3]);
-      }
-      else {
-        // Match 7/3/1820, or 7/3/20, or 7/1820
-        match = date.match(/(\d\d?)\/(?:(\d\d?)\/)?(\d\d\d\d)/);
+        year = num(match[1]);
+      } else {
+        let match = date.match(/(\d+ +)?([A-Za-z]+ +)(\d\d\d\d)(?: +(BC|B\.C\.|BCE|B\.C\.E\.))?/);
         if (match) {
-          month = num(match[1]);
-          day = num(match[2]);
+          day = num(match[1]);
+          month = mapMonth(match[2]);
           year = num(match[3]);
+          if (match[4]) { // B.C.
+            year = -year;
+          }
+        } else {
+          // Match July 3, 1820
+          match = date.match(/([A-Za-z]+ +)(\d+,? )?(\d\d\d\d)(?: +(BC|B\.C\.|BCE|B\.C\.E\.))?/);
+          if (match) {
+            month = mapMonth(match[1]);
+            day = num(match[2]);
+            year = num(match[3]);
+          } else {
+            // Match 7/3/1820, or 7/3/20, or 7/1820
+            match = date.match(/(\d\d?)\/(?:(\d\d?)\/)?(\d\d\d\d)/);
+            if (match) {
+              month = num(match[1]);
+              day = num(match[2]);
+              year = num(match[3]);
+            }
+          }
         }
       }
     }
     if (year) {
+      if (month > 12 && day <= 12) {
+        let tempDay = month;
+        month = day;
+        day = tempDay;
+      }
       let date = {"year": year};
       if (month) {
         date.month = month;
