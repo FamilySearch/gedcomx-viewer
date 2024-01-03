@@ -177,9 +177,11 @@ th {
 
 .identity-gx {
     border: 1px solid #cedace;
-}
-.identity-gx {
     background-color: #f3f8f3
+}
+.merge-node {
+    border: 1px solid #cedace;
+    background-color: #f8f8f3;
 }
 .selected * {
     background-color: #fcfcaa;

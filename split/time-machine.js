@@ -399,7 +399,6 @@ function makeTableHeadersDraggable() {
   });
   // Also make it so that clicked hyperlinks don't propagate
   $("a").click(function(e){
-    console.log("Got a hyperlink click. Stopping propagation...");
     e.stopPropagation();
   });
 }
@@ -1866,7 +1865,7 @@ class PersonRow {
     }
   }
 
-  // get HTML for this merge row
+  // get HTML for this person row
   getHtml(usedColumns, shouldIndent) {
     function getIndentationHtml(indentCodes) {
       let indentHtml = "";
@@ -1921,7 +1920,8 @@ class PersonRow {
       html += this.endRow.getRowPersonCells(this.endRow.gedcomx, this.personId, 'end-gx', usedColumns, "", this.id);
       html += "</tr>\n<tr>";
     }
-    html += this.getRowPersonCells(this.gedcomx, this.personId, 'identity-gx', usedColumns, bottomClass, this.id);
+    let rowClass = this.mergeNode && !this.mergeNode.isLeafNode() ? 'merge-node' : 'identity-gx';
+    html += this.getRowPersonCells(this.gedcomx, this.personId, rowClass, usedColumns, bottomClass, this.id);
     html += "</tr>\n";
     return html;
   }
