@@ -151,8 +151,8 @@ function fetchRelativesAndSources(changeLogMap, $status, context) {
       if (entry.content && entry.content.gedcomx) {
         let gedcomx = entry.content.gedcomx;
         gatherSources(gedcomx.persons);
-        gatherSources(gedcomx.relationships);
-        gatherSources(gedcomx[CHILD_REL])
+        // gatherSources(gedcomx.relationships);
+        // gatherSources(gedcomx[CHILD_REL])
         gatherNames(gedcomx, timestamp,"relationships", ["person1", "person2"]);
         gatherNames(gedcomx, timestamp, CHILD_REL, ["parent1", "parent2", "child"]);
       }
