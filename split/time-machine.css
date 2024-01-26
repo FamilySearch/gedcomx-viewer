@@ -156,6 +156,18 @@ th {
     text-align: center;
 }
 
+#settings {
+    padding: 6px;
+    margin: 0 0 0 100px;
+    background-color: #f3e4d6;
+    border: 1px solid #9d8345;
+    border-radius: 5px;
+    box-shadow: black;
+}
+#fact-level-radio {
+    display: inline;
+}
+
 .ui-widget-header {
     border: 2px solid black;
 }
