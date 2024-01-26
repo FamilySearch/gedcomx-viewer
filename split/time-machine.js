@@ -1517,6 +1517,7 @@ class PersonRow {
       family.sortChildren();
     }
   }
+
   setSortKey(columnName) {
     let sortKey = null;
 
@@ -2068,7 +2069,18 @@ function addSelectedToGroup(groupId) {
 
 function updateFlatViewHtml(grouper) {
   $("#" + grouper.tabId).html(getGrouperHtml(grouper));
+  highlightSelectedRows(grouper);
   makeTableHeadersDraggable();
+}
+
+function highlightSelectedRows(grouper) {
+  for (let group of grouper.mergeGroups) {
+    for (let personRow of group.personRows) {
+      if (personRow.isSelected) {
+        $("." + personRow.id).addClass(ROW_SELECTION);
+      }
+    }
+  }
 }
 
 function getFlatViewHtml(entries) {
