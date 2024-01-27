@@ -1350,7 +1350,7 @@ class DisplayOptions {
   constructor() {
     // Option (INCLUDE_NO/VITAL/ALL_FACTS) for which facts to display.
     this.factsToInclude = INCLUDE_ALL_FACTS;
-    this.shouldDisplayChildren = false;
+    this.shouldDisplayChildren = true;
     // Flag for whether to include 'identity' (up to 24 hours after creation or 2012 + 2015 source attachments)
     // and also 'latest' (just before merge).
     this.shouldIncludeBeforeAfter = false;
