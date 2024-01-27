@@ -23,6 +23,9 @@ th {
     position: sticky;
     border: 1px solid #d3e8ca;
 }
+td {
+    vertical-align: top;
+}
 .sort-date {
     padding: 0 20px 0 0;
 }
@@ -194,6 +197,11 @@ th {
 .merge-node {
     border: 1px solid #cedace;
     background-color: #f8f8f3;
+}
+.note {
+    background-color: #fafcf7;
+    border: 1px solid #cedace;
+    white-space: pre;
 }
 .selected * {
     background-color: #fcfcaa;

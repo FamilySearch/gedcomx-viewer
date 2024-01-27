@@ -1330,6 +1330,8 @@ function handleRowClick(event, rowId) {
 // ===============
 // Map of groupId -> Grouper object that the groupId is found in.
 let grouperMap = {};
+// Map of personRowId -> PersonRow object with that id
+let personRowMap = {};
 // Grouper objects to handle selection logic in each view.
 let mergeGrouper;
 let flatGrouper;
@@ -1558,6 +1560,7 @@ class PersonRow {
     this.personaArk = personaArk;
     this.gedcomx = gedcomx;
     this.id = "mr-" + nextPersonRowId++;
+    personRowMap[this.id] = this;
     grouperMap[this.id] = grouper;
     this.mergeNode = mergeNode;
     this.personDisplay = new PersonDisplay(this.person, "person");
@@ -1566,6 +1569,7 @@ class PersonRow {
     this.mothers = []; // Array of PersonDisplay
     this.isSelected = false;
     this.origOrder = 0;
+    this.note = "";
     // Map of personId -> PersonDisplay for mothers and fathers.
     let fatherMap = {};
     let motherMap = {};
@@ -1740,6 +1744,7 @@ class PersonRow {
       case "child-name":         sortKey = getFirstChildName(this.families);       break;
       case "child-facts":        sortKey = getFirstChildFactDate(this.families);   break;
       case "child-facts-place":  sortKey = getFirstChildFactPlace(this.families);  break;
+      case "notes":              sortKey = this.note;                              break;
     }
     this.sortKey = sortKey;
   }
@@ -1851,7 +1856,7 @@ class PersonRow {
   getNumChildrenRows() {
     let numChildrenRows = 0;
     for (let family of this.families) {
-      if (family.children.length > 0) {
+      if (family.children.length > 0 && displayOptions.shouldDisplayChildren) {
         numChildrenRows += family.children.length;
       }
       else {
@@ -1878,8 +1883,12 @@ class PersonRow {
       return parentsList.join("<br>");
     }
 
-    function startNewRowIfNotFirst(isFirst, rowClass) {
+    // htmlHolder is an array of 0 or 1 HTML strings. If not empty, and we're adding a new row, add this just before closing the row.
+    function startNewRowIfNotFirst(isFirst, rowClass, htmlHolder) {
       if (!isFirst) {
+        if (htmlHolder.length > 0) {
+          html += htmlHolder.pop();
+        }
         html += "</tr>\n<tr" + (rowClass ? " class='" + rowClass + "' onclick='handleRowClick(event, \"" + rowClass + "\")'" : "") + ">";
       }
       return false;
@@ -1891,18 +1900,23 @@ class PersonRow {
     addColumn("father-name", rowspan, combineParents(this.fathers), bottomClass);
     addColumn("mother-name", rowspan, combineParents(this.mothers), bottomClass);
     let isFirstSpouse = true;
+    let noteId = this.id + "-note";
+    let noteCellHtmlHolder = ["<td class='note " + rowClass + bottomClass + "' onclick='doNotSelect(event)' contenteditable='true'" + rowspan
+      + " id='" + noteId + "' onkeyup='updateNote(\"" + this.id + "\", \"" + noteId + "\")'>" + encode(this.note) + "</td>"];
+
     if (this.families.length > 0) {
       for (let spouseIndex = 0; spouseIndex < this.families.length; spouseIndex++) {
         let spouseFamily = this.families[spouseIndex];
-        isFirstSpouse = startNewRowIfNotFirst(isFirstSpouse, allRowsClass);
+        isFirstSpouse = startNewRowIfNotFirst(isFirstSpouse, allRowsClass, noteCellHtmlHolder);
         let familyBottomClass = spouseIndex === this.families.length - 1 ? bottomClass : "";
-        addColumn("spouse-name", getRowspanParameter(spouseFamily.children.length), spouseFamily.spouse ? spouseFamily.spouse.name : "", familyBottomClass);
-        addColumn("spouse-facts", getRowspanParameter(spouseFamily.children.length), spouseFamily.spouse ? spouseFamily.spouse.facts : "", familyBottomClass);
-        if (spouseFamily.children.length > 0) {
+        let childrenRowSpan = getRowspanParameter(displayOptions.shouldDisplayChildren ? spouseFamily.children.length : 1);
+        addColumn("spouse-name", childrenRowSpan, spouseFamily.spouse ? spouseFamily.spouse.name : "", familyBottomClass);
+        addColumn("spouse-facts", childrenRowSpan, spouseFamily.spouse ? spouseFamily.spouse.facts : "", familyBottomClass);
+        if (spouseFamily.children.length > 0 && displayOptions.shouldDisplayChildren) {
           let isFirstChild = true;
           for (let childIndex = 0; childIndex < spouseFamily.children.length; childIndex++) {
             let child = spouseFamily.children[childIndex];
-            isFirstChild = startNewRowIfNotFirst(isFirstChild, allRowsClass);
+            isFirstChild = startNewRowIfNotFirst(isFirstChild, allRowsClass, noteCellHtmlHolder);
             let childBottomClass = childIndex === spouseFamily.children.length - 1 ? familyBottomClass : "";
             addColumn("child-name", "", child.name, childBottomClass);
             addColumn("child-facts", "", child.facts, childBottomClass);
@@ -1918,6 +1932,9 @@ class PersonRow {
       addColumn("spouse-facts", "", "", bottomClass);
       addColumn("child-name", "", "", bottomClass);
       addColumn("child-facts", "", "", bottomClass);
+    }
+    if (noteCellHtmlHolder.length > 0) {
+      html += noteCellHtmlHolder.pop();
     }
     return html;
   }
@@ -1963,7 +1980,7 @@ class PersonRow {
       let indentHtml = "";
       for (let indentCode of indentCodes) {
         if (indentCode === "O") {
-          indentHtml += "<td" + idRowSpan + ">&nbsp;</td>";
+          indentHtml += "<td" + rowSpan + ">&nbsp;</td>";
         } else {
           let upperClass;
           let lowerClass;
@@ -1987,7 +2004,7 @@ class PersonRow {
             default:
               console.log("Error: Unrecognized indent code '" + indentCode + "'");
           }
-          indentHtml += "<td class='con-holder' " + idRowSpan + "><table class='connector-table'>" +
+          indentHtml += "<td class='con-holder' " + rowSpan + "><table class='connector-table'>" +
             "<tr><td class='con-O' rowspan='2'>&nbsp;</td><td class='" + upperClass + "'>&nbsp;</td></tr>" +
             "<tr><td class='" + lowerClass + "'>&nbsp;</td></tr></table></td>";
         }
@@ -1995,7 +2012,7 @@ class PersonRow {
       return indentHtml;
     }
 
-    let idRowSpan = getRowspanParameter(this.getNumChildrenRows() + (this.endRow ? this.endRow.getNumChildrenRows() : 0));
+    let rowSpan = getRowspanParameter(this.getNumChildrenRows() + (this.endRow ? this.endRow.getNumChildrenRows() : 0));
     let html = "<tr class='" + this.id + "' onclick='handleRowClick(event, \"" + this.id + "\")'>";
     if (shouldIndent) {
       html += getIndentationHtml(this.indent.split(""));
@@ -2004,7 +2021,7 @@ class PersonRow {
 
     let rowLabel = this.getRowLabelHtml(shouldIndent);
     let bottomClass = " main-row";
-    html += "<td class='merge-id" + (shouldIndent && this.isDupNode ? "-dup" : "") + bottomClass + "'" + idRowSpan + colspan + "'>"
+    html += "<td class='merge-id" + (shouldIndent && this.isDupNode ? "-dup" : "") + bottomClass + "'" + rowSpan + colspan + "'>"
       + rowLabel + " " + (this.mergeNode ? formatTimestamp(this.mergeNode.firstEntry.updated) : "") + "</td>";
 
     // Person info
@@ -2017,6 +2034,10 @@ class PersonRow {
     html += "</tr>\n";
     return html;
   }
+}
+
+function doNotSelect(event) {
+  event.stopPropagation();
 }
 
 function addParentToMap(parentIdDisplayMap, gedcomx, parentId, parentList, includePersonId) {
@@ -2223,6 +2244,12 @@ function updateGroupName(groupId) {
   mergeGroup.groupName = $mergeGroupLabelNode.text();
 }
 
+function updateNote(personRowId, noteId) {
+  let personRow = personRowMap[personRowId];
+  let $note = $("#" + noteId);
+  personRow.note = $note.text();
+}
+
 function deleteEmptyGroup(groupId) {
   let grouper = grouperMap[groupId];
   grouper.deleteGroup(groupId);
@@ -2264,14 +2291,14 @@ function getTableHeader(usedColumns, maxDepth, shouldIndent, grouper) {
         + (grouper ? "onclick='sortColumn(\"" + columnName + "\", \"" + grouper.id + "\")'" : "")
         + ">" + encode(label) + "</span>";
   }
-  function dpHtml(columnName, label) {
+  function datePlaceLabelHtml(columnName, label) {
     return sortHeader(columnName, label, "sort-date")
     + (grouper ? "<span class='sort-place' onclick='sortColumn(\"" + columnName + "-place" + "\", \"" + grouper.id + "\")'>" + encode(" place ") + "</span>" : "");
   }
   function cell(columnName, label, alwaysInclude) {
     if (alwaysInclude || usedColumns.has(columnName)) {
       return "<th>"
-          + (columnName.endsWith("-facts") ? dpHtml(columnName, label) : sortHeader(columnName, label))
+          + (columnName.endsWith("-facts") ? datePlaceLabelHtml(columnName, label) : sortHeader(columnName, label))
           + "</th>";
     }
     return "";
@@ -2288,6 +2315,7 @@ function getTableHeader(usedColumns, maxDepth, shouldIndent, grouper) {
       + cell("spouse-facts", "Spouse facts")
       + cell("child-name", "Children")
       + cell("child-facts", "Child facts")
+      + cell("notes", "Notes", true);
 }
 
 function getMergeHierarchyHtml(entries) {
