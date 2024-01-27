@@ -311,15 +311,20 @@ function finishedReceivingSources($status) {
   makeTableHeadersDraggable();
 }
 
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
 // context - Map containing baseUrl, personId (of the main person), and optional "sessionId"
-function formatTimestamp(ts) {
+function formatTimestamp(ts, includeTimestamp) {
   function pad(n) {
     return String(n).padStart(2, '0');
   }
   let date = new Date(ts);
-  return "<span class='ts-date'>" + String(date.getFullYear()) + "-" + pad(date.getMonth() + 1) + "-" + pad(date.getDate()) +
-    "</span> <span class='ts-time'>" + pad(date.getHours()) + ":" + pad(date.getMinutes()) + ":" + pad(date.getSeconds()) +
-    "." + String(ts).slice(String(ts).length - 3) + "</span>";
+  let dateHtml = "<span class='ts-date'>" + String(date.getDate()) + "&nbsp;" + MONTHS[date.getMonth()] + "&nbsp;" + String(date.getFullYear()) +"</span>";
+  if (includeTimestamp) {
+    dateHtml += " <span class='ts-time'>" + pad(date.getHours()) + ":" + pad(date.getMinutes()) + ":" + pad(date.getSeconds())
+              + "." + String(ts).slice(String(ts).length - 3) + "</span>";
+  }
+  return dateHtml;
 }
 
 
@@ -427,7 +432,7 @@ function getChangeLogTableHtml(allEntries, personIds, personMinMaxTs) {
       let rowspanHtml = rowspan > 1 ? "rowspan='" + rowspan + "' " : "";
       html += "<td " + rowspanHtml +
           //"onclick='displayRecords(this, " + entryIndex + ")' " +  (<== in case we implement this...)
-          "class='timestamp" + rowClass + "'>" + formatTimestamp(entry.updated) + "</td>";
+          "class='timestamp" + rowClass + "'>" + formatTimestamp(entry.updated, true) + "</td>";
     }
 
     for (let column = 0; column < personIds.length; column++) {
@@ -1730,9 +1735,8 @@ class PersonRow {
       case "collection":
         sortKey = this.collectionName;
         break;
-      case "person-id":
-        sortKey = this.personId;
-        break;
+      case "person-id":          sortKey = this.personId;                          break;
+      case "created":            sortKey = String(this.mergeNode.firstEntry.updated).padStart(15, "0"); break;
       case "person-name":        sortKey = getPersonName(this.person);             break;
       case "person-facts":       sortKey = getFirstFactDate(this.person);          break;
       case "person-facts-place": sortKey = getFirstFactPlace(this.person);         break;
@@ -2021,8 +2025,9 @@ class PersonRow {
 
     let rowLabel = this.getRowLabelHtml(shouldIndent);
     let bottomClass = " main-row";
-    html += "<td class='merge-id" + (shouldIndent && this.isDupNode ? "-dup" : "") + bottomClass + "'" + rowSpan + colspan + "'>"
-      + rowLabel + " " + (this.mergeNode ? formatTimestamp(this.mergeNode.firstEntry.updated) : "") + "</td>";
+    let rowClasses = "class='merge-id" + (shouldIndent && this.isDupNode ? "-dup" : "") + bottomClass + "'";
+    html += "<td " + rowClasses + rowSpan + colspan + "'>" + rowLabel + "</td>"
+          + (this.mergeNode ? "<td " + rowClasses + rowSpan + ">" + formatTimestamp(this.mergeNode.firstEntry.updated) + "</td>" : "");
 
     // Person info
     if (this.endRow) {
@@ -2307,6 +2312,7 @@ function getTableHeader(usedColumns, maxDepth, shouldIndent, grouper) {
   let colspan = shouldIndent ? " colspan='" + maxDepth + "'" : "";
   return "<table id='change-log-hierarchy'><th" + colspan + ">"
       + (grouper && grouper.tabId === SOURCES_VIEW ? sortHeader("collection", "Collection") : sortHeader("person-id", "Person ID"))
+      + (!grouper || grouper.tabId !== SOURCES_VIEW ? "<th>" + sortHeader("created", "Created") + "</th>" : "")
       + cell("person-name", "Name", true)
       + cell("person-facts", "Facts")
       + cell("father-name", "Father")
