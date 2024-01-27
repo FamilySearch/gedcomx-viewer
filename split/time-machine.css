@@ -241,6 +241,8 @@ td {
 .con-holder {
     /* Workaround to get table in td to expand to full height */
     height: 1px;
+    /* Prevent 2x2 connector table from causing a row to be double height when there's only 1 line of real text */
+    font-size: 1px;
 }
 .connector-table {
     height: 100%;
@@ -260,6 +262,7 @@ td {
     border-style: none none none dashed;
 }
 .con-L {
+    border-radius: 5px;
     border-style: none none dashed dashed;
 }
 .group-header {
