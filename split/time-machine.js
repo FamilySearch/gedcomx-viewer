@@ -699,17 +699,25 @@ function showDetails(entryIndex){
   let offset = $entryElement.offset();
   let entryLeft = offset.left;
   let entryRight = entryLeft + $entryElement.width();
-  let windowWidth = $(document).width();
-  if (entryLeft > windowWidth - entryRight) {
+  let entryHeight = $entryElement.height();
+  let clientWidth = document.documentElement.clientWidth;
+  let innerHeight = $(document).innerHeight();
+  if (entryLeft > clientWidth - entryRight) {
     // More room to left of entry element than to right.
     $details.css('left', '');
-    $details.css('right', windowWidth - entryLeft + 10);
+    $details.css('right', clientWidth - entryLeft + 10);
   }
   else {
     $details.css('right', '');
     $details.css('left', entryRight + 10);
   }
-  $details.css('top', offset.top);
+  let detailsHeight = $details.height();
+  if (offset.top + detailsHeight > innerHeight) {
+    $details.css('top', offset.top + entryHeight - detailsHeight);
+  }
+  else {
+    $details.css('top', offset.top);
+  }
   $details.show();
   enabletip=true
   return false;
