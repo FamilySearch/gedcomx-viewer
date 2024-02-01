@@ -286,6 +286,52 @@ function getCollectionName(gedcomx) {
   return collectionTitle;
 }
 
+function getRecordDate(gedcomx) {
+  function findPrimaryDate(factHolders) {
+    if (factHolders) {
+      for (let factHolder of factHolders) {
+        if (factHolder.facts) {
+          for (let fact of factHolder.facts) {
+            if (fact.primary && fact.date && fact.date.original) {
+              return fact.date.original;
+            }
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+  let recordDate = "";
+  let sd = getSourceDescription(gedcomx, null);
+  while (sd) {
+    if (sd["resourceType"] === "http://gedcomx.org/Record") {
+      if (sd.coverage) {
+        for (let coverage of sd.coverage) {
+          if (coverage.temporal && coverage.temporal.original) {
+            recordDate = encode(coverage.original);
+            break;
+          }
+        }
+        break;
+      }
+    }
+    else {
+      sd = getSourceDescription(gedcomx, getProperty(sd, "componentOf.description"));
+    }
+  }
+  if (isEmpty(recordDate)) {
+    let date = findPrimaryDate(gedcomx.persons);
+    if (!date) {
+      date = findPrimaryDate(gedcomx.relationships);
+    }
+    if (date) {
+      recordDate = encode(date);
+    }
+  }
+  return recordDate;
+}
+
 function receivePersona(gedcomx, $status, context, fetching, sourceInfo) {
   fixEventOrders(gedcomx);
   sourceInfo.gx = gedcomx;
@@ -295,6 +341,7 @@ function receivePersona(gedcomx, $status, context, fetching, sourceInfo) {
     // This persona has been deprecated & forwarded or something, so update the 'ark' in sourceInfo to point to the new ark.
     sourceInfo.ark = personaArk;
     sourceInfo.collectionName = getCollectionName(gedcomx);
+    sourceInfo.recordDate = getRecordDate(gedcomx);
   }
   if (fetching.length) {
     setStatus($status, "Fetching " + fetching.length + "/" + sourceMap.size + " sources...");
@@ -1557,12 +1604,14 @@ class MergeGroup {
 
 // Row of data for a person and their 1-hop relatives (record persona or Family Tree person--either original identity or result of a merge)
 class PersonRow {
-  constructor(mergeNode, personId, gedcomx, endGedcomx, indent, maxIndent, isDupNode, grouper, collectionName, personaArk) {
+  constructor(mergeNode, personId, gedcomx, endGedcomx, indent, maxIndent, isDupNode, grouper, collectionName, personaArk, recordDate) {
     this.sortKey = "";
     this.person = findPersonInGx(gedcomx, personId);
     this.personId = personId;
     this.collectionName = collectionName;
     this.personaArk = personaArk;
+    this.recordDate = recordDate;
+    this.recordDateSortKey = recordDate ? parseDateIntoNumber(recordDate).toString() : null;
     this.gedcomx = gedcomx;
     this.id = "mr-" + nextPersonRowId++;
     personRowMap[this.id] = this;
@@ -1737,6 +1786,7 @@ class PersonRow {
         break;
       case "person-id":          sortKey = this.personId;                          break;
       case "created":            sortKey = String(this.mergeNode.firstEntry.updated).padStart(15, "0"); break;
+      case "record-date":        sortKey = this.recordDateSortKey;                 break;
       case "person-name":        sortKey = getPersonName(this.person);             break;
       case "person-facts":       sortKey = getFirstFactDate(this.person);          break;
       case "person-facts-place": sortKey = getFirstFactPlace(this.person);         break;
@@ -2026,8 +2076,13 @@ class PersonRow {
     let rowLabel = this.getRowLabelHtml(shouldIndent);
     let bottomClass = " main-row";
     let rowClasses = "class='merge-id" + (shouldIndent && this.isDupNode ? "-dup" : "") + bottomClass + "'";
-    html += "<td " + rowClasses + rowSpan + colspan + "'>" + rowLabel + "</td>"
-          + (this.mergeNode ? "<td " + rowClasses + rowSpan + ">" + formatTimestamp(this.mergeNode.firstEntry.updated) + "</td>" : "");
+    html += "<td " + rowClasses + rowSpan + colspan + "'>" + rowLabel + "</td>";
+    if (this.mergeNode) {
+      html += "<td " + rowClasses + rowSpan + ">" + formatTimestamp(this.mergeNode.firstEntry.updated) + "</td>";
+    }
+    else if (this.collectionName) {
+      html += "<td class='identity-gx main-row date rt'>" + this.recordDate + "</td>";
+    }
 
     // Person info
     if (this.endRow) {
@@ -2227,7 +2282,7 @@ function buildPersonaRows() {
     if (sourceInfo.ark && sourceInfo.gx) {
       let personaId = findPersonInGx(sourceInfo.gx, shortenPersonArk(sourceInfo.ark)).id;
       if (!personaIds.has(personaId)) {
-        personaRows.push(new PersonRow(null, personaId, sourceInfo.gx, null, 0, 0, false, null, sourceInfo.collectionName, sourceInfo.ark));
+        personaRows.push(new PersonRow(null, personaId, sourceInfo.gx, null, 0, 0, false, null, sourceInfo.collectionName, sourceInfo.ark, sourceInfo.recordDate));
         personaIds.add(personaId);
       }
     }
@@ -2311,7 +2366,9 @@ function getTableHeader(usedColumns, maxDepth, shouldIndent, grouper) {
 
   let colspan = shouldIndent ? " colspan='" + maxDepth + "'" : "";
   return "<table id='change-log-hierarchy'><th" + colspan + ">"
-      + (grouper && grouper.tabId === SOURCES_VIEW ? sortHeader("collection", "Collection") : sortHeader("person-id", "Person ID"))
+      + (grouper && grouper.tabId === SOURCES_VIEW ?
+           sortHeader("collection", "Collection")  + "</th><th>" + sortHeader("record-date", "Record Date")
+         : sortHeader("person-id", "Person ID"))
       + (!grouper || grouper.tabId !== SOURCES_VIEW ? "<th>" + sortHeader("created", "Created") + "</th>" : "")
       + cell("person-name", "Name", true)
       + cell("person-facts", "Facts")

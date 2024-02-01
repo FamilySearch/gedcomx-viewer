@@ -292,3 +292,6 @@ a:link {
 a:hover {
     text-decoration: underline;
 }
+.rt {
+    text-align: right;
+}

@@ -199,6 +199,9 @@ function parseDate(date) {
       year = date;
     }
     else {
+      if (date.includes("-")) {
+        date = date.replaceAll(/-.*/g, "");
+      }
       // Match 3 July 1820
       let match = date.match(/^ *(\d\d\d\d) *$/);
       if (match) {
@@ -226,6 +229,13 @@ function parseDate(date) {
               month = num(match[1]);
               day = num(match[2]);
               year = num(match[3]);
+            }
+            else {
+              // If all else fails, at least try to parse the year off of the end.
+              match = date.match(/.*(\d\d\d\d)/);
+              if (match) {
+                year = num(match[1]);
+              }
             }
           }
         }
@@ -334,7 +344,7 @@ function getFirst(array) {
  * Attempt to parse a date using the formats 3 July 1820; July 3, 1820; and 7/3/1820.
  * (Days and months are optional, i.e., "3 July 1820", "July 3, 1820", "July 1820", "1820", 7/3/1820 and 7/1820 are all ok.)
  * (BC, B.C., BCE or B.C.E. can also be added to the end of the first two date formats).
- * A dayNumber is returned which is 12*31*year + 31*month + day. This is not meant to correspond to a real calendar,
+ * A dayNumber is returned which is YYYYMMDD (with 00's for missing month or day). This is not meant to correspond to a real calendar,
  *   but is a number that can be used to compare two dates unambiguously without a lot of calendar arithmetic.
  * The dayNumber is 0 if it could not be parsed.
  * @param date - Date string. Text before or after the date is ignored.
