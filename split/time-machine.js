@@ -2089,7 +2089,7 @@ class PersonRow {
       html += "<td " + rowClasses + rowSpan + ">" + formatTimestamp(this.mergeNode.firstEntry.updated) + "</td>";
     }
     else if (this.collectionName) {
-      html += "<td class='identity-gx main-row date rt'>" + this.recordDate + "</td>";
+      html += "<td class='identity-gx main-row date rt'" + rowSpan + ">" + this.recordDate + "</td>";
     }
 
     // Person info
