@@ -295,3 +295,18 @@ a:hover {
 .rt {
     text-align: right;
 }
+/* Status */
+.added,.merge-added {
+    color: darkgreen;
+}
+.changed {
+    color: #c29459;
+}
+.deleted,.merge-deleted {
+    color: darkred;
+    text-decoration-line: line-through;
+}
+.merge-orig,.merge-added,.merge-deleted {
+    font-style: italic;
+    opacity: 50%;
+}

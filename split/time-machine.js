@@ -928,16 +928,18 @@ function getFactHtml(fact) {
   let date = fact.date ? fact.date.original : null;
   let place = fact.place ? fact.place.original : null;
   let value = fact.value ? fact.value : null;
-  let html = "<span class='fact-type'>" + encode(type ? type : "<unknown fact type>");
+  let statusClass = fact.status ? " " + fact.status : "";
+  let html = "<span class='fact-type" + statusClass + "'>" + encode(type ? type : "<unknown fact type>");
   if (date || place || value) {
     html += ":</span> ";
     if (value) {
-      html += "<span class='value'>" + encode(value + (date || place ? ";" : "")) + "</span>";
+      html += "<span class='value " + statusClass + "'>" + encode(value + (date || place ? ";" : "")) + "</span>";
     }
     if (date && place) {
-      html += "<span class='date'>" + encode(date + ";") + "</span> <span class='place'>" + encode(place) + "</span>";
+      html += "<span class='date " + statusClass + "'>" + encode(date + ";") + "</span> <span class='place" + statusClass + "'>" + encode(place) + "</span>";
     } else {
-      html += date ? "<span class='date'>" + encode(date) + "</span>" : "<span class='place'>" + encode(place) + "</span>";
+      html += date ? "<span class='date" + statusClass + "'>" + encode(date) + "</span>"
+                   : "<span class='place" + statusClass + "'>" + encode(place) + "</span>";
     }
   }
   else {
@@ -1401,7 +1403,6 @@ let sourceGrouper;
 let nextPersonRowId = 0;
 const ROW_SELECTION = 'selected';
 
-
 const INCLUDE_NO_FACTS = "none";
 const INCLUDE_VITAL_FACTS = "vital";
 const INCLUDE_ALL_FACTS = "all";
@@ -1414,6 +1415,13 @@ class DisplayOptions {
     // Flag for whether to include 'identity' (up to 24 hours after creation or 2012 + 2015 source attachments)
     // and also 'latest' (just before merge).
     this.shouldIncludeBeforeAfter = false;
+    // Flag for whether to include facts and relatives that came in due to a merge
+    // (false => only show info that was added to a note since the most recent merge)
+    this.shouldIncludeInfoFromMerge = true;
+    // Flag for whether to include facts and relatives added after the initial 'identity'.
+    this.shouldIncludeAdditions = true;
+    // Flag for whether to show which facts and relatives were deleted later.
+    this.shouldShowDeletions = true;
   }
 }
 
@@ -2423,17 +2431,20 @@ function getFactListHtml(person) {
   function isEmptyDeathFact(fact) {
     return fact && fact.type === "http://gedcomx.org/Death" && !fact.date && !fact.place;
   }
+  function isVital(factType) {
+    return factType === "Birth" || factType === "Death" || factType === "Christening" || factType === "Burial" || factType === "Marriage";
+  }
+  function shouldIncludeType(factType) {
+    return displayOptions.factsToInclude === INCLUDE_ALL_FACTS || isVital(factType);
+  }
   function filterFacts(facts) {
     if (!facts || displayOptions.factsToInclude === INCLUDE_NO_FACTS) {
       return [];
     }
-    if (displayOptions.factsToInclude === INCLUDE_ALL_FACTS) {
-      return facts;
-    }
     let filtered = [];
     for (let fact of facts) {
       let factType = extractType(fact.type);
-      if (factType === "Birth" || factType === "Death" || factType === "Christening" || factType === "Burial" || factType === "Marriage") {
+      if (shouldIncludeType(factType) && shouldDisplayStatus(fact.status)) {
         filtered.push(fact);
       }
     }
@@ -2582,8 +2593,8 @@ function compareFacts(fact1, fact2) {
 
 // Add the given fact to the given person. Insert it before any other fact that it is
 //   earlier than (by date; or birth < christening < most other events < death < burial).
-function addFact(person, fact, isOrig) {
-  fact.status = getAddStatus(isOrig);
+function addFact(person, fact, isOrig, isPartOfMerge) {
+  fact.status = getAddStatus(isOrig, isPartOfMerge);
   if (!person.hasOwnProperty("facts")) {
     person.facts = [];
   }
@@ -2608,7 +2619,7 @@ function addFact(person, fact, isOrig) {
  * @param entry - Change log entry
  * @param resultingId - 'id' of the Couple relationship with the updated relatives
  */
-function updateCoupleRelationship(gedcomx, entry, resultingId) {
+function updateCoupleRelationship(gedcomx, entry, resultingId, isOrig) {
   let resultingRel = findCoupleRelationship(entry, resultingId);
   if (!resultingRel) {
     return;
@@ -2616,13 +2627,20 @@ function updateCoupleRelationship(gedcomx, entry, resultingId) {
   let relationshipId = getPrimaryIdentifier(resultingRel);
   let existingRel = findEntityByPrimaryIdentifier(getList(gedcomx, "relationships"), relationshipId);
   if (existingRel) {
-    existingRel["person1"] = resultingRel["person1"];
-    existingRel["person2"] = resultingRel["person2"];
-    existingRel.updated = entry.updated;
+    let rel = existingRel;
+    if (!setDeletedStatus(existingRel, isOrig)) {
+      // Not deleting/overwriting existing relationship, but instead flagging it as deleted.
+      // So copy the existing relationship (with its facts, etc.) to the next relationship
+      rel = copyObject(existingRel);
+    }
+    rel["person1"] = resultingRel["person1"];
+    rel["person2"] = resultingRel["person2"];
+    rel.updated = entry.updated;
   }
   else {
     let relCopy = copyObject(resultingRel);
     relCopy.updated = entry.updated;
+    relCopy.status = getAddStatus(isOrig);
     delete relCopy["id"]; // Remove temp id of "<longId>.resulting"
     addToList(gedcomx, "relationships", relCopy);
   }
@@ -2658,14 +2676,14 @@ function updateChildAndParentsRelationship(gedcomx, entry, resultingId) {
   }
 }
 
-function addToList(listHolder, listName, element, isOrig) {
+function addToList(listHolder, listName, element, isOrig, isPartOfMerge) {
   if (listHolder.hasOwnProperty(listName)) {
     listHolder[listName].push(element);
   }
   else {
     listHolder[listName] = [element];
   }
-  element.status = getAddStatus(isOrig);
+  element.status = getAddStatus(isOrig, isPartOfMerge);
 }
 
 
@@ -2677,8 +2695,9 @@ function addToList(listHolder, listName, element, isOrig) {
  * @param listName - Name of list to look in
  * @param elementListContainer - Object (like a change log person) that has a list of the given name with a single entry.
  * @param isOrig - Flag for whether the change is happening during the initial creation of the person (part of its "original intended identity")
+ * @param isPartOfMerge - Flag for whether this add or update is part of information coming from the duplicate as part of a merge.
  */
-function updateInList(listContainer, listName, elementListContainer, isOrig) {
+function updateInList(listContainer, listName, elementListContainer, isOrig, isPartOfMerge) {
   function hasSameId(a, b) {
     if (a.hasOwnProperty("id") && a["id"] === elementWithId["id"]) {
       return true;
@@ -2698,7 +2717,7 @@ function updateInList(listContainer, listName, elementListContainer, isOrig) {
       else {
         existingList.push(elementWithId);
       }
-      elementWithId.status = getAddStatus(isOrig);
+      elementWithId.status = getAddStatus(isOrig, isPartOfMerge);
       return;
     }
   }
@@ -2729,14 +2748,25 @@ function removeFromListByPrimaryIdentifier(listContainer, listName, elementListC
   }
 }
 
-function removeFromListById(listContainer, listName, elementListContainer) {
+/**
+ * Remove the element in listContainer[listName] that has the same id as elementListContainer[listName][0]
+ *   with that element. For example, remove person["names"][2] if it has the same "id" element as elementListContainer["names"][0]
+ * If isOrig is true, then instead of removing it, mark it as deleted.
+ * @param listContainer - Object (like a person) that has a list named listName, containing elements with an 'id'.
+ * @param listName - Name of list to look in
+ * @param elementListContainer - Object (like a change log person) that has a list of the given name with a single entry.
+ * @param isOrig - Flag for whether the change is happening during the initial creation of the person (part of its "original intended identity")
+ */
+function removeFromListById(listContainer, listName, elementListContainer, isOrig) {
   let existingList = listContainer[listName];
   if (existingList) {
     let idToRemove = elementListContainer[listName][0]["id"];
     for (let i = 0; i < existingList.length; i++) {
       let existingId = existingList[i]["id"];
       if (existingId && existingId === idToRemove) {
-        existingList.splice(i, 1);
+        if (setDeletedStatus(existingList[i], isOrig)) {
+          existingList.splice(i, 1);
+        }
         return;
       }
     }
@@ -2744,12 +2774,12 @@ function removeFromListById(listContainer, listName, elementListContainer) {
   console.log("Failed to find element in " + listName + "[] with id " + relationshipId);
 }
 
-function doInList(listContainer, listName, elementListContainer, operation, isOrig) {
+function doInList(listContainer, listName, elementListContainer, operation, isOrig, isPartOfMerge) {
   if (operation === "Create") {
-    addToList(listContainer, listName, elementListContainer[listName][0], isOrig);
+    addToList(listContainer, listName, elementListContainer[listName][0], isOrig, isPartOfMerge);
   }
   else if (operation === "Update") {
-    updateInList(listContainer, listName, elementListContainer, isOrig, isOrig);
+    updateInList(listContainer, listName, elementListContainer, isOrig, isOrig, isPartOfMerge);
   }
   else if (operation === "Delete") {
     removeFromListById(listContainer, listName, elementListContainer, isOrig);
@@ -2764,10 +2794,11 @@ function copyObject(object) {
   return object ? JSON.parse(JSON.stringify(object)) : null;
 }
 
+// Copy the survivor's gedcomx object, mapping status to "merge-" + original status.
 function copySurvivorGx(gx) {
   function mapStatus(obj) {
     if (obj && obj.status) {
-      if (obj.status === "orig" || obj.status === "added" || obj.status === "deleted" || obj.status === "changed") {
+      if (obj.status === ORIG_STATUS || obj.status === ADDED_STATUS || obj.status === DELETED_STATUS || obj.status === CHANGED_STATUS) {
         obj.status = "merge-" + obj.status;
       }
     }
@@ -2834,6 +2865,7 @@ function deleteFactFromRelationship(gedcomx, entry, relationshipListName, result
 
 /**
  * Add or update the persons in the gedcomx referenced by the given relationship (except the main personId).
+ * (Future: use relatives' own change log to show what they looked like at the time, instead of what they look like now.)
  * @param gedcomx - GedcomX to update
  * @param entry - Change log entry for a relationship change. Includes a snapshot of the persons involved in the relationship.
  * @param relationship - Relationship object found
@@ -2844,7 +2876,6 @@ function updateRelatives(gedcomx, entry, relationship) {
     if (relativeId && relativeId !== entry.personId) {
       relativeIds.push(relativeId);
     }
-
   }
   let relativeIds = [];
   addRelativeIdToList("person1");
@@ -2879,7 +2910,7 @@ function updateRelatives(gedcomx, entry, relationship) {
      that in a different color (like green) to indicate that it wasn't part of the original identity, but was added later.
       - If something with "added" gets deleted, we do actually remove it, because we don't need to show it as a removed
         part of the original identity. It actually goes away.
-   - "changed": Since gender can only have one value, it is marked as "updated" if it has changed after the initial identity
+   - "changed": Since gender can only have one value, it is marked as "changed" if it has changed after the initial identity
        period. This only happens if it actually changed from Male to Female or vice-versa. "Unknown" is considered "deleted".
    - "merge-orig/added/deleted": After a merge, we want to know which things came in to the person as a result of a merge,
      including everything that "remained" on the survivor. These are marked with "merge-orig" for things that were "orig";
@@ -2893,28 +2924,58 @@ function updateRelatives(gedcomx, entry, relationship) {
      that it was part of the original identity but is now gone, whether it is rolled up (in which case this is the only
      way it will be shown) or not (in which case the original value is in a lower point in the hierarchy).
    - If something is deleted that had a tag of "merge-added", it is marked as "merge-deleted". It will need to be
-      displayed when not rolled up, since it appears below and we need to know it went away. But it can be hidden
+      displayed when not rolled up, since it appears below, and we need to know it went away. But it can be hidden
       when rolled up, since it was not part of the original identity.
    - Fortunately, this isn't confusing at all.
  */
+// (If you change any of these strings, update the corresponding class names in time-machine.css)
+const ORIG_STATUS         = 'orig'; // Part of the original identity.
+const ADDED_STATUS        = 'added'; // Added after original identity, or after most recent merge
+const CHANGED_STATUS      = 'changed'; // Gender changed (M<=>F) after original identity, or after most recent merge.
+const DELETED_STATUS      = 'deleted'; // Deleted a value added after the original identity, but before the most recent merge.
+const MERGE_ORIG_STATUS   = 'merge-orig'; // On original identity and brought in during merge
+const MERGE_ADDED_STATUS  = 'merge-added'; // Add after original identity and brought in during merge
+const MERGE_DELETED_STATUS= 'merge-deleted'; // On original identity but deleted before the most recent merge
+
+// Tell whether an object (fact or relationship) should be included, based on
+// 1) 'status', the object's status and
+// 2) the display options (shouldIncludeAdditions; shouldShowDeletions; shouldIncludeInfoFromMerge)
+function shouldDisplayStatus(status) {
+  if (!status || status === ORIG_STATUS) {
+    return true;
+  }
+  switch(status) {
+    case ADDED_STATUS:
+    case CHANGED_STATUS:
+      return displayOptions.shouldIncludeAdditions;
+    case DELETED_STATUS:
+      return displayOptions.shouldIncludeAdditions && displayOptions.shouldShowDeletions;
+    case MERGE_ORIG_STATUS:
+    case MERGE_ADDED_STATUS:
+      return displayOptions.shouldIncludeInfoFromMerge;
+    case MERGE_DELETED_STATUS:
+      return displayOptions.shouldIncludeInfoFromMerge && displayOptions.shouldShowDeletions;
+  }
+  return true;
+}
 
 // See above for details on status.
 // Update the given status from orig or merge-orig to deleted; or merge-added to merge-deleted.
-// If 'isOrig' is true, then the delete is being done during the original identity phrase, so the object can be actually deleted.
+// If 'isOrig' is true, then the deletion is being done during the original identity phrase, so the object can be actually deleted.
 // Return true if the given entity should be actually deleted (i.e., if the status is "added" or isOrig is true), or false if it should be kept.
 function setDeletedStatus(entity, isOrig) {
   let status = entity.status;
-  if (status === "added" || isOrig) {
+  if (status === ADDED_STATUS || isOrig) {
     return true;
   }
   else {
-    if (status === "orig" || status === "merge-orig") {
-      status = "deleted";
+    if (status === ORIG_STATUS || status === MERGE_ORIG_STATUS) {
+      status = DELETED_STATUS;
     }
-    else if (status === "merge-added") {
-      status = "merge-deleted";
+    else if (status === MERGE_ADDED_STATUS) {
+      status = MERGE_DELETED_STATUS;
     }
-    else if (status === "deleted" || status === "merge-deleted") {
+    else if (status === DELETED_STATUS || status === MERGE_DELETED_STATUS) {
       console.log("Deleting deleted gender");
     }
     else {
@@ -2925,8 +2986,11 @@ function setDeletedStatus(entity, isOrig) {
   }
 }
 
-function getAddStatus(isOrig) {
-  return isOrig ? "orig" : "added";
+function getAddStatus(isOrig, isPartOfMerge) {
+  if (isPartOfMerge) {
+    return isOrig ? MERGE_ORIG_STATUS : MERGE_ADDED_STATUS;
+  }
+  return isOrig ? ORIG_STATUS : ADDED_STATUS;
 }
 
 /**
@@ -2943,6 +3007,7 @@ function updateGedcomx(gedcomx, entry, isOrig) {
   let objectModifier = extractType(getProperty(changeInfo, "objectModifier"));
   let combo = operation + "-" + objectType;
   let resultingId = getProperty(changeInfo, operation === "Delete" ? "removed.resourceId" : "resulting.resourceId");
+  let isPartOfMerge = entry.mergeSurvivorId || entry.mergeDuplicateId;
 
   if (operation === "Merge" && objectType === "Person") {
     // Nothing really to do when a merge comes in.
@@ -2959,34 +3024,34 @@ function updateGedcomx(gedcomx, entry, isOrig) {
     switch (combo) {
       case "Create-Gender":
         gxPerson.gender = entryPerson.gender;
-        gxPerson.gender.status = getAddStatus(isOrig);
+        gxPerson.gender.status = getAddStatus(isOrig, isPartOfMerge);
         break;
       case "Update-Gender":
-        entryPerson.gender.status = oppositeGender(gxPerson.gender, entryPerson.gender) ? "changed" : getAddStatus(isOrig);
+        entryPerson.gender.status = oppositeGender(gxPerson.gender, entryPerson.gender) ? CHANGED_STATUS : getAddStatus(isOrig);
         gxPerson.gender = entryPerson.gender;
         break;
       case "Delete-Gender":
-        if (setDeletedStatus(gxPerson["gender"], isOrig)) {
+        if (setDeletedStatus(gxPerson["gender"], isOrig, isPartOfMerge)) {
           delete gxPerson["gender"];
         }
         break;
       case "Create-BirthName":
       case "Update-BirthName":
       case "Delete-BirthName":
-        doInList(gxPerson, "names", entryPerson, operation, isOrig);
+        doInList(gxPerson, "names", entryPerson, operation, isOrig, isPartOfMerge);
         break;
       case "Create-SourceReference":
       case "Update-SourceReference":
       case "Delete-SourceReference":
-        doInList(gxPerson, "sources", entryPerson, operation, isOrig);
+        doInList(gxPerson, "sources", entryPerson, operation, isOrig, isPartOfMerge);
         break;
       case "Create-(Fact)":
         console.assert(entryPerson.hasOwnProperty("facts") && entryPerson.facts.length === 1, "Expected one fact in entry");
         console.assert(extractType(entryPerson["facts"][0].type) === objectType, "Mismatched fact type in fact creation");
-        addFact(gxPerson, entryPerson.facts[0], isOrig);
+        addFact(gxPerson, entryPerson.facts[0], isOrig, isPartOfMerge);
         break;
       case "Delete-(Fact)":
-        doInList(gxPerson, "facts", entryPerson, operation, isOrig);
+        doInList(gxPerson, "facts", entryPerson, operation, isOrig, isPartOfMerge);
         break;
       case "Create-Person":
         // Do nothing: We already have a GedcomX record with an empty person of this ID to start with.
@@ -3009,19 +3074,21 @@ function updateGedcomx(gedcomx, entry, isOrig) {
       case "Create-Spouse2":
       case "Update-Spouse1":
       case "Update-Spouse2":
-        updateCoupleRelationship(gedcomx, entry, resultingId);
+        updateCoupleRelationship(gedcomx, entry, resultingId, isOrig, isPartOfMerge);
         break;
       case "Create-(Fact)":
-        addFactToRelationship(gedcomx, entry, "relationships", resultingId, "facts");
+        //todo: Handle 'isOrig' and 'isPartOfMerge' in this and subsequent functions...
+        //todo: Then make it so the HTML generation takes these changes into account.
+        addFactToRelationship(gedcomx, entry, "relationships", resultingId, "facts", isOrig, isPartOfMerge);
         break;
       case "Update-(Fact)":
-        updateFactInRelationship(gedcomx, entry, "relationships", resultingId, "facts");
+        updateFactInRelationship(gedcomx, entry, "relationships", resultingId, "facts", isOrig, isPartOfMerge);
         break;
       case "Delete-(Fact)":
-        deleteFactFromRelationship(gedcomx, entry, "relationships", resultingId, "facts");
+        deleteFactFromRelationship(gedcomx, entry, "relationships", resultingId, "facts", isOrig);
         break;
       case "Delete-Couple":
-        removeFromListByPrimaryIdentifier(gedcomx, "relationships", entry.content.gedcomx);
+        removeFromListByPrimaryIdentifier(gedcomx, "relationships", entry.content.gedcomx, isOrig);
         break;
       case "Create-SourceReference":
       case "Update-SourceReference":
