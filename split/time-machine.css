@@ -170,6 +170,10 @@ td {
 #fact-level-radio {
     display: inline;
 }
+.vertical-divider {
+    font-size: 16px;
+    color: darkgrey;
+}
 
 .ui-widget-header {
     border: 2px solid black;
