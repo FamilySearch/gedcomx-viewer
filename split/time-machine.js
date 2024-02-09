@@ -301,6 +301,26 @@ function getRecordDate(gedcomx) {
     }
     return null;
   }
+  function findLatestDate(factHolders) {
+    let latestDate = null;
+    let latestDateNumber = null;
+    if (factHolders) {
+      for (let factHolder of factHolders) {
+        if (factHolder.facts) {
+          for (let fact of factHolder.facts) {
+            if (fact.date && fact.date.original) {
+              let dateNumber = parseDateIntoNumber(fact.date.original);
+              if (!latestDateNumber || dateNumber > latestDateNumber) {
+                latestDateNumber = dateNumber;
+                latestDate = fact.date.original;
+              }
+            }
+          }
+        }
+      }
+    }
+    return latestDate;
+  }
 
   let recordDate = "";
   let sd = getSourceDescription(gedcomx, null);
@@ -309,7 +329,7 @@ function getRecordDate(gedcomx) {
       if (sd.coverage) {
         for (let coverage of sd.coverage) {
           if (coverage.temporal && coverage.temporal.original) {
-            recordDate = encode(coverage.original);
+            recordDate = coverage.original;
             break;
           }
         }
@@ -321,12 +341,12 @@ function getRecordDate(gedcomx) {
     }
   }
   if (isEmpty(recordDate)) {
-    let date = findPrimaryDate(gedcomx.persons);
-    if (!date) {
-      date = findPrimaryDate(gedcomx.relationships);
-    }
+    let date = findPrimaryDate(gedcomx.persons) ||
+               findPrimaryDate(gedcomx.relationships) ||
+               findLatestDate(gedcomx.persons) ||
+               findLatestDate(gedcomx.relationships);
     if (date) {
-      recordDate = encode(date);
+      recordDate = date;
     }
   }
   return recordDate;
@@ -1620,6 +1640,9 @@ class MergeGroup {
       if (isEmpty(b.sortKey) && !isEmpty(a.sortKey)) {
         return -1;
       }
+      if (isEmpty(a.sortKey) && isEmpty(b.sortKey)) {
+        return 0;
+      }
       let diff = a.sortKey.localeCompare(b.sortKey);
       if (!diff) {
         diff = a.origOrder - b.origOrder;
@@ -2105,7 +2128,7 @@ class PersonRow {
       html += "<td " + rowClasses + rowSpan + ">" + formatTimestamp(this.mergeNode.firstEntry.updated) + "</td>";
     }
     else if (this.collectionName) {
-      html += "<td class='identity-gx main-row date rt'" + rowSpan + ">" + this.recordDate + "</td>";
+      html += "<td class='identity-gx main-row date rt'" + rowSpan + ">" + encode(this.recordDate) + "</td>";
     }
 
     // Person info
@@ -2779,7 +2802,7 @@ function removeFromListById(listContainer, listName, elementListContainer, isOri
       }
     }
   }
-  console.log("Failed to find element in " + listName + "[] with id " + relationshipId);
+  console.log("Failed to element in list " + listName);
 }
 
 function doInList(listContainer, listName, elementListContainer, operation, isOrig, isPartOfMerge) {
