@@ -145,9 +145,7 @@ function fetchRelativesAndSources(changeLogMap, $status, context) {
       let timestamp = entry.updated.toString();
       if (entry.content && entry.content.gedcomx) {
         let gedcomx = entry.content.gedcomx;
-        gatherSources(gedcomx.persons);
-        // gatherSources(gedcomx.relationships);
-        // gatherSources(gedcomx[CHILD_REL])
+        gatherSources(sourceMap, findPersonInGx(gedcomx, personId), personId, entry.updated);
         gatherNames(gedcomx, timestamp,"relationships", ["person1", "person2"]);
         gatherNames(gedcomx, timestamp, CHILD_REL, ["parent1", "parent2", "child"]);
       }
@@ -173,19 +171,26 @@ function fetchRelativesAndSources(changeLogMap, $status, context) {
   }
 }
 
-function gatherSources(list) {
-  if (list) {
-    for (let entity of list) {
-      let sourceUrl = getSourceUrl(entity);
-      if (sourceUrl) {
-        sourceMap[sourceUrl] = null;
-      }
+// Look for a source reference on the given entity (i.e., person).
+function gatherSources(sourceMap, entity, attachedToPersonId, updated) {
+  let sourceUrl = getSourceUrl(entity);
+  if (sourceUrl) {
+    let sourceInfo = sourceMap[sourceUrl];
+    if (sourceInfo) {
+      sourceInfo.attachTo(attachedToPersonId, updated);
+    }
+    else {
+      sourceMap[sourceUrl] = new SourceInfo(attachedToPersonId, updated);
     }
   }
 }
 
 function getSourceUrl(entity) {
   if (entity && entity.sources && entity.sources.length > 0) {
+    if (entity.sources.length > 1) {
+      // This is unexpected, because the entity we're getting should come from a change log entry with only one source on one person.
+      console.log("Warning: Got " + entity.source.length + " sources, but only using first one.");
+    }
     return entity.sources[0].description;
   }
 }
@@ -213,21 +218,49 @@ function gatherNames(gedcomx, timestamp, listName, personKeys) {
 }
 
 class SourceInfo {
-  constructor(sd) {
+  constructor(personId, updated) {
+    this.title = null;
+    this.isExtraction = null;
+    this.personaArk = null;
+    this.gx = null;
+    this.recordDate = null;
+    this.recordDateSortKey = null;
+    this.attachedToPersonId = personId;
+    this.firstAttachmentTs = updated;
+  }
+
+  attachTo(attachedToPersonId, updated) {
+    if (updated < this.firstAttachmentTs) {
+      this.attachedToPersonId = attachedToPersonId;
+      this.firstAttachmentTs = updated;
+    }
+  }
+
+  // Now that the SourceDescription for this source has been fetched, update this SourceInfo with information from it.
+  setSourceDescription(sd) {
     this.title = ("titles" in sd && sd.titles.length && "value" in sd.titles[0]) ? sd.titles[0].value : "";
     this.isExtraction = sd.resourceType === "FSREADONLY";
-    this.ark = ("about" in sd) ? sd.about : null;
-    this.gx = null;
+    this.personaArk = ("about" in sd) ? sd.about : null;
   }
 }
 
+/**
+ * Receive a SourceDescription from an AJAX call.
+ * @param gedcomx - GedcomX containing the SourceDescription
+ * @param $status - JQuery element in which to update status messages
+ * @param context - Context info such as session ID.
+ * @param fetching - List of sourceUrls still being fetched.
+ * @param sourceUrl - SourceUrl fetched for this call
+ * @param sourceMap - (Global) map of sourceUrl -> array of personIDs with this source attached.
+ *                    This function replaces that array with a SourceInfo object.
+ */
 function receiveSourceDescription(gedcomx, $status, context, fetching, sourceUrl, sourceMap) {
   if (gedcomx && "sourceDescriptions" in gedcomx && gedcomx.sourceDescriptions.length) {
-    let sourceInfo = new SourceInfo(gedcomx.sourceDescriptions[0]);
-    sourceMap[sourceUrl] = sourceInfo;
+    let sourceInfo = sourceMap[sourceUrl];
+    sourceInfo.setSourceDescription(gedcomx.sourceDescriptions[0]);
     fetching.splice(fetching.indexOf(sourceUrl), 1)
-    if (sourceInfo.ark.includes("ark:/61903/")) {
-      fetching.push(sourceInfo.ark);
+    if (sourceInfo.personaArk.includes("ark:/61903/")) {
+      fetching.push(sourceInfo.personaArk);
       // Got source description, which has the persona Ark, so now fetch that.
       $.ajax({
         beforeSend: function (request) {
@@ -239,7 +272,7 @@ function receiveSourceDescription(gedcomx, $status, context, fetching, sourceUrl
           }
         },
         dataType: "json",
-        url: sourceInfo.ark,
+        url: sourceInfo.personaArk,
         success: function (gedcomx) {
           receivePersona(gedcomx, $status, context, fetching, sourceInfo);
         }
@@ -355,14 +388,15 @@ function getRecordDate(gedcomx) {
 function receivePersona(gedcomx, $status, context, fetching, sourceInfo) {
   fixEventOrders(gedcomx);
   sourceInfo.gx = gedcomx;
-  fetching.splice(fetching.indexOf(sourceInfo.ark), 1);
+  fetching.splice(fetching.indexOf(sourceInfo.personaArk), 1);
   let personaArk = getMainPersonaArk(gedcomx);
-  if (personaArk !== sourceInfo.ark) {
+  if (personaArk !== sourceInfo.personaArk) {
     // This persona has been deprecated & forwarded or something, so update the 'ark' in sourceInfo to point to the new ark.
-    sourceInfo.ark = personaArk;
-    sourceInfo.collectionName = getCollectionName(gedcomx);
-    sourceInfo.recordDate = getRecordDate(gedcomx);
+    sourceInfo.personaArk = personaArk;
   }
+  sourceInfo.collectionName = getCollectionName(gedcomx);
+  sourceInfo.recordDate = getRecordDate(gedcomx);
+  sourceInfo.recordDateSortKey = sourceInfo.recordDate ? parseDateIntoNumber(sourceInfo.recordDate).toString() : null;
   if (fetching.length) {
     setStatus($status, "Fetching " + fetching.length + "/" + sourceMap.size + " sources...");
   }
@@ -1084,7 +1118,7 @@ function getSourceReferenceHtml(entity) {
   let sourceInfo = sourceMap[sourceUrl];
   if (sourceInfo && ("title" in sourceInfo || "ark" in sourceInfo)) {
     let title = "title" in sourceInfo ? "<span class='source-title'>" + encode(sourceInfo.title) + "</span><br>" : "";
-    let ark = "ark" in sourceInfo ? "<span class='source-ark'>" + encode(sourceInfo.ark) + "</span><br>" : "";
+    let ark = "ark" in sourceInfo ? "<span class='source-ark'>" + encode(sourceInfo.personaArk) + "</span><br>" : "";
     return "<br>" + title + ark + "<br>\n" + getChangeMessage(sourceInfo);
   }
 }
@@ -1286,9 +1320,9 @@ class MergeNode {
 
 // ===============
 class PersonDisplay {
-  constructor(person, nameClass, coupleRelationship, shouldIncludeId) {
+  constructor(person, nameClass, status, coupleRelationship, shouldIncludeId) {
     this.person = person;
-    this.name = "<span class='" + nameClass + "'>" + encode(getPersonName(person)) + "</span>";
+    this.name = "<span class='" + nameClass + (status ? " " + status : "") + "'>" + encode(getPersonName(person)) + "</span>";
     this.coupleRelationship = coupleRelationship;
     if (nameClass !== "person" && shouldIncludeId) {
       this.name += " <span class='relative-id'>(" + encode(person.id) + ")</span>";
@@ -1654,36 +1688,20 @@ class MergeGroup {
 
 // Row of data for a person and their 1-hop relatives (record persona or Family Tree person--either original identity or result of a merge)
 class PersonRow {
-  constructor(mergeNode, personId, gedcomx, indent, maxIndent, isDupNode, grouper, collectionName, personaArk, recordDate) {
+  constructor(mergeNode, personId, gedcomx, indent, maxIndent, isDupNode, grouper, sourceInfo) {
     this.sortKey = "";
     this.person = findPersonInGx(gedcomx, personId);
     this.personId = personId;
-    this.collectionName = collectionName;
-    this.personaArk = personaArk;
-    this.recordDate = recordDate;
-    this.recordDateSortKey = recordDate ? parseDateIntoNumber(recordDate).toString() : null;
+    this.sourceInfo = sourceInfo;
     this.gedcomx = gedcomx;
     this.id = "mr-" + nextPersonRowId++;
     personRowMap[this.id] = this;
     grouperMap[this.id] = grouper;
     this.mergeNode = mergeNode;
-    this.personDisplay = new PersonDisplay(this.person, "person");
-    this.families = []; // Array of FamilyDisplay, one per spouse (and children with that spouse), and one more for any children with no spouse.
-    this.fathers = []; // Array of PersonDisplay. Unknown-gender parents are also included here. (Note that parents are not paired up).
-    this.mothers = []; // Array of PersonDisplay
     this.isSelected = false;
     this.origOrder = 0;
     this.note = "";
-    // Map of personId -> PersonDisplay for mothers and fathers.
-    let fatherMap = {};
-    let motherMap = {};
-    // Map of spouseId -> FamilyDisplay for that spouse and children with that spouse.
-    // Also, "<none>" -> FamilyDisplay for list of children with no spouse.
-    let familyMap = {};
-    let includePersonId = !collectionName;
-    this.handleCoupleAndTernaryRelationships(gedcomx, personId, fatherMap, motherMap, familyMap, includePersonId);
-    this.handleParentChildRelationships(gedcomx, personId, fatherMap, motherMap, familyMap, includePersonId);
-    this.sortFamilies();
+    this.updatePersonDisplay();
 
     this.indent = indent;
     this.maxIndent = maxIndent;
@@ -1691,20 +1709,20 @@ class PersonRow {
   }
 
   updatePersonDisplay() {
-    function updateRelativeFacts(relatives) {
-      for (let relative of relatives) {
-        relative.updateFacts();
-      }
-    }
-    this.personDisplay.updateFacts();
-    updateRelativeFacts(this.fathers);
-    updateRelativeFacts(this.mothers);
-    for (let family of this.families) {
-      if (family.spouse) {
-        family.spouse.updateFacts();
-      }
-      updateRelativeFacts(family.children);
-    }
+    this.personDisplay = new PersonDisplay(this.person, "person");
+    this.families = []; // Array of FamilyDisplay, one per spouse (and children with that spouse), and one more for any children with no spouse.
+    this.fathers = []; // Array of PersonDisplay. Unknown-gender parents are also included here. (Note that parents are not paired up).
+    this.mothers = []; // Array of PersonDisplay
+    // Map of personId -> PersonDisplay for mothers and fathers.
+    let fatherMap = {};
+    let motherMap = {};
+    // Map of spouseId -> FamilyDisplay for that spouse and children with that spouse.
+    // Also, "<none>" -> FamilyDisplay for list of children with no spouse.
+    let familyMap = {};
+    let includePersonId = !this.sourceInfo;
+    this.handleCoupleAndTernaryRelationships(this.gedcomx, this.personId, fatherMap, motherMap, familyMap, includePersonId);
+    this.handleParentChildRelationships(this.gedcomx, this.personId, fatherMap, motherMap, familyMap, includePersonId);
+    this.sortFamilies();
   }
 
   sortFamilies() {
@@ -1829,11 +1847,12 @@ class PersonRow {
 
     switch (columnName) {
       case "collection":
-        sortKey = this.collectionName;
+        sortKey = this.sourceInfo.collectionName;
         break;
       case "person-id":          sortKey = this.personId;                          break;
+      case "attached-to-ids":    sortKey = this.sourceInfo.attachedToPersonId;     break;
       case "created":            sortKey = String(this.mergeNode.firstEntry.updated).padStart(15, "0"); break;
-      case "record-date":        sortKey = this.recordDateSortKey;                 break;
+      case "record-date":        sortKey = this.sourceInfo.recordDateSortKey;      break;
       case "person-name":        sortKey = getPersonName(this.person);             break;
       case "person-facts":       sortKey = getFirstFactDate(this.person);          break;
       case "person-facts-place": sortKey = getFirstFactPlace(this.person);         break;
@@ -1854,7 +1873,7 @@ class PersonRow {
     // Map of childId to array of {parentId, parentChildRelationship}
     let childParentsMap = this.buildChildParentsMap(gedcomx);
 
-    for (let [childId, parentIds] of childParentsMap) {
+    for (let [childId, parentIds, status] of childParentsMap) {
       if (childId === personId) {
         for (let parentIdAndRel of parentIds) {
           let parentId = parentIdAndRel.parentId;
@@ -1862,7 +1881,7 @@ class PersonRow {
           let gender = getGender(parent);
           let parentMap = gender === "Female" ? motherMap : fatherMap;
           if (!parentMap[parentId]) {
-            addParentToMap(parentMap, gedcomx, parentId, gender === "Female" ? this.mothers : this.fathers, includePersonId);
+            addParentToMap(parentMap, gedcomx, parentId, gender === "Female" ? this.mothers : this.fathers, includePersonId, status);
           }
         }
       } else {
@@ -1876,7 +1895,7 @@ class PersonRow {
               let familyDisplay = familyMap[parentId];
               if (familyDisplay) {
                 // This child is a child of a spouse of the main person, so add it to that couple's family
-                familyDisplay.children.push(new PersonDisplay(findPersonInGx(gedcomx, childId), "child", null, includePersonId)); // future: add lineage facts somehow.
+                familyDisplay.children.push(new PersonDisplay(findPersonInGx(gedcomx, childId), "child", status,null, includePersonId)); // future: add lineage facts somehow.
                 foundOtherParent = true;
               }
             }
@@ -1888,7 +1907,7 @@ class PersonRow {
               familyMap["<none>"] = familyDisplay;
               this.families.push(familyDisplay);
             }
-            familyDisplay.children.push(new PersonDisplay(findPersonInGx(gedcomx, childId), "child", null, includePersonId)); // future: add lineage facts somehow.
+            familyDisplay.children.push(new PersonDisplay(findPersonInGx(gedcomx, childId), "child", status,null, includePersonId)); // future: add lineage facts somehow.
           }
         }
       }
@@ -1896,13 +1915,17 @@ class PersonRow {
   }
 
   handleCoupleAndTernaryRelationships(gedcomx, personId, fatherMap, motherMap, familyMap, includePersonId) {
+    console.log("Handing relationships...");
     for (let relationship of getList(gedcomx, "relationships").concat(getList(gedcomx, CHILD_REL))) {
+      if (!shouldDisplayStatus(relationship.status)) {
+        continue;
+      }
       let isChildRel = isChildRelationship(relationship);
       let spouseId = getSpouseId(relationship, personId);
       if (spouseId === "<notParentInRel>") {
         if (personId === getRelativeId(relationship, "child")) {
-          addParentToMap(fatherMap, gedcomx, getRelativeId(relationship, "parent1"), this.fathers, includePersonId);
-          addParentToMap(motherMap, gedcomx, getRelativeId(relationship, "parent2"), this.mothers, includePersonId);
+          addParentToMap(fatherMap, gedcomx, getRelativeId(relationship, "parent1"), this.fathers, includePersonId, relationship.status);
+          addParentToMap(motherMap, gedcomx, getRelativeId(relationship, "parent2"), this.mothers, includePersonId, relationship.status);
         }
       } else {
         if (!spouseId && isChildRel) {
@@ -1910,14 +1933,14 @@ class PersonRow {
         }
         let familyDisplay = familyMap[spouseId];
         if (!familyDisplay) {
-          let spouseDisplay = spouseId === "<none>" ? null : new PersonDisplay(findPersonInGx(gedcomx, spouseId), "spouse", relationship, includePersonId);
+          let spouseDisplay = spouseId === "<none>" ? null : new PersonDisplay(findPersonInGx(gedcomx, spouseId), "spouse", relationship.status, relationship, includePersonId);
           familyDisplay = new FamilyDisplay(spouseDisplay);
           familyMap[spouseId] = familyDisplay;
           this.families.push(familyDisplay);
         }
         if (isChildRel) {
           let childId = getRelativeId(relationship, "child");
-          familyDisplay.children.push(new PersonDisplay(findPersonInGx(gedcomx, childId), "child", null, includePersonId)); // future: add lineage facts somehow.
+          familyDisplay.children.push(new PersonDisplay(findPersonInGx(gedcomx, childId), "child", relationship.status,null, includePersonId)); // future: add lineage facts somehow.
         }
       }
     }
@@ -1936,12 +1959,16 @@ class PersonRow {
   buildChildParentsMap(gedcomx) {
     let childParentsMap = new Map();
     for (let relationship of getList(gedcomx, "relationships")) {
+      if (!shouldDisplayStatus(relationship.status)) {
+        continue;
+      }
       if (relationship.type === PARENT_CHILD_REL) {
         let parentId = getRelativeId(relationship, "person1");
         let childId = getRelativeId(relationship, "person2");
         let parentIdAndRel = {
           parentId: parentId,
-          parentChildRelationship: relationship
+          parentChildRelationship: relationship,
+          status: relationship.status
         };
         let parentIds = childParentsMap.get(childId);
         if (parentIds) {
@@ -2064,11 +2091,11 @@ class PersonRow {
   }
 
   getRowLabelHtml(shouldIncludeVersion) {
-    if (this.collectionName) {
-      if (this.personaArk) {
-        return "<a href='" + this.personaArk + "' target='_blank'>" + encode(this.collectionName) + "</a>";
+    if (this.sourceInfo && this.sourceInfo.collectionName) {
+      if (this.sourceInfo.personaArk) {
+        return "<a href='" + this.sourceInfo.personaArk + "' target='_blank'>" + encode(this.sourceInfo.collectionName) + "</a>";
       }
-      return encode(this.collectionName);
+      return encode(this.sourceInfo.collectionName);
     }
     else {
       return encode(this.personId + (shouldIncludeVersion && this.mergeNode && this.mergeNode.version > 1 ? " (v" + this.mergeNode.version + ")" : ""));
@@ -2113,7 +2140,7 @@ class PersonRow {
       return indentHtml;
     }
 
-    let rowSpan = getRowspanParameter(this.getNumChildrenRows() + (this.endRow ? this.endRow.getNumChildrenRows() : 0));
+    let rowSpan = getRowspanParameter(this.getNumChildrenRows());
     let html = "<tr class='" + this.id + "' onclick='handleRowClick(event, \"" + this.id + "\")'>";
     if (shouldIndent) {
       html += getIndentationHtml(this.indent.split(""));
@@ -2127,15 +2154,12 @@ class PersonRow {
     if (this.mergeNode) {
       html += "<td " + rowClasses + rowSpan + ">" + formatTimestamp(this.mergeNode.firstEntry.updated) + "</td>";
     }
-    else if (this.collectionName) {
-      html += "<td class='identity-gx main-row date rt'" + rowSpan + ">" + encode(this.recordDate) + "</td>";
+    else if (this.sourceInfo.collectionName) {
+      html += "<td class='identity-gx main-row date rt'" + rowSpan + ">" + encode(this.sourceInfo.recordDate) + "</td>";
+      html += "<td class='identity-gx main-row relative-id'" + rowSpan + ">" + encode(this.sourceInfo.attachedToPersonId) + "</td>";
     }
 
     // Person info
-    if (this.endRow) {
-      html += this.endRow.getRowPersonCells(this.endRow.gedcomx, this.personId, 'end-gx', usedColumns, "", this.id);
-      html += "</tr>\n<tr>";
-    }
     let rowClass = this.mergeNode && !this.mergeNode.isLeafNode() ? 'merge-node' : 'identity-gx';
     html += this.getRowPersonCells(this.gedcomx, this.personId, rowClass, usedColumns, bottomClass, this.id);
     html += "</tr>\n";
@@ -2147,9 +2171,9 @@ function doNotSelect(event) {
   event.stopPropagation();
 }
 
-function addParentToMap(parentIdDisplayMap, gedcomx, parentId, parentList, includePersonId) {
+function addParentToMap(parentIdDisplayMap, gedcomx, parentId, parentList, includePersonId, relativeStatus) {
   if (parentId && !parentIdDisplayMap[parentId]) {
-    let parentDisplay = new PersonDisplay(findPersonInGx(gedcomx, parentId), "parent", null, includePersonId);
+    let parentDisplay = new PersonDisplay(findPersonInGx(gedcomx, parentId), "parent", relativeStatus, null, includePersonId);
     parentIdDisplayMap[parentId] = parentDisplay;
     parentList.push(parentDisplay);
   }
@@ -2326,10 +2350,10 @@ function buildPersonaRows() {
   let personaRows = [];
 
   for (let sourceInfo of Object.values(sourceMap)) {
-    if (sourceInfo.ark && sourceInfo.gx) {
-      let personaId = findPersonInGx(sourceInfo.gx, shortenPersonArk(sourceInfo.ark)).id;
+    if (sourceInfo.personaArk && sourceInfo.gx) {
+      let personaId = findPersonInGx(sourceInfo.gx, shortenPersonArk(sourceInfo.personaArk)).id;
       if (!personaIds.has(personaId)) {
-        personaRows.push(new PersonRow(null, personaId, sourceInfo.gx, 0, 0, false, null, sourceInfo.collectionName, sourceInfo.ark, sourceInfo.recordDate));
+        personaRows.push(new PersonRow(null, personaId, sourceInfo.gx, 0, 0, false, null, sourceInfo));
         personaIds.add(personaId);
       }
     }
@@ -2414,7 +2438,9 @@ function getTableHeader(usedColumns, maxDepth, shouldIndent, grouper) {
   let colspan = shouldIndent ? " colspan='" + maxDepth + "'" : "";
   return "<table id='change-log-hierarchy'><th" + colspan + ">"
       + (grouper && grouper.tabId === SOURCES_VIEW ?
-           sortHeader("collection", "Collection")  + "</th><th>" + sortHeader("record-date", "Record Date")
+           sortHeader("collection", "Collection")  + "</th><th>"
+           + sortHeader("record-date", "Record Date") + "</th><th>"
+           + sortHeader("attached-to-ids", "Attached to")
          : sortHeader("person-id", "Person ID"))
       + (!grouper || grouper.tabId !== SOURCES_VIEW ? "<th>" + sortHeader("created", "Created") + "</th>" : "")
       + cell("person-name", "Name", true)
@@ -2649,32 +2675,26 @@ function addFact(person, fact, isOrig, isPartOfMerge) {
  * @param gedcomx - GedcomX to modify
  * @param entry - Change log entry
  * @param resultingId - 'id' of the Couple relationship with the updated relatives
+ * @param isOrig - flag for whether this update is happening during the 'original identity' phase of a person's creation.
+ * @param isPartOfMerge - Flag for whether this 'add' or 'update' is part of information coming from the duplicate as part of a merge.
  */
-function updateCoupleRelationship(gedcomx, entry, resultingId, isOrig) {
+function updateCoupleRelationship(gedcomx, entry, resultingId, isOrig, isPartOfMerge) {
   let resultingRel = findCoupleRelationship(entry, resultingId);
   if (!resultingRel) {
     return;
   }
+  // Remove existing relationship (or flag as deleted)
   let relationshipId = getPrimaryIdentifier(resultingRel);
   let existingRel = findEntityByPrimaryIdentifier(getList(gedcomx, "relationships"), relationshipId);
   if (existingRel) {
-    let rel = existingRel;
-    if (!setDeletedStatus(existingRel, isOrig)) {
-      // Not deleting/overwriting existing relationship, but instead flagging it as deleted.
-      // So copy the existing relationship (with its facts, etc.) to the next relationship
-      rel = copyObject(existingRel);
-    }
-    rel["person1"] = resultingRel["person1"];
-    rel["person2"] = resultingRel["person2"];
-    rel.updated = entry.updated;
+    removeFromListByPrimaryIdentifier(gedcomx, "relationships", entry.content.gedcomx, isOrig);
   }
-  else {
-    let relCopy = copyObject(resultingRel);
-    relCopy.updated = entry.updated;
-    relCopy.status = getAddStatus(isOrig);
-    delete relCopy["id"]; // Remove temp id of "<longId>.resulting"
-    addToList(gedcomx, "relationships", relCopy);
-  }
+  // Add new relationship
+  let relCopy = copyObject(resultingRel);
+  relCopy.updated = entry.updated;
+  relCopy.status = getAddStatus(isOrig, isPartOfMerge);
+  delete relCopy["id"]; // Remove temp id of "<longId>.resulting"
+  addToList(gedcomx, "relationships", relCopy);
 }
 
 /**
@@ -2685,8 +2705,10 @@ function updateCoupleRelationship(gedcomx, entry, resultingId, isOrig) {
  * @param gedcomx - GedcomX to modify
  * @param entry - Change log entry
  * @param resultingId - 'id' of the child-and-parents-relationship with the updated relatives
+ * @param isOrig - flag for whether this update is happening during the 'original identity' phase of a person's creation.
+ * @param isPartOfMerge - Flag for whether this 'add' or 'update' is part of information coming from the duplicate as part of a merge.
  */
-function updateChildAndParentsRelationship(gedcomx, entry, resultingId) {
+function updateChildAndParentsRelationship(gedcomx, entry, resultingId, isOrig, isPartOfMerge) {
   let resultingRel = findChildAndParentsRelationship(entry, resultingId);
   if (!resultingRel) {
     return;
@@ -2694,17 +2716,15 @@ function updateChildAndParentsRelationship(gedcomx, entry, resultingId) {
   let relationshipId = getPrimaryIdentifier(resultingRel);
   let existingRel = findEntityByPrimaryIdentifier(getList(gedcomx, CHILD_REL), relationshipId);
   if (existingRel) {
-    existingRel["parent1"] = resultingRel["parent1"];
-    existingRel["parent2"] = resultingRel["parent2"];
-    existingRel["child"] = resultingRel["child"];
-    existingRel.updated = entry.updated;
+    // Remove existing relationship (or flag as deleted)
+    removeFromListByPrimaryIdentifier(gedcomx, CHILD_REL, entry.content.gedcomx, isOrig);
   }
-  else {
-    let relCopy = copyObject(resultingRel);
-    relCopy.updated = entry.updated;
-    delete relCopy["id"]; // Remove temp id of "<longId>.resulting"
-    addToList(gedcomx, CHILD_REL, relCopy);
-  }
+  // Add new updated relationship
+  let relCopy = copyObject(resultingRel);
+  relCopy.updated = entry.updated;
+  delete relCopy["id"]; // Remove temp id of "<longId>.resulting"
+  relCopy.status = getAddStatus(isOrig, isPartOfMerge)
+  addToList(gedcomx, CHILD_REL, relCopy);
 }
 
 function addToList(listHolder, listName, element, isOrig, isPartOfMerge) {
@@ -2740,16 +2760,17 @@ function updateInList(listContainer, listName, elementListContainer, isOrig, isP
 
   let elementWithId = elementListContainer[listName][0];
   let existingList = listContainer[listName];
-  for (let i = 0; i < existingList.length; i++) {
-    if (hasSameId(existingList[i], elementWithId)) {
-      if (setDeletedStatus(existingList[i], isOrig)) {
-        existingList[i] = elementWithId;
+  if (existingList) {
+    for (let i = 0; i < existingList.length; i++) {
+      if (hasSameId(existingList[i], elementWithId)) {
+        if (setDeletedStatus(existingList[i], isOrig)) {
+          existingList[i] = elementWithId;
+        } else {
+          existingList.push(elementWithId);
+        }
+        elementWithId.status = getAddStatus(isOrig, isPartOfMerge);
+        return;
       }
-      else {
-        existingList.push(elementWithId);
-      }
-      elementWithId.status = getAddStatus(isOrig, isPartOfMerge);
-      return;
     }
   }
   console.log("Failed to find element in " + listName + "[] with id " + elementWithId["id"]);
@@ -2760,15 +2781,19 @@ function updateInList(listContainer, listName, elementListContainer, isOrig, isP
  * @param listContainer - Object (like a person) with a list
  * @param listName - Name of list (like "names" or "sources")
  * @param elementListContainer - Object from change log GedcomX with one element in the given list with an id.
+ * @param isOrig - Flag for whether the change is happening during the initial creation of the person (part of its "original intended identity")
  */
-function removeFromListByPrimaryIdentifier(listContainer, listName, elementListContainer) {
+function removeFromListByPrimaryIdentifier(listContainer, listName, elementListContainer, isOrig) {
   let existingList = listContainer[listName];
   if (existingList) {
     let identifierToRemove = getPrimaryIdentifier(elementListContainer[listName][0]);
     for (let i = 0; i < existingList.length; i++) {
-      let existingIdentifier = getPrimaryIdentifier(existingList[i]);
+      let entity = existingList[i];
+      let existingIdentifier = getPrimaryIdentifier(entity);
       if (existingIdentifier === identifierToRemove) {
-        existingList.splice(i, 1);
+        if (setDeletedStatus(entity, isOrig)) {
+          existingList.splice(i, 1);
+        }
         return;
       }
     }
@@ -2856,7 +2881,7 @@ function copySurvivorGx(gx) {
 }
 
 // Add a fact to a relationship or update one.
-function addFactToRelationship(gedcomx, entry, relationshipListName, resultingId, factKey, shouldUpdate) {
+function addFactToRelationship(gedcomx, entry, relationshipListName, resultingId, factKey, shouldUpdate, isOrig, isPartOfMerge) {
   let resultingRel = findEntity(entry, relationshipListName, resultingId);
   if (!resultingRel) {
     return;
@@ -2865,24 +2890,24 @@ function addFactToRelationship(gedcomx, entry, relationshipListName, resultingId
 
   if (existingRel) {
     if (shouldUpdate) {
-      updateInList(existingRel, factKey, resultingRel);
+      updateInList(existingRel, factKey, resultingRel, isOrig, isPartOfMerge);
     }
     else {
-      addToList(existingRel, factKey, getList(resultingRel, factKey)[0]);
+      addToList(existingRel, factKey, getList(resultingRel, factKey)[0], isOrig, isPartOfMerge);
     }
   }
   else {
     let relCopy = copyObject(resultingRel);
     delete relCopy["id"]; // get rid of temporary '.resulting' id
-    addToList(gedcomx, relationshipListName, relCopy);
+    addToList(gedcomx, relationshipListName, relCopy, isOrig, isPartOfMerge);
   }
 }
 
-function updateFactInRelationship(gedcomx, entry, relationshipListName, resultingId, factKey) {
-  addFactToRelationship(gedcomx, entry, relationshipListName, resultingId, factKey, true);
+function updateFactInRelationship(gedcomx, entry, relationshipListName, resultingId, factKey, isOrig, isPartOfMerge) {
+  addFactToRelationship(gedcomx, entry, relationshipListName, resultingId, factKey, true, isOrig, isPartOfMerge);
 }
 
-function deleteFactFromRelationship(gedcomx, entry, relationshipListName, resultingId, factKey) {
+function deleteFactFromRelationship(gedcomx, entry, relationshipListName, resultingId, factKey, isOrig) {
   let resultingRel = findEntity(entry, relationshipListName, resultingId);
   if (!resultingRel) {
     return;
@@ -2890,7 +2915,7 @@ function deleteFactFromRelationship(gedcomx, entry, relationshipListName, result
   let existingRel = findEntityByPrimaryIdentifier(getList(gedcomx, relationshipListName), getPrimaryIdentifier(resultingRel));
 
   if (existingRel) {
-    removeFromListById(existingRel, factKey, resultingRel);
+    removeFromListById(existingRel, factKey, resultingRel, isOrig);
   }
 }
 
@@ -2900,8 +2925,10 @@ function deleteFactFromRelationship(gedcomx, entry, relationshipListName, result
  * @param gedcomx - GedcomX to update
  * @param entry - Change log entry for a relationship change. Includes a snapshot of the persons involved in the relationship.
  * @param relationship - Relationship object found
+ * @param isOrig - Flag for whether this update happened during the 'original identity' period of a person's creation.
+ * @param isPartOfMerge - Flag for whether this update is happening because of data coming in during a merge.
  */
-function updateRelatives(gedcomx, entry, relationship) {
+function updateRelatives(gedcomx, entry, relationship, isOrig, isPartOfMerge) {
   function addRelativeIdToList(relativeKey) {
     let relativeId = getRelativeId(relationship, relativeKey);
     if (relativeId && relativeId !== entry.personId) {
@@ -2924,6 +2951,7 @@ function updateRelatives(gedcomx, entry, relationship) {
       }
     }
     if (!foundRelative) {
+      relative.status = getAddStatus(isOrig, isPartOfMerge);
       gedcomx.persons.push(relative);
     }
   }
@@ -3095,7 +3123,7 @@ function updateGedcomx(gedcomx, entry, isOrig) {
   }
   else if (objectModifier === "Couple") {
     let resultingRelationship = findCoupleRelationship(entry, resultingId);
-    updateRelatives(gedcomx, entry, resultingRelationship);
+    updateRelatives(gedcomx, entry, resultingRelationship, isOrig, isPartOfMerge);
     if (resultingRelationship.hasOwnProperty("facts") && resultingRelationship.facts.length === 1) {
       combo = operation + "-" + "(Fact)";
     }
@@ -3108,8 +3136,6 @@ function updateGedcomx(gedcomx, entry, isOrig) {
         updateCoupleRelationship(gedcomx, entry, resultingId, isOrig, isPartOfMerge);
         break;
       case "Create-(Fact)":
-        //todo: Handle 'isOrig' and 'isPartOfMerge' in this and subsequent functions...
-        //todo: Then make it so the HTML generation takes these changes into account.
         addFactToRelationship(gedcomx, entry, "relationships", resultingId, "facts", false, isOrig, isPartOfMerge);
         break;
       case "Update-(Fact)":
@@ -3125,7 +3151,7 @@ function updateGedcomx(gedcomx, entry, isOrig) {
       case "Update-SourceReference":
       case "Delete-SourceReference":
         let existingRelationship = findEntityByPrimaryIdentifier(gedcomx.relationships, getPrimaryIdentifier(resultingRelationship));
-        doInList(existingRelationship, "sources", resultingRelationship, operation);
+        doInList(existingRelationship, "sources", resultingRelationship, operation, isOrig, isPartOfMerge);
         break;
       default:
         console.log("Unimplemented change log entry type: " + combo + " for Couple relationship");
@@ -3133,7 +3159,7 @@ function updateGedcomx(gedcomx, entry, isOrig) {
   }
   else if (objectModifier === "ChildAndParentsRelationship") {
     let resultingRelationship = findChildAndParentsRelationship(entry, resultingId);
-    updateRelatives(gedcomx, entry, resultingRelationship);
+    updateRelatives(gedcomx, entry, resultingRelationship, isOrig, isPartOfMerge);
     let factKey = resultingRelationship.hasOwnProperty("parent1Facts") ? "parent1Facts" : "parent2Facts"
     if (resultingRelationship.hasOwnProperty(factKey) && resultingRelationship[factKey].length === 1) {
       combo = operation + "-" + "(Fact)";
@@ -3148,24 +3174,24 @@ function updateGedcomx(gedcomx, entry, isOrig) {
       case "Update-Parent2":
       case "Update-Child":
         // Go ahead and deal with child-and-parents relationships, since that is how the change log operates.
-        updateChildAndParentsRelationship(gedcomx, entry, resultingId);
+        updateChildAndParentsRelationship(gedcomx, entry, resultingId, isOrig, isPartOfMerge);
         break;
       case "Create-(Fact)":
-        addFactToRelationship(gedcomx, entry, CHILD_REL, resultingId, factKey);
+        addFactToRelationship(gedcomx, entry, CHILD_REL, resultingId, factKey, false, isOrig, isPartOfMerge);
         break;
       case "Update-(Fact)":
-        updateFactInRelationship(gedcomx, entry, CHILD_REL, resultingId, factKey);
+        updateFactInRelationship(gedcomx, entry, CHILD_REL, resultingId, factKey, isOrig, isPartOfMerge);
         break;
       case "Delete-(Fact)":
-        deleteFactFromRelationship(gedcomx, entry, CHILD_REL, resultingId, factKey);
+        deleteFactFromRelationship(gedcomx, entry, CHILD_REL, resultingId, factKey, isOrig);
         break;
       case "Delete-ChildAndParentsRelationship":
-        removeFromListByPrimaryIdentifier(gedcomx, CHILD_REL, entry.content.gedcomx);
+        removeFromListByPrimaryIdentifier(gedcomx, CHILD_REL, entry.content.gedcomx, isOrig);
         break;
       case "Create-SourceReference":
       case "Update-SourceReference":
       case "Delete-SourceReference":
-        let existingRelationship = findEntityByPrimaryIdentifier(gedcomx[CHILD_REL], getPrimaryIdentifier(resultingRelationship));
+        let existingRelationship = findEntityByPrimaryIdentifier(gedcomx[CHILD_REL], getPrimaryIdentifier(resultingRelationship), isOrig, isPartOfMerge);
         doInList(existingRelationship, "sources", resultingRelationship, operation);
         break;
       default:

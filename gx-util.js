@@ -447,7 +447,7 @@ function getProperty(object, path) {
 }
 
 function extractType(url) {
-  return url ? url.replaceAll(/.*\//g, "").replaceAll(/data:,/g, "") : null;
+  return url ? url.replaceAll(/.*\//g, "").replaceAll(/data:,/g, "").replaceAll("%20", " ") : null;
 }
 
 /**
