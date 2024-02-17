@@ -145,7 +145,7 @@ function fetchRelativesAndSources(changeLogMap, $status, context) {
       let timestamp = entry.updated.toString();
       if (entry.content && entry.content.gedcomx) {
         let gedcomx = entry.content.gedcomx;
-        gatherSources(sourceMap, findPersonInGx(gedcomx, personId), personId, entry.updated);
+        gatherSources(sourceMap, findPersonInGx(gedcomx, personId));
         gatherNames(gedcomx, timestamp,"relationships", ["person1", "person2"]);
         gatherNames(gedcomx, timestamp, CHILD_REL, ["parent1", "parent2", "child"]);
       }
@@ -172,15 +172,12 @@ function fetchRelativesAndSources(changeLogMap, $status, context) {
 }
 
 // Look for a source reference on the given entity (i.e., person).
-function gatherSources(sourceMap, entity, attachedToPersonId, updated) {
+function gatherSources(sourceMap, entity) {
   let sourceUrl = getSourceUrl(entity);
   if (sourceUrl) {
     let sourceInfo = sourceMap[sourceUrl];
-    if (sourceInfo) {
-      sourceInfo.attachTo(attachedToPersonId, updated);
-    }
-    else {
-      sourceMap[sourceUrl] = new SourceInfo(attachedToPersonId, updated);
+    if (!sourceInfo) {
+      sourceMap[sourceUrl] = new SourceInfo();
     }
   }
 }
@@ -218,22 +215,14 @@ function gatherNames(gedcomx, timestamp, listName, personKeys) {
 }
 
 class SourceInfo {
-  constructor(personId, updated) {
+  constructor() {
     this.title = null;
     this.isExtraction = null;
     this.personaArk = null;
     this.gx = null;
     this.recordDate = null;
     this.recordDateSortKey = null;
-    this.attachedToPersonId = personId;
-    this.firstAttachmentTs = updated;
-  }
-
-  attachTo(attachedToPersonId, updated) {
-    if (updated < this.firstAttachmentTs) {
-      this.attachedToPersonId = attachedToPersonId;
-      this.firstAttachmentTs = updated;
-    }
+    this.attachedToPersonId = null; // Person ID attached to, including version number if > 1 (like "MMMM-MMM (v2)")
   }
 
   // Now that the SourceDescription for this source has been fetched, update this SourceInfo with information from it.
@@ -407,9 +396,28 @@ function receivePersona(gedcomx, $status, context, fetching, sourceInfo) {
 
 function finishedReceivingSources($status) {
   clearStatus($status);
+  setSourcePersonIds();
   let sourcesHtml = getSourcesViewHtml();
   $("#" + SOURCES_VIEW).html(sourcesHtml);
   makeTableHeadersDraggable();
+}
+
+function setSourcePersonIds() {
+  for (let mergeGroup of mergeGrouper.mergeGroups) {
+    for (let mergeRow of mergeGroup.personRows) {
+      let person = findPersonInGx(mergeRow.gedcomx, mergeRow.personId);
+      if (person.sources) {
+        let personId = mergeRow.personId;
+        let version = mergeRow.mergeNode.version;
+        for (let sourceRef of person.sources) {
+          let sourceInfo = sourceMap[sourceRef.description];
+          if (sourceInfo && (!sourceRef.status || !sourceRef.status.startsWith("merge-"))) {
+            sourceInfo.attachedToPersonId = personId + (version > 1 ? " (v" + version + ")" : "");
+          }
+        }
+      }
+    }
+  }
 }
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -1845,12 +1853,17 @@ class PersonRow {
       return "";
     }
 
+    // Zero-pad a single-digit version number like XXXX-MMM (v3) => XXXX-MMM (v03)
+    // so that it will sort properly when there are more than 9 versions of a person ID.
+    function padV(versionedPersonId) {
+      return versionedPersonId.replaceAll(/\(v(\d)\)/g, "(v0$1)");
+    }
     switch (columnName) {
       case "collection":
         sortKey = this.sourceInfo.collectionName;
         break;
       case "person-id":          sortKey = this.personId;                          break;
-      case "attached-to-ids":    sortKey = this.sourceInfo.attachedToPersonId;     break;
+      case "attached-to-ids":    sortKey = padV(this.sourceInfo.attachedToPersonId);break;
       case "created":            sortKey = String(this.mergeNode.firstEntry.updated).padStart(15, "0"); break;
       case "record-date":        sortKey = this.sourceInfo.recordDateSortKey;      break;
       case "person-name":        sortKey = getPersonName(this.person);             break;
