@@ -22,6 +22,7 @@
 
 // Array of all entries from all change logs, sorted from newest to oldest timestamp, and then by column.
 let allEntries = [];
+let mainPersonId = null;
 
 // Note that these are fetched after the ChangeLogHtml is built, so if a user hovers over a cell,
 //   it will only include the extra info (like source title or relative name) if that has been fetched.
@@ -448,6 +449,7 @@ const SPLIT_VIEW   = "split-view";
 function makeMainHtml(context, changeLogMap, $mainTable) {
   let personMinMaxTs = {};
   let personIds = [];
+  mainPersonId = context.personId;
   let allEntries = combineEntries(context.personId, changeLogMap, personIds, personMinMaxTs);
   let html =
     "<div id='tabs'><ul>\n" +
@@ -1480,6 +1482,8 @@ class DisplayOptions {
     this.shouldShowAdditions = true;
     // Flag for whether to show which facts and relatives were deleted later.
     this.shouldShowDeletions = true;
+    // Flag for whether to show "AttachedTo" column in sources view.
+    this.shouldShowAttachedTo = false;
   }
 }
 
@@ -2117,7 +2121,11 @@ class PersonRow {
       return encode(this.sourceInfo.collectionName);
     }
     else {
-      return encode(this.personId + (shouldIncludeVersion && this.mergeNode && this.mergeNode.version > 1 ? " (v" + this.mergeNode.version + ")" : ""));
+      let personIdHtml = encode(this.personId + (shouldIncludeVersion && this.mergeNode && this.mergeNode.version > 1 ? " (v" + this.mergeNode.version + ")" : ""));
+      if (this.personId === mainPersonId) {
+        return "<b>" + personIdHtml + "</b>";
+      }
+      return personIdHtml;
     }
   }
 
@@ -2175,7 +2183,9 @@ class PersonRow {
     }
     else if (this.sourceInfo.collectionName) {
       html += "<td class='identity-gx main-row date rt'" + rowSpan + ">" + encode(this.sourceInfo.recordDate) + "</td>";
-      html += "<td class='identity-gx main-row relative-id'" + rowSpan + ">" + encode(this.sourceInfo.attachedToPersonId) + "</td>";
+      if (displayOptions.shouldShowAttachedTo) {
+        html += "<td class='identity-gx main-row relative-id'" + rowSpan + ">" + encode(this.sourceInfo.attachedToPersonId) + "</td>";
+      }
     }
 
     // Person info
@@ -2675,9 +2685,9 @@ function getTableHeader(usedColumns, maxDepth, shouldIndent, grouper) {
   let colspan = shouldIndent ? " colspan='" + maxDepth + "'" : "";
   return "<table><th" + colspan + ">"
       + (grouper && grouper.tabId === SOURCES_VIEW ?
-           sortHeader("collection", "Collection")  + "</th><th>"
-           + sortHeader("record-date", "Record Date") + "</th><th>"
-           + sortHeader("attached-to-ids", "Attached to")
+           sortHeader("collection", "Collection")  + "</th>" +
+           "<th>" + sortHeader("record-date", "Record Date") + "</th>" +
+           (displayOptions.shouldShowAttachedTo ? ("<th>" + sortHeader("attached-to-ids", "Attached to") + "</th>") : "")
          : sortHeader("person-id", "Person ID"))
       + (!grouper || grouper.tabId !== SOURCES_VIEW ? "<th>" + sortHeader("created", "Created") + "</th>" : "")
       + cell("person-name", "Name", true)
