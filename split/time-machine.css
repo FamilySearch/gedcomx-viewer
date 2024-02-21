@@ -314,3 +314,23 @@ a:hover {
     font-style: italic;
     opacity: 50%;
 }
+
+.split-table {
+    border: 1px darkblue;
+}
+.split-heading {
+    font-weight: bold;
+    border: 1px solid #cedace;
+    border-top: 2px solid #9ab79a;
+    background-color: #f3f8f3
+}
+.split-children {
+    font-weight: bold;
+    border: 1px solid #cedace;
+    border-top: 1px solid red;
+    background-color: #f3f8f3
+}
+.dir-button {
+    /*background-color: #f3f8f3;*/
+    /*border: 1px solid #9ab79a;*/
+}

@@ -37,6 +37,10 @@ let relativeMap = {}
 // Map of duplicatePersonId -> array of [{ "survivor": <survivorPersonId>, "timestamp": <timestamp of merge>}]
 let mergeMap = {}
 
+const CHILD_REL = "child-and-parents-relationships"
+const COUPLE_REL = "http://gedcomx.org/Couple"
+const PARENT_CHILD_REL = "http://gedcomx.org/ParentChild"
+
 // Fetch the change log entries for the person given by the change log URL.
 function buildChangeLogView(changeLogUrl, sessionId, $mainTable, $status) {
   let context = parsePersonUrl(changeLogUrl);
@@ -131,10 +135,6 @@ function receiveChangeLog(gedcomx, personId, context, changeLogMap, fetching, $m
     fetchRelativesAndSources(changeLogMap, $status, context);
   }
 }
-
-const CHILD_REL = "child-and-parents-relationships"
-const COUPLE_REL = "http://gedcomx.org/Couple"
-const PARENT_CHILD_REL = "http://gedcomx.org/ParentChild"
 
 function fetchRelativesAndSources(changeLogMap, $status, context) {
   // Populate sourceMap[sourceUrl] = null, and relativeMap[relativeId] = null,
@@ -397,8 +397,9 @@ function receivePersona(gedcomx, $status, context, fetching, sourceInfo) {
 function finishedReceivingSources($status) {
   clearStatus($status);
   setSourcePersonIds();
-  let sourcesHtml = getSourcesViewHtml();
-  $("#" + SOURCES_VIEW).html(sourcesHtml);
+  $("#" + SOURCES_VIEW).html(getSourcesViewHtml());
+  split = new Split(mergeGrouper.mergeGroups[0].personRows[0].gedcomx);
+  updateSplitViewHtml();
   makeTableHeadersDraggable();
 }
 
@@ -439,9 +440,10 @@ function formatTimestamp(ts, includeTimestamp) {
 
 // ==================== HTML ===================================
 // changeLogMap - Map of personId -> GedcomX of the change log for that personId.
-const MERGE_VIEW = "merge-hierarchy";
-const FLAT_VIEW = "flat-view";
+const MERGE_VIEW   = "merge-hierarchy";
+const FLAT_VIEW    = "flat-view";
 const SOURCES_VIEW = "sources-view";
+const SPLIT_VIEW   = "split-view";
 
 function makeMainHtml(context, changeLogMap, $mainTable) {
   let personMinMaxTs = {};
@@ -450,9 +452,10 @@ function makeMainHtml(context, changeLogMap, $mainTable) {
   let html =
     "<div id='tabs'><ul>\n" +
     "  <li><a href='#change-logs-table'><span>Change Logs</span></a></li>\n" +
-    "  <li><a href='#" + MERGE_VIEW + "'><span>Merge view</span></a></li>\n" +
-    "  <li><a href='#" + FLAT_VIEW + "'><span>Flat view</span></a></li>\n" +
+    "  <li><a href='#" + MERGE_VIEW   + "'><span>Merge view</span></a></li>\n" +
+    "  <li><a href='#" + FLAT_VIEW    + "'><span>Flat view</span></a></li>\n" +
     "  <li><a href='#" + SOURCES_VIEW + "'><span>Sources view</span></a></li>\n" +
+    "  <li><a href='#" + SPLIT_VIEW   + "'><span>Split view</span></a></li>\n" +
     // Display Options
     "  <li>" + getDisplayOptionsHtml() + "</li>" +
     "</ul>\n" +
@@ -460,6 +463,7 @@ function makeMainHtml(context, changeLogMap, $mainTable) {
     "<div id='" + MERGE_VIEW + "'>" + getMergeHierarchyHtml(allEntries) + "</div>\n" +
     "<div id='" + FLAT_VIEW + "'>" + getFlatViewHtml(allEntries) + "</div>\n" +
     "<div id='" + SOURCES_VIEW + "'>Sources grid...</div>\n" +
+    "<div id='" + SPLIT_VIEW + "'>Split view...</div>\n" +
     "<div id='details'></div>\n";// +
     // "<div id='rel-graphs-container'>\n" +
     // "  <div id='close-rel-graphs' onclick='hideRelGraphs()'>X</div>\n" +
@@ -468,7 +472,7 @@ function makeMainHtml(context, changeLogMap, $mainTable) {
   html += "</div>";
   $mainTable.html(html);
   $("#rel-graphs-container").hide();
-  $("#tabs").tabs({active: 2});
+  $("#tabs").tabs({active: 4});
   // Prevent text from being selected when shift-clicking a row.
   for (let eventType of ["keyup", "keydown"]) {
     window.addEventListener(eventType, (e) => {
@@ -482,31 +486,31 @@ function makeMainHtml(context, changeLogMap, $mainTable) {
   makeTableHeadersDraggable();
 }
 
-let pressed = false;
-let start = undefined;
-let startX;
-let startWidth;
+let columnPressed = false;
+let columnStart = undefined;
+let columnStartX;
+let columnStartWidth;
 
 function makeTableHeadersDraggable() {
   $("table th").mousedown(function(e) {
-    start = $(this);
-    pressed = true;
-    startX = e.pageX;
-    startWidth = $(this).width();
-    $(start).addClass("resizing");
+    columnStart = $(this);
+    columnPressed = true;
+    columnStartX = e.pageX;
+    columnStartWidth = $(this).width();
+    $(columnStart).addClass("resizing");
   });
 
   $(document).mousemove(function(e) {
-    if(pressed) {
-      $(start).width(startWidth+(e.pageX-startX));
+    if(columnPressed) {
+      $(columnStart).width(columnStartWidth+(e.pageX-columnStartX));
       e.preventDefault();
     }
   });
 
   $(document).mouseup(function() {
-    if(pressed) {
-      $(start).removeClass("resizing");
-      pressed = false;
+    if(columnPressed) {
+      $(columnStart).removeClass("resizing");
+      columnPressed = false;
     }
   });
   // Also make it so that clicked hyperlinks don't propagate
@@ -543,7 +547,7 @@ function getChangeLogTableHtml(allEntries, personIds, personMinMaxTs) {
     for (let column = 0; column < personIds.length; column++) {
       let personId = personIds[column];
       if (column === entry.column) {
-        html += "<td class='entry" + rowClass + "' id='entry-" + entry.entryIndex + "' onMouseover='showDetails(" + entry.entryIndex + ")' onMouseout='hideDetails()'>" + getEntryHtml(entry) + "</td>";
+        html += "<td class='entry" + rowClass + "' id='entry-" + entry.entryIndex + "' onMouseover='showChangeLogEntryDetails(" + entry.entryIndex + ")' onMouseout='hideDetails()'>" + getEntryHtml(entry) + "</td>";
       }
       else if (entry.updated < personMinMaxTs[personId].min || entry.updated > personMinMaxTs[personId].max) {
         html += "<td class='empty-cell" + rowClass + "'></td>";
@@ -749,7 +753,7 @@ function clearStatus($status) {
   $status.html("");
 }
 
-function showDetails(entryIndex){
+function showChangeLogEntryDetails(entryIndex){
   let html = getEntryDetailsHtml(entryIndex);
   let $entryElement = $("#entry-" + entryIndex);
   let $details = $("#details");
@@ -819,7 +823,7 @@ function getEntryDetailsHtml(entryIndex) {
       let resultingPerson = findPersonByLocalId(entry, resultingId);
       switch(objectType) {
         case "BirthName":
-          html += changeHtml(operation, getName(originalPerson), getName(resultingPerson));
+          html += changeHtml(operation, getNameChangeHtml(originalPerson), getNameChangeHtml(resultingPerson));
             break;
         case "SourceReference":
           html += changeHtml(operation, getSourceReferenceHtml(originalPerson), getSourceReferenceHtml(resultingPerson), false);
@@ -981,13 +985,15 @@ function getFactsHtml(entity, key="facts") {
   return "";
 }
 
-function getFactHtml(fact) {
+function getFactHtml(fact, ignoreStatus) {
   let type = extractType(fact.type);
   let date = fact.date ? fact.date.original : null;
   let place = fact.place ? fact.place.original : null;
   let value = fact.value ? fact.value : null;
-  let statusClass = fact.status ? " " + fact.status : "";
-  let html = "<span class='fact-type" + statusClass + "'>" + (fact.status === ADDED_STATUS ? "+" : "") + encode(type ? type : "<unknown fact type>");
+  let statusClass = fact.status && !ignoreStatus ? " " + fact.status : "";
+  let html = "<span class='fact-type" + statusClass + "'>"
+    + (fact.status === ADDED_STATUS && !ignoreStatus ? "+" : "")
+    + encode(type ? type : "<unknown fact type>");
   if (date || place || value) {
     html += ":</span> ";
     if (value) {
@@ -1131,7 +1137,7 @@ function getSourceReferenceHtml(entity) {
   }
 }
 
-function getName(person) {
+function getNameChangeHtml(person) {
   if (person && person.names) {
     return encode(person.names[0].nameForms[0].fullText) + "<br>\n" + getChangeMessage(person.names[0]);
   }
@@ -1935,7 +1941,7 @@ class PersonRow {
       }
       let isChildRel = isChildRelationship(relationship);
       let spouseId = getSpouseId(relationship, personId);
-      if (spouseId === "<notParentInRel>") {
+      if (spouseId === NO_SPOUSE) {
         if (personId === getRelativeId(relationship, "child")) {
           addParentToMap(fatherMap, gedcomx, getRelativeId(relationship, "parent1"), this.fathers, includePersonId, relationship.status);
           addParentToMap(motherMap, gedcomx, getRelativeId(relationship, "parent2"), this.mothers, includePersonId, relationship.status);
@@ -2381,6 +2387,224 @@ function getSourcesViewHtml() {
   return getGrouperHtml(sourceGrouper, true);
 }
 
+//====== Split ========
+
+// Direction to move each element
+const DIR_KEEP = "keep"; // keep on the "survivor".
+const DIR_COPY = "copy"; // keep on the survivor and also copy to the "split"
+const DIR_MOVE = "move"; // remove from the survivor and move to the "split"
+
+// Type of information in each element. Note: The String will be used in the HTML display.
+const TYPE_NAME = "Name";
+const TYPE_GENDER = "Gender";
+const TYPE_FACT = "Facts";
+const TYPE_PARENTS = "Parents"; // child-and-parents relationship from the person to their parents
+const TYPE_SPOUSE = "Spouse"; // Couple relationship to a spouse
+const TYPE_CHILD = "Children"; // child-and-parents relationship to a child
+const TYPE_SOURCE = "Sources"; // attached source
+//future: const TYPE_ORDINANCE = "ordinance"; // linked ordinance
+
+// One element of information from the original GedcomX that is either kept on the old person, or copied or moved out to the new person.
+class Element {
+  constructor(id, item, type, direction, famId) {
+    this.id = id;
+    this.item = item; // name, gender, fact, field, relationship or source [or eventually ordinance] being decided upon.
+    this.type = type; // Type of item (see TYPE_* above)
+    this.direction = direction; // Direction for this piece of information: DIR_KEEP/COPY/MOVE
+    this.famId = famId; // optional value identifying which family (i.e., spouseId) this relationship element is part of.
+    // (to help group children by spouse).
+  }
+}
+
+let split = null;
+
+class Split {
+  constructor(gedcomx) {
+    this.gedcomx = gedcomx; // Current, merged person's full GedcomX.
+    let personId = gedcomx.persons[0].id;
+    this.personId = personId;
+    // Elements of information, including name, gender, facts, parent relationships, couple relationships, child relationships and sources.
+    // couple and child relationships are ordered such that for each couple relationships, child relationships with that spouse
+    //   follow in the elements list. Then any child relationships with no spouse id follow after that.
+    this.elements = this.initElements(gedcomx, personId);
+  }
+
+  initElements(gedcomx, personId) {
+    function addElement(item, type, famId) {
+      elements.push(new Element(elementIndex++, item, type, DIR_KEEP, famId))
+    }
+    function addElements(list, type) {
+      if (list) {
+        for (let item of list) {
+          addElement(item, type);
+        }
+      }
+    }
+    function addRelationshipElements(gedcomx) {
+      function addChildrenElements(spouseId) {
+        let childRels = childrenMap.get(spouseId);
+        if (childRels) {
+          for (let childRel of childRels) {
+            addElement(childRel, TYPE_CHILD);
+          }
+        }
+      }
+
+      // child-and-parents relationships in which the person is a child, i.e., containing the person's parents
+      let parentRelationships = [];
+      // map of spouseId -> Couple relationship for that spouse
+      let coupleMap = new Map();
+      // map of spouseId -> list of child-and-parents relationships where that spouseId is one of the parents; plus <notParentInRel> -> list w/o another parent.
+      let childrenMap = new Map();
+
+      for (let relationship of getList(gedcomx, "relationships").concat(getList(gedcomx, CHILD_REL))) {
+        if (relationship.status === DELETED_STATUS || relationship.status === MERGE_DELETED_STATUS) {
+          // Skip relationships that did not end up on the "survivor". (Someone may have to re-add these manually later.)
+          continue;
+        }
+        let spouseId = getSpouseId(relationship, personId);
+        if (relationship.type === COUPLE_REL) {
+          coupleMap.set(spouseId, relationship);
+        } else if (isChildRelationship(relationship)) {
+          if (personId === getRelativeId(relationship, "child")) {
+            parentRelationships.push(relationship);
+          }
+          else {
+            let childRelList = childrenMap.get(spouseId);
+            if (!childRelList) {
+              childRelList = [];
+              childrenMap.set(spouseId, childRelList);
+            }
+            childRelList.push(relationship);
+          }
+        }
+      }
+
+      for (let parentRel of parentRelationships) {
+        addElement(parentRel, TYPE_PARENTS);
+      }
+      for (let [spouseId, coupleRel] of coupleMap) {
+        addElement(coupleRel, TYPE_SPOUSE);
+        addChildrenElements(spouseId);
+      }
+      for (let spouseId in childrenMap) {
+        if (!coupleMap.get(spouseId)) {
+          addChildrenElements(spouseId);
+        }
+      }
+    }
+
+    let elementIndex = 0;
+    let elements = [];
+    let person = gedcomx.persons[0];
+    addElements(person.names, TYPE_NAME);
+    addElement(person.gender, TYPE_GENDER);
+    addElements(person.facts, TYPE_FACT);
+    addRelationshipElements(gedcomx);
+    addElements(person.sources, TYPE_SOURCE);
+    return elements;
+  }
+}
+
+function moveElement(direction, elementId) {
+  split.elements[elementId].direction = direction;
+  updateSplitViewHtml();
+}
+
+function updateSplitViewHtml() {
+  $("#" + SPLIT_VIEW).html(getSplitViewHtml());
+}
+
+function getSplitViewHtml() {
+  function makeButton(label, direction, element) {
+    let isActive = direction !== element.direction;
+    return "<button class='dir-button' " +
+      (isActive ? "onclick='moveElement(\"" + direction + "\", " + element.id + ")'" : "disabled")
+        + ">" + encode(label) + "</button>";
+  }
+
+  let html = "<table class='split-table'>\n";
+  html += "<thead><tr><th>Remaining Person</th><th></th><th>Split-out Person</th></tr></thead>\n";
+  html += "<tbody>";
+  let prevElement = null;
+  let infoClass = "identity-gx";
+  for (let element of split.elements) {
+    if (element.status === DELETED_STATUS || element.status === MERGE_DELETED_STATUS) {
+      continue; // skip elements that have been deleted. (Perhaps we eventually make these available to "reclaim" when splitting out a person)
+    }
+    if (!prevElement || element.type !== prevElement.type) {
+      let headingClass = (element.type === TYPE_CHILD && prevElement.type === TYPE_SPOUSE) ? "split-children" : "split-heading";
+      let tdHeading = "<td class='" + headingClass + "'>";
+      html += "<tr>"
+        + tdHeading + encode(element.type) + "</td>"
+        + tdHeading + "</td>"
+        + tdHeading + encode(element.type) + "</td></tr>\n";
+    }
+    // Left column.
+    html += "<td class='" + infoClass + "'>";
+    if (element.direction === DIR_KEEP || element.direction === DIR_COPY) {
+      html += getElementHtml(element, split.personId);
+    }
+    html += "</td>";
+
+    // Center buttons
+    html += "<td class='" + infoClass + "'>" + makeButton("<", DIR_KEEP, element) + " " + makeButton("=", DIR_COPY, element) + " " + makeButton(">", DIR_MOVE, element) + "</td>";
+
+    // Right column
+    html += "<td class='" + infoClass + "'>";
+    if (element.direction === DIR_COPY || element.direction === DIR_MOVE) {
+      html += getElementHtml(element, split.personId);
+    }
+    html += "</td></tr>\n";
+    prevElement = element;
+  }
+  html += "</tbody></table>\n";
+  return html;
+}
+
+function getElementHtml(element, personId) {
+  function getParentsHtml(relationship) {
+    let parentHtmls = [];
+    for (let parentNumber of ["parent1", "parent2"]) {
+      let relativeId = getRelativeId(relationship, parentNumber);
+      if (relativeId) {
+        parentHtmls.push(getRelativeHtml(relativeId, relationship.updated));
+      }
+    }
+    return parentHtmls.join("<br>&nbsp;");
+  }
+
+  switch (element.type) {
+    case TYPE_NAME:
+      let name = element.item;
+      let nameFormHtmls = [];
+      for (let nameForm of getList(name, "nameForms")) {
+        nameFormHtmls.push(encode(nameForm.fullText ? nameForm.fullText : "<unknown>"));
+      }
+      return "&nbsp;" + nameFormHtmls.join("<br>");
+    case TYPE_GENDER:
+      let gender = element.item;
+      return "&nbsp;" + encode( gender.type ? extractType(gender.type) : "Unknown");
+    case TYPE_FACT:
+      return "&nbsp;" + getFactHtml(element.item, true);
+    case TYPE_PARENTS:
+      return "&nbsp;" + getParentsHtml(element.item);
+    case TYPE_SPOUSE:
+      let coupleRelationship = element.item;
+      return "&nbsp;" + getRelativeHtml(getSpouseId(coupleRelationship, personId), coupleRelationship.updated);
+    case TYPE_CHILD:
+      let childRel = element.item;
+      return "&nbsp;&nbsp;&nbsp;&nbsp;" + getRelativeHtml(getRelativeId(childRel, "child"), childRel.updated);
+    case TYPE_SOURCE:
+      let sourceInfo = sourceMap[element.item.description];
+      if (sourceInfo.personaArk) {
+        return "<a href='" + sourceInfo.personaArk + "' target='_blank'>" + encode(sourceInfo.collectionName) + "</a>";
+      }
+      return encode(sourceInfo.collectionName);
+    // future: TYPE_ORDINANCE...
+  }
+}
+
 function updateGroupName(groupId) {
   let grouper = grouperMap[groupId];
   let mergeGroup = grouper.findGroup(groupId);
@@ -2449,7 +2673,7 @@ function getTableHeader(usedColumns, maxDepth, shouldIndent, grouper) {
   }
 
   let colspan = shouldIndent ? " colspan='" + maxDepth + "'" : "";
-  return "<table id='change-log-hierarchy'><th" + colspan + ">"
+  return "<table><th" + colspan + ">"
       + (grouper && grouper.tabId === SOURCES_VIEW ?
            sortHeader("collection", "Collection")  + "</th><th>"
            + sortHeader("record-date", "Record Date") + "</th><th>"
@@ -2546,6 +2770,8 @@ function getParentHtml(gedcomx, personId, parentNumber) {
   return combineHtmlLists(parents);
 }
 
+const NO_SPOUSE = "<none>";
+
 function getSpouseId(relationship, personId) {
   if (relationship.type === COUPLE_REL) {
     let isPerson1 = getRelativeId(relationship, "person1") === personId;
@@ -2561,7 +2787,7 @@ function getSpouseId(relationship, personId) {
       return getRelativeId(relationship, isParent1 ? "parent2" : "parent1");
     }
   }
-  return "<notParentInRel>";
+  return NO_SPOUSE;
 }
 
 function isChildRelationship(relationship) {
