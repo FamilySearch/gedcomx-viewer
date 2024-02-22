@@ -368,6 +368,19 @@ function parseDateIntoNumber(date) {
 const typeLevelMap = {"Birth" : -2, "Christening" : -1, "Baptism": -1, "Death": 1, "Burial" : 2, "Cremation": 2}
 
 function fixEventOrders(doc) {
+  if (doc.persons) {
+    for (let person of doc.persons) {
+      fixEventOrder(person);
+    }
+  }
+  if (doc.relationships) {
+    for (let relationship of doc.relationships) {
+      fixEventOrder(relationship);
+    }
+  }
+}
+
+function fixEventOrder(factHolder) {
   function compareFactInfos(a, b) {
     // Sort facts first by type (birth < chr < bap < death < bur < cremation)
     //   then by date (earlier < later < none)
@@ -376,7 +389,7 @@ function fixEventOrders(doc) {
     if (!diff) {
       let dateNumA = a.dateNum ? a.dateNum : 99999999;
       let dateNumB = b.dateNum ? b.dateNum : 99999999;
-      diff = dateNumB - dateNumA;
+      diff = dateNumA - dateNumB;
       if (!diff) {
         diff = a.origOrder - b.origOrder;
       }
@@ -403,25 +416,11 @@ function fixEventOrders(doc) {
     return factInfos;
   }
 
-  function fixEventOrder(factHolder) {
-    if (factHolder.facts && factHolder.facts.length > 1) {
-      let factInfos = getFactInfos(factHolder);
-      factInfos.sort(compareFactInfos);
-      for (let i = 0; i < factHolder.facts.length; i++) {
-        factHolder.facts[i] = factInfos[i].fact;
-      }
-    }
-  }
-
-  // fixEventOrders--------------
-  if (doc.persons) {
-    for (let person of doc.persons) {
-      fixEventOrder(person);
-    }
-  }
-  if (doc.relationships) {
-    for (let relationship of doc.relationships) {
-      fixEventOrder(relationship);
+  if (factHolder.facts && factHolder.facts.length > 1) {
+    let factInfos = getFactInfos(factHolder);
+    factInfos.sort(compareFactInfos);
+    for (let i = 0; i < factHolder.facts.length; i++) {
+      factHolder.facts[i] = factInfos[i].fact;
     }
   }
 }
@@ -447,7 +446,7 @@ function getProperty(object, path) {
 }
 
 function extractType(url) {
-  return url ? url.replaceAll(/.*\//g, "").replaceAll(/data:,/g, "").replaceAll("%20", " ") : null;
+  return url ? url.replaceAll(/.*\//g, "").replaceAll(/data:,/g, "").replaceAll(/%20/g, " ") : null;
 }
 
 /**

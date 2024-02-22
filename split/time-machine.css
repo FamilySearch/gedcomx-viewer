@@ -330,7 +330,51 @@ a:hover {
     border-top: 1px solid red;
     background-color: #f3f8f3
 }
+.split-extra {
+    border: 1px solid #cedace;
+    background-color: #f4fcfc;
+    white-space: nowrap;
+}
+
 .dir-button {
     /*background-color: #f3f8f3;*/
     /*border: 1px solid #9ab79a;*/
+}
+.collapse-button {
+    margin-left: 10px;
+    font-family: monospace;
+}
+
+.tooltip {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
+
+.tooltip .tooltiptext {
+    visibility: hidden;
+    background-color: lightgrey;
+    color: #000;
+    text-align: left;
+    border-radius: 6px;
+    padding: 5px;
+    position: absolute;
+    z-index: 1;
+    bottom: 150%;
+    left: 20px;
+}
+
+.tooltip .tooltiptext::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 20px;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: lightgrey transparent transparent transparent;
+}
+
+.tooltip:hover .tooltiptext {
+    visibility: visible;
 }

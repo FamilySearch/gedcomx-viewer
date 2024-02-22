@@ -26,7 +26,7 @@ let mainPersonId = null;
 
 // Note that these are fetched after the ChangeLogHtml is built, so if a user hovers over a cell,
 //   it will only include the extra info (like source title or relative name) if that has been fetched.
-// Map of source URL -> {title: <title>, ark: <ark>, [and perhaps, gx: <recordGx>]} (initially source URL -> null until fetched).
+// Map of source URL -> {title: <title>, ark: <ark>, [and perhaps, gedcomx: <recordGx>]} (initially source URL -> null until fetched).
 let sourceMap = {}
 
 // Map of relative personId -> timestamp -> {"name":, "gender":, "lifespan"} (and, eventually, "ts-name": name at that timestamp).
@@ -220,7 +220,7 @@ class SourceInfo {
     this.title = null;
     this.isExtraction = null;
     this.personaArk = null;
-    this.gx = null;
+    this.gedcomx = null;
     this.recordDate = null;
     this.recordDateSortKey = null;
     this.attachedToPersonId = null; // Person ID attached to, including version number if > 1 (like "MMMM-MMM (v2)")
@@ -277,8 +277,8 @@ function receiveSourceDescription(gedcomx, $status, context, fetching, sourceUrl
   }
 }
 
-function getMainPersonaArk(gx) {
-  let sd = getSourceDescription(gx, null);
+function getMainPersonaArk(gedcomx) {
+  let sd = getSourceDescription(gedcomx, null);
   if (sd) {
     if (sd.about) {
       return sd.about;
@@ -377,13 +377,15 @@ function getRecordDate(gedcomx) {
 
 function receivePersona(gedcomx, $status, context, fetching, sourceInfo) {
   fixEventOrders(gedcomx);
-  sourceInfo.gx = gedcomx;
+  sourceInfo.gedcomx = gedcomx;
   fetching.splice(fetching.indexOf(sourceInfo.personaArk), 1);
   let personaArk = getMainPersonaArk(gedcomx);
   if (personaArk !== sourceInfo.personaArk) {
     // This persona has been deprecated & forwarded or something, so update the 'ark' in sourceInfo to point to the new ark.
     sourceInfo.personaArk = personaArk;
   }
+  let person = findPersonInGx(gedcomx, personaArk);
+  sourceInfo.personId = person ? person.id : null;
   sourceInfo.collectionName = getCollectionName(gedcomx);
   sourceInfo.recordDate = getRecordDate(gedcomx);
   sourceInfo.recordDateSortKey = sourceInfo.recordDate ? parseDateIntoNumber(sourceInfo.recordDate).toString() : null;
@@ -450,7 +452,7 @@ function makeMainHtml(context, changeLogMap, $mainTable) {
   let personMinMaxTs = {};
   let personIds = [];
   mainPersonId = context.personId;
-  let allEntries = combineEntries(context.personId, changeLogMap, personIds, personMinMaxTs);
+  allEntries = combineEntries(context.personId, changeLogMap, personIds, personMinMaxTs);
   let html =
     "<div id='tabs'><ul>\n" +
     "  <li><a href='#change-logs-table'><span>Change Logs</span></a></li>\n" +
@@ -1277,7 +1279,7 @@ class MergeNode {
     this.isLater = false;
     let survivorGx = survivorMergeNode ? survivorMergeNode.gedcomx : null;
     // GedcomX within 24 hours of the person's creation, or at the initial time of merge.
-    this.gedcomx = survivorGx ? copySurvivorGx(survivorGx) : getInitialGedcomx(personId);
+    this.gedcomx = survivorGx ? copySurvivorGedcomx(survivorGx) : getInitialGedcomx(personId);
     // Flag for whether only changes in 2012 or within 24 hours of creation have been made to this person's GedcomX so far
     this.isInitialIdentity = true;
 
@@ -1337,6 +1339,20 @@ class MergeNode {
 // ===============
 class PersonDisplay {
   constructor(person, nameClass, status, coupleRelationship, shouldIncludeId) {
+    // To show all names for each person and relative, do this.name = combineNames();
+    // function combineNames() {
+    //   let names = [];
+    //   for (let name of getList(person, "names")) {
+    //     let nameForm = getFirst(getList(name, "nameForms"));
+    //     let fullText = getProperty(nameForm, "fullText");
+    //     let nameHtml = "<span class='" + nameClass + (status ? " " + status : "") + "'>" + encode(fullText ? fullText : "<no name>") + "</span>";
+    //     if (!names.includes(nameHtml)) {
+    //       names.push(nameHtml);
+    //     }
+    //   }
+    //   return names.join("<br>");
+    // }
+
     this.person = person;
     this.name = "<span class='" + nameClass + (status ? " " + status : "") + "'>" + encode(getPersonName(person)) + "</span>";
     this.coupleRelationship = coupleRelationship;
@@ -2345,6 +2361,7 @@ function updateTabsHtml() {
   updateMergeHierarchyHtml();
   updateFlatViewHtml(flatGrouper);
   updateFlatViewHtml(sourceGrouper);
+  updateSplitViewHtml();
 }
 
 function updateFlatViewHtml(grouper) {
@@ -2379,10 +2396,10 @@ function buildPersonaRows() {
   let personaRows = [];
 
   for (let sourceInfo of Object.values(sourceMap)) {
-    if (sourceInfo.personaArk && sourceInfo.gx) {
-      let personaId = findPersonInGx(sourceInfo.gx, shortenPersonArk(sourceInfo.personaArk)).id;
+    if (sourceInfo.personaArk && sourceInfo.gedcomx) {
+      let personaId = findPersonInGx(sourceInfo.gedcomx, shortenPersonArk(sourceInfo.personaArk)).id;
       if (!personaIds.has(personaId)) {
-        personaRows.push(new PersonRow(null, personaId, sourceInfo.gx, 0, 0, false, null, sourceInfo));
+        personaRows.push(new PersonRow(null, personaId, sourceInfo.gedcomx, 0, 0, false, null, sourceInfo));
         personaIds.add(personaId);
       }
     }
@@ -2417,12 +2434,28 @@ const TYPE_SOURCE = "Sources"; // attached source
 // One element of information from the original GedcomX that is either kept on the old person, or copied or moved out to the new person.
 class Element {
   constructor(id, item, type, direction, famId) {
-    this.id = id;
+    this.id = id; // index in split.elements[]
     this.item = item; // name, gender, fact, field, relationship or source [or eventually ordinance] being decided upon.
     this.type = type; // Type of item (see TYPE_* above)
     this.direction = direction; // Direction for this piece of information: DIR_KEEP/COPY/MOVE
-    this.famId = famId; // optional value identifying which family (i.e., spouseId) this relationship element is part of.
-    // (to help group children by spouse).
+    this.famId = famId; // optional value identifying which family (i.e., spouseId) this relationship element is part of, to group children by spouse.
+    this.canExpand = false;
+    // Flag for whether following elements of the same type AND with an 'elementSource' should be displayed.
+    this.isExpanded = false;
+    // Where this came from, if it isn't the main current person.
+    this.elementSource = null;
+    // Flag for whether this element is 'selected', so that it will show even when collapsed.
+    // This also means it will be kept on the resulting person(s), even though 'elementSource' would otherwise cause it to be ignored.
+    this.isSelected = false;
+  }
+
+  isVisible() {
+    return !this.elementSource || this.isSelected;
+  }
+
+  // Tell whether this element is an "extra" value that can be hidden.
+  isExtra() {
+    return !!this.elementSource;
   }
 }
 
@@ -2441,12 +2474,23 @@ class Split {
 
   initElements(gedcomx, personId) {
     function addElement(item, type, famId) {
-      elements.push(new Element(elementIndex++, item, type, DIR_KEEP, famId))
+      let element = new Element(elementIndex++, item, type, DIR_KEEP, famId);
+      if (item.elementSource) {
+        element.elementSource = item.elementSource;
+        delete item["elementSource"];
+      }
+      elements.push(element);
+      return element;
     }
-    function addElements(list, type) {
+    function addElements(list, type, shouldSetCanExpand) {
       if (list) {
+        let isFirst = true;
         for (let item of list) {
-          addElement(item, type);
+          let element = addElement(item, type);
+          if (isFirst && shouldSetCanExpand) {
+            element.canExpand = true;
+          }
+          isFirst = false;
         }
       }
     }
@@ -2489,7 +2533,6 @@ class Split {
           }
         }
       }
-
       for (let parentRel of parentRelationships) {
         addElement(parentRel, TYPE_PARENTS);
       }
@@ -2503,21 +2546,123 @@ class Split {
         }
       }
     }
-
+    function populateExtraNamesAndFacts() {
+      // Tell whether the given newName already exists in names[] (i.e., if they have the same full text on the first name form)
+      function alreadyHasName(names, newName) {
+        function getFullText(name) {
+          let nameForm = getFirst(getList(name, "nameForms"));
+          let fullText = getProperty(nameForm, "fullText");
+          return fullText ? fullText : "<no name>";
+        }
+        if (names) {
+          let targetText = getFullText(newName);
+          if (!isEmpty(targetText)) {
+            for (let name of names) {
+              let fullText = getFullText(name);
+              if (targetText === fullText) {
+                return true;
+              }
+            }
+          }
+        }
+        return false;
+      }
+      function alreadyHasFact(facts, newFact) {
+        function getFactString(fact) {
+          return (fact.type ? extractType(fact.type).replaceAll(/ /g, "") : "<no type>") + ": " +
+            (fact.date && fact.date.original ? fact.date.original.trim().replaceAll(/^0/g, "") : "<no date>") + "; " +
+            (fact.place && fact.place.original ? fact.place.original.trim().replaceAll(/, United States$/g, "") : "<no place>") + "; " +
+            (fact.value && fact.value.text ? fact.value.text : "<no text>");
+        }
+        if (facts) {
+          let newFactString = getFactString(newFact);
+          for (let fact of facts) {
+            let factString = getFactString(fact);
+            if (factString === newFactString) {
+              return true;
+            }
+          }
+        }
+        return false;
+      }
+      // -- addExtraNamesAndFacts()
+      for (let i = allEntries.length - 1; i >= 0; i--) {
+        let entry = allEntries[i];
+        let changeInfo = entry.changeInfo[0];
+        let operation = extractType(getProperty(changeInfo, "operation"));
+        let objectType = extractType(getProperty(changeInfo, "objectType"));
+        let objectModifier = extractType(getProperty(changeInfo, "objectModifier"));
+        if (objectModifier === "Person" && objectType !== "NotAMatch" && operation !== "Delete") {
+          let resultingId = getProperty(changeInfo, "resulting.resourceId");
+          let entryPerson = findPersonByLocalId(entry, resultingId);
+          let combo = operation + "-" + ((entryPerson.hasOwnProperty("facts") && entryPerson.facts.length === 1) ? "(Fact)" : objectType);
+          if (combo === "Create-BirthName" || combo === "Update-BirthName") {
+            if (!alreadyHasName(person.names, entryPerson.names[0])) {
+              let nameCopy = copyObject(entryPerson.names[0]);
+              nameCopy.elementSource = "From person: " + getPersonId(entryPerson);
+              extraNames.push(nameCopy);
+            }
+          }
+          else if (combo === "Create-(Fact)") {
+            if (!alreadyHasFact(allFacts, entryPerson.facts[0])) {
+              let factCopy = copyObject(entryPerson.facts[0]);
+              factCopy.elementSource = "From person: " + getPersonId(entryPerson);
+              allFacts.push(factCopy);
+            }
+          }
+        }
+      }
+      let personaIds = [];
+      for (let sourceInfo of Object.values(sourceMap)) {
+        if (sourceInfo.personaArk && sourceInfo.gedcomx) {
+          let persona = findPersonInGx(sourceInfo.gedcomx, shortenPersonArk(sourceInfo.personaArk));
+          if (persona && !personaIds.includes(persona.id) && persona.facts) {
+            for (let fact of persona.facts) {
+              if (!alreadyHasFact(allFacts, fact)) {
+                let factCopy = copyObject(fact);
+                factCopy.elementSource = "From source: " + sourceInfo.collectionName;
+                allFacts.push(factCopy);
+              }
+            }
+            personaIds.push(persona.id);
+          }
+        }
+      }
+    }
+    // initElements()...
     let elementIndex = 0;
     let elements = [];
     let person = gedcomx.persons[0];
-    addElements(person.names, TYPE_NAME);
+    let extraNames = [];
+    let allFacts = copyObject(person.facts);
+    populateExtraNamesAndFacts();
+    fixEventOrder({"facts" : allFacts});
+    addElements(person.names, TYPE_NAME, extraNames.length > 0);
+    addElements(extraNames, TYPE_NAME);
     addElement(person.gender, TYPE_GENDER);
-    addElements(person.facts, TYPE_FACT);
-    addRelationshipElements(gedcomx);
+    addElements(allFacts, TYPE_FACT, allFacts.length > (person.facts ? person.facts.length : 0));
+    addRelationshipElements(gedcomx); // future: find other relationships that were removed along the way.
     addElements(person.sources, TYPE_SOURCE);
     return elements;
   }
 }
 
 function moveElement(direction, elementId) {
-  split.elements[elementId].direction = direction;
+  let element = split.elements[elementId];
+  element.direction = direction;
+  if (element.direction !== DIR_KEEP && element.isExtra() && !element.isSelected) {
+    element.isSelected = true;
+  }
+  updateSplitViewHtml();
+}
+
+function toggleSplitExpanded(elementIndex) {
+  split.elements[elementIndex].isExpanded = !split.elements[elementIndex].isExpanded;
+  updateSplitViewHtml();
+}
+
+function toggleElement(elementId) {
+  split.elements[elementId].isSelected = !split.elements[elementId].isSelected;
   updateSplitViewHtml();
 }
 
@@ -2532,47 +2677,57 @@ function getSplitViewHtml() {
       (isActive ? "onclick='moveElement(\"" + direction + "\", " + element.id + ")'" : "disabled")
         + ">" + encode(label) + "</button>";
   }
-
+  function getHeadingHtml(element) {
+    let headingClass = (element.type === TYPE_CHILD && prevElement.type === TYPE_SPOUSE) ? "split-children" : "split-heading";
+    let tdHeading = "<td class='" + headingClass + "'>";
+    let buttonHtml = "";
+    if (element.canExpand) {
+      if (!prevElement || element.type !== prevElement.type) {
+        // For "Names" and "Facts", add an expand/collapse button after the label
+        isExpanded = element.isExpanded;
+        buttonHtml = "<button class='collapse-button' onclick='toggleSplitExpanded(" + element.id + ")'>" + encode(isExpanded ? "-" : "+") + "</button>";
+      }
+    } else {
+      isExpanded = false;
+    }
+    return "<tr>"
+      + tdHeading + encode(element.type) + buttonHtml + "</td>"
+      + tdHeading + "</td>"
+      + tdHeading + encode(element.type) + buttonHtml + "</td></tr>\n";
+  }
+  // -- getSplitViewHtml()
   let html = "<table class='split-table'>\n";
   html += "<thead><tr><th>Remaining Person</th><th></th><th>Split-out Person</th></tr></thead>\n";
   html += "<tbody>";
   let prevElement = null;
-  let infoClass = "identity-gx";
+  let isExpanded = false;
+
   for (let element of split.elements) {
     if (element.status === DELETED_STATUS || element.status === MERGE_DELETED_STATUS) {
       continue; // skip elements that have been deleted. (Perhaps we eventually make these available to "reclaim" when splitting out a person)
     }
-    if (!prevElement || element.type !== prevElement.type) {
-      let headingClass = (element.type === TYPE_CHILD && prevElement.type === TYPE_SPOUSE) ? "split-children" : "split-heading";
-      let tdHeading = "<td class='" + headingClass + "'>";
-      html += "<tr>"
-        + tdHeading + encode(element.type) + "</td>"
-        + tdHeading + "</td>"
-        + tdHeading + encode(element.type) + "</td></tr>\n";
+    if (!prevElement || element.type !== prevElement.type || element.famId !== prevElement.famId) {
+      html += getHeadingHtml(element);
     }
-    // Left column.
-    html += "<td class='" + infoClass + "'>";
-    if (element.direction === DIR_KEEP || element.direction === DIR_COPY) {
-      html += getElementHtml(element, split.personId);
-    }
-    html += "</td>";
 
-    // Center buttons
-    html += "<td class='" + infoClass + "'>" + makeButton("<", DIR_KEEP, element) + " " + makeButton("=", DIR_COPY, element) + " " + makeButton(">", DIR_MOVE, element) + "</td>";
+    if (isExpanded || element.isVisible()) {
+      html += "<tr>";
+      // Left column.
+      html += getElementHtml(element, split.personId, element.direction === DIR_KEEP || element.direction === DIR_COPY);
 
-    // Right column
-    html += "<td class='" + infoClass + "'>";
-    if (element.direction === DIR_COPY || element.direction === DIR_MOVE) {
-      html += getElementHtml(element, split.personId);
+      // Center buttons
+      html += "<td class='identity-gx'>" + makeButton("<", DIR_KEEP, element) + " " + makeButton("=", DIR_COPY, element) + " " + makeButton(">", DIR_MOVE, element) + "</td>";
+
+      // Right column
+      html += getElementHtml(element, split.personId, element.direction === DIR_COPY || element.direction === DIR_MOVE);
     }
-    html += "</td></tr>\n";
     prevElement = element;
   }
   html += "</tbody></table>\n";
   return html;
 }
 
-function getElementHtml(element, personId) {
+function getElementHtml(element, personId, shouldDisplay) {
   function getParentsHtml(relationship) {
     let parentHtmls = [];
     for (let parentNumber of ["parent1", "parent2"]) {
@@ -2584,6 +2739,10 @@ function getElementHtml(element, personId) {
     return parentHtmls.join("<br>&nbsp;");
   }
 
+  if (!shouldDisplay) {
+    return "<td class='identity-gx'></td>";
+  }
+  let elementHtml = "";
   switch (element.type) {
     case TYPE_NAME:
       let name = element.item;
@@ -2591,28 +2750,65 @@ function getElementHtml(element, personId) {
       for (let nameForm of getList(name, "nameForms")) {
         nameFormHtmls.push(encode(nameForm.fullText ? nameForm.fullText : "<unknown>"));
       }
-      return "&nbsp;" + nameFormHtmls.join("<br>");
+      elementHtml = "&nbsp;" + nameFormHtmls.join("<br>");
+      break;
     case TYPE_GENDER:
       let gender = element.item;
-      return "&nbsp;" + encode( gender.type ? extractType(gender.type) : "Unknown");
+      elementHtml = "&nbsp;" + encode( gender.type ? extractType(gender.type) : "Unknown");
+      break;
     case TYPE_FACT:
-      return "&nbsp;" + getFactHtml(element.item, true);
+      elementHtml = "&nbsp;" + getFactHtml(element.item, true);
+      break;
     case TYPE_PARENTS:
-      return "&nbsp;" + getParentsHtml(element.item);
+      elementHtml = "&nbsp;" + getParentsHtml(element.item);
+      break;
     case TYPE_SPOUSE:
       let coupleRelationship = element.item;
-      return "&nbsp;" + getRelativeHtml(getSpouseId(coupleRelationship, personId), coupleRelationship.updated);
+      elementHtml = "&nbsp;" + getRelativeHtml(getSpouseId(coupleRelationship, personId), coupleRelationship.updated);
+      break;
     case TYPE_CHILD:
       let childRel = element.item;
-      return "&nbsp;&nbsp;&nbsp;&nbsp;" + getRelativeHtml(getRelativeId(childRel, "child"), childRel.updated);
+      elementHtml = "&nbsp;&nbsp;&nbsp;&nbsp;" + getRelativeHtml(getRelativeId(childRel, "child"), childRel.updated);
+      break;
     case TYPE_SOURCE:
       let sourceInfo = sourceMap[element.item.description];
       if (sourceInfo.personaArk) {
-        return "<a href='" + sourceInfo.personaArk + "' target='_blank'>" + encode(sourceInfo.collectionName) + "</a>";
+        elementHtml = "<a href='" + sourceInfo.personaArk + "' target='_blank'>" + encode(sourceInfo.collectionName) + "</a>";
       }
-      return encode(sourceInfo.collectionName);
+      else {
+        elementHtml = encode(sourceInfo.collectionName);
+      }
+      return wrapTooltip(element, elementHtml, sourceInfo.gedcomx ? getGedcomxSummary(sourceInfo.gedcomx, sourceInfo.personId) : null);
     // future: TYPE_ORDINANCE...
   }
+  return wrapTooltip(element, elementHtml, element.elementSource ? encode(element.elementSource) : null);
+}
+
+function wrapTooltip(element, mainHtml, tooltipHtml) {
+  if (!tooltipHtml) {
+    return "<td class='identity-gx'>" + mainHtml + "</td>";
+  }
+  return "<td class='split-extra tooltip'>"
+    + (element.isExtra() ? "<input id='extra-" + element.id + "' type='checkbox' onchange='toggleElement(" + element.id + ")'" + (element.isSelected ? " checked" : "") + ">" : "")
+    + "<label for='extra-" + element.id + "' class='tooltip'>" + mainHtml + "<span class='tooltiptext'>" + tooltipHtml + "</span></label></td>";
+}
+
+// Get an HTML summary of the info in the given gedcomx file.
+function getGedcomxSummary(gedcomx, personId) {
+  if (!gedcomx || !personId) {
+    return "";
+  }
+
+  let person = findPersonInGx(gedcomx, personId);
+  let lines = [];
+  lines.push(getPersonName(person));
+  if (person.facts) {
+    for (let fact of person.facts) {
+      lines.push(getFactHtml(fact, true));
+    }
+  }
+  //future: Include relatives...
+  return lines.join("<br>");
 }
 
 function updateGroupName(groupId) {
@@ -2671,7 +2867,8 @@ function getTableHeader(usedColumns, maxDepth, shouldIndent, grouper) {
   }
   function datePlaceLabelHtml(columnName, label) {
     return sortHeader(columnName, label, "sort-date")
-    + (grouper ? "<span class='sort-place' onclick='sortColumn(\"" + columnName + "-place" + "\", \"" + grouper.id + "\")'>" + encode(" place ") + "</span>" : "");
+        + (grouper ? "<span class='sort-place' onclick='sortColumn(\"" + columnName + "-place" + "\", \"" + grouper.id + "\")'>"
+        + encode(" place ") + "</span>" : "");
   }
   function cell(columnName, label, alwaysInclude) {
     if (alwaysInclude || usedColumns.has(columnName)) {
@@ -2682,6 +2879,7 @@ function getTableHeader(usedColumns, maxDepth, shouldIndent, grouper) {
     return "";
   }
 
+  // --- getTableHeader()
   let colspan = shouldIndent ? " colspan='" + maxDepth + "'" : "";
   return "<table><th" + colspan + ">"
       + (grouper && grouper.tabId === SOURCES_VIEW ?
@@ -2859,6 +3057,7 @@ function getPersonId(person) {
 }
 
 function findPersonInGx(gedcomx, personId) {
+  personId = shortenPersonArk(personId);
   if (gedcomx && personId && gedcomx.hasOwnProperty("persons")) {
     for (let person of gedcomx.persons) {
       let gxPersonId = getPersonId(person)
@@ -3100,7 +3299,7 @@ function copyObject(object) {
 }
 
 // Copy the survivor's gedcomx object, mapping status to "merge-" + original status.
-function copySurvivorGx(gx) {
+function copySurvivorGedcomx(gedcomx) {
   function mapStatus(obj) {
     if (obj && obj.status) {
       if (obj.status === ORIG_STATUS || obj.status === ADDED_STATUS || obj.status === DELETED_STATUS || obj.status === CHANGED_STATUS) {
@@ -3109,8 +3308,8 @@ function copySurvivorGx(gx) {
     }
   }
 
-  gx = copyObject(gx);
-  for (let person of getList(gx, "persons")) {
+  gedcomx = copyObject(gedcomx);
+  for (let person of getList(gedcomx, "persons")) {
     mapStatus(person.gender);
     for (let name of getList(person, "names")) {
       mapStatus(name);
@@ -3122,11 +3321,11 @@ function copySurvivorGx(gx) {
       mapStatus(source);
     }
   }
-  for (let relationship of getList(gx, "relationships").concat(getList(gx, CHILD_REL))) {
+  for (let relationship of getList(gedcomx, "relationships").concat(getList(gedcomx, CHILD_REL))) {
     mapStatus(relationship);
   }
   //future: Handle memories, too.
-  return gx;
+  return gedcomx;
 }
 
 // Add a fact to a relationship or update one.
@@ -3355,7 +3554,7 @@ function updateGedcomx(gedcomx, entry, isOrig) {
         break;
       case "Create-(Fact)":
         console.assert(entryPerson.hasOwnProperty("facts") && entryPerson.facts.length === 1, "Expected one fact in entry");
-        console.assert(extractType(entryPerson["facts"][0].type) === objectType, "Mismatched fact type in fact creation");
+        console.assert(extractType(entryPerson["facts"][0].type) === objectType || objectType === "Fact", "Mismatched fact type in fact creation: " + extractType(entryPerson["facts"][0].type) + " != " + objectType);
         addFact(gxPerson, entryPerson.facts[0], isOrig, isPartOfMerge);
         break;
       case "Delete-(Fact)":
