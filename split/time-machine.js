@@ -206,11 +206,7 @@ function updateRelativeMap(gedcomx, timestamp, listName, relativeKeys) {
           let relativeId = relationship[relativeKey].resourceId;
           let relative = findPersonInGx(gedcomx, relativeId);
           if (relative) {
-            let relativeInfo = relativeMap[relativeId];
-            if (!relativeInfo) {
-              relativeInfo = new RelativeInfo(relativeId);
-              relativeMap[relativeId] = new RelativeInfo(relativeId);
-            }
+            let relativeInfo = computeIfAbsent(relativeMap, relativeId, () => new RelativeInfo(relativeId));
             relativeInfo.addDisplay(timestamp, relative.display);
           }
         }
@@ -219,13 +215,18 @@ function updateRelativeMap(gedcomx, timestamp, listName, relativeKeys) {
   }
 }
 
-function computeIfAbsent(map, key, initialValueIfAbsent) {
+// Get the value of map[key]. If not present, use the supplied function to create a default value,
+//   add that value to the map, and return the value.
+function computeIfAbsent(map, key, defaultValueFunction) {
   let value = map[key];
   if (value) {
     return value;
   }
-  map[key] = initialValueIfAbsent;
-  return initialValueIfAbsent;
+  else {
+    value = defaultValueFunction();
+    map[key] = value;
+    return value;
+  }
 }
 
 let sourceInfoIndex = 0;
@@ -689,11 +690,7 @@ function getNewMergeIds(personId, changeLogEntries) {
             let removedPersonId = extractPersonId(personUrl);
             mergeIds.push(removedPersonId);
             // List of merges (usually just one, unless this person was "restored" later) where the removedPersonId went away.
-            let mergeList = mergeMap[removedPersonId];
-            if (!mergeList) {
-              mergeList = [];
-              mergeMap[removedPersonId] = mergeList;
-            }
+            let mergeList = computeIfAbsent(mergeMap, removedPersonId, () => []);
             mergeList.push({"survivor": personId, "timestamp": entry.updated});
           }
         }
@@ -2326,11 +2323,7 @@ function getRootMergeNode(allEntries) {
       continue;
     }
     let personId = entry.personId;
-    let mergeNode = personNodeMap[personId];
-    if (!mergeNode) {
-      mergeNode = new MergeNode(personId);
-      personNodeMap[personId] = mergeNode;
-    }
+    let mergeNode = computeIfAbsent(personNodeMap, personId, () => new MergeNode(personId));
     // When a merge happens, the 'duplicate' gets relationships removed and then a person delete in its change log.
     // But we want to display the person as they were just before the merge, so we will ignore those changes.
     if (isMergeEntry(entry)) {
@@ -2831,10 +2824,9 @@ function updateSplitViewHtml() {
 function getSplitViewHtml() {
   function makeButton(label, direction, element) {
     let isActive = direction !== element.direction;
-    let buttonHtml = "<button class='dir-button' " +
+    return "<button class='dir-button' " +
       (isActive ? "onclick='moveElement(\"" + direction + "\", " + element.id + ")'" : "disabled") + ">" +
       encode(label) + "</button>";
-    return buttonHtml;
   }
   function getHeadingHtml(element) {
     let headingClass = (element.type === TYPE_CHILD && prevElement.type === TYPE_SPOUSE) ? "split-children" : "split-heading";
