@@ -27,13 +27,12 @@ let mainPersonId = null;
 // Note that these are fetched after the ChangeLogHtml is built, so if a user hovers over a cell,
 //   it will only include the extra info (like source title or relative name) if that has been fetched.
 // Map of source URL -> {title: <title>, ark: <ark>, [and perhaps, gedcomx: <recordGx>]} (initially source URL -> null until fetched).
-let sourceMap = {}
+let sourceMap = {};
 
-// Map of relative personId -> timestamp -> {"name":, "gender":, "lifespan"} (and, eventually, "ts-name": name at that timestamp).
-//   where the timestamps are all the timestamps at which a change log of the main person(s) reference that relative.
-//   (Initially, the name is just the name given in the change log, which appears to be the latest name)
-//   todo: fetch relatives' change logs and replace the latest name with the name at the time of the timestamp.
+// Map of relative personId -> RelativeInfo
 let relativeMap = {}
+// Flag for whether we have finished receiving relative sources.
+let relativeSourcesReceived = false;
 
 // Map of duplicatePersonId -> array of [{ "survivor": <survivorPersonId>, "timestamp": <timestamp of merge>}]
 let mergeMap = {}
@@ -138,7 +137,7 @@ function receiveChangeLog(gedcomx, personId, context, changeLogMap, fetching, $m
 }
 
 function fetchRelativesAndSources(changeLogMap, $status, context) {
-  // Populate sourceMap[sourceUrl] = null, and relativeMap[relativeId] = null,
+  // Populate sourceMap[sourceUrl] = null, and relativeMap[relativeId].
   // so that the keys of these maps can be used to fill in the values.
   for (let personId of Object.keys(changeLogMap)) {
     let entries = changeLogMap[personId];
@@ -147,13 +146,14 @@ function fetchRelativesAndSources(changeLogMap, $status, context) {
       if (entry.content && entry.content.gedcomx) {
         let gedcomx = entry.content.gedcomx;
         gatherSources(sourceMap, findPersonInGx(gedcomx, personId));
-        gatherNames(gedcomx, timestamp,"relationships", ["person1", "person2"]);
-        gatherNames(gedcomx, timestamp, CHILD_REL, ["parent1", "parent2", "child"]);
+        updateRelativeMap(gedcomx, timestamp,"relationships", ["person1", "person2"]);
+        updateRelativeMap(gedcomx, timestamp, CHILD_REL, ["parent1", "parent2", "child"]);
       }
     }
   }
 
   let fetching = [...Object.keys(sourceMap)];
+
   setStatus($status, "Fetching " + fetching.length + " sources...");
   for (let sourceUrl of Object.keys(sourceMap)) {
     $.ajax({
@@ -172,9 +172,9 @@ function fetchRelativesAndSources(changeLogMap, $status, context) {
   }
 }
 
-// Look for a source reference on the given entity (i.e., person).
+// Look for a source reference on the given entity (i.e., person), and add it to the (global) sourceMap.
 function gatherSources(sourceMap, entity) {
-  let sourceUrl = getSourceUrl(entity);
+  let sourceUrl = getOnlySourceUrl(entity);
   if (sourceUrl) {
     let sourceInfo = sourceMap[sourceUrl];
     if (!sourceInfo) {
@@ -183,7 +183,7 @@ function gatherSources(sourceMap, entity) {
   }
 }
 
-function getSourceUrl(entity) {
+function getOnlySourceUrl(entity) {
   if (entity && entity.sources && entity.sources.length > 0) {
     if (entity.sources.length > 1) {
       // This is unexpected, because the entity we're getting should come from a change log entry with only one source on one person.
@@ -193,26 +193,39 @@ function getSourceUrl(entity) {
   }
 }
 
-function gatherNames(gedcomx, timestamp, listName, personKeys) {
+// Populate relativeMap[relativeId] -> tsMap[timestamp] -> relative.display
+// Note that relative.display is currently the same for all timestamps,
+//   because the change log always provides the latest forwarded ID and latest information for each relative,
+//   instead of what they would have looked like at the time.
+// Future: use relatives' change log to show what they looked like at the time.
+function updateRelativeMap(gedcomx, timestamp, listName, relativeKeys) {
   if (gedcomx[listName]) {
     for (let relationship of gedcomx[listName]) {
-      for (let relative of personKeys) {
-        if (relationship[relative]) {
-          let relativeId = relationship[relative].resourceId;
-          for (let person of gedcomx.persons) {
-            if (person.id === relativeId) {
-              let tsMap = relativeMap[relativeId];
-              if (!tsMap) {
-                tsMap = {}
-                relativeMap[relativeId] = tsMap;
-              }
-              tsMap[timestamp] = person.display;
+      for (let relativeKey of relativeKeys) {
+        if (relationship[relativeKey]) {
+          let relativeId = relationship[relativeKey].resourceId;
+          let relative = findPersonInGx(gedcomx, relativeId);
+          if (relative) {
+            let relativeInfo = relativeMap[relativeId];
+            if (!relativeInfo) {
+              relativeInfo = new RelativeInfo(relativeId);
+              relativeMap[relativeId] = new RelativeInfo(relativeId);
             }
+            relativeInfo.addDisplay(timestamp, relative.display);
           }
         }
       }
     }
   }
+}
+
+function computeIfAbsent(map, key, initialValueIfAbsent) {
+  let value = map[key];
+  if (value) {
+    return value;
+  }
+  map[key] = initialValueIfAbsent;
+  return initialValueIfAbsent;
 }
 
 let sourceInfoIndex = 0;
@@ -236,6 +249,25 @@ class SourceInfo {
   }
 }
 
+class RelativeInfo {
+  constructor(relativeId) {
+    this.relativeId = relativeId;
+    // Map of ts -> FS display for the relative at that timestamp.
+    // (Currently the same for all timestamps, so not really helpful).
+    this.tsMap = {};
+    // Set of persona Arks attached to this relative.
+    this.attachedPersonaArks = new Set();
+  }
+
+  addDisplay(timestamp, fsDisplay) {
+    this.tsMap[timestamp] = fsDisplay; // FamilySearch 'display' element with some info in it.
+  }
+
+  addPersonaArk(personaArk) {
+    this.attachedPersonaArks.add(personaArk);
+  }
+}
+
 /**
  * Receive a SourceDescription from an AJAX call.
  * @param gedcomx - GedcomX containing the SourceDescription
@@ -243,8 +275,7 @@ class SourceInfo {
  * @param context - Context info such as session ID.
  * @param fetching - List of sourceUrls still being fetched.
  * @param sourceUrl - SourceUrl fetched for this call
- * @param sourceMap - (Global) map of sourceUrl -> array of personIDs with this source attached.
- *                    This function replaces that array with a SourceInfo object.
+ * @param sourceMap - (Global) map of sourceUrl -> SourceInfo for that source (which is filled out here).
  */
 function receiveSourceDescription(gedcomx, $status, context, fetching, sourceUrl, sourceMap) {
   if (gedcomx && "sourceDescriptions" in gedcomx && gedcomx.sourceDescriptions.length) {
@@ -392,20 +423,21 @@ function receivePersona(gedcomx, $status, context, fetching, sourceInfo) {
   sourceInfo.recordDate = getRecordDate(gedcomx);
   sourceInfo.recordDateSortKey = sourceInfo.recordDate ? parseDateIntoNumber(sourceInfo.recordDate).toString() : null;
   if (fetching.length) {
-    setStatus($status, "Fetching " + fetching.length + "/" + sourceMap.size + " sources...");
+    setStatus($status, "Fetching " + fetching.length + "/" + Object.keys(sourceMap).length + " sources...");
   }
   else {
-    finishedReceivingSources($status);
+    finishedReceivingSources($status, context);
   }
 }
 
-function finishedReceivingSources($status) {
+function finishedReceivingSources($status, context) {
   clearStatus($status);
   setSourcePersonIds();
   $("#" + SOURCES_VIEW).html(getSourcesViewHtml());
   split = new Split(mergeGrouper.mergeGroups[0].personRows[0].gedcomx);
   updateSplitViewHtml();
   makeTableHeadersDraggable();
+  fetchRelativeSources($status, context);
 }
 
 function setSourcePersonIds() {
@@ -423,6 +455,55 @@ function setSourcePersonIds() {
         }
       }
     }
+  }
+}
+
+// Begin fetching the list of source descriptions for each relative,
+//   so that we can know what persona Arks are attached to each relative.
+//   This allows us to know which sources attached to the main person have relatives
+//   with corresponding attachments in the same source.
+// For example, say person A has husband B in Family Tree; and that a marriage record R has a bride X and groom Y;
+//   If X is attached to A, then if Y is also attached to B, then we can say that this source "supports" the
+//   Couple relationship between A&B, because X&Y are a couple and A=X and B=Y.
+function fetchRelativeSources($status, context) {
+  let fetching = [...Object.keys(relativeMap)];
+
+  setStatus($status, "Fetching " + fetching.length + " relatives' sources...");
+  for (let relativeId of Object.keys(relativeMap)) {
+    let sourceUrl = "https://www.familysearch.org/platform/tree/persons/" + relativeId + "/sources";
+    $.ajax({
+      beforeSend: function(request) {
+        request.setRequestHeader("Accept", "application/json");
+        if (context.sessionId) {
+          request.setRequestHeader("Authorization", "Bearer " + context.sessionId);
+        }
+      },
+      dataType: "json",
+      url: sourceUrl,
+      success:function(gedcomx){
+        receiveRelativeSources(gedcomx, $status, context, fetching, relativeId);
+      }
+    });
+  }
+}
+
+function receiveRelativeSources(gedcomx, $status, context, fetching, relativeId) {
+  if (gedcomx && "sourceDescriptions" in gedcomx && gedcomx.sourceDescriptions.length) {
+    let relativeInfo = relativeMap[relativeId];
+    fetching.splice(fetching.indexOf(relativeId), 1);
+    for (let sd of gedcomx.sourceDescriptions) {
+      if (sd.about && sd.about.includes("ark:/61903")) {
+        relativeInfo.addPersonaArk(sd.about);
+      }
+    }
+  }
+  if (fetching.length) {
+    setStatus($status, "Fetching " + fetching.length + "/" + Object.keys(sourceMap).length + " relatives' sources...");
+  }
+  else {
+    // Finished receiving relative sources
+    clearStatus($status);
+    relativeSourcesReceived = true;
   }
 }
 
@@ -1123,9 +1204,9 @@ function getRelativeId(rel, key) {
 }
 
 function getRelativeName(relativeId, timestamp) {
-  let tsMap = relativeMap[relativeId];
-  if (tsMap) {
-    let relativeDisplay = tsMap[timestamp];
+  let relativeInfo = relativeMap[relativeId];
+  if (relativeInfo) {
+    let relativeDisplay = relativeInfo.tsMap[timestamp];
     if (relativeDisplay && relativeDisplay.name) {
       return relativeDisplay.name;
     }
@@ -1134,7 +1215,7 @@ function getRelativeName(relativeId, timestamp) {
 }
 
 function getSourceReferenceHtml(entity) {
-  let sourceUrl = getSourceUrl(entity);
+  let sourceUrl = getOnlySourceUrl(entity);
   let sourceInfo = sourceMap[sourceUrl];
   if (sourceInfo && ("title" in sourceInfo || "ark" in sourceInfo)) {
     let title = "title" in sourceInfo ? "<span class='source-title'>" + encode(sourceInfo.title) + "</span><br>" : "";
@@ -2455,13 +2536,13 @@ function splitOnSources(sourceGrouper, sourceGroup) {
       case TYPE_FACT:
         break;
       case TYPE_SPOUSE:
+        let coupleRelationship = element.item;
+
         break;
       case TYPE_CHILD:
         break;
       case TYPE_SOURCE:
-        let sourceReference = element.item;
-        let elementSourceInfo = sourceMap[sourceReference.description];
-        element.direction = splitSourceIds.has(elementSourceInfo.sourceId) ? DIR_MOVE : DIR_KEEP;
+        element.direction = splitSourceIds.has(element.sourceId) ? DIR_MOVE : DIR_KEEP;
         break;
     }
   }
@@ -2505,6 +2586,7 @@ class Element {
     this.isExpanded = false;
     // Where this came from, if it isn't the main current person.
     this.elementSource = null;
+    this.sourceInfo = null;
     // Flag for whether this element is 'selected', so that it will show even when collapsed.
     // This also means it will be kept on the resulting person(s), even though 'elementSource' would otherwise cause it to be ignored.
     this.isSelected = false;
@@ -2539,6 +2621,10 @@ class Split {
       if (item.elementSource) {
         element.elementSource = item.elementSource;
         delete item["elementSource"];
+      }
+      if (type === TYPE_SOURCE) {
+        let sourceReference = element.item;
+        element.sourceInfo = sourceMap[sourceReference.description];
       }
       elements.push(element);
       return element;
@@ -2718,6 +2804,7 @@ function getFullText(name) {
   return fullText ? fullText : "<no name>";
 }
 
+// Don't delete: Really is used, IntelliJ just can't tell.
 function moveElement(direction, elementId) {
   let element = split.elements[elementId];
   element.direction = direction;
@@ -2747,7 +2834,6 @@ function getSplitViewHtml() {
     let buttonHtml = "<button class='dir-button' " +
       (isActive ? "onclick='moveElement(\"" + direction + "\", " + element.id + ")'" : "disabled") + ">" +
       encode(label) + "</button>";
-    console.log("Button html: " + buttonHtml);
     return buttonHtml;
   }
   function getHeadingHtml(element) {
