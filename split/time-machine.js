@@ -215,8 +215,10 @@ function gatherNames(gedcomx, timestamp, listName, personKeys) {
   }
 }
 
+let sourceInfoIndex = 0;
 class SourceInfo {
   constructor() {
+    this.sourceId = sourceInfoIndex++;
     this.title = null;
     this.isExtraction = null;
     this.personaArk = null;
@@ -2416,10 +2418,69 @@ function getSourcesViewHtml() {
 
 //====== Split ========
 
+// Use the PersonRows in the given group (sources or eventually flat or even merge hierarchy view)
+//   to decide which Elements to move to each side in the Split view. (aka "applyToSplit")
+function splitOnGroup(groupId) {
+  let grouper = grouperMap[groupId];
+  let mergeGroup = grouper.findGroup(groupId);
+  if (grouper.tabId === SOURCES_VIEW) {
+    splitOnSources(grouper, mergeGroup);
+  }
+  updateSplitViewHtml();
+  $("#tabs").tabs("option", "active", 4);
+}
+
+// sourceGrouper - Grouper for the source view
+// sourceGroup - The group of sources being applied to infer out to split the person.
+function splitOnSources(sourceGrouper, sourceGroup) {
+  function gatherSourcesFromGroup(sourceGroup) {
+    let sourceIds = new Set();
+    for (let personRow of sourceGroup.personRows) {
+      sourceIds.add(personRow.sourceInfo.sourceId);
+    }
+    return sourceIds;
+  }
+
+  let splitSourceIds = gatherSourcesFromGroup(sourceGroup);
+  for (let element of split.elements) {
+    // Clear element directions, so we know which ones haven't been decided yet.
+    element.direction = DIR_NULL;
+    switch (element.type) {
+      case TYPE_NAME:
+        let fullName = getFullText(element.item);
+        break;
+      case TYPE_GENDER:
+        element.direction = DIR_COPY;
+        break;
+      case TYPE_FACT:
+        break;
+      case TYPE_SPOUSE:
+        break;
+      case TYPE_CHILD:
+        break;
+      case TYPE_SOURCE:
+        let sourceReference = element.item;
+        let elementSourceInfo = sourceMap[sourceReference.description];
+        element.direction = splitSourceIds.has(elementSourceInfo.sourceId) ? DIR_MOVE : DIR_KEEP;
+        break;
+    }
+  }
+  // Move sources to DIR_MOVE
+
+  //todo: Move sources to DIR_MOVE
+  //todo: gather list of person IDs and source URLs when creating elements
+  //todo: Move or copy elements that came from any of these sources (copy if also came from sources not moving over)
+  //todo: Move or copy corresponding relatives (copy if also correspond to sources not moving over)
+  //todo: Display DIR_NULL as yellow or something (at least those not extra or w/o empty checkboxes)
+  //todo: Map original identities according to sources
+  //todo: Move or copy elements from chosen original identities, too.
+  //todo: Move remaining elements based on similarity (leave unchecked extras unchecked, but still move them over).
+}
 // Direction to move each element
 const DIR_KEEP = "keep"; // keep on the "survivor".
 const DIR_COPY = "copy"; // keep on the survivor and also copy to the "split"
 const DIR_MOVE = "move"; // remove from the survivor and move to the "split"
+const DIR_NULL = null; // not decided yet
 
 // Type of information in each element. Note: The String will be used in the HTML display.
 const TYPE_NAME = "Name";
@@ -2503,7 +2564,6 @@ class Split {
           }
         }
       }
-
       // child-and-parents relationships in which the person is a child, i.e., containing the person's parents
       let parentRelationships = [];
       // map of spouseId -> Couple relationship for that spouse
@@ -2549,11 +2609,6 @@ class Split {
     function populateExtraNamesAndFacts() {
       // Tell whether the given newName already exists in names[] (i.e., if they have the same full text on the first name form)
       function alreadyHasName(names, newName) {
-        function getFullText(name) {
-          let nameForm = getFirst(getList(name, "nameForms"));
-          let fullText = getProperty(nameForm, "fullText");
-          return fullText ? fullText : "<no name>";
-        }
         if (names) {
           let targetText = getFullText(newName);
           if (!isEmpty(targetText)) {
@@ -2629,7 +2684,7 @@ class Split {
         }
       }
     }
-    // initElements()...
+    // --- initElements()...
     let elementIndex = 0;
     let elements = [];
     let person = gedcomx.persons[0];
@@ -2642,9 +2697,25 @@ class Split {
     addElement(person.gender, TYPE_GENDER);
     addElements(allFacts, TYPE_FACT, allFacts.length > (person.facts ? person.facts.length : 0));
     addRelationshipElements(gedcomx); // future: find other relationships that were removed along the way.
-    addElements(person.sources, TYPE_SOURCE);
+    if (person.sources) {
+      person.sources.sort(compareSourceReferences);
+      addElements(person.sources, TYPE_SOURCE);
+    }
     return elements;
   }
+}
+
+function compareSourceReferences(a, b) {
+  let sourceInfo1 = sourceMap[a.description];
+  let sourceInfo2 = sourceMap[b.description];
+  return sourceInfo1.recordDateSortKey.localeCompare(sourceInfo2.recordDateSortKey);
+}
+
+// Get the full text of the first name form of the name object.
+function getFullText(name) {
+  let nameForm = getFirst(getList(name, "nameForms"));
+  let fullText = getProperty(nameForm, "fullText");
+  return fullText ? fullText : "<no name>";
 }
 
 function moveElement(direction, elementId) {
@@ -2673,9 +2744,11 @@ function updateSplitViewHtml() {
 function getSplitViewHtml() {
   function makeButton(label, direction, element) {
     let isActive = direction !== element.direction;
-    return "<button class='dir-button' " +
-      (isActive ? "onclick='moveElement(\"" + direction + "\", " + element.id + ")'" : "disabled")
-        + ">" + encode(label) + "</button>";
+    let buttonHtml = "<button class='dir-button' " +
+      (isActive ? "onclick='moveElement(\"" + direction + "\", " + element.id + ")'" : "disabled") + ">" +
+      encode(label) + "</button>";
+    console.log("Button html: " + buttonHtml);
+    return buttonHtml;
   }
   function getHeadingHtml(element) {
     let headingClass = (element.type === TYPE_CHILD && prevElement.type === TYPE_SPOUSE) ? "split-children" : "split-heading";
@@ -2713,13 +2786,13 @@ function getSplitViewHtml() {
     if (isExpanded || element.isVisible()) {
       html += "<tr>";
       // Left column.
-      html += getElementHtml(element, split.personId, element.direction === DIR_KEEP || element.direction === DIR_COPY);
+      html += getElementHtml(element, split.personId, element.direction !== DIR_MOVE);
 
       // Center buttons
       html += "<td class='identity-gx'>" + makeButton("<", DIR_KEEP, element) + " " + makeButton("=", DIR_COPY, element) + " " + makeButton(">", DIR_MOVE, element) + "</td>";
 
       // Right column
-      html += getElementHtml(element, split.personId, element.direction === DIR_COPY || element.direction === DIR_MOVE);
+      html += getElementHtml(element, split.personId, element.direction !== DIR_KEEP);
     }
     prevElement = element;
   }
@@ -2785,10 +2858,11 @@ function getElementHtml(element, personId, shouldDisplay) {
 }
 
 function wrapTooltip(element, mainHtml, tooltipHtml) {
+  let undecidedClass = element.direction === DIR_NULL ? " undecided" : "";
   if (!tooltipHtml) {
-    return "<td class='identity-gx'>" + mainHtml + "</td>";
+    return "<td class='identity-gx " + undecidedClass + "'>" + mainHtml + "</td>";
   }
-  return "<td class='split-extra tooltip'>"
+  return "<td class='split-extra tooltip" + undecidedClass + "'>"
     + (element.isExtra() ? "<input id='extra-" + element.id + "' type='checkbox' onchange='toggleElement(" + element.id + ")'" + (element.isSelected ? " checked" : "") + ">" : "")
     + "<label for='extra-" + element.id + "' class='tooltip'>" + mainHtml + "<span class='tooltiptext'>" + tooltipHtml + "</span></label></td>";
 }
@@ -2836,12 +2910,19 @@ function getGrouperHtml(grouper) {
   for (let groupIndex = 0; groupIndex < grouper.mergeGroups.length; groupIndex++) {
     let personGroup = grouper.mergeGroups[groupIndex];
     if (grouper.mergeGroups.length > 1) {
+      let isEmptyGroup = isEmpty(personGroup.personRows.length);
       html += "<tr class='group-header'><td class='group-header' colspan='" + numColumns + "'>"
-          + (isEmpty(personGroup.personRows.length) ? "<button class='close-button' onclick='deleteEmptyGroup(\"" + personGroup.groupId + "\")'>X</button>" : "")
+          // Close button for empty groups
+          + (isEmptyGroup ? "<button class='close-button' onclick='deleteEmptyGroup(\"" + personGroup.groupId + "\")'>X</button>" : "")
+          // Group name
           + "<div class='group-name' contenteditable='true' id='" + personGroup.groupId
           + "' onkeyup='updateGroupName(\"" + personGroup.groupId + "\")'>"
-          + encode(personGroup.groupName)
-          + "</div><button class='add-to-group-button' onclick='addSelectedToGroup(\"" + personGroup.groupId + "\")'>Add to group</button></td></tr>\n";
+          + encode(personGroup.groupName) + "</div>"
+          // "Add to Group" button
+          + "<button class='add-to-group-button' onclick='addSelectedToGroup(\"" + personGroup.groupId + "\")'>Add to group</button>"
+          // "Apply to Split" button
+          + (groupIndex < 1 || isEmptyGroup ? "" : "<button class='apply-button' onclick='splitOnGroup(\"" + personGroup.groupId + "\")'>Apply to Split</button>")
+          + "</td></tr>\n";
     }
     for (let personRow of personGroup.personRows) {
       html += personRow.getHtml(grouper.usedColumns, false);

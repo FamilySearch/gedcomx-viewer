@@ -272,6 +272,8 @@ td {
 .group-header {
     background-color: white;
     border-style: none;
+    border-bottom: 2px solid #add2ad;
+    padding-top: 10px;
 }
 .group-name {
     display: inline-block;
@@ -289,6 +291,13 @@ td {
     vertical-align: top;
     color: darkgreen;
     background-color: #decfb5;
+}
+.apply-button {
+    display: inline-block;
+    float: right;
+    vertical-align: top;
+    color: #731313;
+    background-color: #deb6b5;
 }
 a:link {
     text-decoration: none;
@@ -347,8 +356,6 @@ a:hover {
 
 .tooltip {
     position: relative;
-    display: inline-block;
-    width: 100%;
 }
 
 .tooltip .tooltiptext {
@@ -368,7 +375,6 @@ a:hover {
     content: "";
     position: absolute;
     top: 100%;
-    left: 20px;
     margin-left: -5px;
     border-width: 5px;
     border-style: solid;
@@ -377,4 +383,8 @@ a:hover {
 
 .tooltip:hover .tooltiptext {
     visibility: visible;
+}
+
+.undecided {
+    background-color: #fdfdf2;
 }
