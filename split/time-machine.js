@@ -1566,8 +1566,8 @@ const INCLUDE_ALL_FACTS = "all";
 class DisplayOptions {
   constructor() {
     // Option (INCLUDE_NO/VITAL/ALL_FACTS) for which facts to display.
-    this.factsToInclude = INCLUDE_ALL_FACTS;
-    this.shouldShowChildren = true;
+    this.factsToInclude = INCLUDE_VITAL_FACTS;
+    this.shouldShowChildren = false;
     // Flag for whether to include 'identity' (up to 24 hours after creation or 2012 + 2015 source attachments)
     // and also 'latest' (just before merge).
     this.shouldIncludeBeforeAfter = false;
@@ -2505,7 +2505,7 @@ function splitOnGroup(groupId) {
 }
 
 // sourceGrouper - Grouper for the source view
-// sourceGroup - The group of sources being applied to infer out to split the person.
+// sourceGroup - The group of sources being applied to infer how to split the person.
 function splitOnSources(sourceGrouper, sourceGroup) {
   function gatherSourcesFromGroup(sourceGroup) {
     let sourceIds = new Set();
@@ -2535,7 +2535,7 @@ function splitOnSources(sourceGrouper, sourceGroup) {
       case TYPE_CHILD:
         break;
       case TYPE_SOURCE:
-        element.direction = splitSourceIds.has(element.sourceId) ? DIR_MOVE : DIR_KEEP;
+        element.direction = splitSourceIds.has(element.sourceInfo.sourceId) ? DIR_MOVE : DIR_KEEP;
         break;
     }
   }
