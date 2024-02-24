@@ -44,6 +44,7 @@ const PARENT_CHILD_REL = "http://gedcomx.org/ParentChild"
 // Fetch the change log entries for the person given by the change log URL.
 function buildChangeLogView(changeLogUrl, sessionId, $mainTable, $status) {
   let context = parsePersonUrl(changeLogUrl);
+  mainPersonId = context.personId;
   if (sessionId) {
     context["sessionId"] = sessionId;
   }
@@ -252,11 +253,12 @@ class SourceInfo {
 
 class RelativeInfo {
   constructor(relativeId) {
+    // Family Tree person ID for a relative.
     this.relativeId = relativeId;
     // Map of ts -> FS display for the relative at that timestamp.
     // (Currently the same for all timestamps, so not really helpful).
     this.tsMap = {};
-    // Set of persona Arks attached to this relative.
+    // Set of shortened persona Arks attached to this relative (like 1:1:XXXX-YYY)
     this.attachedPersonaArks = new Set();
   }
 
@@ -265,7 +267,7 @@ class RelativeInfo {
   }
 
   addPersonaArk(personaArk) {
-    this.attachedPersonaArks.add(personaArk);
+    this.attachedPersonaArks.add(shortenPersonArk(personaArk));
   }
 }
 
@@ -535,7 +537,6 @@ const SPLIT_VIEW   = "split-view";
 function makeMainHtml(context, changeLogMap, $mainTable) {
   let personMinMaxTs = {};
   let personIds = [];
-  mainPersonId = context.personId;
   allEntries = combineEntries(context.personId, changeLogMap, personIds, personMinMaxTs);
   let html =
     "<div id='tabs'><ul>\n" +
@@ -2487,6 +2488,7 @@ function getSourcesViewHtml() {
   let personaRows = buildPersonaRows();
   let usedColumns = findUsedColumns(personaRows);
   sourceGrouper = new Grouper(personaRows, usedColumns, 0, SOURCES_VIEW);
+  sourceGrouper.sort("record-date");
   return getGrouperHtml(sourceGrouper, true);
 }
 
@@ -2507,32 +2509,124 @@ function splitOnGroup(groupId) {
 // sourceGrouper - Grouper for the source view
 // sourceGroup - The group of sources being applied to infer how to split the person.
 function splitOnSources(sourceGrouper, sourceGroup) {
-  function gatherSourcesFromGroup(sourceGroup) {
-    let sourceIds = new Set();
-    for (let personRow of sourceGroup.personRows) {
-      sourceIds.add(personRow.sourceInfo.sourceId);
+  function getOtherPersonRows() {
+    let otherRows = [];
+    // Get a list of all the person rows from sourceGrouper that are NOT in 'sourceGroup'.
+    for (let group of sourceGrouper.mergeGroups) {
+      if (group.groupId !== sourceGroup.groupId) {
+        otherRows.push(...group.personRows);
+      }
     }
-    return sourceIds;
+    return otherRows;
+  }
+  function addRelativeArksToSet(gedcomx, relativeId, relativeArkSet) {
+    if (relativeId && relativeId !== NO_SPOUSE) {
+      let relativeArk = getPersonId(findPersonInGx(gedcomx, relativeId));
+      if (relativeArk) {
+        relativeArkSet.add(relativeArk);
+      }
+    }
+  }
+  function gatherSourcesFromGroup(personRows) {
+    for (let personRow of personRows) {
+      splitSourceIds.add(personRow.sourceInfo.sourceId);
+    }
+  }
+  function gatherRelativePersonasFromGroup(personRows, parentArks, spouseArks, childArks) {
+    for (let personRow of personRows) {
+      let personaId = personRow.sourceInfo.personId;
+      let gedcomx = personRow.sourceInfo.gedcomx;
+      for (let relationship of getList(gedcomx, "relationships")) {
+        if (relationship.type === PARENT_CHILD_REL) {
+          let person1Id = getRelativeId(relationship, "person1");
+          let person2Id = getRelativeId(relationship, "person2");
+          if (person1Id === personaId) {
+            addRelativeArksToSet(gedcomx, person2Id, childArks);
+          }
+          else if (person2Id === personaId) {
+            addRelativeArksToSet(gedcomx, person1Id, parentArks);
+          }
+        }
+        else if (relationship.type === COUPLE_REL) {
+          let spouseId = getSpouseId(relationship, personaId);
+          addRelativeArksToSet(gedcomx, spouseId, spouseArks);
+        }
+      }
+    }
+  }
+  function setDirectionBasedOnAttachments(relativeId, keepRelativeArks, splitRelativeArks, element, optionalRelativeId2) {
+    function checkRelativeArks(relId) {
+      let relativeInfo = relativeMap[relId];
+      if (relativeInfo) {
+        for (let relativeArk of relativeInfo.attachedPersonaArks) {
+          if (keepRelativeArks.has(relativeArk)) {
+            shouldKeep = true;
+          }
+          if (splitRelativeArks.has(relativeArk)) {
+            shouldMove = true;
+          }
+        }
+      }
+    }
+    // Set the direction of the element based on whether the given Family Tree person with the given relative ID
+    //   has any persona Arks attached to it that appear in (a) keepRelativeArks => keep; (b) splitRelativeArks => move;
+    //     (c) both => copy; or (d) neither => leave as null.
+    let shouldKeep = false;
+    let shouldMove = false;
+    checkRelativeArks(relativeId);
+    checkRelativeArks(optionalRelativeId2);
+    if (shouldKeep && shouldMove) {
+      element.direction = DIR_COPY;
+    } else if (shouldKeep) {
+      element.direction = DIR_KEEP;
+    } else if (shouldMove) {
+      element.direction = DIR_MOVE;
+    }
   }
 
-  let splitSourceIds = gatherSourcesFromGroup(sourceGroup);
+  //--- splitOnSources() ---
+  // List of source Id numbers that are being split out
+  let splitSourceIds = new Set();
+  gatherSourcesFromGroup(sourceGroup.personRows);
+  // Sets of record persona Arks that appear as relatives in sources that are being split out.
+  let splitSpouseArks = new Set();
+  let splitParentArks = new Set();
+  let splitChildArks = new Set();
+  gatherRelativePersonasFromGroup(sourceGroup.personRows, splitParentArks, splitSpouseArks, splitChildArks);
+  let keepSpouseArks = new Set();
+  let keepParentArks = new Set();
+  let keepChildArks = new Set();
+  gatherRelativePersonasFromGroup(getOtherPersonRows(), keepParentArks, keepSpouseArks, keepChildArks);
+
   for (let element of split.elements) {
     // Clear element directions, so we know which ones haven't been decided yet.
     element.direction = DIR_NULL;
     switch (element.type) {
       case TYPE_NAME:
         let fullName = getFullText(element.item);
+        //todo: Select at least one full name to copy or move, leaving at least one as keep or copy.
+        //todo: Gather names from sources and favorite persons.
         break;
       case TYPE_GENDER:
         element.direction = DIR_COPY;
         break;
       case TYPE_FACT:
         break;
+      case TYPE_PARENTS:
+        let parentsRel = element.item;
+        let parent1Id = getRelativeId(parentsRel, "parent1");
+        let parent2Id = getRelativeId(parentsRel, "parent2");
+        setDirectionBasedOnAttachments(parent1Id, keepParentArks, splitParentArks, element, parent2Id);
+        break;
       case TYPE_SPOUSE:
         let coupleRelationship = element.item;
-
+        let spouseId = getSpouseId(coupleRelationship, mainPersonId);
+        setDirectionBasedOnAttachments(spouseId, keepSpouseArks, splitSpouseArks, element);
         break;
       case TYPE_CHILD:
+        let childRel = element.item;
+        let childId = getRelativeId(childRel, "child");
+        setDirectionBasedOnAttachments(childId, keepChildArks, splitChildArks, element);
         break;
       case TYPE_SOURCE:
         element.direction = splitSourceIds.has(element.sourceInfo.sourceId) ? DIR_MOVE : DIR_KEEP;
@@ -2870,7 +2964,7 @@ function getSplitViewHtml() {
       html += "<td class='identity-gx'>" + makeButton("<", DIR_KEEP, element) + " " + makeButton("=", DIR_COPY, element) + " " + makeButton(">", DIR_MOVE, element) + "</td>";
 
       // Right column
-      html += getElementHtml(element, split.personId, element.direction !== DIR_KEEP);
+      html += getElementHtml(element, split.personId, element.direction === DIR_COPY || element.direction === DIR_MOVE);
     }
     prevElement = element;
   }
@@ -3204,6 +3298,9 @@ function getPersonId(person) {
     if (identifiers && identifiers.length > 0) {
       return shortenPersonArk(identifiers[0]);
     }
+  }
+  if (!person) {
+    return null;
   }
   let personId = getPersonIdOfType("http://gedcomx.org/Persistent");
   if (!personId) {
