@@ -2532,10 +2532,14 @@ function splitOnSources(sourceGrouper, sourceGroup) {
       splitSourceIds.add(personRow.sourceInfo.sourceId);
     }
   }
-  function gatherRelativePersonasFromGroup(personRows, parentArks, spouseArks, childArks) {
+  function gatherInfoFromGroup(personRows, parentArks, spouseArks, childArks, personaFacts) {
     for (let personRow of personRows) {
       let personaId = personRow.sourceInfo.personId;
       let gedcomx = personRow.sourceInfo.gedcomx;
+      let persona = findPersonInGx(gedcomx, personaId);
+      for (let fact of getList(persona, "facts")) {
+        personaFacts.add(getFactString(fact));
+      }
       for (let relationship of getList(gedcomx, "relationships")) {
         if (relationship.type === PARENT_CHILD_REL) {
           let person1Id = getRelativeId(relationship, "person1");
@@ -2554,6 +2558,17 @@ function splitOnSources(sourceGrouper, sourceGroup) {
       }
     }
   }
+
+  function setDirectionBasedOnInclusion(shouldKeep, shouldMove, element) {
+    if (shouldKeep && shouldMove) {
+      element.direction = DIR_COPY;
+    } else if (shouldKeep) {
+      element.direction = DIR_KEEP;
+    } else if (shouldMove) {
+      element.direction = DIR_MOVE;
+    }
+  }
+
   function setDirectionBasedOnAttachments(relativeId, keepRelativeArks, splitRelativeArks, element, optionalRelativeId2) {
     function checkRelativeArks(relId) {
       let relativeInfo = relativeMap[relId];
@@ -2575,13 +2590,7 @@ function splitOnSources(sourceGrouper, sourceGroup) {
     let shouldMove = false;
     checkRelativeArks(relativeId);
     checkRelativeArks(optionalRelativeId2);
-    if (shouldKeep && shouldMove) {
-      element.direction = DIR_COPY;
-    } else if (shouldKeep) {
-      element.direction = DIR_KEEP;
-    } else if (shouldMove) {
-      element.direction = DIR_MOVE;
-    }
+    setDirectionBasedOnInclusion(shouldKeep, shouldMove, element);
   }
 
   //--- splitOnSources() ---
@@ -2592,11 +2601,13 @@ function splitOnSources(sourceGrouper, sourceGroup) {
   let splitSpouseArks = new Set();
   let splitParentArks = new Set();
   let splitChildArks = new Set();
-  gatherRelativePersonasFromGroup(sourceGroup.personRows, splitParentArks, splitSpouseArks, splitChildArks);
+  let splitFacts = new Set();
+  gatherInfoFromGroup(sourceGroup.personRows, splitParentArks, splitSpouseArks, splitChildArks, splitFacts);
   let keepSpouseArks = new Set();
   let keepParentArks = new Set();
   let keepChildArks = new Set();
-  gatherRelativePersonasFromGroup(getOtherPersonRows(), keepParentArks, keepSpouseArks, keepChildArks);
+  let keepFacts = new Set();
+  gatherInfoFromGroup(getOtherPersonRows(), keepParentArks, keepSpouseArks, keepChildArks, keepFacts);
 
   for (let element of split.elements) {
     // Clear element directions, so we know which ones haven't been decided yet.
@@ -2611,6 +2622,8 @@ function splitOnSources(sourceGrouper, sourceGroup) {
         element.direction = DIR_COPY;
         break;
       case TYPE_FACT:
+        let factString = getFactString(element.item);
+        setDirectionBasedOnInclusion(keepFacts.has(factString), splitFacts.has(factString), element);
         break;
       case TYPE_PARENTS:
         let parentsRel = element.item;
@@ -2796,12 +2809,6 @@ class Split {
         return false;
       }
       function alreadyHasFact(facts, newFact) {
-        function getFactString(fact) {
-          return (fact.type ? extractType(fact.type).replaceAll(/ /g, "") : "<no type>") + ": " +
-            (fact.date && fact.date.original ? fact.date.original.trim().replaceAll(/^0/g, "") : "<no date>") + "; " +
-            (fact.place && fact.place.original ? fact.place.original.trim().replaceAll(/, United States$/g, "") : "<no place>") + "; " +
-            (fact.value && fact.value.text ? fact.value.text : "<no text>");
-        }
         if (facts) {
           let newFactString = getFactString(newFact);
           for (let fact of facts) {
@@ -2876,6 +2883,16 @@ class Split {
     }
     return elements;
   }
+}
+
+// Get a somewhat normalized fact string with type: [<date>; ][<place>; ][<value>]
+//  - with leading "0" stripped off of date; ", United States" stripped off of place.
+// Not meant to be displayed, just used to see if a fact might be redundant.
+function getFactString(fact) {
+  return (fact.type ? extractType(fact.type).replaceAll(/ /g, "") : "<no type>") + ": " +
+    (fact.date && fact.date.original ? fact.date.original.trim().replaceAll(/^0/g, "") : "<no date>") + "; " +
+    (fact.place && fact.place.original ? fact.place.original.trim().replaceAll(/, United States$/g, "") : "<no place>") + "; " +
+    (fact.value && fact.value.text ? fact.value.text : "<no text>");
 }
 
 function compareSourceReferences(a, b) {

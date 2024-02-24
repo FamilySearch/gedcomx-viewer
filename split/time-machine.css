@@ -247,6 +247,7 @@ td {
     height: 1px;
     /* Prevent 2x2 connector table from causing a row to be double height when there's only 1 line of real text */
     font-size: 1px;
+    width: 25px;
 }
 .connector-table {
     height: 100%;
