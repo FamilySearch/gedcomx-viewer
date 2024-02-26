@@ -7,14 +7,7 @@
  - Select rows
    - Drag to move to new or existing group
    - Double-click value to select everyone with that value
- - Combined "identity" (original) vs. "end" view.
-   - Styles for (a) original identity data, (b) original data that was later deleted,
-     (c) data added after original identity, (d) added data that was later deleted
- - Toolbar with options for:
-   - Facts: all, vitals, none
-   - Children show/hide.
  - Collapse merge node (and summarize all info in that one row).
- - Combined person/sources view.
  - Ordinances
  - Memories
  - Move "lollipops" (conclusions made after creation or merge) separately from identities.
@@ -1521,7 +1514,7 @@ class FamilyDisplay {
 function handleMergeKeypress(event) {
   if (event.key === "Escape") {
     console.log("Pressed escape");
-    for (let grouper of [mergeGrouper, flatGrouper, sourceGrouper]) {
+    for (let grouper of [mergeGrouper, flatGrouper, sourceGrouper, comboGrouper]) {
       if (grouper) {
         grouper.deselectAll();
       }
@@ -1818,7 +1811,12 @@ class PersonRow {
     this.isDupNode = isDupNode;
     // List of PersonRow for sources that were first attached to this person (or this version of the person, if a merge node)
     this.childSourceRows = [];
+    // Parent in merge hierarchy
     this.parentRow = parentRow;
+    this.childRows = [];
+    if (parentRow) {
+      parentRow.childRows.push(this);
+    }
   }
 
   updatePersonDisplay() {
@@ -2211,6 +2209,9 @@ class PersonRow {
     if (!this.isSelected) {
       $("." + this.id).addClass(ROW_SELECTION);
       this.isSelected = true;
+      for (let childRow of this.childRows) {
+        childRow.select();
+      }
     }
   }
 
@@ -2218,6 +2219,9 @@ class PersonRow {
     if (this.isSelected) {
       $("." + this.id).removeClass(ROW_SELECTION);
       this.isSelected = false;
+      for (let childRow of this.childRows) {
+        childRow.deselect();
+      }
     }
   }
 
@@ -2403,17 +2407,19 @@ function findMaxDepth(mergeNode) {
  * @param mergeRows - Array of MergeRows to add to
  * @param shouldIncludeMergeNodes - Flag for whether to include non-leaf-nodes in the resulting array.
  * @param personSourcesMap - Map of personId -> list of sourceInfo objects first attached to that person Id (or null if not included)
+ * @param parentRow - Parent PersonRow (from a higher merge history node).
  * @returns Array of MergeRow entries (i.e., the array mergeRows)
  */
-function buildMergeRows(mergeNode, indent, maxIndent, isDupNode, mergeRows, shouldIncludeMergeNodes, personSourcesMap) {
+function buildMergeRows(mergeNode, indent, maxIndent, isDupNode, mergeRows, shouldIncludeMergeNodes, personSourcesMap, parentRow) {
   this.indent = indent;
+  let mergeRow = null;
   if (shouldIncludeMergeNodes || mergeNode.isLeafNode()) {
-    let mergeRow = new PersonRow(mergeNode, mergeNode.personId, mergeNode.gedcomx, indent, maxIndent, isDupNode, null, null);
+    mergeRow = new PersonRow(mergeNode, mergeNode.personId, mergeNode.gedcomx, indent, maxIndent, isDupNode, null, null, parentRow);
     mergeRows.push(mergeRow);
     if (personSourcesMap) {
       for (let sourceInfo of getList(personSourcesMap, mergeNode.personId)) {
         let personaId = findPersonInGx(sourceInfo.gedcomx, shortenPersonArk(sourceInfo.personaArk)).id;
-        let personaRow = new PersonRow(null, personaId, sourceInfo.gedcomx, 0, 0, false, null, sourceInfo, mergeRow);
+        let personaRow = new PersonRow(null, personaId, sourceInfo.gedcomx, 0, 0, false, null, sourceInfo, null);
         mergeRows.push(personaRow);
         mergeRow.addSourceChild(personaRow)
       }
@@ -2421,8 +2427,8 @@ function buildMergeRows(mergeNode, indent, maxIndent, isDupNode, mergeRows, shou
   }
   if (!mergeNode.isLeafNode()) {
     let indentPrefix = indent.length > 0 ? (indent.substring(0, indent.length - 1) + (isDupNode ? "I" : "O")) : "";
-    buildMergeRows(mergeNode.dupNode, indentPrefix + "T", maxIndent, true, mergeRows, shouldIncludeMergeNodes, personSourcesMap);
-    buildMergeRows(mergeNode.prevNode, indentPrefix + "L", maxIndent, false, mergeRows, shouldIncludeMergeNodes, personSourcesMap);
+    buildMergeRows(mergeNode.dupNode, indentPrefix + "T", maxIndent, true, mergeRows, shouldIncludeMergeNodes, personSourcesMap, mergeRow);
+    buildMergeRows(mergeNode.prevNode, indentPrefix + "L", maxIndent, false, mergeRows, shouldIncludeMergeNodes, personSourcesMap, mergeRow);
   }
   return mergeRows;
 }
@@ -2584,13 +2590,33 @@ function buildPersonSourcesMap(entries) {
 }
 //====== Split ========
 
-// Use the PersonRows in the given group (sources or eventually flat or even merge hierarchy view)
-//   to decide which Elements to move to each side in the Split view. (aka "applyToSplit")
+// Use the selected PersonRows in the merge hierarchy view to select
+function splitOnSelectedMergeRows() {
+
+  updateSplitViewHtml();
+  $("#tabs").tabs("option", "active", 5);
+}
+
+function getOtherPersonRows(grouper, mainGroup) {
+  let otherRows = [];
+  // Get a list of all the person rows from sourceGrouper that are NOT in 'sourceGroup'.
+  for (let group of grouper.mergeGroups) {
+    if (group.groupId !== mainGroup.groupId) {
+      otherRows.push(...group.personRows);
+    }
+  }
+  return otherRows;
+}
+
+// Use the PersonRows in the given group to decide which Elements to move to each side in the Split view.
+// (aka "applyToSplit")
 function splitOnGroup(groupId) {
   let grouper = grouperMap[groupId];
   let mergeGroup = grouper.findGroup(groupId);
   if (grouper.tabId === FLAT_VIEW || grouper.tabId === SOURCES_VIEW || grouper.tabId === COMBO_VIEW) {
-    splitOnInfoInGroup(grouper, mergeGroup);
+    let splitRows = mergeGroup.personRows;
+    let otherRows = getOtherPersonRows(grouper, mergeGroup);
+    splitOnInfoInGroup(grouper.tabId, otherRows, splitRows);
     updateSplitViewHtml();
     $("#tabs").tabs("option", "active", 5);
   }
@@ -2598,17 +2624,7 @@ function splitOnGroup(groupId) {
 
 // sourceGrouper - Grouper for the source view
 // sourceGroup - The group of sources being applied to infer how to split the person.
-function splitOnInfoInGroup(grouper, sourceGroup) {
-  function getOtherPersonRows() {
-    let otherRows = [];
-    // Get a list of all the person rows from sourceGrouper that are NOT in 'sourceGroup'.
-    for (let group of grouper.mergeGroups) {
-      if (group.groupId !== sourceGroup.groupId) {
-        otherRows.push(...group.personRows);
-      }
-    }
-    return otherRows;
-  }
+function splitOnInfoInGroup(tabId, keepRows, splitRows) {
   function addRelativeArksToSet(gedcomx, relativeId, relativeArkSet) {
     if (relativeId && relativeId !== NO_SPOUSE) {
       let relativeArk = getPersonId(findPersonInGx(gedcomx, relativeId));
@@ -2619,7 +2635,7 @@ function splitOnInfoInGroup(grouper, sourceGroup) {
   }
   function gatherSourcesFromGroup(personRows, sourceIdSet) {
     for (let personRow of personRows) {
-      if (grouper.tabId === FLAT_VIEW) {
+      if (tabId === FLAT_VIEW) {
         // No source rows, so move attachments over
         let person = findPersonInGx(personRow.gedcomx, personRow.personId);
         for (let sourceReference of getList(person, "sources")) {
@@ -2771,13 +2787,12 @@ function splitOnInfoInGroup(grouper, sourceGroup) {
     setDirectionBasedOnInclusion(element, shouldKeep, shouldMove, false, false);
   }
 
-  //--- splitOnSources() ---
-  let otherPersonRows = getOtherPersonRows();
+  //--- splitOnInfoInGroup() ---
   // Set of source ID numbers that are being split out
   let keepSourceIds = new Set();
   let splitSourceIds = new Set();
-  gatherSourcesFromGroup(sourceGroup.personRows, splitSourceIds);
-  gatherSourcesFromGroup(otherPersonRows, keepSourceIds);
+  gatherSourcesFromGroup(splitRows, splitSourceIds);
+  gatherSourcesFromGroup(keepRows, keepSourceIds);
   // Sets of record persona Arks that appear as relatives in sources that are being split out.
   let splitSourceNames = new Set();
   let splitTreeNames = new Set();
@@ -2789,7 +2804,7 @@ function splitOnInfoInGroup(grouper, sourceGroup) {
   let splitParentPids = new Set();
   let splitSpousePids = new Set();
   let splitChildPids = new Set();
-  gatherInfoFromGroup(sourceGroup.personRows, splitSourceNames, splitTreeNames, splitSourceFacts, splitTreeFacts,
+  gatherInfoFromGroup(splitRows, splitSourceNames, splitTreeNames, splitSourceFacts, splitTreeFacts,
     splitParentArks, splitSpouseArks, splitChildArks,
     splitParentPids, splitSpousePids, splitChildPids);
   let keepSourceNames = new Set();
@@ -2802,7 +2817,7 @@ function splitOnInfoInGroup(grouper, sourceGroup) {
   let keepParentPids = new Set();
   let keepSpousePids = new Set();
   let keepChildPids = new Set();
-  gatherInfoFromGroup(otherPersonRows, keepSourceNames, keepTreeNames, keepSourceFacts, keepTreeFacts,
+  gatherInfoFromGroup(keepRows, keepSourceNames, keepTreeNames, keepSourceFacts, keepTreeFacts,
     keepParentArks, keepSpouseArks, keepChildArks,
     splitParentPids, splitSpousePids, splitChildPids);
 
@@ -3387,11 +3402,13 @@ function getMergeGrouperHtml() {
     html += mergeRow.getHtml(mergeGrouper.usedColumns, MERGE_VIEW);
   }
   html += "</table>\n";
+  html += "<button class='apply-button' onclick='splitOnSelectedMergeRows()'>Apply selected rows to Split</button>"
   return html;
 }
 
 function updateMergeHierarchyHtml() {
   $("#" + mergeGrouper.tabId).html(getMergeGrouperHtml());
+  highlightSelectedRows(mergeGrouper);
 }
 
 function getPersonName(person) {
