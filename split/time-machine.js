@@ -2733,7 +2733,7 @@ function splitOnInfoInGroup(tabId, keepRows, splitRows) {
             }
           }
           else if (fatherId === personId || motherId === personId) {
-            childPids.add();
+            childPids.add(childId);
           }
         }
       }
@@ -2827,7 +2827,7 @@ function splitOnInfoInGroup(tabId, keepRows, splitRows) {
   let keepChildPids = new Set();
   gatherInfoFromGroup(keepRows, keepSourceNames, keepTreeNames, keepSourceFacts, keepTreeFacts,
     keepParentArks, keepSpouseArks, keepChildArks,
-    splitParentPids, splitSpousePids, splitChildPids);
+    keepParentPids, keepSpousePids, keepChildPids);
 
   for (let element of split.elements) {
     // Clear element directions, so we know which ones haven't been decided yet.
