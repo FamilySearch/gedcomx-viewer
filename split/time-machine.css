@@ -189,6 +189,10 @@ td {
     background-color: #f1e9da;
 }
 
+.source-row {
+    border: 1px solid #dccbb5;
+    background-color: #dae9f1;
+}
 .end-gx {
     border: 1px solid #dad9ce;
     background-color: #faf8eb

@@ -30,12 +30,12 @@ let mainPersonId = null;
 let sourceMap = {};
 
 // Map of relative personId -> RelativeInfo
-let relativeMap = {}
+let relativeMap = new Map();
 // Flag for whether we have finished receiving relative sources.
 let relativeSourcesReceived = false;
 
 // Map of duplicatePersonId -> array of [{ "survivor": <survivorPersonId>, "timestamp": <timestamp of merge>}]
-let mergeMap = {}
+let mergeMap = new Map();
 
 const CHILD_REL = "child-and-parents-relationships"
 const COUPLE_REL = "http://gedcomx.org/Couple"
@@ -219,13 +219,13 @@ function updateRelativeMap(gedcomx, timestamp, listName, relativeKeys) {
 // Get the value of map[key]. If not present, use the supplied function to create a default value,
 //   add that value to the map, and return the value.
 function computeIfAbsent(map, key, defaultValueFunction) {
-  let value = map[key];
+  let value = map.get(key);
   if (value) {
     return value;
   }
   else {
     value = defaultValueFunction();
-    map[key] = value;
+    map.set(key, value);
     return value;
   }
 }
@@ -435,30 +435,12 @@ function receivePersona(gedcomx, $status, context, fetching, sourceInfo) {
 
 function finishedReceivingSources($status, context) {
   clearStatus($status);
-  setSourcePersonIds();
   $("#" + SOURCES_VIEW).html(getSourcesViewHtml());
   split = new Split(mergeGrouper.mergeGroups[0].personRows[0].gedcomx);
   updateSplitViewHtml();
+  updateComboViewHtml();
   makeTableHeadersDraggable();
   fetchRelativeSources($status, context);
-}
-
-function setSourcePersonIds() {
-  for (let mergeGroup of mergeGrouper.mergeGroups) {
-    for (let mergeRow of mergeGroup.personRows) {
-      let person = findPersonInGx(mergeRow.gedcomx, mergeRow.personId);
-      if (person.sources) {
-        let personId = mergeRow.personId;
-        let version = mergeRow.mergeNode.version;
-        for (let sourceRef of person.sources) {
-          let sourceInfo = sourceMap[sourceRef.description];
-          if (sourceInfo && (!sourceRef.status || !sourceRef.status.startsWith("merge-"))) {
-            sourceInfo.attachedToPersonId = personId + (version > 1 ? " (v" + version + ")" : "");
-          }
-        }
-      }
-    }
-  }
 }
 
 // Begin fetching the list of source descriptions for each relative,
@@ -469,10 +451,10 @@ function setSourcePersonIds() {
 //   If X is attached to A, then if Y is also attached to B, then we can say that this source "supports" the
 //   Couple relationship between A&B, because X&Y are a couple and A=X and B=Y.
 function fetchRelativeSources($status, context) {
-  let fetching = [...Object.keys(relativeMap)];
+  let fetching = [...relativeMap.keys()];
 
   setStatus($status, "Fetching " + fetching.length + " relatives' sources...");
-  for (let relativeId of Object.keys(relativeMap)) {
+  for (let relativeId of relativeMap.keys()) {
     let sourceUrl = "https://www.familysearch.org/platform/tree/persons/" + relativeId + "/sources";
     $.ajax({
       beforeSend: function(request) {
@@ -492,7 +474,7 @@ function fetchRelativeSources($status, context) {
 
 function receiveRelativeSources(gedcomx, $status, context, fetching, relativeId) {
   if (gedcomx && "sourceDescriptions" in gedcomx && gedcomx.sourceDescriptions.length) {
-    let relativeInfo = relativeMap[relativeId];
+    let relativeInfo = relativeMap.get(relativeId);
     fetching.splice(fetching.indexOf(relativeId), 1);
     for (let sd of gedcomx.sourceDescriptions) {
       if (sd.about && sd.about.includes("ark:/61903")) {
@@ -533,6 +515,7 @@ const MERGE_VIEW   = "merge-hierarchy";
 const FLAT_VIEW    = "flat-view";
 const SOURCES_VIEW = "sources-view";
 const SPLIT_VIEW   = "split-view";
+const COMBO_VIEW   = "combo-view";
 
 function makeMainHtml(context, changeLogMap, $mainTable) {
   let personMinMaxTs = {};
@@ -544,6 +527,7 @@ function makeMainHtml(context, changeLogMap, $mainTable) {
     "  <li><a href='#" + MERGE_VIEW   + "'><span>Merge view</span></a></li>\n" +
     "  <li><a href='#" + FLAT_VIEW    + "'><span>Flat view</span></a></li>\n" +
     "  <li><a href='#" + SOURCES_VIEW + "'><span>Sources view</span></a></li>\n" +
+    "  <li><a href='#" + COMBO_VIEW + "'><span>Combo view</span></a></li>\n" +
     "  <li><a href='#" + SPLIT_VIEW   + "'><span>Split view</span></a></li>\n" +
     // Display Options
     "  <li>" + getDisplayOptionsHtml() + "</li>" +
@@ -552,6 +536,7 @@ function makeMainHtml(context, changeLogMap, $mainTable) {
     "<div id='" + MERGE_VIEW + "'>" + getMergeHierarchyHtml(allEntries) + "</div>\n" +
     "<div id='" + FLAT_VIEW + "'>" + getFlatViewHtml(allEntries) + "</div>\n" +
     "<div id='" + SOURCES_VIEW + "'>Sources grid...</div>\n" +
+    "<div id='" + COMBO_VIEW + "'>Flat + sources view...</div>\n" +
     "<div id='" + SPLIT_VIEW + "'>Split view...</div>\n" +
     "<div id='details'></div>\n";// +
     // "<div id='rel-graphs-container'>\n" +
@@ -1040,7 +1025,7 @@ function getEvidenceHtml(person) {
 }
 
 function getMergedIntoMessage(removedPersonId, timestamp) {
-  let mergeList = mergeMap[removedPersonId];
+  let mergeList = mergeMap.get(removedPersonId);
   if (mergeList) {
     for (let mergeItem of mergeList) {
       if (mergeItem.timestamp === timestamp) {
@@ -1202,7 +1187,7 @@ function getRelativeId(rel, key) {
 }
 
 function getRelativeName(relativeId, timestamp) {
-  let relativeInfo = relativeMap[relativeId];
+  let relativeInfo = relativeMap.get(relativeId);
   if (relativeInfo) {
     let relativeDisplay = relativeInfo.tsMap[timestamp];
     if (relativeDisplay && relativeDisplay.name) {
@@ -1356,8 +1341,6 @@ class MergeNode {
     this.version = survivorMergeNode ? survivorMergeNode.version + 1 : 1;
     // First (earliest in time) entry. For a merged person, this is the person merge entry.
     this.firstEntry = null;
-    // Flag for whether changes have been applied to the GedcomX after
-    this.isLater = false;
     let survivorGx = survivorMergeNode ? survivorMergeNode.gedcomx : null;
     // GedcomX within 24 hours of the person's creation, or at the initial time of merge.
     this.gedcomx = survivorGx ? copySurvivorGedcomx(survivorGx) : getInitialGedcomx(personId);
@@ -1555,6 +1538,7 @@ let personRowMap = {};
 let mergeGrouper;
 let flatGrouper;
 let sourceGrouper;
+let comboGrouper;
 
 // Global id used for MergeRow, MergeGroup and Grouper.
 let nextPersonRowId = 0;
@@ -1622,7 +1606,7 @@ function handleOptionChange() {
 }
 
 function updatePersonFactsDisplay() {
-  for (let grouper of [mergeGrouper, flatGrouper, sourceGrouper]) {
+  for (let grouper of [mergeGrouper, flatGrouper, sourceGrouper, comboGrouper]) {
     for (let personRow of grouper.getAllRows()) {
       personRow.updatePersonDisplay();
     }
@@ -1630,7 +1614,7 @@ function updatePersonFactsDisplay() {
 }
 
 function updateIncludedColumns() {
-  for (let grouper of [mergeGrouper, flatGrouper, sourceGrouper]) {
+  for (let grouper of [mergeGrouper, flatGrouper, sourceGrouper, comboGrouper]) {
     grouper.usedColumns = findUsedColumns(grouper.getAllRows());
   }
 }
@@ -1803,13 +1787,13 @@ class MergeGroup {
 
 // Row of data for a person and their 1-hop relatives (record persona or Family Tree person--either original identity or result of a merge)
 class PersonRow {
-  constructor(mergeNode, personId, gedcomx, indent, maxIndent, isDupNode, grouper, sourceInfo) {
+  constructor(mergeNode, personId, gedcomx, indent, maxIndent, isDupNode, grouper, sourceInfo, parentRow) {
     this.sortKey = "";
     this.person = findPersonInGx(gedcomx, personId);
     this.personId = personId;
     this.sourceInfo = sourceInfo;
     this.gedcomx = gedcomx;
-    this.id = "mr-" + nextPersonRowId++;
+    this.id = "person-row-" + nextPersonRowId++;
     personRowMap[this.id] = this;
     grouperMap[this.id] = grouper;
     this.mergeNode = mergeNode;
@@ -1821,6 +1805,9 @@ class PersonRow {
     this.indent = indent;
     this.maxIndent = maxIndent;
     this.isDupNode = isDupNode;
+    // List of PersonRow for sources that were first attached to this person (or this version of the person, if a merge node)
+    this.childSourceRows = [];
+    this.parentRow = parentRow;
   }
 
   updatePersonDisplay() {
@@ -1965,14 +1952,27 @@ class PersonRow {
     function padV(versionedPersonId) {
       return versionedPersonId.replaceAll(/\(v(\d)\)/g, "(v0$1)");
     }
+    // Get a sort key to use for sorting by person ID. In Flat view, this is just the personId.
+    // But in source view, it's the person ID for FT person rows; or for source rows, it's
+    //    the sourceInfo.attachedToPersonId + "_" + sourceInfo.recordDateSortKey;
+    function personIdAndRecordDate(personId, sourceInfo) {
+      let recordDateSortKey = sourceInfo ? sourceInfo.recordDateSortKey : null;
+      let sortPersonId = sourceInfo && sourceInfo.attachedToPersonId ? sourceInfo.attachedToPersonId : personId;
+      return sortPersonId + (recordDateSortKey ? "_" + recordDateSortKey : "");
+    }
+
+    function recordDateSortKey(sourceInfo) {
+      return sourceInfo && sourceInfo.recordDateSortKey ? sourceInfo.recordDateSortKey : "";
+    }
+
     switch (columnName) {
       case "collection":
         sortKey = this.sourceInfo.collectionName;
         break;
-      case "person-id":          sortKey = this.personId;                          break;
-      case "attached-to-ids":    sortKey = padV(this.sourceInfo.attachedToPersonId);break;
+      case "person-id":          sortKey = personIdAndRecordDate(this.personId, this.sourceInfo);       break;
+      case "attached-to-ids":    sortKey = padV(this.sourceInfo.attachedToPersonId);                    break;
       case "created":            sortKey = String(this.mergeNode.firstEntry.updated).padStart(15, "0"); break;
-      case "record-date":        sortKey = this.sourceInfo.recordDateSortKey;      break;
+      case "record-date":        sortKey = recordDateSortKey(this.sourceInfo);     break;
       case "person-name":        sortKey = getPersonName(this.person);             break;
       case "person-facts":       sortKey = getFirstFactDate(this.person);          break;
       case "person-facts-place": sortKey = getFirstFactPlace(this.person);         break;
@@ -2210,12 +2210,26 @@ class PersonRow {
     }
   }
 
-  getRowLabelHtml(shouldIncludeVersion) {
-    if (this.sourceInfo && this.sourceInfo.collectionName) {
+  isSourceRow() {
+    return this.sourceInfo;
+  }
+
+  getCollectionHtml() {
+    if (this.sourceInfo) {
       if (this.sourceInfo.personaArk) {
         return "<a href='" + this.sourceInfo.personaArk + "' target='_blank'>" + encode(this.sourceInfo.collectionName) + "</a>";
       }
       return encode(this.sourceInfo.collectionName);
+    }
+    return "";
+  }
+
+  getPersonIdHtml(shouldIncludeVersion) {
+    if (this.isSourceRow()) {
+      if (this.sourceInfo.attachedToPersonId) {
+        return "<span class='relative-id'>" + encode("(" + this.sourceInfo.attachedToPersonId + ")") + "</span>";
+      }
+      return "";
     }
     else {
       let personIdHtml = encode(this.personId + (shouldIncludeVersion && this.mergeNode && this.mergeNode.version > 1 ? " (v" + this.mergeNode.version + ")" : ""));
@@ -2227,7 +2241,7 @@ class PersonRow {
   }
 
   // get HTML for this person row
-  getHtml(usedColumns, shouldIndent) {
+  getHtml(usedColumns, tabId) {
     function getIndentationHtml(indentCodes) {
       let indentHtml = "";
       for (let indentCode of indentCodes) {
@@ -2266,23 +2280,33 @@ class PersonRow {
 
     let rowSpan = getRowspanParameter(this.getNumChildrenRows());
     let html = "<tr class='" + this.id + "' onclick='handleRowClick(event, \"" + this.id + "\")'>";
-    if (shouldIndent) {
-      html += getIndentationHtml(this.indent.split(""));
-    }
-    let colspan = shouldIndent ? " colspan='" + (1 + this.maxIndent - this.indent.length) : "";
-
-    let rowLabel = this.getRowLabelHtml(shouldIndent);
+    let shouldIndent = tabId === MERGE_VIEW;
+    let colspan = shouldIndent ? " colspan='" + (1 + this.maxIndent - this.indent.length) + "'" : "";
     let bottomClass = " main-row";
-    let rowClasses = "class='merge-id" + (shouldIndent && this.isDupNode ? "-dup" : "") + bottomClass + "'";
-    html += "<td " + rowClasses + rowSpan + colspan + "'>" + rowLabel + "</td>";
-    if (this.mergeNode) {
-      html += "<td " + rowClasses + rowSpan + ">" + formatTimestamp(this.mergeNode.firstEntry.updated) + "</td>";
+    let rowClasses = "class='"
+      + (this.isSourceRow() ? "source-row" : "merge-id" + (shouldIndent && this.isDupNode ? "-dup" : ""))
+      + bottomClass + "'";
+
+    if (shouldIndent) {
+      // Merge view: indentation and person id that spans columns as needed.
+      html += getIndentationHtml(this.indent.split(""));
+      html += "<td " + rowClasses + rowSpan + colspan + ">" + this.getPersonIdHtml(true) + "</td>";
     }
-    else if (this.sourceInfo.collectionName) {
-      html += "<td class='identity-gx main-row date rt'" + rowSpan + ">" + encode(this.sourceInfo.recordDate) + "</td>";
-      if (displayOptions.shouldShowAttachedTo) {
-        html += "<td class='identity-gx main-row relative-id'" + rowSpan + ">" + encode(this.sourceInfo.attachedToPersonId) + "</td>";
+    else {
+      if (tabId === SOURCES_VIEW || tabId === COMBO_VIEW) {
+        // Collection name and record date
+        let rowClass = this.isSourceRow() ? "source-row" : "merge-id";
+        html += "<td class='" + rowClass + " main-row'" + rowSpan + ">" + this.getCollectionHtml() + "</td>";
+        html += "<td class='" + rowClass + " main-row date rt'" + rowSpan + ">" + (this.sourceInfo ? encode(this.sourceInfo.recordDate) : "") + "</td>";
       }
+      if (tabId !== SOURCES_VIEW) {
+        // Person ID
+        html += "<td " + rowClasses + rowSpan + colspan + "'>" + this.getPersonIdHtml(shouldIndent) + "</td>";
+      }
+    }
+    if (tabId === MERGE_VIEW || tabId === FLAT_VIEW) {
+      // Created date
+      html += "<td " + rowClasses + rowSpan + ">" + formatTimestamp(this.mergeNode.firstEntry.updated) + "</td>";
     }
 
     // Person info
@@ -2290,6 +2314,11 @@ class PersonRow {
     html += this.getRowPersonCells(this.gedcomx, this.personId, rowClass, usedColumns, bottomClass, this.id);
     html += "</tr>\n";
     return html;
+  }
+
+  // Add a source persona PersonRow as a "child" of a FT person row.
+  addSourceChild(personaRow) {
+    this.childSourceRows.push(personaRow);
   }
 }
 
@@ -2314,7 +2343,7 @@ function getRowspanParameter(numRows) {
 // When a merge entry is found, merge the two MergeNodes into a new MergeNode (same person ID, but incremented 'version')
 // Return the one remaining MergeNode at the end.
 function getRootMergeNode(allEntries) {
-  let personNodeMap = {};
+  let personNodeMap = new Map();
   let latestMergeNode = null;
 
   for (let i = allEntries.length - 1; i >= 0; i--) {
@@ -2328,10 +2357,10 @@ function getRootMergeNode(allEntries) {
     // When a merge happens, the 'duplicate' gets relationships removed and then a person delete in its change log.
     // But we want to display the person as they were just before the merge, so we will ignore those changes.
     if (isMergeEntry(entry)) {
-      let duplicateMergeNode = personNodeMap[entry.mergeDuplicateId];
-      delete personNodeMap[entry.mergeDuplicateId];
+      let duplicateMergeNode = personNodeMap.get(entry.mergeDuplicateId);
+      personNodeMap.delete(entry.mergeDuplicateId);
       mergeNode = mergeNode.merge(duplicateMergeNode);
-      personNodeMap[personId] = mergeNode;
+      personNodeMap.set(personId, mergeNode);
     }
     mergeNode.update(entry);
     latestMergeNode = mergeNode;
@@ -2362,18 +2391,27 @@ function findMaxDepth(mergeNode) {
  * @param isDupNode - Flag for whether this is a "duplicate" node (as opposed to the survivor of a merge)
  * @param mergeRows - Array of MergeRows to add to
  * @param shouldIncludeMergeNodes - Flag for whether to include non-leaf-nodes in the resulting array.
+ * @param personSourcesMap - Map of personId -> list of sourceInfo objects first attached to that person Id (or null if not included)
  * @returns Array of MergeRow entries (i.e., the array mergeRows)
  */
-function buildMergeRows(mergeNode, indent, maxIndent, isDupNode, mergeRows, shouldIncludeMergeNodes) {
+function buildMergeRows(mergeNode, indent, maxIndent, isDupNode, mergeRows, shouldIncludeMergeNodes, personSourcesMap) {
   this.indent = indent;
   if (shouldIncludeMergeNodes || mergeNode.isLeafNode()) {
     let mergeRow = new PersonRow(mergeNode, mergeNode.personId, mergeNode.gedcomx, indent, maxIndent, isDupNode, null, null);
     mergeRows.push(mergeRow);
+    if (personSourcesMap) {
+      for (let sourceInfo of personSourcesMap.get(mergeNode.personId)) {
+        let personaId = findPersonInGx(sourceInfo.gedcomx, shortenPersonArk(sourceInfo.personaArk)).id;
+        let personaRow = new PersonRow(null, personaId, sourceInfo.gedcomx, 0, 0, false, null, sourceInfo, mergeRow);
+        mergeRows.push(personaRow);
+        mergeRow.addSourceChild(personaRow)
+      }
+    }
   }
   if (!mergeNode.isLeafNode()) {
     let indentPrefix = indent.length > 0 ? (indent.substring(0, indent.length - 1) + (isDupNode ? "I" : "O")) : "";
-    buildMergeRows(mergeNode.dupNode, indentPrefix + "T", maxIndent, true, mergeRows, shouldIncludeMergeNodes);
-    buildMergeRows(mergeNode.prevNode, indentPrefix + "L", maxIndent, false, mergeRows, shouldIncludeMergeNodes);
+    buildMergeRows(mergeNode.dupNode, indentPrefix + "T", maxIndent, true, mergeRows, shouldIncludeMergeNodes, personSourcesMap);
+    buildMergeRows(mergeNode.prevNode, indentPrefix + "L", maxIndent, false, mergeRows, shouldIncludeMergeNodes, personSourcesMap);
   }
   return mergeRows;
 }
@@ -2438,6 +2476,7 @@ function updateTabsHtml() {
   updateMergeHierarchyHtml();
   updateFlatViewHtml(flatGrouper);
   updateFlatViewHtml(sourceGrouper);
+  updateFlatViewHtml(comboGrouper);
   updateSplitViewHtml();
 }
 
@@ -2492,6 +2531,46 @@ function getSourcesViewHtml() {
   return getGrouperHtml(sourceGrouper, true);
 }
 
+// Build a view with a flat list of persons + the sources attached to each one first.
+function getComboViewHtml() {
+  let rootMergeNode = getRootMergeNode(allEntries);
+  let maxDepth = findMaxDepth(rootMergeNode);
+  let personSourcesMap = buildPersonSourcesMap(allEntries);
+  let personAndPersonaRows = buildMergeRows(rootMergeNode, "", maxDepth - 1, false, [], false, personSourcesMap);
+  let usedColumns = findUsedColumns(personAndPersonaRows);
+  comboGrouper = new Grouper(personAndPersonaRows, usedColumns, maxDepth, COMBO_VIEW);
+  return getGrouperHtml(comboGrouper);
+}
+
+// Build a map of FT personID -> list of SourceInfo objects for sources that were first attached to that person ID.
+function buildPersonSourcesMap(entries) {
+  // Set of sourceInfo.sourceId that have already been added to personSourceMap
+  //   i.e., we already found the earliest person ID that this source was attached to.
+  let alreadyUsedSourceIds = new Set();
+  // Map of FT personId -> list of SourceInfo that were first attached to that ID
+  let personSourcesMap = new Map();
+  for (let i = entries.length - 1; i >=0; i--) {
+    let entry = entries[i];
+    let changeInfo = entry.changeInfo[0];
+    // Create/Update/Delete/Merge
+    let operation = extractType(getProperty(changeInfo, "operation"));
+    let objectType = extractType(getProperty(changeInfo, "objectType"));
+    let objectModifier = extractType(getProperty(changeInfo, "objectModifier"));
+    if (objectModifier === "Person" && operation === "Create" && objectType === "SourceReference") {
+      let resultingId = getProperty(changeInfo, "resulting.resourceId");
+      let entryPerson = findPersonByLocalId(entry, resultingId);
+      let sourceReference = getFirst(getList(entryPerson, "sources")); //i.e., entryPerson.sources[0], but with null-checking
+      let sourceInfo = sourceMap[sourceReference.description];
+      if (!alreadyUsedSourceIds.has(sourceInfo.sourceId)) {
+        alreadyUsedSourceIds.add(sourceInfo.sourceId);
+        let personSourcesList = computeIfAbsent(personSourcesMap, entry.personId, () => []);
+        personSourcesList.push(sourceInfo);
+        sourceInfo.attachedToPersonId = entry.personId;
+      }
+    }
+  }
+  return personSourcesMap;
+}
 //====== Split ========
 
 // Use the PersonRows in the given group (sources or eventually flat or even merge hierarchy view)
@@ -2499,20 +2578,20 @@ function getSourcesViewHtml() {
 function splitOnGroup(groupId) {
   let grouper = grouperMap[groupId];
   let mergeGroup = grouper.findGroup(groupId);
-  if (grouper.tabId === SOURCES_VIEW) {
-    splitOnSources(grouper, mergeGroup);
+  if (grouper.tabId === FLAT_VIEW || grouper.tabId === SOURCES_VIEW || grouper.tabId === COMBO_VIEW) {
+    splitOnInfoInGroup(grouper, mergeGroup);
+    updateSplitViewHtml();
+    $("#tabs").tabs("option", "active", 5);
   }
-  updateSplitViewHtml();
-  $("#tabs").tabs("option", "active", 4);
 }
 
 // sourceGrouper - Grouper for the source view
 // sourceGroup - The group of sources being applied to infer how to split the person.
-function splitOnSources(sourceGrouper, sourceGroup) {
+function splitOnInfoInGroup(grouper, sourceGroup) {
   function getOtherPersonRows() {
     let otherRows = [];
     // Get a list of all the person rows from sourceGrouper that are NOT in 'sourceGroup'.
-    for (let group of sourceGrouper.mergeGroups) {
+    for (let group of grouper.mergeGroups) {
       if (group.groupId !== sourceGroup.groupId) {
         otherRows.push(...group.personRows);
       }
@@ -2527,39 +2606,109 @@ function splitOnSources(sourceGrouper, sourceGroup) {
       }
     }
   }
-  function gatherSourcesFromGroup(personRows) {
+  function gatherSourcesFromGroup(personRows, sourceIdSet) {
     for (let personRow of personRows) {
-      splitSourceIds.add(personRow.sourceInfo.sourceId);
-    }
-  }
-  function gatherInfoFromGroup(personRows, parentArks, spouseArks, childArks, personaFacts) {
-    for (let personRow of personRows) {
-      let personaId = personRow.sourceInfo.personId;
-      let gedcomx = personRow.sourceInfo.gedcomx;
-      let persona = findPersonInGx(gedcomx, personaId);
-      for (let fact of getList(persona, "facts")) {
-        personaFacts.add(getFactString(fact));
-      }
-      for (let relationship of getList(gedcomx, "relationships")) {
-        if (relationship.type === PARENT_CHILD_REL) {
-          let person1Id = getRelativeId(relationship, "person1");
-          let person2Id = getRelativeId(relationship, "person2");
-          if (person1Id === personaId) {
-            addRelativeArksToSet(gedcomx, person2Id, childArks);
-          }
-          else if (person2Id === personaId) {
-            addRelativeArksToSet(gedcomx, person1Id, parentArks);
+      if (grouper.tabId === FLAT_VIEW) {
+        // No source rows, so move attachments over
+        let person = findPersonInGx(personRow.gedcomx, personRow.personId);
+        for (let sourceReference of getList(person, "sources")) {
+          let sourceInfo = sourceMap[sourceReference.description];
+          if (sourceInfo) {
+            sourceIdSet.add(sourceInfo.sourceId);
           }
         }
-        else if (relationship.type === COUPLE_REL) {
-          let spouseId = getSpouseId(relationship, personaId);
-          addRelativeArksToSet(gedcomx, spouseId, spouseArks);
+      }
+      else {
+        if (personRow.sourceInfo) {
+          sourceIdSet.add(personRow.sourceInfo.sourceId);
+        }
+      }
+    }
+  }
+  function gatherNames(person, nameSet) {
+    for (let name of getList(person, "names")) {
+      let fullText = getFullText(name);
+      if (!isEmpty(fullText)) {
+        nameSet.add(fullText);
+      }
+    }
+  }
+  function gatherFacts(person, factSet) {
+    for (let fact of getList(person, "facts")) {
+      factSet.add(getFactString(fact));
+    }
+  }
+  function gatherInfoFromGroup(personRows, sourceNames, treeNames, sourceFacts, treeFacts,
+                               parentArks, spouseArks, childArks,
+                               parentPids, spousePids, childPids) {
+    for (let personRow of personRows) {
+      if (personRow.isSourceRow()) {
+        // Source persona rows
+        let personaId = personRow.sourceInfo.personId;
+        let gedcomx = personRow.sourceInfo.gedcomx;
+        let persona = findPersonInGx(gedcomx, personaId);
+        gatherNames(persona, sourceNames);
+        gatherFacts(persona, sourceFacts);
+        for (let relationship of getList(gedcomx, "relationships")) {
+          if (relationship.type === PARENT_CHILD_REL) {
+            let person1Id = getRelativeId(relationship, "person1");
+            let person2Id = getRelativeId(relationship, "person2");
+            if (person1Id === personaId) {
+              addRelativeArksToSet(gedcomx, person2Id, childArks);
+            } else if (person2Id === personaId) {
+              addRelativeArksToSet(gedcomx, person1Id, parentArks);
+            }
+          } else if (relationship.type === COUPLE_REL) {
+            let spouseId = getSpouseId(relationship, personaId);
+            addRelativeArksToSet(gedcomx, spouseId, spouseArks);
+          }
+        }
+      }
+      else {
+        // FT Person rows
+        let personId = personRow.personId;
+        let gedcomx = personRow.gedcomx;
+        let person = findPersonInGx(gedcomx, personId);
+        gatherNames(person, treeNames);
+        gatherFacts(person, treeFacts);
+        for (let relationship of getList(gedcomx, "relationships")) {
+          if (relationship.type === PARENT_CHILD_REL) {
+            let person1Id = getRelativeId(relationship, "person1");
+            let person2Id = getRelativeId(relationship, "person2");
+            if (person1Id === personId) {
+              childPids.add(person2Id);
+            } else if (person2Id === personId) {
+              parentPids.add(person1Id);
+            }
+          } else if (relationship.type === COUPLE_REL) {
+            let spouseId = getSpouseId(relationship, personId);
+            spousePids.add(spouseId);
+          }
+        }
+        for (let rel of getList(gedcomx, CHILD_REL)) {
+          let fatherId = getRelativeId(rel, "parent1");
+          let motherId = getRelativeId(rel, "parent2");
+          let childId = getRelativeId(rel, "child");
+          if (childId === personId) {
+            if (fatherId) {
+              parentPids.add(fatherId);
+            }
+            if (motherId) {
+              parentPids.add(motherId);
+            }
+          }
+          else if (fatherId === personId || motherId === personId) {
+            childPids.add();
+          }
         }
       }
     }
   }
 
-  function setDirectionBasedOnInclusion(shouldKeep, shouldMove, element) {
+  // Set the element direction based on whether its values matched a 'keep' source, 'move' source, or both.
+  // If it didn't match either kind of source, then set the direction based on whether a tree person from the keep or move group matched.
+  // If it didn't match anything there, either, that's strange, but leave it as "DIR_NULL" so the user can choose it.
+  function setDirectionBasedOnInclusion(element, shouldKeep, shouldMove, treeShouldKeep, treeShouldMove) {
     if (shouldKeep && shouldMove) {
       element.direction = DIR_COPY;
     } else if (shouldKeep) {
@@ -2567,11 +2716,25 @@ function splitOnSources(sourceGrouper, sourceGroup) {
     } else if (shouldMove) {
       element.direction = DIR_MOVE;
     }
+    // Didn't find the element's information in the attached sources, so check the FT person information
+    else if (treeShouldKeep && treeShouldMove) {
+      element.direction = DIR_COPY;
+    } else if (treeShouldKeep) {
+      element.direction = DIR_KEEP;
+    } else if (treeShouldMove) {
+      element.direction = DIR_MOVE;
+    }
   }
 
-  function setDirectionBasedOnAttachments(relativeId, keepRelativeArks, splitRelativeArks, element, optionalRelativeId2) {
+  function setDirectionBasedOnSetInclusion(element, value, keepSourceSet, moveSourceSet, keepTreeSet, moveTreeSet) {
+    setDirectionBasedOnInclusion(element, keepSourceSet.has(value), moveSourceSet.has(value),
+      keepTreeSet ? keepTreeSet.has(value) : false,
+      moveTreeSet ? moveTreeSet.has(value) : false);
+  }
+
+  function setDirectionBasedOnAttachments(relativeId, keepRelativeArks, splitRelativeArks, keepRelativePids, splitRelativePids, element, optionalRelativeId2) {
     function checkRelativeArks(relId) {
-      let relativeInfo = relativeMap[relId];
+      let relativeInfo = relativeMap.get(relId);
       if (relativeInfo) {
         for (let relativeArk of relativeInfo.attachedPersonaArks) {
           if (keepRelativeArks.has(relativeArk)) {
@@ -2590,24 +2753,47 @@ function splitOnSources(sourceGrouper, sourceGroup) {
     let shouldMove = false;
     checkRelativeArks(relativeId);
     checkRelativeArks(optionalRelativeId2);
-    setDirectionBasedOnInclusion(shouldKeep, shouldMove, element);
+    if (!shouldKeep && !shouldMove) {
+      shouldKeep = keepRelativePids.has(relativeId);
+      shouldMove = splitRelativePids.has(relativeId);
+    }
+    setDirectionBasedOnInclusion(element, shouldKeep, shouldMove, false, false);
   }
 
   //--- splitOnSources() ---
-  // List of source Id numbers that are being split out
+  let otherPersonRows = getOtherPersonRows();
+  // Set of source ID numbers that are being split out
+  let keepSourceIds = new Set();
   let splitSourceIds = new Set();
-  gatherSourcesFromGroup(sourceGroup.personRows);
+  gatherSourcesFromGroup(sourceGroup.personRows, splitSourceIds);
+  gatherSourcesFromGroup(otherPersonRows, keepSourceIds);
   // Sets of record persona Arks that appear as relatives in sources that are being split out.
-  let splitSpouseArks = new Set();
+  let splitSourceNames = new Set();
+  let splitTreeNames = new Set();
+  let splitSourceFacts = new Set();
+  let splitTreeFacts = new Set();
   let splitParentArks = new Set();
+  let splitSpouseArks = new Set();
   let splitChildArks = new Set();
-  let splitFacts = new Set();
-  gatherInfoFromGroup(sourceGroup.personRows, splitParentArks, splitSpouseArks, splitChildArks, splitFacts);
-  let keepSpouseArks = new Set();
+  let splitParentPids = new Set();
+  let splitSpousePids = new Set();
+  let splitChildPids = new Set();
+  gatherInfoFromGroup(sourceGroup.personRows, splitSourceNames, splitTreeNames, splitSourceFacts, splitTreeFacts,
+    splitParentArks, splitSpouseArks, splitChildArks,
+    splitParentPids, splitSpousePids, splitChildPids);
+  let keepSourceNames = new Set();
+  let keepTreeNames = new Set();
+  let keepSourceFacts = new Set();
+  let keepTreeFacts = new Set();
   let keepParentArks = new Set();
+  let keepSpouseArks = new Set();
   let keepChildArks = new Set();
-  let keepFacts = new Set();
-  gatherInfoFromGroup(getOtherPersonRows(), keepParentArks, keepSpouseArks, keepChildArks, keepFacts);
+  let keepParentPids = new Set();
+  let keepSpousePids = new Set();
+  let keepChildPids = new Set();
+  gatherInfoFromGroup(otherPersonRows, keepSourceNames, keepTreeNames, keepSourceFacts, keepTreeFacts,
+    keepParentArks, keepSpouseArks, keepChildArks,
+    splitParentPids, splitSpousePids, splitChildPids);
 
   for (let element of split.elements) {
     // Clear element directions, so we know which ones haven't been decided yet.
@@ -2615,48 +2801,38 @@ function splitOnSources(sourceGrouper, sourceGroup) {
     switch (element.type) {
       case TYPE_NAME:
         let fullName = getFullText(element.item);
-        //todo: Select at least one full name to copy or move, leaving at least one as keep or copy.
-        //todo: Gather names from sources and favorite persons.
+        setDirectionBasedOnSetInclusion(element, fullName, keepSourceNames, splitSourceNames, keepTreeNames, splitTreeNames);
         break;
       case TYPE_GENDER:
         element.direction = DIR_COPY;
         break;
       case TYPE_FACT:
         let factString = getFactString(element.item);
-        setDirectionBasedOnInclusion(keepFacts.has(factString), splitFacts.has(factString), element);
+        setDirectionBasedOnSetInclusion(element, factString, keepSourceFacts, splitSourceFacts, keepTreeFacts, splitTreeFacts);
         break;
       case TYPE_PARENTS:
         let parentsRel = element.item;
         let parent1Id = getRelativeId(parentsRel, "parent1");
         let parent2Id = getRelativeId(parentsRel, "parent2");
-        setDirectionBasedOnAttachments(parent1Id, keepParentArks, splitParentArks, element, parent2Id);
+        setDirectionBasedOnAttachments(parent1Id, keepParentArks, splitParentArks, keepParentPids, splitParentPids, element, parent2Id);
         break;
       case TYPE_SPOUSE:
         let coupleRelationship = element.item;
         let spouseId = getSpouseId(coupleRelationship, mainPersonId);
-        setDirectionBasedOnAttachments(spouseId, keepSpouseArks, splitSpouseArks, element);
+        setDirectionBasedOnAttachments(spouseId, keepSpouseArks, splitSpouseArks, keepSpousePids, splitSpousePids, element);
         break;
       case TYPE_CHILD:
         let childRel = element.item;
         let childId = getRelativeId(childRel, "child");
-        setDirectionBasedOnAttachments(childId, keepChildArks, splitChildArks, element);
+        setDirectionBasedOnAttachments(childId, keepChildArks, splitChildArks, keepChildPids, splitChildPids, element);
         break;
       case TYPE_SOURCE:
-        element.direction = splitSourceIds.has(element.sourceInfo.sourceId) ? DIR_MOVE : DIR_KEEP;
+        setDirectionBasedOnSetInclusion(element, element.sourceInfo.sourceId, keepSourceIds, splitSourceIds);
         break;
     }
   }
-  // Move sources to DIR_MOVE
-
-  //todo: Move sources to DIR_MOVE
-  //todo: gather list of person IDs and source URLs when creating elements
-  //todo: Move or copy elements that came from any of these sources (copy if also came from sources not moving over)
-  //todo: Move or copy corresponding relatives (copy if also correspond to sources not moving over)
-  //todo: Display DIR_NULL as yellow or something (at least those not extra or w/o empty checkboxes)
-  //todo: Map original identities according to sources
-  //todo: Move or copy elements from chosen original identities, too.
-  //todo: Move remaining elements based on similarity (leave unchecked extras unchecked, but still move them over).
 }
+
 // Direction to move each element
 const DIR_KEEP = "keep"; // keep on the "survivor".
 const DIR_COPY = "copy"; // keep on the survivor and also copy to the "split"
@@ -2820,7 +2996,7 @@ class Split {
         }
         return false;
       }
-      // -- addExtraNamesAndFacts()
+      // -- populateExtraNamesAndFacts()
       for (let i = allEntries.length - 1; i >= 0; i--) {
         let entry = allEntries[i];
         let changeInfo = entry.changeInfo[0];
@@ -2875,7 +3051,7 @@ class Split {
     addElements(person.names, TYPE_NAME, extraNames.length > 0);
     addElements(extraNames, TYPE_NAME);
     addElement(person.gender, TYPE_GENDER);
-    addElements(allFacts, TYPE_FACT, allFacts.length > (person.facts ? person.facts.length : 0));
+    addElements(allFacts, TYPE_FACT, allFacts && allFacts.length > (person.facts ? person.facts.length : 0));
     addRelationshipElements(gedcomx); // future: find other relationships that were removed along the way.
     if (person.sources) {
       person.sources.sort(compareSourceReferences);
@@ -2889,7 +3065,7 @@ class Split {
 //  - with leading "0" stripped off of date; ", United States" stripped off of place.
 // Not meant to be displayed, just used to see if a fact might be redundant.
 function getFactString(fact) {
-  return (fact.type ? extractType(fact.type).replaceAll(/ /g, "") : "<no type>") + ": " +
+  return (fact.type ? extractType(fact.type).replaceAll(/ /g, "").replace("Census", "Residence") : "<no type>") + ": " +
     (fact.date && fact.date.original ? fact.date.original.trim().replaceAll(/^0/g, "") : "<no date>") + "; " +
     (fact.place && fact.place.original ? fact.place.original.trim().replaceAll(/, United States$/g, "") : "<no place>") + "; " +
     (fact.value && fact.value.text ? fact.value.text : "<no text>");
@@ -2930,6 +3106,10 @@ function toggleElement(elementId) {
 
 function updateSplitViewHtml() {
   $("#" + SPLIT_VIEW).html(getSplitViewHtml());
+}
+
+function updateComboViewHtml() {
+  $("#" + COMBO_VIEW).html(getComboViewHtml());
 }
 
 function getSplitViewHtml() {
@@ -3096,25 +3276,30 @@ function deleteEmptyGroup(groupId) {
 function getGrouperHtml(grouper) {
   let html = getTableHeader(grouper.usedColumns, grouper.maxDepth, false, grouper);
   let numColumns = html.match(/<th>/g).length;
+
+  function getGroupHeadingHtml(isEmptyGroup, personGroup, groupIndex) {
+    return "<tr class='group-header'><td class='group-header' colspan='" + numColumns + "'>"
+      // Close button for empty groups
+      + (isEmptyGroup ? "<button class='close-button' onclick='deleteEmptyGroup(\"" + personGroup.groupId + "\")'>X</button>" : "")
+      // Group name
+      + "<div class='group-name' contenteditable='true' id='" + personGroup.groupId
+      + "' onkeyup='updateGroupName(\"" + personGroup.groupId + "\")'>"
+      + encode(personGroup.groupName) + "</div>"
+      // "Add to Group" button
+      + "<button class='add-to-group-button' onclick='addSelectedToGroup(\"" + personGroup.groupId + "\")'>Add to group</button>"
+      // "Apply to Split" button
+      + (groupIndex < 1 || isEmptyGroup ? "" : "<button class='apply-button' onclick='splitOnGroup(\"" + personGroup.groupId + "\")'>Apply to Split</button>")
+      + "</td></tr>\n";
+  }
+
   for (let groupIndex = 0; groupIndex < grouper.mergeGroups.length; groupIndex++) {
     let personGroup = grouper.mergeGroups[groupIndex];
     if (grouper.mergeGroups.length > 1) {
       let isEmptyGroup = isEmpty(personGroup.personRows.length);
-      html += "<tr class='group-header'><td class='group-header' colspan='" + numColumns + "'>"
-          // Close button for empty groups
-          + (isEmptyGroup ? "<button class='close-button' onclick='deleteEmptyGroup(\"" + personGroup.groupId + "\")'>X</button>" : "")
-          // Group name
-          + "<div class='group-name' contenteditable='true' id='" + personGroup.groupId
-          + "' onkeyup='updateGroupName(\"" + personGroup.groupId + "\")'>"
-          + encode(personGroup.groupName) + "</div>"
-          // "Add to Group" button
-          + "<button class='add-to-group-button' onclick='addSelectedToGroup(\"" + personGroup.groupId + "\")'>Add to group</button>"
-          // "Apply to Split" button
-          + (groupIndex < 1 || isEmptyGroup ? "" : "<button class='apply-button' onclick='splitOnGroup(\"" + personGroup.groupId + "\")'>Apply to Split</button>")
-          + "</td></tr>\n";
+      html += getGroupHeadingHtml(isEmptyGroup, personGroup, groupIndex);
     }
     for (let personRow of personGroup.personRows) {
-      html += personRow.getHtml(grouper.usedColumns, false);
+      html += personRow.getHtml(grouper.usedColumns, grouper.tabId);
     }
   }
   html += "</table>\n";
@@ -3151,22 +3336,31 @@ function getTableHeader(usedColumns, maxDepth, shouldIndent, grouper) {
 
   // --- getTableHeader()
   let colspan = shouldIndent ? " colspan='" + maxDepth + "'" : "";
-  return "<table><th" + colspan + ">"
-      + (grouper && grouper.tabId === SOURCES_VIEW ?
-           sortHeader("collection", "Collection")  + "</th>" +
-           "<th>" + sortHeader("record-date", "Record Date") + "</th>" +
-           (displayOptions.shouldShowAttachedTo ? ("<th>" + sortHeader("attached-to-ids", "Attached to") + "</th>") : "")
-         : sortHeader("person-id", "Person ID"))
-      + (!grouper || grouper.tabId !== SOURCES_VIEW ? "<th>" + sortHeader("created", "Created") + "</th>" : "")
-      + cell("person-name", "Name", true)
-      + cell("person-facts", "Facts")
-      + cell("father-name", "Father")
-      + cell("mother-name", "Mother")
-      + cell("spouse-name", "Spouse")
-      + cell("spouse-facts", "Spouse facts")
-      + cell("child-name", "Children")
-      + cell("child-facts", "Child facts")
-      + cell("notes", "Notes", true);
+  let html = "<table>";
+
+  if (grouper && (grouper.tabId === SOURCES_VIEW || grouper.tabId === COMBO_VIEW)) {
+    html += "<th>" + sortHeader("collection", "Collection")  + "</th>";
+    html += "<th>" + sortHeader("record-date", "Record Date") + "</th>"
+    if (displayOptions.shouldShowAttachedTo) {
+      html += "<th>" + sortHeader("attached-to-ids", "Attached to") + "</th>";
+    }
+  }
+  if (!grouper || grouper.tabId !== SOURCES_VIEW) {
+    html += "<th" + colspan + ">" + sortHeader("person-id", "Person ID") + "</th>";
+  }
+  if (!grouper || grouper.tabId === FLAT_VIEW) {
+    html += "<th>" + sortHeader("created", "Created") + "</th>";
+  }
+  html += cell("person-name", "Name", true) +
+          cell("person-facts", "Facts") +
+          cell("father-name", "Father") +
+          cell("mother-name", "Mother") +
+          cell("spouse-name", "Spouse") +
+          cell("spouse-facts", "Spouse facts") +
+          cell("child-name", "Children") +
+          cell("child-facts", "Child facts") +
+          cell("notes", "Notes", true);
+  return html;
 }
 
 function getMergeHierarchyHtml(entries) {
@@ -3182,7 +3376,7 @@ function getMergeHierarchyHtml(entries) {
 function getMergeGrouperHtml() {
   let html = getTableHeader(mergeGrouper.usedColumns, mergeGrouper.maxDepth, true, null);
   for (let mergeRow of mergeGrouper.getAllRows()) {
-    html += mergeRow.getHtml(mergeGrouper.usedColumns, true);
+    html += mergeRow.getHtml(mergeGrouper.usedColumns, MERGE_VIEW);
   }
   html += "</table>\n";
   return html;
@@ -3291,7 +3485,7 @@ function getRelativeHtml(relativeId, timestamp) {
 }
 
 // ====================================================================
-// ============ GedcomX manipuation (no HTML) =========================
+// ============ GedcomX manipulation (no HTML) =========================
 
 function getInitialGedcomx(personId) {
   return { "persons": [
