@@ -168,6 +168,9 @@ function fetchRelativesAndSources(changeLogMap, $status, context) {
       url: sourceUrl,
       success:function(gedcomx){
         receiveSourceDescription(gedcomx, $status, context, fetching, sourceUrl, sourceMap);
+      },
+      error: function(jqXHR, textStatus, errorThrown) {
+        receiveSourceDescription(null, $status, context, fetching, sourceUrl, sourceMap)
       }
     });
   }
@@ -281,10 +284,10 @@ class RelativeInfo {
  * @param sourceMap - (Global) map of sourceUrl -> SourceInfo for that source (which is filled out here).
  */
 function receiveSourceDescription(gedcomx, $status, context, fetching, sourceUrl, sourceMap) {
+  fetching.splice(fetching.indexOf(sourceUrl), 1);
   if (gedcomx && "sourceDescriptions" in gedcomx && gedcomx.sourceDescriptions.length) {
     let sourceInfo = sourceMap[sourceUrl];
     sourceInfo.setSourceDescription(gedcomx.sourceDescriptions[0]);
-    fetching.splice(fetching.indexOf(sourceUrl), 1)
     if (sourceInfo.personaArk.includes("ark:/61903/")) {
       fetching.push(sourceInfo.personaArk);
       // Got source description, which has the persona Ark, so now fetch that.
@@ -301,6 +304,9 @@ function receiveSourceDescription(gedcomx, $status, context, fetching, sourceUrl
         url: sourceInfo.personaArk,
         success: function (gedcomx) {
           receivePersona(gedcomx, $status, context, fetching, sourceInfo);
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+          receivePersona(null, $status, context, fetching, sourceInfo);
         }
       });
     }
@@ -412,19 +418,24 @@ function getRecordDate(gedcomx) {
 }
 
 function receivePersona(gedcomx, $status, context, fetching, sourceInfo) {
-  fixEventOrders(gedcomx);
-  sourceInfo.gedcomx = gedcomx;
-  fetching.splice(fetching.indexOf(sourceInfo.personaArk), 1);
-  let personaArk = getMainPersonaArk(gedcomx);
-  if (personaArk !== sourceInfo.personaArk) {
-    // This persona has been deprecated & forwarded or something, so update the 'ark' in sourceInfo to point to the new ark.
-    sourceInfo.personaArk = personaArk;
+  if (!gedcomx) {
+    console.log("Persona " + sourceInfo.personaArk + " no longer exists (410 Gone). Skipping.");
   }
-  let person = findPersonInGx(gedcomx, personaArk);
-  sourceInfo.personId = person ? person.id : null;
-  sourceInfo.collectionName = getCollectionName(gedcomx);
-  sourceInfo.recordDate = getRecordDate(gedcomx);
-  sourceInfo.recordDateSortKey = sourceInfo.recordDate ? parseDateIntoNumber(sourceInfo.recordDate).toString() : null;
+  else {
+    fixEventOrders(gedcomx);
+    sourceInfo.gedcomx = gedcomx;
+    let personaArk = getMainPersonaArk(gedcomx);
+    if (personaArk !== sourceInfo.personaArk) {
+      // This persona has been deprecated & forwarded or something, so update the 'ark' in sourceInfo to point to the new ark.
+      sourceInfo.personaArk = personaArk;
+    }
+    let person = findPersonInGx(gedcomx, personaArk);
+    sourceInfo.personId = person ? person.id : null;
+    sourceInfo.collectionName = getCollectionName(gedcomx);
+    sourceInfo.recordDate = getRecordDate(gedcomx);
+    sourceInfo.recordDateSortKey = sourceInfo.recordDate ? parseDateIntoNumber(sourceInfo.recordDate).toString() : null;
+  }
+  fetching.splice(fetching.indexOf(sourceInfo.personaArk), 1);
   if (fetching.length) {
     setStatus($status, "Fetching " + fetching.length + "/" + Object.keys(sourceMap).length + " sources...");
   }
@@ -2400,7 +2411,7 @@ function buildMergeRows(mergeNode, indent, maxIndent, isDupNode, mergeRows, shou
     let mergeRow = new PersonRow(mergeNode, mergeNode.personId, mergeNode.gedcomx, indent, maxIndent, isDupNode, null, null);
     mergeRows.push(mergeRow);
     if (personSourcesMap) {
-      for (let sourceInfo of personSourcesMap.get(mergeNode.personId)) {
+      for (let sourceInfo of getList(personSourcesMap, mergeNode.personId)) {
         let personaId = findPersonInGx(sourceInfo.gedcomx, shortenPersonArk(sourceInfo.personaArk)).id;
         let personaRow = new PersonRow(null, personaId, sourceInfo.gedcomx, 0, 0, false, null, sourceInfo, mergeRow);
         mergeRows.push(personaRow);
@@ -2919,11 +2930,8 @@ class Split {
     }
     function addRelationshipElements(gedcomx) {
       function addChildrenElements(spouseId) {
-        let childRels = childrenMap.get(spouseId);
-        if (childRels) {
-          for (let childRel of childRels) {
-            addElement(childRel, TYPE_CHILD);
-          }
+        for (let childRel of getList(childrenMap, spouseId)) {
+          addElement(childRel, TYPE_CHILD);
         }
       }
       // child-and-parents relationships in which the person is a child, i.e., containing the person's parents

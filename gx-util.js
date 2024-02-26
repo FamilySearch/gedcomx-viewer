@@ -634,5 +634,9 @@ function normalizeDate(origDate) {
  * @returns {*|*[]} - List of the given name, if any, or and empty list [] if the container or list are null.
  */
 function getList(container, listName) {
+  if (container && container instanceof Map) {
+    let list = container.get(listName);
+    return list ? list : [];
+  }
   return container && container.hasOwnProperty(listName) && container[listName] ? container[listName] : [];
 }
