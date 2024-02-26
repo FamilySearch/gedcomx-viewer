@@ -2592,20 +2592,11 @@ function buildPersonSourcesMap(entries) {
 
 // Use the selected PersonRows in the merge hierarchy view to select
 function splitOnSelectedMergeRows() {
-
+  let unselectedMergeRows = getRowsBySelection(mergeGrouper.mergeGroups[0].personRows, false);
+  let selectedMergeRows = getRowsBySelection(mergeGrouper.mergeGroups[0].personRows, true);
+  splitOnInfoInGroup(MERGE_VIEW, unselectedMergeRows, selectedMergeRows);
   updateSplitViewHtml();
   $("#tabs").tabs("option", "active", 5);
-}
-
-function getOtherPersonRows(grouper, mainGroup) {
-  let otherRows = [];
-  // Get a list of all the person rows from sourceGrouper that are NOT in 'sourceGroup'.
-  for (let group of grouper.mergeGroups) {
-    if (group.groupId !== mainGroup.groupId) {
-      otherRows.push(...group.personRows);
-    }
-  }
-  return otherRows;
 }
 
 // Use the PersonRows in the given group to decide which Elements to move to each side in the Split view.
@@ -2625,6 +2616,11 @@ function splitOnGroup(groupId) {
 // sourceGrouper - Grouper for the source view
 // sourceGroup - The group of sources being applied to infer how to split the person.
 function splitOnInfoInGroup(tabId, keepRows, splitRows) {
+  // Tell whether the given entity's status should cause it to be included in a list for a merge hierarchy row.
+  //   Include if there is no status, but not if the status is 'deleted' or any of the merge statuses.
+  function shouldIncludeStatus(entity) {
+    return tabId !== MERGE_VIEW || !entity.status || (entity.status !== DELETED_STATUS && !entity.status.startsWith("merge-"));
+  }
   function addRelativeArksToSet(gedcomx, relativeId, relativeArkSet) {
     if (relativeId && relativeId !== NO_SPOUSE) {
       let relativeArk = getPersonId(findPersonInGx(gedcomx, relativeId));
@@ -2635,13 +2631,15 @@ function splitOnInfoInGroup(tabId, keepRows, splitRows) {
   }
   function gatherSourcesFromGroup(personRows, sourceIdSet) {
     for (let personRow of personRows) {
-      if (tabId === FLAT_VIEW) {
-        // No source rows, so move attachments over
+      if (tabId === FLAT_VIEW || tabId === MERGE_VIEW) {
+        // No source rows, so move attachments over (unless the attachments are on a merge node and are only there because of the merge)
         let person = findPersonInGx(personRow.gedcomx, personRow.personId);
         for (let sourceReference of getList(person, "sources")) {
-          let sourceInfo = sourceMap[sourceReference.description];
-          if (sourceInfo) {
-            sourceIdSet.add(sourceInfo.sourceId);
+          if (shouldIncludeStatus(sourceReference)) {
+            let sourceInfo = sourceMap[sourceReference.description];
+            if (sourceInfo) {
+              sourceIdSet.add(sourceInfo.sourceId);
+            }
           }
         }
       }
@@ -2654,15 +2652,19 @@ function splitOnInfoInGroup(tabId, keepRows, splitRows) {
   }
   function gatherNames(person, nameSet) {
     for (let name of getList(person, "names")) {
-      let fullText = getFullText(name);
-      if (!isEmpty(fullText)) {
-        nameSet.add(fullText);
+      if (shouldIncludeStatus(name)) {
+        let fullText = getFullText(name);
+        if (!isEmpty(fullText)) {
+          nameSet.add(fullText);
+        }
       }
     }
   }
   function gatherFacts(person, factSet) {
     for (let fact of getList(person, "facts")) {
-      factSet.add(getFactString(fact));
+      if (shouldIncludeStatus(fact)) {
+        factSet.add(getFactString(fact));
+      }
     }
   }
   function gatherInfoFromGroup(personRows, sourceNames, treeNames, sourceFacts, treeFacts,
@@ -2699,6 +2701,9 @@ function splitOnInfoInGroup(tabId, keepRows, splitRows) {
         gatherNames(person, treeNames);
         gatherFacts(person, treeFacts);
         for (let relationship of getList(gedcomx, "relationships")) {
+          if (!shouldIncludeStatus(relationship)) {
+            continue;
+          }
           if (relationship.type === PARENT_CHILD_REL) {
             let person1Id = getRelativeId(relationship, "person1");
             let person2Id = getRelativeId(relationship, "person2");
@@ -2713,6 +2718,9 @@ function splitOnInfoInGroup(tabId, keepRows, splitRows) {
           }
         }
         for (let rel of getList(gedcomx, CHILD_REL)) {
+          if (!shouldIncludeStatus(rel)) {
+            continue;
+          }
           let fatherId = getRelativeId(rel, "parent1");
           let motherId = getRelativeId(rel, "parent2");
           let childId = getRelativeId(rel, "child");
@@ -3084,6 +3092,28 @@ class Split {
   }
 }
 
+// Get the other persons who are not selected in the 'mainGroup'
+function getOtherPersonRows(grouper, mainGroup) {
+  let otherRows = [];
+  // Get a list of all the person rows from sourceGrouper that are NOT in 'sourceGroup'.
+  for (let group of grouper.mergeGroups) {
+    if (group.groupId !== mainGroup.groupId) {
+      otherRows.push(...group.personRows);
+    }
+  }
+  return otherRows;
+}
+
+function getRowsBySelection(personRows, isSelected) {
+  let matchingRows = [];
+  for (let personRow of personRows) {
+    if (personRow.isSelected === isSelected) {
+      matchingRows.push(personRow);
+    }
+  }
+  return matchingRows;
+}
+
 // Get a somewhat normalized fact string with type: [<date>; ][<place>; ][<value>]
 //  - with leading "0" stripped off of date; ", United States" stripped off of place.
 // Not meant to be displayed, just used to see if a fact might be redundant.
@@ -3393,16 +3423,18 @@ function getMergeHierarchyHtml(entries) {
   let usedColumns = findUsedColumns(mergeRows);
 
   mergeGrouper = new Grouper(mergeRows, usedColumns, maxDepth, MERGE_VIEW);
-  return getMergeGrouperHtml();
+  return getMergeGrouperHtml(maxDepth);
 }
 
-function getMergeGrouperHtml() {
+function getMergeGrouperHtml(maxDepth) {
   let html = getTableHeader(mergeGrouper.usedColumns, mergeGrouper.maxDepth, true, null);
+  let numColumns = html.match(/<th>/g).length + maxDepth;
   for (let mergeRow of mergeGrouper.getAllRows()) {
     html += mergeRow.getHtml(mergeGrouper.usedColumns, MERGE_VIEW);
   }
+  html += "<tr><td class='bottom-button-row' colspan='" + numColumns + "'>"
+  html += "<button class='apply-button' onclick='splitOnSelectedMergeRows()'>Apply selected rows to Split</button></td></tr>";
   html += "</table>\n";
-  html += "<button class='apply-button' onclick='splitOnSelectedMergeRows()'>Apply selected rows to Split</button>"
   return html;
 }
 

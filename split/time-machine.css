@@ -280,6 +280,11 @@ td {
     border-bottom: 2px solid #add2ad;
     padding-top: 10px;
 }
+.bottom-button-row {
+    background-color: white;
+    border-style: none;
+    padding-top: 10px;
+}
 .group-name {
     display: inline-block;
     margin-left: 10px;
