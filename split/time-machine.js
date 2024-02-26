@@ -169,7 +169,7 @@ function fetchRelativesAndSources(changeLogMap, $status, context) {
       success:function(gedcomx){
         receiveSourceDescription(gedcomx, $status, context, fetching, sourceUrl, sourceMap);
       },
-      error: function(jqXHR, textStatus, errorThrown) {
+      error: function() {
         receiveSourceDescription(null, $status, context, fetching, sourceUrl, sourceMap)
       }
     });
@@ -305,7 +305,7 @@ function receiveSourceDescription(gedcomx, $status, context, fetching, sourceUrl
         success: function (gedcomx) {
           receivePersona(gedcomx, $status, context, fetching, sourceInfo);
         },
-        error: function(jqXHR, textStatus, errorThrown) {
+        error: function() {
           receivePersona(null, $status, context, fetching, sourceInfo);
         }
       });
@@ -418,10 +418,7 @@ function getRecordDate(gedcomx) {
 }
 
 function receivePersona(gedcomx, $status, context, fetching, sourceInfo) {
-  if (!gedcomx) {
-    console.log("Persona " + sourceInfo.personaArk + " no longer exists (410 Gone). Skipping.");
-  }
-  else {
+  if (gedcomx) {
     fixEventOrders(gedcomx);
     sourceInfo.gedcomx = gedcomx;
     let personaArk = getMainPersonaArk(gedcomx);
@@ -478,15 +475,18 @@ function fetchRelativeSources($status, context) {
       url: sourceUrl,
       success:function(gedcomx){
         receiveRelativeSources(gedcomx, $status, context, fetching, relativeId);
+      },
+      error: function() {
+        receiveRelativeSources(null, $status, context, fetching, relativeId);
       }
     });
   }
 }
 
 function receiveRelativeSources(gedcomx, $status, context, fetching, relativeId) {
+  fetching.splice(fetching.indexOf(relativeId), 1);
   if (gedcomx && "sourceDescriptions" in gedcomx && gedcomx.sourceDescriptions.length) {
     let relativeInfo = relativeMap.get(relativeId);
-    fetching.splice(fetching.indexOf(relativeId), 1);
     for (let sd of gedcomx.sourceDescriptions) {
       if (sd.about && sd.about.includes("ark:/61903")) {
         relativeInfo.addPersonaArk(sd.about);
