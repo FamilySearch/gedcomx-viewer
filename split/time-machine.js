@@ -281,7 +281,7 @@ function receiveSourceDescription(gedcomx, $status, context, fetching, sourceUrl
   if (gedcomx && "sourceDescriptions" in gedcomx && gedcomx.sourceDescriptions.length) {
     let sourceInfo = sourceMap[sourceUrl];
     sourceInfo.setSourceDescription(gedcomx.sourceDescriptions[0]);
-    if (sourceInfo.personaArk.includes("ark:/61903/")) {
+    if (sourceInfo.personaArk && sourceInfo.personaArk.includes("ark:/61903/")) {
       fetching.push(sourceInfo.personaArk);
       // Got source description, which has the persona Ark, so now fetch that.
       $.ajax({
@@ -2426,7 +2426,15 @@ function buildMergeRows(mergeNode, indent, maxIndent, isDupNode, mergeRows, shou
     mergeRows.push(mergeRow);
     if (personSourcesMap) {
       for (let sourceInfo of getList(personSourcesMap, mergeNode.personId)) {
-        let personaId = findPersonInGx(sourceInfo.gedcomx, shortenPersonArk(sourceInfo.personaArk)).id;
+        if (!sourceInfo.personaArk) {
+          continue;
+        }
+        let shortPersonaArk = shortenPersonArk(sourceInfo.personaArk);
+        if (!shortPersonaArk.includes(":")) {
+          continue; // unexpected format.
+        }
+        let persona = findPersonInGx(sourceInfo.gedcomx, shortPersonaArk);
+        let personaId = persona.id;
         let personaRow = new PersonRow(null, personaId, sourceInfo.gedcomx, 0, 0, false, null, sourceInfo, null);
         mergeRows.push(personaRow);
         mergeRow.addSourceChild(personaRow)
@@ -3135,7 +3143,9 @@ function getFactString(fact) {
 function compareSourceReferences(a, b) {
   let sourceInfo1 = sourceMap[a.description];
   let sourceInfo2 = sourceMap[b.description];
-  return sourceInfo1.recordDateSortKey.localeCompare(sourceInfo2.recordDateSortKey);
+  let key1 = sourceInfo1 && sourceInfo1.recordDateSortKey ? sourceInfo1.recordDateSortKey : "?";
+  let key2 = sourceInfo2 && sourceInfo2.recordDateSortKey ? sourceInfo2.recordDateSortKey : "?";
+  return key1.localeCompare(key2);
 }
 
 // Get the full text of the first name form of the name object.
