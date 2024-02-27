@@ -1061,10 +1061,16 @@ function getFactsHtml(entity, key="facts") {
   return "";
 }
 
+function trimPlace(place) {
+  return place ? place
+    .replace(", United States of America", "")
+    .replace(", United States", "")
+    .replace(", Vereinigte Staaten von Amerika", "") : null;
+}
 function getFactHtml(fact, ignoreStatus) {
   let type = extractType(fact.type);
   let date = fact.date ? fact.date.original : null;
-  let place = fact.place ? fact.place.original : null;
+  let place = fact.place ? trimPlace(fact.place.original) : null;
   let value = fact.value ? fact.value : null;
   let statusClass = fact.status && !ignoreStatus ? " " + fact.status : "";
   let html = "<span class='fact-type" + statusClass + "'>"
@@ -3441,7 +3447,7 @@ function getMergeGrouperHtml(maxDepth) {
 }
 
 function updateMergeHierarchyHtml() {
-  $("#" + mergeGrouper.tabId).html(getMergeGrouperHtml());
+  $("#" + mergeGrouper.tabId).html(getMergeGrouperHtml(mergeGrouper.maxDepth));
   highlightSelectedRows(mergeGrouper);
 }
 
