@@ -4233,8 +4233,10 @@ On most of the views, you can do the following:
 This tab shows a merge hierarchy, showing what the merged persons looked like originally, and how and when they
 merged over time.
 <ul>
-  <li>Click a row to select that row and all the rows that merged into it.</li>
-  <li>(Click on child rows to deselect those)</li>
+  <li>Click a row to select that row and all the rows that merged into it. Click on child rows to deselect those)</li>
+  <li>The red-ish person IDs on the left are the "duplicates" in a merge, and the green ones are the winning "survivors".
+  Note that the survivor reuses the same person ID, so a (v2), (v3), etc., is used to distinguish different
+  instances of the same person ID.</li>
   <li>Click on the red "Apply selected rows to Split" button to apply information from the
       currently-selected rows to the Split view.</li>
 </ul>
