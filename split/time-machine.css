@@ -130,7 +130,7 @@ td {
     color: #400180;
 }
 
-#tabs ul {
+#tabs > ul {
     list-style-type: none;
     margin: 0;
     padding: 0;
@@ -138,12 +138,12 @@ td {
     background-color: #dec49e;
 }
 
-#tabs ul li {
+#tabs > ul > li {
     float: left;
     border: 1px solid #eee3d3;
 }
 
-#tabs ul li a:hover {
+#tabs > ul > li a:hover {
     background-color: #d5b398;
 }
 
@@ -151,7 +151,7 @@ td {
     background-color: #c7966d;
 }
 
-#tabs ul li a {
+#tabs > ul > li > a {
     display: block;
     color: black;
     padding: 8px;
@@ -397,4 +397,8 @@ a:hover {
 
 .undecided {
     background-color: #fdfdf2;
+}
+.help, .help ul li {
+    color: #400180;
+    background-color: #FFFFFF;
 }

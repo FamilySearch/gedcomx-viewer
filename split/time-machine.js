@@ -512,14 +512,14 @@ function formatTimestamp(ts, includeTimestamp) {
   return dateHtml;
 }
 
-
 // ==================== HTML ===================================
 // changeLogMap - Map of personId -> GedcomX of the change log for that personId.
 const MERGE_VIEW   = "merge-hierarchy";
 const FLAT_VIEW    = "flat-view";
 const SOURCES_VIEW = "sources-view";
-const SPLIT_VIEW   = "split-view";
 const COMBO_VIEW   = "combo-view";
+const SPLIT_VIEW   = "split-view";
+const HELP_VIEW    = "help-view";
 
 function makeMainHtml(context, changeLogMap, $mainTable) {
   let personMinMaxTs = {};
@@ -535,6 +535,7 @@ function makeMainHtml(context, changeLogMap, $mainTable) {
     "  <li><a href='#" + SPLIT_VIEW   + "'><span>Split view</span></a></li>\n" +
     // Display Options
     "  <li>" + getDisplayOptionsHtml() + "</li>" +
+    "  <li><a href='#" + HELP_VIEW + "'><span>Help</span></a></li>" +
     "</ul>\n" +
     "<div id ='change-logs-table'>" + getChangeLogTableHtml(allEntries, personIds, personMinMaxTs) + "</div>\n" +
     "<div id='" + MERGE_VIEW + "'>" + getMergeHierarchyHtml(allEntries) + "</div>\n" +
@@ -542,7 +543,8 @@ function makeMainHtml(context, changeLogMap, $mainTable) {
     "<div id='" + SOURCES_VIEW + "'>Sources grid...</div>\n" +
     "<div id='" + COMBO_VIEW + "'>Flat + sources view...</div>\n" +
     "<div id='" + SPLIT_VIEW + "'>Split view...</div>\n" +
-    "<div id='details'></div>\n";// +
+    "<div id='details'></div>\n" +
+    "<div id='" + HELP_VIEW + "'>" + getHelpViewHtml() + "</div>";// +
     // "<div id='rel-graphs-container'>\n" +
     // "  <div id='close-rel-graphs' onclick='hideRelGraphs()'>X</div>\n" +
     // "  <div id='rel-graphs'></div>\n" +
@@ -4170,4 +4172,108 @@ function updateGedcomx(gedcomx, entry, isOrig) {
         console.log("Unimplemented change log entry type: " + combo + " for ChildAndParentsRelationship");
     }
   }
+}
+
+function getHelpViewHtml() {
+  return `<div class="help">Welcome to the "munged" person splitter prototype!<br>
+<h2>Introduction</h2>
+<p>Any family tree system can have "munged" person entries that contain information about two or more real humans.
+This can come to pass in at least two ways:</p>
+<ol>
+  <li>A <b>bad merge</b>, i.e., merging two person entries together that really represent two different real humans.</li>
+  <li><b>Organically</b>, by adding information about two real humans to the same person entry.</li>
+</ol>
+<p>"Information" here refers to names, gender, events (like birth or death), characteristics (like occupation),
+relationships, source attachments, etc.</p>
+<p>Fixing a munged person is often done in several steps:</p>
+<ol>
+  <li><b>Group</b> the original identities and/or attached sources into those that belong to the same real humans.</li>
+  <li><b>Assign</b> information to the "remaining" or "split-out" persons.</li>
+  <li><b>Create</b> a new person (or restore a previously-existing one) and move information over to them.</li>
+</ol>
+<p>This prototype explores how we might <b>group</b> identities and sources, and <b>assign</b> bits of information
+in a helpful, efficient and hopefully non-error-prone way. It is <i>not</i> intended to be announcement of any
+particular upcoming feature at FamilySearch. While it reads information from Family Tree, it does not actually
+update the Family Tree data. That being said, it may be useful in analyzing real cases in order to better fix them
+manually for now.</p>
+<h2>Instructions</h2>
+<p>To use this prototype, first log in to FamilySearch. Then replace the "PID" parameter in the URL with the person
+ID of someone in Family Tree that may be munged. Then explore the data in each of the various tabs.</p>
+<h3>Display options</h3>
+On most of the views, you can do the following:
+<ul>
+  <li><b>Resize</b>. Drag the column headers to resize the columns.</li>
+  <li><b>Sort</b>. Click on a column header to sort (except in Merge view). Click on the "place" word to sort by place.</li>
+  <li><b>Select</b>. Click on a row to select or deselect it. Shift-click to select a range of rows.</li>
+  <li><b>Group</b>. Click "Create Group" to move the selected rows to a new group, or "Add to group" to add selected rows to it.
+    <ul><li>Click on the name of the group to give it a helpful name or add notes.</li></ul>
+  </li>
+  <li><b>Notes</b>. Click on a cell in the "Notes" field to add a note. (Rich edit like bold and italics are available).</li>
+  <li><b>Apply</b>. Click the red "Apply to Split" button to infer what information should be kept/copied/split out in the Split view.</li>
+  <li><b>Display options</b>. The display options at the top show or hide information, so you can change your focus and fit things on the screen.
+    <ul>
+        <li>Facts: display All facts, just vitals (Birth, christening, death, burial and marriage), or no events.</li>
+        <li>Show additions: Show information that was added after a person was originally created (i.e., after 24 hours).
+            This information has a "+" in front of it.</li>
+        <li>Repeat info from merge (Merge view only): Show/hide information that came in only because of the merge.
+        When off, only data added after a merge appears on the merge node.</li>
+        <li>Include deletions: Show information that was deleted off of the person, as red with strikethrough.</li>
+        <li>Show children: Show/hide children, since sometimes they are necessary for decisions, but other times
+            they take up too much room to focus on other things.</li>
+    </ul>
+  </li>
+</ul>
+<h3>Change Log</h3>
+<p>This tab shows all the change log entries for each of the person IDs that have been merged
+  together into the current "survivor". It is not meant to be especially helpful with fixing a munged person,
+  but was a helpful step in developing the prototype. The entries are sorted with the most recent first and the earliest at
+  the bottom. The person IDs are arranged with earliest to get merged out of existence on the right. Hover
+  over a change log entry to get a pop-up view of details on that change entry.</p>
+<h3>Merge View</h3>
+This tab shows a merge hierarchy, showing what the merged persons looked like originally, and how and when they
+merged over time.
+<ul>
+  <li>Click a row to select that row and all the rows that merged into it.</li>
+  <li>(Click on child rows to deselect those)</li>
+  <li>Click on the red "Apply selected rows to Split" button to apply information from the
+      currently-selected rows to the Split view.</li>
+</ul>
+<h3>Flat view</h3>
+Similar to the Merge view, but only the "leaf nodes" are shown, and sorting and grouping are supported.
+<h3>Sources view</h3>
+Shows the attached sources and the information that each contains about the person and their relatives.
+<ul>
+  <li>Sort by "Record Date" to get a good chronological timeline for the person.</li>
+  <li>Click on the collection name to open that source in a new tab.</li>
+</ul>
+<h3>Combo view (usually best)</h3>
+Combines the Flat view and Sources view.
+<ul>
+  <li>Sort by Person Id to sort the Family Tree persons by person ID, and then show under each of them, which
+  sources were first attached to that person ID (and sort those by record date).</li>
+  <li>This is probably the best view to work in most of the time, as it lets you use the sources to make good
+  decisions, but also lets you decide on the Family Tree persons as well.</li>
+</ul>
+<h3>Split view</h3>
+<p>This screen lets you decide, for every bit of information, whether it should remain with the existing person,
+be split out to the new person, or be copied so that it is on both (like is typically done with the gender).</p>
+<p>Since it would be difficult to know how to best split things up if doing it by hand, use one of the other
+  views and click on "Apply to Split" to pre-populate the decisions in the Split view, and then fine-tune it by hand.</p>
+<ul>
+  <li>Click &lt;, = or &gt; to keep, copy or split out a piece of information.</li>
+  <li>Click the "+"/"-" buttons to show/hide names and facts that appear in sources or earlier versions of a
+  Family Tree person, but which are not currently on the latest person.</li>
+  <li>Check boxes next to any of those "hidden" values to show that they should be kept/added.</li>
+  <li>Sometimes you'll have to choose which value (like which of several possible birth dates) you want
+  to choose for one person or the other.</li>
+</ul>
+<h3>Actually fixing a munged person</h3>
+The tool unfortunately does not actually split a person for real at this time. It is meant to be a prototype to
+quickly explore ideas on how to help someone quickly and correctly split a munged person. For now, you can use
+it to figure out what the persons are supposed to look like, and then do a "restore" on one of the former persons
+and use this tool to help you add missing information to the restored person, and remove wrong information from
+the remaining one.
+<h3>Feedback</h3>
+If you have questions, feedback or suggestions on this prototype, please send e-mail to 
+<a href="mailto:wilsonr@familysearch.org">Randy Wilson</a>.</div>`;
 }
