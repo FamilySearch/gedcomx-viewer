@@ -523,21 +523,25 @@ const COMBO_VIEW   = "combo-view";
 const SPLIT_VIEW   = "split-view";
 const viewList = [HELP_VIEW, CHANGE_LOG_VIEW, MERGE_VIEW, FLAT_VIEW, SOURCES_VIEW, COMBO_VIEW, SPLIT_VIEW];
 
+function getCurrentTab() {
+  return viewList[$("#tabs").tabs("option", "active")];
+}
+
 function makeMainHtml(context, changeLogMap, $mainTable) {
   let personMinMaxTs = {};
   let personIds = [];
   allEntries = combineEntries(context.personId, changeLogMap, personIds, personMinMaxTs);
   let html =
     "<div id='tabs'><ul>\n" +
-    "  <li><a href='#" + HELP_VIEW + "'><span>Help</span></a></li>" +
-    "  <li><a href='#" + CHANGE_LOG_VIEW + "'><span>Change Logs</span></a></li>\n" +
-    "  <li><a href='#" + MERGE_VIEW   + "'><span>Merge view</span></a></li>\n" +
-    "  <li><a href='#" + FLAT_VIEW    + "'><span>Flat view</span></a></li>\n" +
-    "  <li><a href='#" + SOURCES_VIEW + "'><span>Sources view</span></a></li>\n" +
-    "  <li><a href='#" + COMBO_VIEW + "'><span>Combo view</span></a></li>\n" +
-    "  <li><a href='#" + SPLIT_VIEW   + "'><span>Split view</span></a></li>\n" +
+    "  <li class='tab'><a href='#" + HELP_VIEW + "'><span>Help</span></a></li>" +
+    "  <li class='tab'><a href='#" + CHANGE_LOG_VIEW + "'><span>Change Logs</span></a></li>\n" +
+    "  <li class='tab'><a href='#" + MERGE_VIEW   + "'><span>Merge view</span></a></li>\n" +
+    "  <li class='tab'><a href='#" + FLAT_VIEW    + "'><span>Flat view</span></a></li>\n" +
+    "  <li class='tab'><a href='#" + SOURCES_VIEW + "'><span>Sources view</span></a></li>\n" +
+    "  <li class='tab'><a href='#" + COMBO_VIEW + "'><span>Combo view</span></a></li>\n" +
+    "  <li class='tab'><a href='#" + SPLIT_VIEW   + "'><span>Split view</span></a></li>\n" +
     // Display Options
-    "  <li>" + getDisplayOptionsHtml() + "</li>" +
+    "  <li id='options-tab'>" + getDisplayOptionsHtml() + "</li>" +
     "</ul>\n" +
     "<div id='" + HELP_VIEW + "'>" + getHelpViewHtml() + "</div>" +
     "<div id ='change-logs-table'>" + getChangeLogTableHtml(allEntries, personIds, personMinMaxTs) + "</div>\n" +
@@ -555,10 +559,8 @@ function makeMainHtml(context, changeLogMap, $mainTable) {
   $mainTable.html(html);
   $("#rel-graphs-container").hide();
   $("#tabs").tabs({
-    active: 4,
-    activate: function(event, ui) {
-      displayAvailableOptions();
-    }
+    active: viewList.indexOf(COMBO_VIEW),
+    activate: displayAvailableOptions
   });
   // Prevent text from being selected when shift-clicking a row.
   for (let eventType of ["keyup", "keydown"]) {
@@ -1593,6 +1595,10 @@ let displayOptions = new DisplayOptions();
 
 function getDisplayOptionsHtml() {
   return "<div id='settings'>\n" +
+    "  <span id='vertical-option'><input type='checkbox' id='vertical-checkbox' onChange='handleOptionChange()'>Vertical" +
+    "  <span class='vertical-divider'>|</span></span> " +
+    "  <span id='repeat-info-option'><input type='checkbox' id='merge-info-checkbox' onChange='handleOptionChange()'>Repeat info from merge" +
+    "  <span class='vertical-divider'>|</span></span> " +
     "  <form id='fact-level-radio' onChange='handleOptionChange()'>Facts: " +
     "    <input type='radio' name='fact-level' id='fact-" + INCLUDE_ALL_FACTS + "' value='" + INCLUDE_ALL_FACTS + "'>All</input>" +
     "    <input type='radio' name='fact-level' id='fact-" + INCLUDE_VITAL_FACTS + "' value='" + INCLUDE_VITAL_FACTS + "'>Vitals</input>" +
@@ -1602,9 +1608,6 @@ function getDisplayOptionsHtml() {
     "  <span class='vertical-divider'>|</span> " +
     "  <input type='checkbox' id='additions-checkbox' onChange='handleOptionChange()'>Show additions, " +
     "  <input type='checkbox' id='deletions-checkbox' onChange='handleOptionChange()'>Include deletions" +
-    "  <span id='repeat-info-option'><span class='vertical-divider vertical-option'>|</span><input type='checkbox' id='merge-info-checkbox' onChange='handleOptionChange()'>Repeat info from merge</span> " +
-    "  <span class='vertical-divider vertical-option'>|</span> " +
-    "  <span class='vertical-option'><input type='checkbox' id='vertical-checkbox' onChange='handleOptionChange()'>Vertical</span>" +
     "</div>";
 }
 
@@ -1632,14 +1635,14 @@ function handleOptionChange() {
 }
 
 function displayAvailableOptions() {
-  let activeTab = viewList[$("#tabs").tabs("option", "active")];
-  setVisibility("#settings", activeTab !== CHANGE_LOG_VIEW && activeTab !== SPLIT_VIEW);
-  setVisibility(".vertical-option", activeTab === COMBO_VIEW || activeTab === HELP_VIEW);
-  setVisibility("#repeat-info-option", activeTab === MERGE_VIEW || activeTab === HELP_VIEW);
+  let activeTab = getCurrentTab();
+  setVisibility("settings", activeTab !== CHANGE_LOG_VIEW && activeTab !== SPLIT_VIEW);
+  setVisibility("vertical-option", activeTab === COMBO_VIEW || activeTab === HELP_VIEW);
+  setVisibility("repeat-info-option", activeTab === MERGE_VIEW || activeTab === HELP_VIEW);
 }
 
-function setVisibility(searchParam, isVisible) {
-  let $element = $(searchParam);
+function setVisibility(elementId, isVisible) {
+  let $element = $("#" + elementId);
   if (isVisible) {
     $element.show();
   }

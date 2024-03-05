@@ -138,13 +138,17 @@ td {
     background-color: #dec49e;
 }
 
-#tabs > ul > li {
+.tab {
     float: left;
     border: 1px solid #eee3d3;
 }
 
 #tabs > ul > li a:hover {
     background-color: #d5b398;
+}
+
+#options-tab {
+    float:right;
 }
 
 .ui-tabs-active, .ui-tabs-active:hover {
@@ -161,7 +165,7 @@ td {
 
 #settings {
     padding: 6px;
-    margin: 0 0 0 100px;
+    margin: 2px 5px 2px 5px;
     background-color: #f3e4d6;
     border: 1px solid #9d8345;
     border-radius: 5px;
