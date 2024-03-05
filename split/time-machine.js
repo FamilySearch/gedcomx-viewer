@@ -2018,7 +2018,7 @@ class PersonRow {
 
     switch (columnName) {
       case "collection":
-        sortKey = this.sourceInfo.collectionName;
+        sortKey = this.sourceInfo ? this.sourceInfo.collectionName : "";
         break;
       case "person-id":          sortKey = personIdAndRecordDate(this.personId, this.sourceInfo);       break;
       case "attached-to-ids":    sortKey = padV(this.sourceInfo.attachedToPersonId);                    break;
@@ -3379,38 +3379,82 @@ function deleteEmptyGroup(groupId) {
   updateFlatViewHtml(grouper);
 }
 
+function getVerticalGrouperHtml(grouper) {
+  function addGroupNamesRow() {
+    // Top row: <blank cloumn header><group header, colspan=#person'rows' in group><gap>...
+    html += "<tr><td>ROW LABEL</td>"; // leave one cell for the left header column
+    for (let groupIndex = 0; groupIndex < grouper.mergeGroups.length; groupIndex++) {
+      let group = grouper.mergeGroups[groupIndex];
+      let colspan = group.personRows.length > 1 ? " colspan='" + group.personRows.length + "'" : "";
+      html += "<td" + colspan + ">";
+      if (grouper.mergeGroups.length > 1) {
+        html += getGroupHeadingHtml(personGroup, groupIndex);
+      }
+      if (groupIndex === grouper.mergeGroups.length - 1) {
+        html += getAddGroupButtonHtml(grouper);
+      }
+      html += "</td>";
+      if (groupIndex < grouper.mergeGroups.length - 1) {
+        html += "<td class='group-divider'></td>";
+      }
+    }
+    html += "</tr>\n";
+  }
+
+  function getCollectionNameRow() {
+    html += "<tr><td>";
+
+    html += "</td>";
+  }
+  let html = "<table>";
+  addGroupNamesRow();
+
+  // Collection name row
+  if (grouper.tabId === COMBO_VIEW || grouper.tabId === SOURCES_VIEW) {
+    addCollectionNameRow()
+  }
+  html += "</table>\n";
+  return html;
+}
 function getGrouperHtml(grouper) {
+  if (displayOptions.vertical && getCurrentTab() === COMBO_VIEW) {
+    return getVerticalGrouperHtml(grouper);
+  }
   let html = getTableHeader(grouper.usedColumns, grouper.maxDepth, false, grouper);
   let numColumns = html.match(/<th>/g).length;
-
-  function getGroupHeadingHtml(isEmptyGroup, personGroup, groupIndex) {
-    return "<tr class='group-header'><td class='group-header' colspan='" + numColumns + "'>"
-      // Close button for empty groups
-      + (isEmptyGroup ? "<button class='close-button' onclick='deleteEmptyGroup(\"" + personGroup.groupId + "\")'>X</button>" : "")
-      // Group name
-      + "<div class='group-name' contenteditable='true' id='" + personGroup.groupId
-      + "' onkeyup='updateGroupName(\"" + personGroup.groupId + "\")'>"
-      + encode(personGroup.groupName) + "</div>"
-      // "Add to Group" button
-      + "<button class='add-to-group-button' onclick='addSelectedToGroup(\"" + personGroup.groupId + "\")'>Add to group</button>"
-      // "Apply to Split" button
-      + (groupIndex < 1 || isEmptyGroup ? "" : "<button class='apply-button' onclick='splitOnGroup(\"" + personGroup.groupId + "\")'>Apply to Split</button>")
-      + "</td></tr>\n";
-  }
 
   for (let groupIndex = 0; groupIndex < grouper.mergeGroups.length; groupIndex++) {
     let personGroup = grouper.mergeGroups[groupIndex];
     if (grouper.mergeGroups.length > 1) {
-      let isEmptyGroup = isEmpty(personGroup.personRows.length);
-      html += getGroupHeadingHtml(isEmptyGroup, personGroup, groupIndex);
+      html += getGroupHeadingHtml(personGroup, groupIndex);
     }
     for (let personRow of personGroup.personRows) {
       html += personRow.getHtml(grouper.usedColumns, grouper.tabId);
     }
   }
   html += "</table>\n";
-  html += "<button id='add-group' onclick='addGroup(\"" + grouper.id + "\")'>New group</button>\n";
+  html += getAddGroupButtonHtml(grouper);
   return html;
+}
+
+function getAddGroupButtonHtml(grouper) {
+  return "<button id='add-group' onclick='addGroup(\"" + grouper.id + "\")'>New group</button>\n";
+}
+
+function getGroupHeadingHtml(personGroup, groupIndex) {
+  let isEmptyGroup = isEmpty(personGroup.personRows.length);
+  return "<tr class='group-header'><td class='group-header' colspan='" + numColumns + "'>"
+    // Close button for empty groups
+    + (isEmptyGroup ? "<button class='close-button' onclick='deleteEmptyGroup(\"" + personGroup.groupId + "\")'>X</button>" : "")
+    // Group name
+    + "<div class='group-name' contenteditable='true' id='" + personGroup.groupId
+    + "' onkeyup='updateGroupName(\"" + personGroup.groupId + "\")'>"
+    + encode(personGroup.groupName) + "</div>"
+    // "Add to Group" button
+    + "<button class='add-to-group-button' onclick='addSelectedToGroup(\"" + personGroup.groupId + "\")'>Add to group</button>"
+    // "Apply to Split" button
+    + (groupIndex < 1 || isEmptyGroup ? "" : "<button class='apply-button' onclick='splitOnGroup(\"" + personGroup.groupId + "\")'>Apply to Split</button>")
+    + "</td></tr>\n";
 }
 
 function sortColumn(columnName, grouperId) {
@@ -3419,53 +3463,54 @@ function sortColumn(columnName, grouperId) {
   updateFlatViewHtml(grouper);
 }
 
-function getTableHeader(usedColumns, maxDepth, shouldIndent, grouper) {
-  function sortHeader(columnName, label, spanClass) {
-    return "<span "
-        + (spanClass ? "class='" + spanClass + "'" : "")
-        + (grouper ? "onclick='sortColumn(\"" + columnName + "\", \"" + grouper.id + "\")'" : "")
-        + ">" + encode(label) + "</span>";
-  }
-  function datePlaceLabelHtml(columnName, label) {
-    return sortHeader(columnName, label, "sort-date")
-        + (grouper ? "<span class='sort-place' onclick='sortColumn(\"" + columnName + "-place" + "\", \"" + grouper.id + "\")'>"
-        + encode(" place ") + "</span>" : "");
-  }
-  function cell(columnName, label, alwaysInclude) {
-    if (alwaysInclude || usedColumns.has(columnName)) {
-      return "<th>"
-          + (columnName.endsWith("-facts") ? datePlaceLabelHtml(columnName, label) : sortHeader(columnName, label))
-          + "</th>";
-    }
-    return "";
-  }
+function sortHeader(grouper, columnName, label, spanClass) {
+  return "<span "
+    + (spanClass ? "class='" + spanClass + "'" : "")
+    + (grouper ? "onclick='sortColumn(\"" + columnName + "\", \"" + grouper.id + "\")'" : "")
+    + ">" + encode(label) + "</span>";
+}
 
-  // --- getTableHeader()
+function datePlaceLabelHtml(grouper, columnName, label) {
+  return sortHeader(grouper, columnName, label, "sort-date")
+    + (grouper ? "<span class='sort-place' onclick='sortColumn(\"" + columnName + "-place" + "\", \"" + grouper.id + "\")'>"
+      + encode(" place ") + "</span>" : "");
+}
+
+function headerHtml(grouper, usedColumns, columnName, label, alwaysInclude) {
+  if (alwaysInclude || usedColumns.has(columnName)) {
+    return "<th>"
+      + (columnName.endsWith("-facts") ? datePlaceLabelHtml(grouper, columnName, label) : sortHeader(grouper, columnName, label))
+      + "</th>";
+  }
+  return "";
+}
+
+function getTableHeader(usedColumns, maxDepth, shouldIndent, grouper) {
   let colspan = shouldIndent ? " colspan='" + maxDepth + "'" : "";
   let html = "<table>";
 
   if (grouper && (grouper.tabId === SOURCES_VIEW || grouper.tabId === COMBO_VIEW)) {
-    html += "<th>" + sortHeader("collection", "Collection")  + "</th>";
-    html += "<th>" + sortHeader("record-date", "Record Date") + "</th>"
+    html += "<th>" + sortHeader(grouper, "collection", "Collection")  + "</th>";
+    html += "<th>" + sortHeader(grouper, "record-date", "Record Date") + "</th>"
     if (displayOptions.shouldShowAttachedTo) {
-      html += "<th>" + sortHeader("attached-to-ids", "Attached to") + "</th>";
+      html += "<th>" + sortHeader(grouper, "attached-to-ids", "Attached to") + "</th>";
     }
   }
   if (!grouper || grouper.tabId !== SOURCES_VIEW) {
-    html += "<th" + colspan + ">" + sortHeader("person-id", "Person ID") + "</th>";
+    html += "<th" + colspan + ">" + sortHeader(grouper, "person-id", "Person ID") + "</th>";
   }
   if (!grouper || grouper.tabId === FLAT_VIEW) {
-    html += "<th>" + sortHeader("created", "Created") + "</th>";
+    html += "<th>" + sortHeader(grouper, "created", "Created") + "</th>";
   }
-  html += cell("person-name", "Name", true) +
-          cell("person-facts", "Facts") +
-          cell("father-name", "Father") +
-          cell("mother-name", "Mother") +
-          cell("spouse-name", "Spouse") +
-          cell("spouse-facts", "Spouse facts") +
-          cell("child-name", "Children") +
-          cell("child-facts", "Child facts") +
-          cell("notes", "Notes", true);
+  html += headerHtml(grouper, usedColumns, "person-name", "Name", true) +
+          headerHtml(grouper, usedColumns, "person-facts", "Facts") +
+          headerHtml(grouper, usedColumns, "father-name", "Father") +
+          headerHtml(grouper, usedColumns, "mother-name", "Mother") +
+          headerHtml(grouper, usedColumns, "spouse-name", "Spouse") +
+          headerHtml(grouper, usedColumns, "spouse-facts", "Spouse facts") +
+          headerHtml(grouper, usedColumns, "child-name", "Children") +
+          headerHtml(grouper, usedColumns, "child-facts", "Child facts") +
+          headerHtml(grouper, usedColumns, "notes", "Notes", true);
   return html;
 }
 
