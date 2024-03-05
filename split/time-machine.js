@@ -514,12 +514,14 @@ function formatTimestamp(ts, includeTimestamp) {
 
 // ==================== HTML ===================================
 // changeLogMap - Map of personId -> GedcomX of the change log for that personId.
+const HELP_VIEW    = "help-view";
+const CHANGE_LOG_VIEW= "change-logs-table";
 const MERGE_VIEW   = "merge-hierarchy";
 const FLAT_VIEW    = "flat-view";
 const SOURCES_VIEW = "sources-view";
 const COMBO_VIEW   = "combo-view";
 const SPLIT_VIEW   = "split-view";
-const HELP_VIEW    = "help-view";
+const viewList = [HELP_VIEW, CHANGE_LOG_VIEW, MERGE_VIEW, FLAT_VIEW, SOURCES_VIEW, COMBO_VIEW, SPLIT_VIEW];
 
 function makeMainHtml(context, changeLogMap, $mainTable) {
   let personMinMaxTs = {};
@@ -527,7 +529,8 @@ function makeMainHtml(context, changeLogMap, $mainTable) {
   allEntries = combineEntries(context.personId, changeLogMap, personIds, personMinMaxTs);
   let html =
     "<div id='tabs'><ul>\n" +
-    "  <li><a href='#change-logs-table'><span>Change Logs</span></a></li>\n" +
+    "  <li><a href='#" + HELP_VIEW + "'><span>Help</span></a></li>" +
+    "  <li><a href='#" + CHANGE_LOG_VIEW + "'><span>Change Logs</span></a></li>\n" +
     "  <li><a href='#" + MERGE_VIEW   + "'><span>Merge view</span></a></li>\n" +
     "  <li><a href='#" + FLAT_VIEW    + "'><span>Flat view</span></a></li>\n" +
     "  <li><a href='#" + SOURCES_VIEW + "'><span>Sources view</span></a></li>\n" +
@@ -535,16 +538,15 @@ function makeMainHtml(context, changeLogMap, $mainTable) {
     "  <li><a href='#" + SPLIT_VIEW   + "'><span>Split view</span></a></li>\n" +
     // Display Options
     "  <li>" + getDisplayOptionsHtml() + "</li>" +
-    "  <li><a href='#" + HELP_VIEW + "'><span>Help</span></a></li>" +
     "</ul>\n" +
+    "<div id='" + HELP_VIEW + "'>" + getHelpViewHtml() + "</div>" +
     "<div id ='change-logs-table'>" + getChangeLogTableHtml(allEntries, personIds, personMinMaxTs) + "</div>\n" +
     "<div id='" + MERGE_VIEW + "'>" + getMergeHierarchyHtml(allEntries) + "</div>\n" +
     "<div id='" + FLAT_VIEW + "'>" + getFlatViewHtml(allEntries) + "</div>\n" +
     "<div id='" + SOURCES_VIEW + "'>Sources grid...</div>\n" +
     "<div id='" + COMBO_VIEW + "'>Flat + sources view...</div>\n" +
     "<div id='" + SPLIT_VIEW + "'>Split view...</div>\n" +
-    "<div id='details'></div>\n" +
-    "<div id='" + HELP_VIEW + "'>" + getHelpViewHtml() + "</div>";// +
+    "<div id='details'></div>\n";
     // "<div id='rel-graphs-container'>\n" +
     // "  <div id='close-rel-graphs' onclick='hideRelGraphs()'>X</div>\n" +
     // "  <div id='rel-graphs'></div>\n" +
@@ -552,7 +554,12 @@ function makeMainHtml(context, changeLogMap, $mainTable) {
   html += "</div>";
   $mainTable.html(html);
   $("#rel-graphs-container").hide();
-  $("#tabs").tabs({active: 4});
+  $("#tabs").tabs({
+    active: 4,
+    activate: function(event, ui) {
+      displayAvailableOptions();
+    }
+  });
   // Prevent text from being selected when shift-clicking a row.
   for (let eventType of ["keyup", "keydown"]) {
     window.addEventListener(eventType, (e) => {
@@ -1577,6 +1584,8 @@ class DisplayOptions {
     this.shouldShowDeletions = true;
     // Flag for whether to show "AttachedTo" column in sources view.
     this.shouldShowAttachedTo = false;
+    // Flag for whether to do a vertical display
+    this.vertical = false;
   }
 }
 
@@ -1589,11 +1598,13 @@ function getDisplayOptionsHtml() {
     "    <input type='radio' name='fact-level' id='fact-" + INCLUDE_VITAL_FACTS + "' value='" + INCLUDE_VITAL_FACTS + "'>Vitals</input>" +
     "    <input type='radio' name='fact-level' id='fact-" + INCLUDE_NO_FACTS + "' value='" + INCLUDE_NO_FACTS + "'>None</input>" +
     "  </form> <span class='vertical-divider'>|</span> " +
-    "  <input type='checkbox' id='additions-checkbox' onChange='handleOptionChange()'>Show additions, " +
-    "  <input type='checkbox' id='merge-info-checkbox' onChange='handleOptionChange()'>Repeat info from merge, " +
-    "  <input type='checkbox' id='deletions-checkbox' onChange='handleOptionChange()'>Include deletions" +
-    "  <span class='vertical-divider'>|</span> " +
     "  <input type='checkbox' id='children-checkbox' onChange='handleOptionChange()'>Show children" +
+    "  <span class='vertical-divider'>|</span> " +
+    "  <input type='checkbox' id='additions-checkbox' onChange='handleOptionChange()'>Show additions, " +
+    "  <input type='checkbox' id='deletions-checkbox' onChange='handleOptionChange()'>Include deletions" +
+    "  <span id='repeat-info-option'><span class='vertical-divider vertical-option'>|</span><input type='checkbox' id='merge-info-checkbox' onChange='handleOptionChange()'>Repeat info from merge</span> " +
+    "  <span class='vertical-divider vertical-option'>|</span> " +
+    "  <span class='vertical-option'><input type='checkbox' id='vertical-checkbox' onChange='handleOptionChange()'>Vertical</span>" +
     "</div>";
 }
 
@@ -1604,6 +1615,7 @@ function initOptionsDisplay() {
   $("#merge-info-checkbox").prop("checked", displayOptions.shouldRepeatInfoFromMerge);
   $("#additions-checkbox").prop("checked", displayOptions.shouldShowAdditions);
   $("#deletions-checkbox").prop("checked", displayOptions.shouldShowDeletions);
+  displayAvailableOptions();
 }
 
 function handleOptionChange() {
@@ -1612,9 +1624,28 @@ function handleOptionChange() {
   displayOptions.shouldRepeatInfoFromMerge = $("#merge-info-checkbox").prop("checked");
   displayOptions.shouldShowAdditions = $("#additions-checkbox").prop("checked");
   displayOptions.shouldShowDeletions = $("#deletions-checkbox").prop("checked");
+  displayOptions.vertical = $("#vertical-checkbox").prop("checked");
   updatePersonFactsDisplay();
   updateIncludedColumns();
   updateTabsHtml();
+  displayAvailableOptions();
+}
+
+function displayAvailableOptions() {
+  let activeTab = viewList[$("#tabs").tabs("option", "active")];
+  setVisibility("#settings", activeTab !== CHANGE_LOG_VIEW && activeTab !== SPLIT_VIEW);
+  setVisibility(".vertical-option", activeTab === COMBO_VIEW || activeTab === HELP_VIEW);
+  setVisibility("#repeat-info-option", activeTab === MERGE_VIEW || activeTab === HELP_VIEW);
+}
+
+function setVisibility(searchParam, isVisible) {
+  let $element = $(searchParam);
+  if (isVisible) {
+    $element.show();
+  }
+  else {
+    $element.hide();
+  }
 }
 
 function updatePersonFactsDisplay() {
