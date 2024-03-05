@@ -2572,6 +2572,7 @@ function getComboViewHtml() {
   let personAndPersonaRows = buildMergeRows(rootMergeNode, "", maxDepth - 1, false, [], false, personSourcesMap);
   let usedColumns = findUsedColumns(personAndPersonaRows);
   comboGrouper = new Grouper(personAndPersonaRows, usedColumns, maxDepth, COMBO_VIEW);
+  comboGrouper.sort("person-id");
   return getGrouperHtml(comboGrouper);
 }
 
