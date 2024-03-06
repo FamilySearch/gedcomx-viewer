@@ -22,9 +22,25 @@ th {
     background-color: #f2ffeb;
     position: sticky;
     border: 1px solid #d3e8ca;
+    text-align: left;
 }
 td {
     vertical-align: top;
+}
+.drag-table-handle {
+    border: 1px solid #adc9a2;
+    border-radius: 3px;
+    background-color: #d3e8ca;
+    text-align: center;
+    margin: 2px;
+    box-shadow: 2px 2px 3px lightgrey;
+}
+.drag-width {
+    border-radius: 3px;
+}
+.add-group-button {
+    margin: 2px;
+    box-shadow: 2px 2px 3px lightgrey;
 }
 .sort-date {
     padding: 0 20px 0 0;

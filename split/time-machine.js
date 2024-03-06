@@ -579,19 +579,39 @@ let columnPressed = false;
 let columnStart = undefined;
 let columnStartX;
 let columnStartWidth;
+let resizingTable;
+let tableStartSize;
 
 function makeTableHeadersDraggable() {
-  $("table th").mousedown(function(e) {
+  function findTable(element) {
+    while (element && element.prop('nodeName') !== "TABLE") {
+      element = element.parent();
+    }
+    return element;
+  }
+
+  $(".drag-width").mousedown(function(e) {
     columnStart = $(this);
     columnPressed = true;
     columnStartX = e.pageX;
     columnStartWidth = $(this).width();
+    // Table jquery element that contains the dragged cell.
+    // If this is set, then dragging resizes the table instead of the column.
+    resizingTable = columnStart.attr("id") === "drag-table" ? findTable(columnStart) : null;
+    tableStartSize = resizingTable ? resizingTable.width() : null;
     $(columnStart).addClass("resizing");
   });
 
   $(document).mousemove(function(e) {
     if(columnPressed) {
-      $(columnStart).width(columnStartWidth+(e.pageX-columnStartX));
+      if (resizingTable) {
+        let newColumnSize = columnStartWidth + (e.pageX - columnStartX);
+        let newSizeRatio = newColumnSize / columnStartWidth;
+        $(resizingTable).width(tableStartSize * newSizeRatio);
+      }
+      else {
+        $(columnStart).width(columnStartWidth + (e.pageX - columnStartX));
+      }
       e.preventDefault();
     }
   });
@@ -1587,7 +1607,7 @@ class DisplayOptions {
     // Flag for whether to show "AttachedTo" column in sources view.
     this.shouldShowAttachedTo = false;
     // Flag for whether to do a vertical display
-    this.vertical = false;
+    this.vertical = true;
   }
 }
 
@@ -1613,9 +1633,10 @@ function getDisplayOptionsHtml() {
 
 // Set the displayed options according to the global displayOptions variable's contents.
 function initOptionsDisplay() {
+  $("#vertical-checkbox").prop("checked", displayOptions.vertical);
+  $("#merge-info-checkbox").prop("checked", displayOptions.shouldRepeatInfoFromMerge);
   $("#fact-" + displayOptions.factsToInclude).prop("checked", true);
   $("#children-checkbox").prop("checked", displayOptions.shouldShowChildren);
-  $("#merge-info-checkbox").prop("checked", displayOptions.shouldRepeatInfoFromMerge);
   $("#additions-checkbox").prop("checked", displayOptions.shouldShowAdditions);
   $("#deletions-checkbox").prop("checked", displayOptions.shouldShowDeletions);
   displayAvailableOptions();
@@ -1679,7 +1700,7 @@ class Grouper {
     this.id = "grouper-" + nextPersonRowId++;
     this.tabId = tabId;
     this.mergeGroups = [new MergeGroup("Group 1", mergeRows, this)];
-    this.usedColumns = usedColumns;
+    this.usedColumns = usedColumns; // Set of COL_*
     this.maxDepth = maxDepth;
     this.prevSelectLocation = null;
     for (let mergeRow of mergeRows) {
@@ -2017,25 +2038,25 @@ class PersonRow {
     }
 
     switch (columnName) {
-      case "collection":
+      case COLUMN_COLLECTION:
         sortKey = this.sourceInfo ? this.sourceInfo.collectionName : "";
         break;
-      case "person-id":          sortKey = personIdAndRecordDate(this.personId, this.sourceInfo);       break;
-      case "attached-to-ids":    sortKey = padV(this.sourceInfo.attachedToPersonId);                    break;
-      case "created":            sortKey = String(this.mergeNode.firstEntry.updated).padStart(15, "0"); break;
-      case "record-date":        sortKey = recordDateSortKey(this.sourceInfo);     break;
-      case "person-name":        sortKey = getPersonName(this.person);             break;
-      case "person-facts":       sortKey = getFirstFactDate(this.person);          break;
-      case "person-facts-place": sortKey = getFirstFactPlace(this.person);         break;
-      case "father-name":        sortKey = getFirstRelativeName(this.fathers);     break;
-      case "mother-name":        sortKey = getFirstRelativeName(this.mothers);     break;
-      case "spouse-name":        sortKey = getFirstSpouseName(this.families);      break;
-      case "spouse-facts":       sortKey = getFirstSpouseFactDate(this.families);  break;
-      case "spouse-facts-place": sortKey = getFirstSpouseFactPlace(this.families); break;
-      case "child-name":         sortKey = getFirstChildName(this.families);       break;
-      case "child-facts":        sortKey = getFirstChildFactDate(this.families);   break;
-      case "child-facts-place":  sortKey = getFirstChildFactPlace(this.families);  break;
-      case "notes":              sortKey = this.note;                              break;
+      case COLUMN_PERSON_ID:          sortKey = personIdAndRecordDate(this.personId, this.sourceInfo);       break;
+      case COLUMN_ATTACHED_TO_IDS:    sortKey = padV(this.sourceInfo.attachedToPersonId);                    break;
+      case COLUMN_CREATED:            sortKey = String(this.mergeNode.firstEntry.updated).padStart(15, "0"); break;
+      case COLUMN_RECORD_DATE:        sortKey = recordDateSortKey(this.sourceInfo);     break;
+      case COLUMN_PERSON_NAME:        sortKey = getPersonName(this.person);             break;
+      case COLUMN_PERSON_FACTS:       sortKey = getFirstFactDate(this.person);          break;
+      case COLUMN_PERSON_FACTS_PLACE: sortKey = getFirstFactPlace(this.person);         break;
+      case COLUMN_FATHER_NAME:        sortKey = getFirstRelativeName(this.fathers);     break;
+      case COLUMN_MOTHER_NAME:        sortKey = getFirstRelativeName(this.mothers);     break;
+      case COLUMN_SPOUSE_NAME:        sortKey = getFirstSpouseName(this.families);      break;
+      case COLUMN_SPOUSE_FACTS:       sortKey = getFirstSpouseFactDate(this.families);  break;
+      case COLUMN_SPOUSE_FACTS_PLACE: sortKey = getFirstSpouseFactPlace(this.families); break;
+      case COLUMN_CHILD_NAME:         sortKey = getFirstChildName(this.families);       break;
+      case COLUMN_CHILD_FACTS:        sortKey = getFirstChildFactDate(this.families);   break;
+      case COLUMN_CHILD_FACTS_PLACE:  sortKey = getFirstChildFactPlace(this.families);  break;
+      case COLUMN_NOTES:              sortKey = this.note;                              break;
     }
     this.sortKey = sortKey;
   }
@@ -2165,21 +2186,21 @@ class PersonRow {
     return numChildrenRows === 0 ? 1 : numChildrenRows;
   }
 
+  combineParents(parents) {
+    let parentsList = [];
+    if (parents) {
+      for (let parent of parents) {
+        parentsList.push(parent.name);
+      }
+    }
+    return parentsList.join("<br>");
+  }
+
   getRowPersonCells(gedcomx, personId, rowClass, usedColumns, bottomClass, allRowsClass) {
     function addColumn(key, rowspan, content, extraClass) {
       if (usedColumns.has(key)) {
         html += "<td class='" + rowClass + extraClass + "'" + rowspan + ">" + (content ? content : "") + "</td>";
       }
-    }
-
-    function combineParents(parents) {
-      let parentsList = [];
-      if (parents) {
-        for (let parent of parents) {
-          parentsList.push(parent.name);
-        }
-      }
-      return parentsList.join("<br>");
     }
 
     // htmlHolder is an array of 0 or 1 HTML strings. If not empty, and we're adding a new row, add this just before closing the row.
@@ -2196,8 +2217,8 @@ class PersonRow {
     let rowspan = getRowspanParameter(this.getNumChildrenRows());
     let html = "<td class='" + rowClass + bottomClass + "'" + rowspan + ">" + this.personDisplay.name + "</td>\n";
     addColumn("person-facts", rowspan, this.personDisplay.facts, bottomClass);
-    addColumn("father-name", rowspan, combineParents(this.fathers), bottomClass);
-    addColumn("mother-name", rowspan, combineParents(this.mothers), bottomClass);
+    addColumn("father-name", rowspan, this.combineParents(this.fathers), bottomClass);
+    addColumn("mother-name", rowspan, this.combineParents(this.mothers), bottomClass);
     let isFirstSpouse = true;
     let noteId = this.id + "-note";
     let noteCellHtmlHolder = ["<td class='note " + rowClass + bottomClass + "' onclick='doNotSelect(event)' contenteditable='true'" + rowspan
@@ -2271,14 +2292,25 @@ class PersonRow {
     return this.sourceInfo;
   }
 
-  getCollectionHtml() {
+  getCellClass() {
+    return this.isSourceRow() ? "source-row" : "merge-id";
+  }
+
+  getCollectionHtml(rowSpan) {
+    let html = "<td class='" + this.getCellClass() + " main-row'" + (rowSpan ? rowSpan : "") + ">";
     if (this.sourceInfo) {
       if (this.sourceInfo.personaArk) {
-        return "<a href='" + this.sourceInfo.personaArk + "' target='_blank'>" + encode(this.sourceInfo.collectionName) + "</a>";
+        html += "<a href='" + this.sourceInfo.personaArk + "' target='_blank'>" + encode(this.sourceInfo.collectionName) + "</a>";
       }
-      return encode(this.sourceInfo.collectionName);
+      else {
+        html += encode(this.sourceInfo.collectionName);
+      }
     }
-    return "";
+    return html + "</td>";
+  }
+
+  getRecordDateHtml(rowSpan) {
+    return "<td class='" + this.getCellClass() + " main-row date rt'" + (rowSpan ? rowSpan : "") + ">" + (this.sourceInfo ? encode(this.sourceInfo.recordDate) : "") + "</td>";
   }
 
   getPersonIdHtml(shouldIncludeVersion) {
@@ -2352,9 +2384,8 @@ class PersonRow {
     else {
       if (tabId === SOURCES_VIEW || tabId === COMBO_VIEW) {
         // Collection name and record date
-        let rowClass = this.isSourceRow() ? "source-row" : "merge-id";
-        html += "<td class='" + rowClass + " main-row'" + rowSpan + ">" + this.getCollectionHtml() + "</td>";
-        html += "<td class='" + rowClass + " main-row date rt'" + rowSpan + ">" + (this.sourceInfo ? encode(this.sourceInfo.recordDate) : "") + "</td>";
+        html += this.getCollectionHtml(rowSpan);
+        html += this.getRecordDateHtml(rowSpan);
       }
       if (tabId !== SOURCES_VIEW) {
         // Person ID
@@ -2363,7 +2394,7 @@ class PersonRow {
     }
     if (tabId === MERGE_VIEW || tabId === FLAT_VIEW) {
       // Created date
-      html += "<td " + rowClasses + rowSpan + ">" + formatTimestamp(this.mergeNode.firstEntry.updated) + "</td>";
+      html += this.getTimestampHtml(rowClasses, rowSpan);
     }
 
     // Person info
@@ -2373,7 +2404,11 @@ class PersonRow {
     return html;
   }
 
-  // Add a source persona PersonRow as a "child" of a FT person row.
+  getTimestampHtml(rowClasses, rowSpan) {
+    return "<td " + (rowClasses ? rowClasses : this.getCellClass()) + (rowSpan ? rowSpan : "") + ">" + formatTimestamp(this.mergeNode.firstEntry.updated) + "</td>";
+  }
+
+// Add a source persona PersonRow as a "child" of a FT person row.
   addSourceChild(personaRow) {
     this.childSourceRows.push(personaRow);
   }
@@ -2606,7 +2641,7 @@ function getComboViewHtml() {
   let personAndPersonaRows = buildMergeRows(rootMergeNode, "", maxDepth - 1, false, [], false, personSourcesMap);
   let usedColumns = findUsedColumns(personAndPersonaRows);
   comboGrouper = new Grouper(personAndPersonaRows, usedColumns, maxDepth, COMBO_VIEW);
-  comboGrouper.sort("person-id");
+  comboGrouper.sort(COLUMN_PERSON_ID);
   return getGrouperHtml(comboGrouper);
 }
 
@@ -2917,6 +2952,24 @@ function splitOnInfoInGroup(tabId, keepRows, splitRows) {
     }
   }
 }
+
+const COLUMN_COLLECTION         = "collection";
+const COLUMN_PERSON_ID          = "person-id";
+const COLUMN_ATTACHED_TO_IDS    = "attached-to-ids";
+const COLUMN_CREATED            = "created";
+const COLUMN_RECORD_DATE        = "record-date";
+const COLUMN_PERSON_NAME        = "person-name";
+const COLUMN_PERSON_FACTS       = "person-facts";
+const COLUMN_PERSON_FACTS_PLACE = "person-facts-place";
+const COLUMN_FATHER_NAME        = "father-name";
+const COLUMN_MOTHER_NAME        = "mother-name";
+const COLUMN_SPOUSE_NAME        = "spouse-name";
+const COLUMN_SPOUSE_FACTS       = "spouse-facts";
+const COLUMN_SPOUSE_FACTS_PLACE = "spouse-facts-place";
+const COLUMN_CHILD_NAME         = "child-name";
+const COLUMN_CHILD_FACTS        = "child-facts";
+const COLUMN_CHILD_FACTS_PLACE  = "child-facts-place";
+const COLUMN_NOTES              = "notes";
 
 // Direction to move each element
 const DIR_KEEP = "keep"; // keep on the "survivor".
@@ -3380,48 +3433,88 @@ function deleteEmptyGroup(groupId) {
 }
 
 function getVerticalGrouperHtml(grouper) {
+  function padGroup(groupIndex) {
+    if (groupIndex < grouper.mergeGroups.length - 1) {
+      html += "<td class='group-divider'></td>";
+    }
+  }
+
+  function addRow(columnId, rowLabel, shouldAlwaysInclude, personRowFunction) {
+    if (shouldAlwaysInclude || grouper.usedColumns.has(columnId)) {
+      html += "<tr>" + headerHtml(grouper, columnId, rowLabel, shouldAlwaysInclude, true);
+      for (let groupIndex = 0; groupIndex < grouper.mergeGroups.length; groupIndex++) {
+        let group = grouper.mergeGroups[groupIndex];
+        for (let personRow of group.personRows) {
+          html += personRowFunction(personRow);
+        }
+        padGroup(groupIndex);
+      }
+      html += "</tr>\n";
+    }
+  }
+
   function addGroupNamesRow() {
-    // Top row: <blank cloumn header><group header, colspan=#person'rows' in group><gap>...
-    html += "<tr><td>ROW LABEL</td>"; // leave one cell for the left header column
+    // Top row: <blank column header><group header, colspan=#person'rows' in group><gap>...
+    html += "<tr><td class='drag-width' id='drag-table'><div class='drag-table-handle'>" + encode("<=width=>") + "</div></td>"; // leave one cell for the left header column
     for (let groupIndex = 0; groupIndex < grouper.mergeGroups.length; groupIndex++) {
       let group = grouper.mergeGroups[groupIndex];
       let colspan = group.personRows.length > 1 ? " colspan='" + group.personRows.length + "'" : "";
       html += "<td" + colspan + ">";
       if (grouper.mergeGroups.length > 1) {
-        html += getGroupHeadingHtml(personGroup, groupIndex);
+        html += getGroupHeadingHtml(group, groupIndex);
       }
       if (groupIndex === grouper.mergeGroups.length - 1) {
         html += getAddGroupButtonHtml(grouper);
       }
       html += "</td>";
-      if (groupIndex < grouper.mergeGroups.length - 1) {
-        html += "<td class='group-divider'></td>";
-      }
+      padGroup(groupIndex);
     }
     html += "</tr>\n";
   }
 
-  function getCollectionNameRow() {
-    html += "<tr><td>";
-
-    html += "</td>";
+  function td(personRow, cellContentsHtml, shouldDrag) {
+    return "<td class='" + personRow.getCellClass() + (shouldDrag ? " drag-width" : "") + "'>" + (cellContentsHtml ? cellContentsHtml : "") + "</td>";
   }
+
+  let tabId = grouper.tabId;
   let html = "<table>";
   addGroupNamesRow();
 
-  // Collection name row
-  if (grouper.tabId === COMBO_VIEW || grouper.tabId === SOURCES_VIEW) {
-    addCollectionNameRow()
+  // Person ID row
+  if (tabId !== SOURCES_VIEW) {
+    addRow(COLUMN_PERSON_ID, "Person ID", true, personRow => td(personRow, personRow.getPersonIdHtml(false), true));
   }
+  // Collection name & record date rows
+  if (tabId === COMBO_VIEW || tabId === SOURCES_VIEW) {
+    addRow(COLUMN_COLLECTION, "Collection", true, personRow => personRow.getCollectionHtml());
+    addRow(COLUMN_RECORD_DATE, "Record Date", true, personRow => personRow.getRecordDateHtml());
+  }
+  // Created timestamp row
+  if (tabId === MERGE_VIEW || tabId === FLAT_VIEW) {
+    addRow(COLUMN_CREATED, "Created", true, personRow => personRow.getTimestampHtml());
+  }
+  // Person names row
+  addRow(COLUMN_PERSON_NAME, "Name", true, personRow => td(personRow, personRow.personDisplay.name));
+
+  // Person facts row
+  // Future: Put "Birth:", etc., on left, and put events of that time in the same row.
+  //  - Able to sort by that. Requires using COLUMN_FACTS + ".Birth" or something in order to sort and display.
+  addRow(COLUMN_SPOUSE_FACTS, "Facts", false, personRow => td(personRow, personRow.personDisplay.facts));
+
+  addRow(COLUMN_FATHER_NAME, "Father", false, personRow => td(personRow, personRow.combineParents(personRow.fathers)));
+  addRow(COLUMN_MOTHER_NAME, "Mother", false, personRow => td(personRow, personRow.combineParents(personRow.mothers)));
+
+  //TODO: spouse (&facts) & children...
   html += "</table>\n";
   return html;
 }
+
 function getGrouperHtml(grouper) {
   if (displayOptions.vertical && getCurrentTab() === COMBO_VIEW) {
     return getVerticalGrouperHtml(grouper);
   }
-  let html = getTableHeader(grouper.usedColumns, grouper.maxDepth, false, grouper);
-  let numColumns = html.match(/<th>/g).length;
+  let html = getTableHeader(grouper, false);
+  let numColumns = html.match(/<th/g).length;
 
   for (let groupIndex = 0; groupIndex < grouper.mergeGroups.length; groupIndex++) {
     let personGroup = grouper.mergeGroups[groupIndex];
@@ -3438,7 +3531,7 @@ function getGrouperHtml(grouper) {
 }
 
 function getAddGroupButtonHtml(grouper) {
-  return "<button id='add-group' onclick='addGroup(\"" + grouper.id + "\")'>New group</button>\n";
+  return "<button class='add-group-button' onclick='addGroup(\"" + grouper.id + "\")'>New group</button>\n";
 }
 
 function getGroupHeadingHtml(personGroup, groupIndex) {
@@ -3476,41 +3569,41 @@ function datePlaceLabelHtml(grouper, columnName, label) {
       + encode(" place ") + "</span>" : "");
 }
 
-function headerHtml(grouper, usedColumns, columnName, label, alwaysInclude) {
-  if (alwaysInclude || usedColumns.has(columnName)) {
-    return "<th>"
+function headerHtml(grouper, columnName, label, alwaysInclude, nonDraggable) {
+  if (alwaysInclude || grouper.usedColumns.has(columnName)) {
+    return "<th" + (nonDraggable ? "" : " class='drag-width'") + ">"
       + (columnName.endsWith("-facts") ? datePlaceLabelHtml(grouper, columnName, label) : sortHeader(grouper, columnName, label))
       + "</th>";
   }
   return "";
 }
 
-function getTableHeader(usedColumns, maxDepth, shouldIndent, grouper) {
-  let colspan = shouldIndent ? " colspan='" + maxDepth + "'" : "";
+function getTableHeader(grouper, shouldIndent) {
+  let colspan = shouldIndent ? " colspan='" + grouper.maxDepth + "'" : "";
   let html = "<table>";
 
-  if (grouper && (grouper.tabId === SOURCES_VIEW || grouper.tabId === COMBO_VIEW)) {
-    html += "<th>" + sortHeader(grouper, "collection", "Collection")  + "</th>";
-    html += "<th>" + sortHeader(grouper, "record-date", "Record Date") + "</th>"
+  if (grouper.tabId === SOURCES_VIEW || grouper.tabId === COMBO_VIEW) {
+    html += "<th class='drag-width'>" + sortHeader(grouper, COLUMN_COLLECTION, "Collection")  + "</th>";
+    html += "<th class='drag-width'>" + sortHeader(grouper, COLUMN_RECORD_DATE, "Record Date") + "</th>";
     if (displayOptions.shouldShowAttachedTo) {
-      html += "<th>" + sortHeader(grouper, "attached-to-ids", "Attached to") + "</th>";
+      html += "<th class='drag-width'>" + sortHeader(grouper, COLUMN_ATTACHED_TO_IDS, "Attached to") + "</th>";
     }
   }
-  if (!grouper || grouper.tabId !== SOURCES_VIEW) {
-    html += "<th" + colspan + ">" + sortHeader(grouper, "person-id", "Person ID") + "</th>";
+  if (grouper.tabId !== SOURCES_VIEW) {
+    html += "<th class='drag-width'" + colspan + ">" + sortHeader(grouper, COLUMN_PERSON_ID, "Person ID") + "</th>";
   }
-  if (!grouper || grouper.tabId === FLAT_VIEW) {
-    html += "<th>" + sortHeader(grouper, "created", "Created") + "</th>";
+  if (grouper.tabId === FLAT_VIEW) {
+    html += "<th class='drag-width'>" + sortHeader(grouper, COLUMN_CREATED, "Created") + "</th>";
   }
-  html += headerHtml(grouper, usedColumns, "person-name", "Name", true) +
-          headerHtml(grouper, usedColumns, "person-facts", "Facts") +
-          headerHtml(grouper, usedColumns, "father-name", "Father") +
-          headerHtml(grouper, usedColumns, "mother-name", "Mother") +
-          headerHtml(grouper, usedColumns, "spouse-name", "Spouse") +
-          headerHtml(grouper, usedColumns, "spouse-facts", "Spouse facts") +
-          headerHtml(grouper, usedColumns, "child-name", "Children") +
-          headerHtml(grouper, usedColumns, "child-facts", "Child facts") +
-          headerHtml(grouper, usedColumns, "notes", "Notes", true);
+  html += headerHtml(grouper, COLUMN_PERSON_NAME, "Name", true) +
+          headerHtml(grouper, COLUMN_PERSON_NAME, "Facts") +
+          headerHtml(grouper, COLUMN_FATHER_NAME, "Father") +
+          headerHtml(grouper, COLUMN_MOTHER_NAME, "Mother") +
+          headerHtml(grouper, COLUMN_SPOUSE_NAME, "Spouse") +
+          headerHtml(grouper, COLUMN_SPOUSE_FACTS, "Spouse facts") +
+          headerHtml(grouper, COLUMN_CHILD_NAME, "Children") +
+          headerHtml(grouper, COLUMN_CHILD_FACTS, "Child facts") +
+          headerHtml(grouper, COLUMN_NOTES, "Notes", true);
   return html;
 }
 
@@ -3525,8 +3618,8 @@ function getMergeHierarchyHtml(entries) {
 }
 
 function getMergeGrouperHtml(maxDepth) {
-  let html = getTableHeader(mergeGrouper.usedColumns, mergeGrouper.maxDepth, true, null);
-  let numColumns = html.match(/<th>/g).length + maxDepth;
+  let html = getTableHeader(mergeGrouper, true);
+  let numColumns = html.match(/<th/g).length + maxDepth;
   for (let mergeRow of mergeGrouper.getAllRows()) {
     html += mergeRow.getHtml(mergeGrouper.usedColumns, MERGE_VIEW);
   }
