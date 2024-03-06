@@ -136,13 +136,13 @@ td {
     color: #007580;
 }
 
-.note-redundant-subject {
+.ft-note-redundant-subject {
     color: #bea4da;
 }
-.note-subject {
+.ft-note-subject {
     color: #400180;
 }
-.note {
+.ft-note {
     color: #400180;
 }
 
@@ -229,7 +229,7 @@ td {
 .note {
     background-color: #fafcf7;
     border: 1px solid #cedace;
-    white-space: pre;
+    white-space: break-spaces;
 }
 .selected * {
     background-color: #fcfcaa;

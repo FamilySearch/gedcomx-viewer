@@ -1036,11 +1036,11 @@ function getNoteHtml(person) {
   if (person && person.notes) {
     for (let note of person.notes) {
       if (note.subject) {
-        let subjectClass = (note.text && note.text.includes(note.subject)) ? "note-redundant-subject" : "note-subject";
+        let subjectClass = (note.text && note.text.includes(note.subject)) ? "ft-note-redundant-subject" : "ft-note-subject";
         html += "<span class='" + subjectClass + "'>" + encode("Subject: " + note.subject.replaceAll("\n", "; ")) + "</span><br>\n";
       }
       if (note.text) {
-        html += "Note: <span class='note'>" + encode(note.text).replaceAll("\n", "<br>\n") + "</span><br>\n";
+        html += "Note: <span class='ft-note'>" + encode(note.text).replaceAll("\n", "<br>\n") + "</span><br>\n";
       }
       html += getChangeMessage(note);
     }
@@ -2220,9 +2220,7 @@ class PersonRow {
     addColumn("father-name", rowspan, this.combineParents(this.fathers), bottomClass);
     addColumn("mother-name", rowspan, this.combineParents(this.mothers), bottomClass);
     let isFirstSpouse = true;
-    let noteId = this.id + "-note";
-    let noteCellHtmlHolder = ["<td class='note " + rowClass + bottomClass + "' onclick='doNotSelect(event)' contenteditable='true'" + rowspan
-      + " id='" + noteId + "' onkeyup='updateNote(\"" + this.id + "\", \"" + noteId + "\")'>" + encode(this.note) + "</td>"];
+    let noteCellHtmlHolder = this.getNoteCellHtml(rowClass, bottomClass, rowspan);
 
     if (this.families.length > 0) {
       for (let spouseIndex = 0; spouseIndex < this.families.length; spouseIndex++) {
@@ -2238,25 +2236,32 @@ class PersonRow {
             let child = spouseFamily.children[childIndex];
             isFirstChild = startNewRowIfNotFirst(isFirstChild, allRowsClass, noteCellHtmlHolder);
             let childBottomClass = childIndex === spouseFamily.children.length - 1 ? familyBottomClass : "";
-            addColumn("child-name", "", child.name, childBottomClass);
-            addColumn("child-facts", "", child.facts, childBottomClass);
+            addColumn(COLUMN_CHILD_NAME, "", child.name, childBottomClass);
+            addColumn(COLUMN_CHILD_FACTS, "", child.facts, childBottomClass);
           }
         } else {
-          addColumn("child-name", "", "", familyBottomClass);
-          addColumn("child-facts", "", "", familyBottomClass);
+          addColumn(COLUMN_CHILD_NAME, "", "", familyBottomClass);
+          addColumn(COLUMN_CHILD_FACTS, "", "", familyBottomClass);
         }
       }
     }
     else {
-      addColumn("spouse-name", "", "", bottomClass);
-      addColumn("spouse-facts", "", "", bottomClass);
-      addColumn("child-name", "", "", bottomClass);
-      addColumn("child-facts", "", "", bottomClass);
+      addColumn(COLUMN_SPOUSE_NAME, "", "", bottomClass);
+      addColumn(COLUMN_SPOUSE_FACTS, "", "", bottomClass);
+      addColumn(COLUMN_CHILD_NAME, "", "", bottomClass);
+      addColumn(COLUMN_CHILD_FACTS, "", "", bottomClass);
     }
     if (noteCellHtmlHolder.length > 0) {
       html += noteCellHtmlHolder.pop();
     }
     return html;
+  }
+
+  getNoteCellHtml(rowClass, bottomClass, rowspan) {
+    let noteId = this.id + "-note";
+    return ["<td class='note " + rowClass + bottomClass + "' onclick='doNotSelect(event)' contenteditable='true'" + rowspan
+    + " id='" + noteId + "' onkeyup='updateNote(\"" + this.id + "\", \"" + noteId + "\")'>"
+    + encode(this.note) + "</td>"];
   }
 
   toggleSelection() {
@@ -3505,6 +3510,8 @@ function getVerticalGrouperHtml(grouper) {
   addRow(COLUMN_MOTHER_NAME, "Mother", false, personRow => td(personRow, personRow.combineParents(personRow.mothers)));
 
   //TODO: spouse (&facts) & children...
+
+  addRow(COLUMN_NOTES, "Notes", true, personRow => personRow.getNoteCellHtml('identity-gx', '', ''));
   html += "</table>\n";
   return html;
 }
@@ -3519,7 +3526,8 @@ function getGrouperHtml(grouper) {
   for (let groupIndex = 0; groupIndex < grouper.mergeGroups.length; groupIndex++) {
     let personGroup = grouper.mergeGroups[groupIndex];
     if (grouper.mergeGroups.length > 1) {
-      html += getGroupHeadingHtml(personGroup, groupIndex);
+      html += "<tr class='group-header'>" + "<td class='group-header' colspan='" + numColumns + "'>" +
+        getGroupHeadingHtml(personGroup, groupIndex) + "</td></tr>";
     }
     for (let personRow of personGroup.personRows) {
       html += personRow.getHtml(grouper.usedColumns, grouper.tabId);
@@ -3536,9 +3544,8 @@ function getAddGroupButtonHtml(grouper) {
 
 function getGroupHeadingHtml(personGroup, groupIndex) {
   let isEmptyGroup = isEmpty(personGroup.personRows.length);
-  return "<tr class='group-header'><td class='group-header' colspan='" + numColumns + "'>"
-    // Close button for empty groups
-    + (isEmptyGroup ? "<button class='close-button' onclick='deleteEmptyGroup(\"" + personGroup.groupId + "\")'>X</button>" : "")
+  // Close button for empty groups
+  return (isEmptyGroup ? "<button class='close-button' onclick='deleteEmptyGroup(\"" + personGroup.groupId + "\")'>X</button>" : "")
     // Group name
     + "<div class='group-name' contenteditable='true' id='" + personGroup.groupId
     + "' onkeyup='updateGroupName(\"" + personGroup.groupId + "\")'>"
@@ -3546,8 +3553,7 @@ function getGroupHeadingHtml(personGroup, groupIndex) {
     // "Add to Group" button
     + "<button class='add-to-group-button' onclick='addSelectedToGroup(\"" + personGroup.groupId + "\")'>Add to group</button>"
     // "Apply to Split" button
-    + (groupIndex < 1 || isEmptyGroup ? "" : "<button class='apply-button' onclick='splitOnGroup(\"" + personGroup.groupId + "\")'>Apply to Split</button>")
-    + "</td></tr>\n";
+    + (groupIndex < 1 || isEmptyGroup ? "" : "<button class='apply-button' onclick='splitOnGroup(\"" + personGroup.groupId + "\")'>Apply to Split</button>");
 }
 
 function sortColumn(columnName, grouperId) {
