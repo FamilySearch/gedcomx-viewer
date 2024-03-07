@@ -1453,20 +1453,6 @@ class MergeNode {
 // ===============
 class PersonDisplay {
   constructor(person, nameClass, status, coupleRelationship, shouldIncludeId) {
-    // To show all names for each person and relative, do this.name = combineNames();
-    // function combineNames() {
-    //   let names = [];
-    //   for (let name of getList(person, "names")) {
-    //     let nameForm = getFirst(getList(name, "nameForms"));
-    //     let fullText = getProperty(nameForm, "fullText");
-    //     let nameHtml = "<span class='" + nameClass + (status ? " " + status : "") + "'>" + encode(fullText ? fullText : "<no name>") + "</span>";
-    //     if (!names.includes(nameHtml)) {
-    //       names.push(nameHtml);
-    //     }
-    //   }
-    //   return names.join("<br>");
-    // }
-
     this.person = person;
     this.name = "<span class='" + nameClass + (status ? " " + status : "") + "'>" + encode(getPersonName(person)) + "</span>";
     this.coupleRelationship = coupleRelationship;
@@ -1864,14 +1850,14 @@ class MergeGroup {
 // Row of data for a person and their 1-hop relatives (record persona or Family Tree person--either original identity or result of a merge)
 class PersonRow {
   constructor(mergeNode, personId, gedcomx, indent, maxIndent, isDupNode, grouper, sourceInfo, parentRow) {
+    this.id = "person-row-" + nextPersonRowId++;
+    personRowMap[this.id] = this;
+    grouperMap[this.id] = grouper;
     this.sortKey = "";
     this.person = findPersonInGx(gedcomx, personId);
     this.personId = personId;
     this.sourceInfo = sourceInfo;
     this.gedcomx = gedcomx;
-    this.id = "person-row-" + nextPersonRowId++;
-    personRowMap[this.id] = this;
-    grouperMap[this.id] = grouper;
     this.mergeNode = mergeNode;
     this.isSelected = false;
     this.origOrder = 0;
@@ -1897,14 +1883,14 @@ class PersonRow {
     this.fathers = []; // Array of PersonDisplay. Unknown-gender parents are also included here. (Note that parents are not paired up).
     this.mothers = []; // Array of PersonDisplay
     // Map of personId -> PersonDisplay for mothers and fathers.
-    let fatherMap = {};
-    let motherMap = {};
+    let fatherMap = new Map();
+    let motherMap = new Map();
     // Map of spouseId -> FamilyDisplay for that spouse and children with that spouse.
-    // Also, "<none>" -> FamilyDisplay for list of children with no spouse.
-    let familyMap = {};
+    // Also, NO_SPOUSE -> FamilyDisplay for list of children with no spouse.
+    this.familyMap = new Map();
     let includePersonId = !this.sourceInfo;
-    this.handleCoupleAndTernaryRelationships(this.gedcomx, this.personId, fatherMap, motherMap, familyMap, includePersonId);
-    this.handleParentChildRelationships(this.gedcomx, this.personId, fatherMap, motherMap, familyMap, includePersonId);
+    this.handleCoupleAndTernaryRelationships(this.gedcomx, this.personId, fatherMap, motherMap, this.familyMap, includePersonId);
+    this.handleParentChildRelationships(this.gedcomx, this.personId, fatherMap, motherMap, this.familyMap, includePersonId);
     this.sortFamilies();
   }
 
@@ -2081,7 +2067,7 @@ class PersonRow {
           let parent = findPersonInGx(gedcomx, parentId);
           let gender = getGender(parent);
           let parentMap = gender === "Female" ? motherMap : fatherMap;
-          if (!parentMap[parentId]) {
+          if (!parentMap.has(parentId)) {
             addParentToMap(parentMap, gedcomx, parentId, gender === "Female" ? this.mothers : this.fathers, includePersonId, status);
           }
         }
@@ -2093,7 +2079,7 @@ class PersonRow {
           for (let parentIdAndRel of parentIds) {
             let parentId = parentIdAndRel.parentId;
             if (parentId !== personId) {
-              let familyDisplay = familyMap[parentId];
+              let familyDisplay = familyMap.get(parentId);
               if (familyDisplay) {
                 // This child is a child of a spouse of the main person, so add it to that couple's family
                 familyDisplay.children.push(new PersonDisplay(findPersonInGx(gedcomx, childId), "child", status,null, includePersonId)); // future: add lineage facts somehow.
@@ -2102,10 +2088,10 @@ class PersonRow {
             }
           }
           if (!foundOtherParent) {
-            let familyDisplay = familyMap["<none>"];
+            let familyDisplay = familyMap.get(NO_SPOUSE);
             if (!familyDisplay) {
               familyDisplay = new FamilyDisplay(null);
-              familyMap["<none>"] = familyDisplay;
+              familyMap.set(NO_SPOUSE, familyDisplay);
               this.families.push(familyDisplay);
             }
             familyDisplay.children.push(new PersonDisplay(findPersonInGx(gedcomx, childId), "child", status,null, includePersonId)); // future: add lineage facts somehow.
@@ -2132,11 +2118,11 @@ class PersonRow {
         if (!spouseId && isChildRel) {
           spouseId = "<none>";
         }
-        let familyDisplay = familyMap[spouseId];
+        let familyDisplay = familyMap.get(spouseId);
         if (!familyDisplay) {
           let spouseDisplay = spouseId === "<none>" ? null : new PersonDisplay(findPersonInGx(gedcomx, spouseId), "spouse", relationship.status, relationship, includePersonId);
           familyDisplay = new FamilyDisplay(spouseDisplay);
-          familyMap[spouseId] = familyDisplay;
+          familyMap.set(spouseId, familyDisplay);
           this.families.push(familyDisplay);
         }
         if (isChildRel) {
@@ -2433,9 +2419,9 @@ function doNotSelect(event) {
 }
 
 function addParentToMap(parentIdDisplayMap, gedcomx, parentId, parentList, includePersonId, relativeStatus) {
-  if (parentId && !parentIdDisplayMap[parentId]) {
+  if (parentId && !parentIdDisplayMap.get(parentId)) {
     let parentDisplay = new PersonDisplay(findPersonInGx(gedcomx, parentId), "parent", relativeStatus, null, includePersonId);
-    parentIdDisplayMap[parentId] = parentDisplay;
+    parentIdDisplayMap.set(parentId, parentDisplay);
     parentList.push(parentDisplay);
   }
 }
@@ -3032,6 +3018,30 @@ class Element {
 
 let split = null;
 
+function getRelationshipMaps(gedcomx, personId, coupleMap, parentRelationships, childrenMap) {
+  for (let relationship of getList(gedcomx, "relationships").concat(getList(gedcomx, CHILD_REL))) {
+    if (relationship.status === DELETED_STATUS || relationship.status === MERGE_DELETED_STATUS) {
+      // Skip relationships that did not end up on the "survivor". (Someone may have to re-add these manually later.)
+      continue;
+    }
+    let spouseId = getSpouseId(relationship, personId);
+    if (relationship.type === COUPLE_REL) {
+      coupleMap.set(spouseId, relationship);
+    } else if (isChildRelationship(relationship)) {
+      if (personId === getRelativeId(relationship, "child")) {
+        parentRelationships.push(relationship);
+      } else {
+        let childRelList = childrenMap.get(spouseId);
+        if (!childRelList) {
+          childRelList = [];
+          childrenMap.set(spouseId, childRelList);
+        }
+        childRelList.push(relationship);
+      }
+    }
+  }
+}
+
 class Split {
   constructor(gedcomx) {
     this.gedcomx = gedcomx; // Current, merged person's full GedcomX.
@@ -3081,29 +3091,7 @@ class Split {
       let coupleMap = new Map();
       // map of spouseId -> list of child-and-parents relationships where that spouseId is one of the parents; plus <notParentInRel> -> list w/o another parent.
       let childrenMap = new Map();
-
-      for (let relationship of getList(gedcomx, "relationships").concat(getList(gedcomx, CHILD_REL))) {
-        if (relationship.status === DELETED_STATUS || relationship.status === MERGE_DELETED_STATUS) {
-          // Skip relationships that did not end up on the "survivor". (Someone may have to re-add these manually later.)
-          continue;
-        }
-        let spouseId = getSpouseId(relationship, personId);
-        if (relationship.type === COUPLE_REL) {
-          coupleMap.set(spouseId, relationship);
-        } else if (isChildRelationship(relationship)) {
-          if (personId === getRelativeId(relationship, "child")) {
-            parentRelationships.push(relationship);
-          }
-          else {
-            let childRelList = childrenMap.get(spouseId);
-            if (!childRelList) {
-              childRelList = [];
-              childrenMap.set(spouseId, childRelList);
-            }
-            childRelList.push(relationship);
-          }
-        }
-      }
+      getRelationshipMaps(gedcomx, personId, coupleMap, parentRelationships, childrenMap);
       for (let parentRel of parentRelationships) {
         addElement(parentRel, TYPE_PARENTS);
       }
@@ -3490,6 +3478,111 @@ function getVerticalGrouperHtml(grouper) {
     return "<td class='" + personRow.getCellClass() + (shouldDrag ? " drag-width" : "") + "'>" + (cellContentsHtml ? cellContentsHtml : "") + "</td>";
   }
 
+  function findFamilyDisplay(personRow, spouseIndex) {
+    let index = 0;
+    for (let familyDisplay of personRow.familyMap.values()) {
+      if (index === spouseIndex) {
+        return familyDisplay;
+      }
+    }
+    return null;
+  }
+
+  function getMaxSpouses(grouper) {
+    let maxSpouses = 0;
+    for (let group of grouper.mergeGroups) {
+      for (let personRow of group.personRows) {
+        let numSpouses = personRow.familyMap.size;
+        if (numSpouses > maxSpouses) {
+          maxSpouses = numSpouses;
+        }
+      }
+    }
+    return maxSpouses;
+  }
+
+  function anySpouseHasFacts(grouper, spouseIndex) {
+    for (let group of grouper.mergeGroups) {
+      for (let personRow of group.personRows) {
+        let familyDisplay = findFamilyDisplay(personRow, spouseIndex);
+        if (familyDisplay && familyDisplay.spouse && familyDisplay.spouse.facts) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  function getSpouseName(personRow, spouseIndex) {
+    let familyDisplay = findFamilyDisplay(personRow, spouseIndex);
+    return familyDisplay ? familyDisplay.spouse.name : null;
+  }
+
+  function getSpouseFacts(personRow, spouseIndex) {
+    let familyDisplay = findFamilyDisplay(personRow, spouseIndex);
+    return familyDisplay ? familyDisplay.spouse.facts : null;
+  }
+
+  function getChildName(personRow, spouseIndex, childIndex) {
+    let familyDisplay = findFamilyDisplay(personRow, spouseIndex);
+    let childDisplay = familyDisplay && childIndex < familyDisplay.children.length ? familyDisplay.children[childIndex] : null;
+    return childDisplay ? childDisplay.name : null;
+  }
+
+  function getChildFacts(personRow, spouseIndex, childIndex) {
+    let familyDisplay = findFamilyDisplay(personRow, spouseIndex);
+    let childDisplay = familyDisplay && childIndex < familyDisplay.children.length ? familyDisplay.children[childIndex] : null;
+    return childDisplay && childDisplay.facts ? childDisplay.facts : null;
+  }
+
+  // Look through all the person rows in the given grouper, and look at the spouse family with the given index,
+  //   see how many children there are, and which ones have facts on them.
+  // Return an array of hasChildFacts[n] indicating (a) the maximum number of children for the given spouse index in
+  //   any person row; and (b) whether the nth child of that spouse has facts for any of the person rows.
+  // (This lets us know how many child rows to include in the vertical view, and whether to include a child facts row for each).
+  function seeWhichChildrenHaveFacts(grouper, spouseIndex) {
+    let hasChildFacts = [];
+    for (let group of grouper.mergeGroups) {
+      for (let personRow of group.personRows) {
+        let familyDisplay = findFamilyDisplay(personRow, spouseIndex);
+        if (familyDisplay) {
+          for (let childIndex = 0; childIndex < familyDisplay.children.length; childIndex++) {
+            if (childIndex >= hasChildFacts.length) {
+              hasChildFacts.push(false);
+            }
+            if (familyDisplay.children[childIndex].facts) {
+              hasChildFacts[childIndex] = true;
+            }
+          }
+        }
+      }
+    }
+    return hasChildFacts;
+  }
+
+  function addSpouseFamilyRows() {
+    let maxSpouses = getMaxSpouses(grouper);
+    for (let spouseIndex = 0; spouseIndex < maxSpouses; spouseIndex++) {
+      let spouseLabel = "Spouse" + (spouseIndex > 0 ? " " + (spouseIndex + 1) : "");
+      addRow(COLUMN_SPOUSE_NAME, spouseLabel, true, personRow => td(personRow, getSpouseName(personRow, spouseIndex)));
+      if (anySpouseHasFacts(grouper, spouseIndex)) {
+        addRow(COLUMN_SPOUSE_FACTS, spouseLabel + " facts", true, personRow => td(personRow, getSpouseFacts(personRow, spouseIndex)));
+      }
+      if (displayOptions.shouldShowChildren) {
+        // Array of boolean telling whether the nth child row needs facts for any of the person rows.
+        let hasChildFacts = seeWhichChildrenHaveFacts(grouper, spouseIndex);
+        for (let childIndex = 0; childIndex < hasChildFacts.length; childIndex++) {
+          let childLabel = "- Child" + (hasChildFacts.length > 1 ? " " + (childIndex + 1) : "");
+          addRow(COLUMN_CHILD_NAME, childLabel, true, personRow => td(personRow, getChildName(personRow, spouseIndex, childIndex)));
+          if (hasChildFacts[childIndex]) {
+            addRow(COLUMN_CHILD_FACTS, " facts", true, personRow => td(personRow, getChildFacts(personRow, spouseIndex, childIndex)));
+          }
+        }
+      }
+    }
+  }
+
+  // --- getVerticalGrouperHtml ---
   let tabId = grouper.tabId;
   let html = "<table id='vertical-" + grouper.tabId + "'>";
   addGroupNamesRow();
@@ -3515,11 +3608,12 @@ function getVerticalGrouperHtml(grouper) {
   //  - Able to sort by that. Requires using COLUMN_FACTS + ".Birth" or something in order to sort and display.
   addRow(COLUMN_SPOUSE_FACTS, "Facts", false, personRow => td(personRow, personRow.personDisplay.facts));
 
+  // Relative rows: Fathers, mothers, then each spouse with their children.
   addRow(COLUMN_FATHER_NAME, "Father", false, personRow => td(personRow, personRow.combineParents(personRow.fathers)));
   addRow(COLUMN_MOTHER_NAME, "Mother", false, personRow => td(personRow, personRow.combineParents(personRow.mothers)));
+  addSpouseFamilyRows();
 
-  //TODO: spouse (&facts) & children...
-
+  // Notes
   addRow(COLUMN_NOTES, "Notes", true, personRow => personRow.getNoteCellHtml('identity-gx', '', ''));
   html += "</table>\n";
   return html;
