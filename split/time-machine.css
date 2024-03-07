@@ -229,7 +229,9 @@ td {
 .note {
     background-color: #fafcf7;
     border: 1px solid #cedace;
+    border-radius: 3px;
     white-space: break-spaces;
+    min-width: 20px;
 }
 .selected * {
     background-color: #fcfcaa;
@@ -309,6 +311,12 @@ td {
     display: inline-block;
     margin-left: 10px;
     margin-right: 10px;
+    margin-bottom: 5px;
+    border: 1px solid #dddddd;
+    border-radius: 3px;
+    padding: 2px;
+    background-color: #f3f6f1;
+    box-shadow: 2px 2px 3px #eeeeee;
 }
 .close-button {
     display: inline-block;
@@ -321,6 +329,8 @@ td {
     vertical-align: top;
     color: darkgreen;
     background-color: #decfb5;
+    margin: 2px;
+    box-shadow: 2px 2px 3px #eeeeee;
 }
 .apply-button {
     display: inline-block;
@@ -328,6 +338,7 @@ td {
     vertical-align: top;
     color: #731313;
     background-color: #deb6b5;
+    margin: 2px;
 }
 a:link {
     text-decoration: none;

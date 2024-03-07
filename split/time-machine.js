@@ -2696,7 +2696,7 @@ function splitOnSelectedMergeRows() {
   let selectedMergeRows = getRowsBySelection(mergeGrouper.mergeGroups[0].personRows, true);
   splitOnInfoInGroup(MERGE_VIEW, unselectedMergeRows, selectedMergeRows);
   updateSplitViewHtml();
-  $("#tabs").tabs("option", "active", 5);
+  $("#tabs").tabs("option", "active", viewList.indexOf(SPLIT_VIEW));
 }
 
 // Use the PersonRows in the given group to decide which Elements to move to each side in the Split view.
@@ -2709,7 +2709,7 @@ function splitOnGroup(groupId) {
     let otherRows = getOtherPersonRows(grouper, mergeGroup);
     splitOnInfoInGroup(grouper.tabId, otherRows, splitRows);
     updateSplitViewHtml();
-    $("#tabs").tabs("option", "active", 5);
+    $("#tabs").tabs("option", "active", viewList.indexOf(SPLIT_VIEW));
   }
 }
 
@@ -3578,8 +3578,8 @@ function sortHeader(grouper, columnName, label, spanClass) {
     + ">" + encode(label) + "</span>";
 }
 
-function sortHeaderTh(grouper, columnName, label) {
-  return "<th" + headerId(grouper, columnName) + " class='drag-width'>" + sortHeader(grouper, columnName, label) + "</th>";
+function sortHeaderTh(grouper, columnName, label, colspan) {
+  return "<th" + headerId(grouper, columnName) + (colspan ? colspan: "") + " class='drag-width'>" + sortHeader(grouper, columnName, label) + "</th>";
 }
 
 function datePlaceLabelHtml(grouper, columnName, label) {
@@ -3614,9 +3614,9 @@ function getTableHeader(grouper, shouldIndent) {
     }
   }
   if (grouper.tabId !== SOURCES_VIEW) {
-    html += sortHeaderTh(grouper, COLUMN_PERSON_ID, "Person ID");
+    html += sortHeaderTh(grouper, COLUMN_PERSON_ID, "Person ID", colspan);
   }
-  if (grouper.tabId === FLAT_VIEW) {
+  if (grouper.tabId === MERGE_VIEW || grouper.tabId === FLAT_VIEW) {
     html += sortHeaderTh(grouper, COLUMN_CREATED, "Created");
   }
   html += headerHtml(grouper, COLUMN_PERSON_NAME, "Name", true) +
