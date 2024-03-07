@@ -581,6 +581,8 @@ let columnStartX;
 let columnStartWidth;
 let resizingTable;
 let tableStartSize;
+// map of table.id -> width, and column.id -> width, if manually set at any point.
+let tableMap = new Map();
 
 function makeTableHeadersDraggable() {
   function findTable(element) {
@@ -588,6 +590,11 @@ function makeTableHeadersDraggable() {
       element = element.parent();
     }
     return element;
+  }
+
+  for (let elementId of tableMap.keys()) {
+    let $element = $("#" + elementId);
+    $element.width(tableMap.get(elementId));
   }
 
   $(".drag-width").mousedown(function(e) {
@@ -608,9 +615,11 @@ function makeTableHeadersDraggable() {
         let newColumnSize = columnStartWidth + (e.pageX - columnStartX);
         let newSizeRatio = newColumnSize / columnStartWidth;
         $(resizingTable).width(tableStartSize * newSizeRatio);
+        tableMap.set(resizingTable.attr("id"), tableStartSize * newSizeRatio);
       }
       else {
         $(columnStart).width(columnStartWidth + (e.pageX - columnStartX));
+        tableMap.set(columnStart.attr("id"), columnStartWidth + (e.pageX - columnStartX));
       }
       e.preventDefault();
     }
@@ -3482,7 +3491,7 @@ function getVerticalGrouperHtml(grouper) {
   }
 
   let tabId = grouper.tabId;
-  let html = "<table>";
+  let html = "<table id='vertical-" + grouper.tabId + "'>";
   addGroupNamesRow();
 
   // Person ID row
@@ -3569,15 +3578,24 @@ function sortHeader(grouper, columnName, label, spanClass) {
     + ">" + encode(label) + "</span>";
 }
 
+function sortHeaderTh(grouper, columnName, label) {
+  return "<th" + headerId(grouper, columnName) + " class='drag-width'>" + sortHeader(grouper, columnName, label) + "</th>";
+}
+
 function datePlaceLabelHtml(grouper, columnName, label) {
   return sortHeader(grouper, columnName, label, "sort-date")
     + (grouper ? "<span class='sort-place' onclick='sortColumn(\"" + columnName + "-place" + "\", \"" + grouper.id + "\")'>"
-      + encode(" place ") + "</span>" : "");
+    + encode(" place ") + "</span>" : "");
+}
+
+function headerId(grouper, columnName) {
+  return " id='" + grouper.id + "-th-" + columnName + "'";
 }
 
 function headerHtml(grouper, columnName, label, alwaysInclude, nonDraggable) {
   if (alwaysInclude || grouper.usedColumns.has(columnName)) {
-    return "<th" + (nonDraggable ? "" : " class='drag-width'") + ">"
+    let id = nonDraggable ? "" : headerId(grouper, columnName);
+    return "<th" + id + (nonDraggable ? "" : " class='drag-width'") + ">"
       + (columnName.endsWith("-facts") ? datePlaceLabelHtml(grouper, columnName, label) : sortHeader(grouper, columnName, label))
       + "</th>";
   }
@@ -3586,20 +3604,20 @@ function headerHtml(grouper, columnName, label, alwaysInclude, nonDraggable) {
 
 function getTableHeader(grouper, shouldIndent) {
   let colspan = shouldIndent ? " colspan='" + grouper.maxDepth + "'" : "";
-  let html = "<table>";
+  let html = "<table id='table-" + grouper.id + "'>";
 
   if (grouper.tabId === SOURCES_VIEW || grouper.tabId === COMBO_VIEW) {
-    html += "<th class='drag-width'>" + sortHeader(grouper, COLUMN_COLLECTION, "Collection")  + "</th>";
-    html += "<th class='drag-width'>" + sortHeader(grouper, COLUMN_RECORD_DATE, "Record Date") + "</th>";
+    html += sortHeaderTh(grouper, COLUMN_COLLECTION, "Collection");
+    html += sortHeaderTh(grouper, COLUMN_RECORD_DATE, "Record Date");
     if (displayOptions.shouldShowAttachedTo) {
-      html += "<th class='drag-width'>" + sortHeader(grouper, COLUMN_ATTACHED_TO_IDS, "Attached to") + "</th>";
+      html += sortHeaderTh(grouper, COLUMN_ATTACHED_TO_IDS, "Attached to");
     }
   }
   if (grouper.tabId !== SOURCES_VIEW) {
-    html += "<th class='drag-width'" + colspan + ">" + sortHeader(grouper, COLUMN_PERSON_ID, "Person ID") + "</th>";
+    html += sortHeaderTh(grouper, COLUMN_PERSON_ID, "Person ID");
   }
   if (grouper.tabId === FLAT_VIEW) {
-    html += "<th class='drag-width'>" + sortHeader(grouper, COLUMN_CREATED, "Created") + "</th>";
+    html += sortHeaderTh(grouper, COLUMN_CREATED, "Created");
   }
   html += headerHtml(grouper, COLUMN_PERSON_NAME, "Name", true) +
           headerHtml(grouper, COLUMN_PERSON_NAME, "Facts") +
