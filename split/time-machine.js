@@ -1565,6 +1565,17 @@ function handleRowClick(event, rowId) {
   }
 }
 
+function handleColumnClick(event, rowId) {
+  let grouper = grouperMap[rowId];
+  console.log("Clicked column " + rowId + (event.shiftKey ? " + shift" : "") + (event.ctrlKey ? " + ctrl" : "") + (event.metaKey ? " + meta" : ""));
+  if (event.shiftKey) {
+    grouper.selectUntil(rowId);
+  }
+  else {
+    grouper.toggleRow(rowId);
+  }
+}
+
 // ===============
 // Map of groupId -> Grouper object that the groupId is found in.
 let grouperMap = {};
@@ -2271,6 +2282,7 @@ class PersonRow {
   select() {
     if (!this.isSelected) {
       $("." + this.id).addClass(ROW_SELECTION);
+      $("." + this.getIdClass().trim()).addClass(ROW_SELECTION);
       this.isSelected = true;
       for (let childRow of this.childRows) {
         childRow.select();
@@ -2281,6 +2293,7 @@ class PersonRow {
   deselect() {
     if (this.isSelected) {
       $("." + this.id).removeClass(ROW_SELECTION);
+      $("." + this.getIdClass()).removeClass(ROW_SELECTION);
       this.isSelected = false;
       for (let childRow of this.childRows) {
         childRow.deselect();
@@ -2292,12 +2305,16 @@ class PersonRow {
     return this.sourceInfo;
   }
 
-  getCellClass() {
-    return this.isSourceRow() ? "source-row" : "merge-id";
+  getIdClass() {
+    return "cell-" + this.id;
   }
 
-  getCollectionHtml(rowSpan) {
-    let html = "<td class='" + this.getCellClass() + " main-row'" + (rowSpan ? rowSpan : "") + ">";
+  getCellClass() {
+    return (this.isSourceRow() ? "source-row" : "merge-id") + " " + this.getIdClass();
+  }
+
+  getCollectionHtml(rowSpan, clickInfo) {
+    let html = "<td class='" + this.getCellClass() + " main-row'" + (rowSpan ? rowSpan : "") + (clickInfo ? clickInfo : "") + ">";
     if (this.sourceInfo) {
       if (this.sourceInfo.personaArk) {
         html += "<a href='" + this.sourceInfo.personaArk + "' target='_blank'>" + encode(this.sourceInfo.collectionName) + "</a>";
@@ -2309,8 +2326,9 @@ class PersonRow {
     return html + "</td>";
   }
 
-  getRecordDateHtml(rowSpan) {
-    return "<td class='" + this.getCellClass() + " main-row date rt'" + (rowSpan ? rowSpan : "") + ">" + (this.sourceInfo ? encode(this.sourceInfo.recordDate) : "") + "</td>";
+  getRecordDateHtml(rowSpan, clickInfo) {
+    return "<td class='" + this.getCellClass() + " main-row date rt'" + (rowSpan ? rowSpan : "")
+      + (clickInfo ? clickInfo : "") + ">" + (this.sourceInfo ? encode(this.sourceInfo.recordDate) : "") + "</td>";
   }
 
   getPersonIdHtml(shouldIncludeVersion) {
@@ -2404,8 +2422,9 @@ class PersonRow {
     return html;
   }
 
-  getTimestampHtml(rowClasses, rowSpan) {
-    return "<td " + (rowClasses ? rowClasses : this.getCellClass()) + (rowSpan ? rowSpan : "") + ">" + formatTimestamp(this.mergeNode.firstEntry.updated) + "</td>";
+  getTimestampHtml(rowClasses, rowSpan, clickInfo) {
+    return "<td " + (rowClasses ? rowClasses : this.getCellClass()) + (rowSpan ? rowSpan : "") +
+      (clickInfo ? clickInfo : "") + ">" + formatTimestamp(this.mergeNode.firstEntry.updated) + "</td>";
   }
 
 // Add a source persona PersonRow as a "child" of a FT person row.
@@ -2593,6 +2612,7 @@ function highlightSelectedRows(grouper) {
     for (let personRow of group.personRows) {
       if (personRow.isSelected) {
         $("." + personRow.id).addClass(ROW_SELECTION);
+        $("." + personRow.getIdClass()).addClass(ROW_SELECTION);
       }
     }
   }
@@ -3475,7 +3495,8 @@ function getVerticalGrouperHtml(grouper) {
   }
 
   function td(personRow, cellContentsHtml, shouldDrag) {
-    return "<td class='" + personRow.getCellClass() + (shouldDrag ? " drag-width" : "") + "'>" + (cellContentsHtml ? cellContentsHtml : "") + "</td>";
+    return "<td class='" + personRow.getCellClass() + (shouldDrag ? " drag-width" : "") + "'" + clickInfo(personRow) + ">" +
+      (cellContentsHtml ? cellContentsHtml : "") + "</td>";
   }
 
   function findFamilyDisplay(personRow, spouseIndex) {
@@ -3582,6 +3603,10 @@ function getVerticalGrouperHtml(grouper) {
     }
   }
 
+  function clickInfo(personRow) {
+    return " onclick='handleColumnClick(event, \"" + personRow.id + "\");'";
+  }
+
   // --- getVerticalGrouperHtml ---
   let tabId = grouper.tabId;
   let html = "<table id='vertical-" + grouper.tabId + "'>";
@@ -3589,32 +3614,41 @@ function getVerticalGrouperHtml(grouper) {
 
   // Person ID row
   if (tabId !== SOURCES_VIEW) {
-    addRow(COLUMN_PERSON_ID, "Person ID", true, personRow => td(personRow, personRow.getPersonIdHtml(false), true));
+    addRow(COLUMN_PERSON_ID, "Person ID", true,
+        personRow => td(personRow, personRow.getPersonIdHtml(false), true));
   }
   // Collection name & record date rows
   if (tabId === COMBO_VIEW || tabId === SOURCES_VIEW) {
-    addRow(COLUMN_COLLECTION, "Collection", true, personRow => personRow.getCollectionHtml());
-    addRow(COLUMN_RECORD_DATE, "Record Date", true, personRow => personRow.getRecordDateHtml());
+    addRow(COLUMN_COLLECTION, "Collection", true,
+        personRow => personRow.getCollectionHtml(null, clickInfo(personRow)));
+    addRow(COLUMN_RECORD_DATE, "Record Date", true,
+        personRow => personRow.getRecordDateHtml(null, clickInfo(personRow)));
   }
   // Created timestamp row
   if (tabId === MERGE_VIEW || tabId === FLAT_VIEW) {
-    addRow(COLUMN_CREATED, "Created", true, personRow => personRow.getTimestampHtml());
+    addRow(COLUMN_CREATED, "Created", true,
+        personRow => personRow.getTimestampHtml(null, null, clickInfo(personRow)));
   }
   // Person names row
-  addRow(COLUMN_PERSON_NAME, "Name", true, personRow => td(personRow, personRow.personDisplay.name));
+  addRow(COLUMN_PERSON_NAME, "Name", true,
+      personRow => td(personRow, personRow.personDisplay.name));
 
   // Person facts row
   // Future: Put "Birth:", etc., on left, and put events of that time in the same row.
   //  - Able to sort by that. Requires using COLUMN_FACTS + ".Birth" or something in order to sort and display.
-  addRow(COLUMN_SPOUSE_FACTS, "Facts", false, personRow => td(personRow, personRow.personDisplay.facts));
+  addRow(COLUMN_SPOUSE_FACTS, "Facts", false,
+      personRow => td(personRow, personRow.personDisplay.facts));
 
   // Relative rows: Fathers, mothers, then each spouse with their children.
-  addRow(COLUMN_FATHER_NAME, "Father", false, personRow => td(personRow, personRow.combineParents(personRow.fathers)));
-  addRow(COLUMN_MOTHER_NAME, "Mother", false, personRow => td(personRow, personRow.combineParents(personRow.mothers)));
+  addRow(COLUMN_FATHER_NAME, "Father", false,
+      personRow => td(personRow, personRow.combineParents(personRow.fathers)));
+  addRow(COLUMN_MOTHER_NAME, "Mother", false,
+      personRow => td(personRow, personRow.combineParents(personRow.mothers)));
   addSpouseFamilyRows();
 
   // Notes
-  addRow(COLUMN_NOTES, "Notes", true, personRow => personRow.getNoteCellHtml('identity-gx', '', ''));
+  addRow(COLUMN_NOTES, "Notes", true,
+      personRow => personRow.getNoteCellHtml('identity-gx', '', ''));
   html += "</table>\n";
   return html;
 }

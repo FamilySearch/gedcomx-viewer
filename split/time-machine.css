@@ -233,9 +233,6 @@ td {
     white-space: break-spaces;
     min-width: 20px;
 }
-.selected * {
-    background-color: #fcfcaa;
-}
 .main-row {
     border-bottom: 2px solid #add2ad;
 }
@@ -432,4 +429,7 @@ a:hover {
 .help, .help ul li {
     color: #400180;
     background-color: #FFFFFF;
+}
+.selected, .selected * {
+    background-color: #fcfcaa;
 }
