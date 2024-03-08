@@ -1664,7 +1664,7 @@ function handleOptionChange() {
 function displayAvailableOptions() {
   let activeTab = getCurrentTab();
   setVisibility("settings", activeTab !== CHANGE_LOG_VIEW && activeTab !== SPLIT_VIEW);
-  setVisibility("vertical-option", activeTab === COMBO_VIEW || activeTab === HELP_VIEW);
+  setVisibility("vertical-option", activeTab === FLAT_VIEW || activeTab === SOURCES_VIEW || activeTab === COMBO_VIEW || activeTab === HELP_VIEW);
   setVisibility("repeat-info-option", activeTab === MERGE_VIEW || activeTab === HELP_VIEW);
 }
 
@@ -3481,16 +3481,14 @@ function getVerticalGrouperHtml(grouper) {
     for (let groupIndex = 0; groupIndex < grouper.mergeGroups.length; groupIndex++) {
       let group = grouper.mergeGroups[groupIndex];
       let colspan = group.personRows.length > 1 ? " colspan='" + group.personRows.length + "'" : "";
-      html += "<td" + colspan + ">";
+      html += "<td class='group-header'" + colspan + ">";
       if (grouper.mergeGroups.length > 1) {
         html += getGroupHeadingHtml(group, groupIndex);
-      }
-      if (groupIndex === grouper.mergeGroups.length - 1) {
-        html += getAddGroupButtonHtml(grouper);
       }
       html += "</td>";
       padGroup(groupIndex);
     }
+    html += "<td class='new-group-td'>" + getAddGroupButtonHtml(grouper) + "</td>";
     html += "</tr>\n";
   }
 
@@ -3499,89 +3497,89 @@ function getVerticalGrouperHtml(grouper) {
       (cellContentsHtml ? cellContentsHtml : "") + "</td>";
   }
 
-  function findFamilyDisplay(personRow, spouseIndex) {
-    let index = 0;
-    for (let familyDisplay of personRow.familyMap.values()) {
-      if (index === spouseIndex) {
-        return familyDisplay;
-      }
-    }
-    return null;
-  }
-
-  function getMaxSpouses(grouper) {
-    let maxSpouses = 0;
-    for (let group of grouper.mergeGroups) {
-      for (let personRow of group.personRows) {
-        let numSpouses = personRow.familyMap.size;
-        if (numSpouses > maxSpouses) {
-          maxSpouses = numSpouses;
+  function addSpouseFamilyRows() {
+    function findFamilyDisplay(personRow, spouseIndex) {
+      let index = 0;
+      for (let familyDisplay of personRow.familyMap.values()) {
+        if (index === spouseIndex) {
+          return familyDisplay;
         }
       }
+      return null;
     }
-    return maxSpouses;
-  }
 
-  function anySpouseHasFacts(grouper, spouseIndex) {
-    for (let group of grouper.mergeGroups) {
-      for (let personRow of group.personRows) {
-        let familyDisplay = findFamilyDisplay(personRow, spouseIndex);
-        if (familyDisplay && familyDisplay.spouse && familyDisplay.spouse.facts) {
-          return true;
+    function getMaxSpouses(grouper) {
+      let maxSpouses = 0;
+      for (let group of grouper.mergeGroups) {
+        for (let personRow of group.personRows) {
+          let numSpouses = personRow.familyMap.size;
+          if (numSpouses > maxSpouses) {
+            maxSpouses = numSpouses;
+          }
         }
       }
+      return maxSpouses;
     }
-    return false;
-  }
 
-  function getSpouseName(personRow, spouseIndex) {
-    let familyDisplay = findFamilyDisplay(personRow, spouseIndex);
-    return familyDisplay ? familyDisplay.spouse.name : null;
-  }
+    function anySpouseHasFacts(grouper, spouseIndex) {
+      for (let group of grouper.mergeGroups) {
+        for (let personRow of group.personRows) {
+          let familyDisplay = findFamilyDisplay(personRow, spouseIndex);
+          if (familyDisplay && familyDisplay.spouse && familyDisplay.spouse.facts) {
+            return true;
+          }
+        }
+      }
+      return false;
+    }
 
-  function getSpouseFacts(personRow, spouseIndex) {
-    let familyDisplay = findFamilyDisplay(personRow, spouseIndex);
-    return familyDisplay ? familyDisplay.spouse.facts : null;
-  }
+    function getSpouseName(personRow, spouseIndex) {
+      let familyDisplay = findFamilyDisplay(personRow, spouseIndex);
+      return familyDisplay ? familyDisplay.spouse.name : null;
+    }
 
-  function getChildName(personRow, spouseIndex, childIndex) {
-    let familyDisplay = findFamilyDisplay(personRow, spouseIndex);
-    let childDisplay = familyDisplay && childIndex < familyDisplay.children.length ? familyDisplay.children[childIndex] : null;
-    return childDisplay ? childDisplay.name : null;
-  }
+    function getSpouseFacts(personRow, spouseIndex) {
+      let familyDisplay = findFamilyDisplay(personRow, spouseIndex);
+      return familyDisplay ? familyDisplay.spouse.facts : null;
+    }
 
-  function getChildFacts(personRow, spouseIndex, childIndex) {
-    let familyDisplay = findFamilyDisplay(personRow, spouseIndex);
-    let childDisplay = familyDisplay && childIndex < familyDisplay.children.length ? familyDisplay.children[childIndex] : null;
-    return childDisplay && childDisplay.facts ? childDisplay.facts : null;
-  }
+    function getChildName(personRow, spouseIndex, childIndex) {
+      let familyDisplay = findFamilyDisplay(personRow, spouseIndex);
+      let childDisplay = familyDisplay && childIndex < familyDisplay.children.length ? familyDisplay.children[childIndex] : null;
+      return childDisplay ? childDisplay.name : null;
+    }
 
-  // Look through all the person rows in the given grouper, and look at the spouse family with the given index,
-  //   see how many children there are, and which ones have facts on them.
-  // Return an array of hasChildFacts[n] indicating (a) the maximum number of children for the given spouse index in
-  //   any person row; and (b) whether the nth child of that spouse has facts for any of the person rows.
-  // (This lets us know how many child rows to include in the vertical view, and whether to include a child facts row for each).
-  function seeWhichChildrenHaveFacts(grouper, spouseIndex) {
-    let hasChildFacts = [];
-    for (let group of grouper.mergeGroups) {
-      for (let personRow of group.personRows) {
-        let familyDisplay = findFamilyDisplay(personRow, spouseIndex);
-        if (familyDisplay) {
-          for (let childIndex = 0; childIndex < familyDisplay.children.length; childIndex++) {
-            if (childIndex >= hasChildFacts.length) {
-              hasChildFacts.push(false);
-            }
-            if (familyDisplay.children[childIndex].facts) {
-              hasChildFacts[childIndex] = true;
+    function getChildFacts(personRow, spouseIndex, childIndex) {
+      let familyDisplay = findFamilyDisplay(personRow, spouseIndex);
+      let childDisplay = familyDisplay && childIndex < familyDisplay.children.length ? familyDisplay.children[childIndex] : null;
+      return childDisplay && childDisplay.facts ? childDisplay.facts : null;
+    }
+
+    // Look through all the person rows in the given grouper, and look at the spouse family with the given index,
+    //   see how many children there are, and which ones have facts on them.
+    // Return an array of hasChildFacts[n] indicating (a) the maximum number of children for the given spouse index in
+    //   any person row; and (b) whether the nth child of that spouse has facts for any of the person rows.
+    // (This lets us know how many child rows to include in the vertical view, and whether to include a child facts row for each).
+    function seeWhichChildrenHaveFacts(grouper, spouseIndex) {
+      let hasChildFacts = [];
+      for (let group of grouper.mergeGroups) {
+        for (let personRow of group.personRows) {
+          let familyDisplay = findFamilyDisplay(personRow, spouseIndex);
+          if (familyDisplay) {
+            for (let childIndex = 0; childIndex < familyDisplay.children.length; childIndex++) {
+              if (childIndex >= hasChildFacts.length) {
+                hasChildFacts.push(false);
+              }
+              if (familyDisplay.children[childIndex].facts) {
+                hasChildFacts[childIndex] = true;
+              }
             }
           }
         }
       }
+      return hasChildFacts;
     }
-    return hasChildFacts;
-  }
 
-  function addSpouseFamilyRows() {
     let maxSpouses = getMaxSpouses(grouper);
     for (let spouseIndex = 0; spouseIndex < maxSpouses; spouseIndex++) {
       let spouseLabel = "Spouse" + (spouseIndex > 0 ? " " + (spouseIndex + 1) : "");
@@ -3654,7 +3652,7 @@ function getVerticalGrouperHtml(grouper) {
 }
 
 function getGrouperHtml(grouper) {
-  if (displayOptions.vertical && getCurrentTab() === COMBO_VIEW) {
+  if (displayOptions.vertical && (getCurrentTab() === FLAT_VIEW || getCurrentTab() === SOURCES_VIEW || getCurrentTab() === COMBO_VIEW)) {
     return getVerticalGrouperHtml(grouper);
   }
   let html = getTableHeader(grouper, false);

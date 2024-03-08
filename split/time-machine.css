@@ -27,19 +27,23 @@ th {
 td {
     vertical-align: top;
 }
+#drag-table {
+    vertical-align: bottom;
+}
 .drag-table-handle {
     border: 1px solid #adc9a2;
     border-radius: 3px;
     background-color: #d3e8ca;
     text-align: center;
-    margin: 2px;
+    margin: 5px;
     box-shadow: 2px 2px 3px lightgrey;
 }
 .drag-width {
     border-radius: 3px;
 }
 .add-group-button {
-    margin: 2px;
+    margin: 5px;
+    padding: 2px;
     box-shadow: 2px 2px 3px lightgrey;
 }
 .sort-date {
@@ -232,6 +236,9 @@ td {
     border-radius: 3px;
     white-space: break-spaces;
     min-width: 20px;
+}
+.selected, .selected * {
+    background-color: #fcfcaa;
 }
 .main-row {
     border-bottom: 2px solid #add2ad;
@@ -430,6 +437,14 @@ a:hover {
     color: #400180;
     background-color: #FFFFFF;
 }
-.selected, .selected * {
-    background-color: #fcfcaa;
+.group-divider {
+    min-width: 10px;
+}
+.group-header {
+    min-width: 300px;
+    vertical-align: bottom;
+}
+.new-group-td {
+    min-width: 90px;
+    vertical-align: bottom;
 }
