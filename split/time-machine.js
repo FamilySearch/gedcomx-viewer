@@ -1613,7 +1613,7 @@ class DisplayOptions {
     // Flag for whether to show "AttachedTo" column in sources view.
     this.shouldShowAttachedTo = false;
     // Flag for whether to do a vertical display
-    this.vertical = true;
+    this.vertical = false;
   }
 }
 
