@@ -19,6 +19,7 @@ table {
 }
 th {
     top: 0;
+    left: 0;
     background-color: #f2ffeb;
     position: sticky;
     border: 1px solid #d3e8ca;
