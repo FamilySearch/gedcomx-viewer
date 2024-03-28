@@ -418,7 +418,7 @@ function summaryRelationshipToGx(sRelationship) {
       "resourceId" : p2,
       "resource" : "#" + p2
     }
-  }
+  };
   if (sRelationship.facts) {
     gxRelationship.facts = convertSummaryArrayToGx(sRelationship.facts, summaryFactToGx);
   }

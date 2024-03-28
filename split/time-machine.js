@@ -2,6 +2,7 @@
 //   LZBY-X8J - Clarence Gray. 5 PIDs that all merge into the same one. (Wife Bertha Nickell (later Bishop): L2DF-DRG)
 //   9HMF-2S1 - Alice Moore. Example from Kathryn
 //   G2FN-RZY - Theoore Freise, which Robby and Karl were working on. Has lots of data and persons added after some merging.
+//   KWNR-S97 - John Taylor. We need to support attached sources w/o indexed personas.
 
 /* Still to do:
  - Select rows
@@ -33,9 +34,11 @@ let mergeMap = new Map();
 const CHILD_REL = "child-and-parents-relationships"
 const COUPLE_REL = "http://gedcomx.org/Couple"
 const PARENT_CHILD_REL = "http://gedcomx.org/ParentChild"
+const PERSISTENT_TYPE = "http://gedcomx.org/Persistent";
+const USYS_ID_TYPE = "http://api.familysearch.org/temple/USYS_ID";
 
 // Fetch the change log entries for the person given by the change log URL.
-function buildChangeLogView(changeLogUrl, sessionId, $mainTable, $status) {
+function buildChangeLogView(changeLogUrl, sessionId, $mainTable, $status, shouldFetchOrdinances) {
   let context = parsePersonUrl(changeLogUrl);
   mainPersonId = context.personId;
   if (sessionId) {
@@ -50,7 +53,7 @@ function buildChangeLogView(changeLogUrl, sessionId, $mainTable, $status) {
   updateStatus($status, "Fetching change logs...");
   // Recursively fetch this person's change log and that of anyone merged in.
   // Once last change log has been fetched, the last ajax call will call makeChangeLogHtml()
-  fetchChangeLog(context.personId, context, changeLogMap, fetching, $mainTable, $status)
+  fetchChangeLog(context.personId, context, changeLogMap, fetching, $mainTable, $status, null, shouldFetchOrdinances);
 }
 
 /**
@@ -63,8 +66,9 @@ function buildChangeLogView(changeLogUrl, sessionId, $mainTable, $status) {
  * @param $mainTable - JQuery element to put the resulting HTML into when ready
  * @param $status - JQuery element to update with status messages
  * @param nextUrl - "next" Url for a person's change log, if this is a next link call (none => fetch person's change log from scratch)
+ * @param shouldFetchOrdinances - flag for whether to fetch ordinances (currently only works within FamilySearch VPN).
  */
-function fetchChangeLog(personId, context, changeLogMap, fetching, $mainTable, $status, nextUrl=null) {
+function fetchChangeLog(personId, context, changeLogMap, fetching, $mainTable, $status, nextUrl, shouldFetchOrdinances) {
   if (!nextUrl && (changeLogMap.hasOwnProperty(personId) || fetching.includes(personId))) {
     return; // Already took care of this one
   }
@@ -86,6 +90,10 @@ function fetchChangeLog(personId, context, changeLogMap, fetching, $mainTable, $
       receiveChangeLog(gedcomx, personId, context, changeLogMap, fetching, $mainTable, $status, nextUrl);
     }
   });
+
+  if (shouldFetchOrdinances) {
+    fetchOrdinances($status, personId, fetching, context, changeLogMap, $mainTable);
+  }
 }
 
 /**
@@ -100,14 +108,9 @@ function fetchChangeLog(personId, context, changeLogMap, fetching, $mainTable, $
  * @param receivedNextUrl - flag for whether this is a 'next' URL.
  */
 function receiveChangeLog(gedcomx, personId, context, changeLogMap, fetching, $mainTable, $status, receivedNextUrl) {
-  if (receivedNextUrl) {
-    $status.html($status.html().replace("Fetching next change log for " + personId, "Received next change log for " + personId));
-  } else {
-    let logHtml = $status.html();
-    logHtml = logHtml.replace("Fetching change log for " + personId, "Received change log for " + personId);
-    $status.html(logHtml);
-  }
-  fetching.splice(fetching.indexOf(personId), 1); // Remove personId from the fetching array
+  modifyStatusMessage($status, fetching, personId,
+    "Fetching" + (receivedNextUrl ? " next" : "") + " change log for " + personId,
+    "Received" + (receivedNextUrl ? " next" : "") + " change log for " + personId);
   let changeLogEntries = makeChangeLogEntries(gedcomx);
   if (personId in changeLogMap) {
     changeLogEntries = changeLogMap[personId].concat(changeLogEntries);
@@ -121,6 +124,10 @@ function receiveChangeLog(gedcomx, personId, context, changeLogMap, fetching, $m
   for (let newMergeId of mergedIds) {
     fetchChangeLog(newMergeId, context, changeLogMap, fetching, $mainTable, $status);
   }
+  handleIfFinishedFetching(fetching, context, changeLogMap, $mainTable, $status);
+}
+
+function handleIfFinishedFetching(fetching, context, changeLogMap, $mainTable, $status) {
   if (fetching.length === 0) {
     // All the change logs that needed to be fetched have now been fetched, and this is the last one.
     // So create the Html.
@@ -128,6 +135,339 @@ function receiveChangeLog(gedcomx, personId, context, changeLogMap, fetching, $m
     // Then, kick off the fetching of relatives and sources info, and update the table when done.
     fetchRelativesAndSources(changeLogMap, $status, context);
   }
+}
+
+// Map of owsId -> OrdinanceWorkSet
+let owsMap = new Map();
+// Map of personId -> OrdinanceWorkSet[] that were originally attached to that personId.
+let personOrdinanceMap = new Map();
+
+class Ordinance { // "ctr" = Certified Temple Record
+  constructor(ctrId, ordinanceType, ordinanceStatus, officialType, performedDate, templeCode) {
+    this.ctrId = ctrId;
+    this.ordinanceType = ordinanceType; // BAPTISM_LDS, INITIATORY, ENDOWMENT, SEALING_TO_PARENTS, SEALING_TO_SPOUSE
+    this.ordinanceStatus = ordinanceStatus; // COMPLETED, ...
+    this.officialType = officialType; // OFFICIAL_PRIMARY or OFFICIAL_SECONDARY
+    this.performedDate = performedDate;
+    this.templeCode = templeCode; // PORTL
+    this.ordinanceSortKey = this.makeOrdSortKey(ordinanceType, performedDate, templeCode);
+  }
+  getOrdCode() {
+    if (this.ordinanceType) {
+      switch(this.ordinanceType) {
+        case "BAPTISM_LDS": return "B";
+        case "CONFIRMATION_LDS": return "C";
+        case "INITIATORY": return "I";
+        case "ENDOWMENT": return "E";
+        case "SEALING_TO_PARENTS": return "SP";
+        case "SEALING_TO_SPOUSE": return "SS";
+      }
+      return "?";
+    }
+  }
+  getOrdString() {
+    return this.getOrdCode() + ":" + (this.performedDate ? " " + this.performedDate : "") + (this.templeCode ? " " + this.templeCode : "");
+  }
+  makeOrdSortKey(ordinanceType, performedDate, templeCode) {
+    let typesArray = ['B', 'C', 'I', 'E', 'SP', 'SS'];
+    let ordinanceOrder = typesArray.indexOf(this.getOrdCode(ordinanceType));
+    if (ordinanceOrder < 0) {
+      ordinanceOrder = typesArray.length;
+    }
+    let dateNumber = parseDateIntoNumber(performedDate).toString().padStart(8, '0');
+    return ordinanceOrder + "_" + dateNumber + "_" + (templeCode ? templeCode : "?");
+  }
+}
+
+class OrdinanceWorkSet { // "ows"
+   constructor(owsId, principalPersonId, currentPersonId, originalPersonId, role, date) {
+     this.principalPersonId = principalPersonId; // Family Tree person ID at the time the ordinances were submitted.
+     this.currentPersonId = currentPersonId; // latest, forwarded person id (according to TF) the ordinance is on.
+     this.originalPersonId = originalPersonId; // (latest, forwarded?) person id (according to TF) the ordinance was originally attached to(?)
+     this.roleInOws = role; // Role of this person in the OWS (e.g., ORD_FATHER if father of person getting baptized)
+     this.owsId = owsId;
+     this.modifiedDate = date;  // "modified" date from TF person. Should be reservation/submission date.
+     this.createDate = null; // createDate from ows. Probably the same as above. Like "26 Feb 2007 21:33:43 GMT".
+     this.ordinances = [];
+     this.gedcomx = null; // GedcomX with the person and perhaps parents and spouse.
+   }
+   sortOrdinances() {
+     this.ordinances.sort((a, b) => a.ordinanceSortKey.localeCompare(b.ordinanceSortKey));
+   }
+   getOrdinancesHtml() {
+     let ordinanceList = [];
+     for (let ord of this.ordinances) {
+       ordinanceList.push(encode(ord.getOrdString()));
+     }
+     return ordinanceList.join("<br>");
+   }
+}
+
+function fetchOrdinances($status, personId, fetching, context, changeLogMap, $mainTable) {
+  updateStatus($status, "Fetching ordinances from TF for " + personId);
+  fetching.push(personId + "-tf");
+  let url = "http://tf.tree.service.prod.us-east-1.prod.fslocal.org/person/" + personId + "?sessionId=" + context.sessionId;
+  $.ajax({
+    beforeSend: function (request) {
+      // request.setRequestHeader("User-Agent", "fs-wilsonr");
+      request.setRequestHeader("User-Agent-Chain", "fs-wilsonr");
+      request.setRequestHeader("Accept", "application/json");
+      if (context.sessionId) {
+        request.setRequestHeader("Authorization", "Bearer " + context.sessionId);
+      }
+    },
+    dataType: "json",
+    url: url,
+    success: function (tf) {
+      console.log("Success in fetching tf person " + personId);
+      receiveTfPerson(tf, personId, context, changeLogMap, fetching, $mainTable, $status);
+    },
+    error: function (data) {
+      console.log("Failed to fetch tf person " + personId);
+      receiveTfPerson(null, personId, context, changeLogMap, fetching, $mainTable, $status);
+    }
+  });
+  return url;
+}
+
+/*
+  Receive a Tree Foundation person, and harvest it for ordinance information.
+  tf.ordinanceReferences[]
+      .originallyAttachedTo
+      .value
+        .role (ORD_PRINCIPAL/ORD_FATHER/ORD_MOTHER)
+        .type (ORDINANCE)
+        .uri (owsId, like "ows.MC7B-XRV")
+   Then fetch the OWS for each ordinance reference.
+ */
+function receiveTfPerson(tf, personId, context, changeLogMap, fetching, $mainTable, $status) {
+  function findNewOrdinanceWorkSets() {
+    let newOrdinanceWorkSets = [];
+    for (let ordinanceReference of getList(tf, "ordinanceReferences")) {
+      let role = ordinanceReference.value.role;
+      if (role === "ORD_PRINCIPAL") {
+        let type = ordinanceReference.value.type;
+        let currentPersonId = ordinanceReference.currentPersonId;
+        let originalPersonId = ordinanceReference.originallyAttachedTo;
+        let modifiedDate = ordinanceReference.attribution.modified;
+        if (type !== "ORDINANCE") {
+          console.log("New ordinance type: " + type);
+        }
+        let owsId = ordinanceReference.value.uri;
+        let currentOws = owsMap.get(owsId);
+        if (currentOws) {
+          if (currentOws.role !== role) {
+            console.log("Got two different roles for ows " + owsId);
+          }
+          if (originalPersonId !== currentOws.originalPersonId) {
+            console.log("Got two different 'attached to' person Ids for ows " + owsId);
+          }
+        } else {
+          let ows = new OrdinanceWorkSet(owsId, null, currentPersonId, originalPersonId, role, modifiedDate);
+          owsMap.set(owsId, ows);
+          computeIfAbsent(personOrdinanceMap, personId, key => []).push(ows);
+          newOrdinanceWorkSets.push(ows);
+        }
+      }
+    }
+    return newOrdinanceWorkSets;
+  }
+
+  //---receiveTfPerson()---
+  if (tf) {
+    modifyStatusMessage($status, fetching, personId + "-tf",
+      "Fetching ordinances from TF for " + personId, "Received ordinances from TF for " + personId);
+
+    let newOrdinanceWorkSets = findNewOrdinanceWorkSets();
+    for (let ows of newOrdinanceWorkSets) {
+      fetchOws(ows.owsId, context, fetching, changeLogMap, $mainTable, $status);
+    }
+  }
+  handleIfFinishedFetching(fetching, context, changeLogMap, $mainTable, $status);
+}
+
+function modifyStatusMessage($status, fetching, fetchingEntryToRemove, originalMessage, newMessage) {
+  let logHtml = $status.html();
+  logHtml = logHtml.replace(originalMessage, newMessage);
+  $status.html(logHtml);
+  fetching.splice(fetching.indexOf(fetchingEntryToRemove), 1); // Remove personId from the fetching array
+}
+
+// Note: Only works with engineer admin role.
+function fetchOws(owsId, context, fetching, changeLogMap, $mainTable, $status) {
+  fetching.push(owsId);
+  updateStatus($status, "Fetching OWS " + owsId);
+  let url = "http://tem-temple.temple.service.prod.us-east-1.prod.fslocal.org/ordinance-work-sets/" + owsId;
+  $.ajax({
+    beforeSend: function(request) {
+      request.setRequestHeader("Accept", "application/json");
+      if (context.sessionId) {
+        request.setRequestHeader("Authorization", "Bearer " + context.sessionId);
+      }
+    },
+    dataType: "json",
+    url: url,
+    success:function(owsJson){
+      receiveOws(owsJson, owsId, context, fetching, changeLogMap, $mainTable, $status);
+    },
+    error: function() {
+      receiveOws(null, owsId, context, fetching, changeLogMap, $mainTable, $status);
+    }
+  });
+}
+
+// Receive OWS object from tem-temple API (Only works as engineer admin).
+// .ctrs[]
+//   .id (like ctr.7PP4-G7N)
+//   .ctrExtendedDetail[].officialType (OFFICIAL_PRIMARY, or OFFICIAL_SECONDARY => not from official temple record, but evidence shows it was done)
+//   .ordinanceStatus (like http://api.familysearch.org/temple/COMPLETED")
+//   .ordinanceType (like http://api.familysearch.org/temple/BAPTISM_LDS, INITIATORY, ENDOWMENT, SEALING_TO_PARENTS, SEALING_TO_SPOUSE
+//   .performedDate.original (like 06 Dec 1991) (or .formal, like +1991-12-06)
+//   .templeRef.templeCode (like PORTL)
+// .persons[] - needs ids updated (and updated in corresponding relationships)
+// .relationships[] - needs types mapped to standard ParentChild and Couple types
+function receiveOws(owsJson, owsId, context, fetching, changeLogMap, $mainTable, $status) {
+
+  /**
+   * Fix local and persistent person IDs, and fix relationships.
+   * - Persons have a local ".id" that is a temple person id.
+   * - To convert this to a Family Tree person id, we'll look for an Identifier of type .../temple/USYS_ID
+   * - We'll add a Person Ark as a Persistent Identifier on the person, and change their local .id to that FT person ID.
+   * - Then we'll update references in relationships to refer to those new local IDs.
+   * - Finally, we'll change the relationship types on relationships from FATHER, MOTHER, SPOUSE, CHILD to
+   *    standard GedcomX ParentChild and Couple relationships.
+   * @param gedcomx
+   * @param latestForwardedFTPersonId - Latest, forwarded Family Tree person ID for the person we're working with.
+   * @param mainPersonId - Local id for a temple person. (See the person's identifier of type .../temple/USYS_ID to get
+   *                        the Family Tree person ID of the person at the time this ordinance was reserved.
+   * @param fatherId - Local (temple) id for the father.
+   * @param motherId - Local (temple) id for the mother.
+   * @param spouseId - Local (temple) id for the spouse.
+   * @return family tree person ID of the principal person.
+   */
+  function fixPersonIdsAndRelationshipTypes(gedcomx, latestForwardedFTPersonId, mainPersonId, fatherId, motherId, spouseId) {
+    function fixRelativeId(relativeReference) {
+      let relativeId = relativeReference.resourceId;
+      let relativeFtPersonId = idMap.get(relativeId);
+      if (relativeFtPersonId) {
+        relativeReference.resource = "#" + relativeFtPersonId;
+        relativeReference.resourceId = relativeFtPersonId;
+      }
+    }
+
+    function addRelationshipIfNotThere(person1Id, person2Id, relationshipType, isBidirectional) {
+      if (person1Id && person2Id) {
+        for (let relationship of getList(gedcomx, "relationships")) {
+          if (relationship.type === relationshipType &&
+            ((person1Id === relationship.person1.resourceId && person2Id === relationship.person2.resourceId) ||
+              (isBidirectional && person2Id === relationship.person1.resourceId && person1Id === relationship.person2.resourceId))) {
+            return; // Relationship already exists.
+          }
+        }
+        // Relationship does not yet exist, so add it.
+        if (!gedcomx.relationships) {
+          gedcomx.relationships = [];
+        }
+        let relationship = {
+          "type" : relationshipType,
+          "person1" : {"resourceId" : person1Id, "resource" : "#" + person1Id},
+          "person2" : {"resourceId" : person2Id, "resource" : "#" + person2Id}
+        };
+        gedcomx.relationships.push(relationship);
+      }
+    }
+
+    // -- fixPersonIdsAndRelationshipTypes() --
+    // Map of original local person ID -> Family Tree person Id.
+    let idMap = new Map();
+    addRelationshipIfNotThere(fatherId, mainPersonId, PARENT_CHILD_REL);
+    addRelationshipIfNotThere(motherId, mainPersonId, PARENT_CHILD_REL);
+    addRelationshipIfNotThere(mainPersonId, spouseId, COUPLE_REL, true);
+
+    let mainFtPersonId = null;
+    for (let person of getList(gedcomx, "persons")) {
+      let ftPersonId = getIdentifier(person, USYS_ID_TYPE);
+      if (ftPersonId) {
+        ftPersonId = ftPersonId.replace("p.", ""); // p.XXXX-YYY -> XXXX-YYY
+        if (!getIdentifier(person, PERSISTENT_TYPE)) {
+          // no "primary" or "persistent" identifier, so add one.
+          person.identifiers[PERSISTENT_TYPE] = ["https://familysearch.org/ark:/61903/4:1:" + ftPersonId];
+        }
+        idMap.set(person.id, ftPersonId);
+        if (person.id === mainPersonId) {
+          mainFtPersonId = ftPersonId;
+        }
+        person.id = ftPersonId;
+      } else {
+        console.log("Could not find USYS_ID for ordinance person.");
+        return;
+      }
+    }
+    let mainPersonArk = "https://familysearch.org/ark:/61903/4:1:" + mainFtPersonId;
+    let mainPersonSourceDescription = {
+      "id": "#sd_" + mainFtPersonId,
+      "about": mainPersonArk,
+      "identifiers": {
+        "http://gedcomx.org/Persistent": [mainPersonArk]
+      }
+    };
+    gedcomx.sourceDescriptions = [mainPersonSourceDescription];
+    gedcomx.description = "#" + mainPersonSourceDescription.id;
+    for (let relationship of getList(gedcomx, "relationships")) {
+      fixRelativeId(relationship.person1);
+      fixRelativeId(relationship.person2);
+      let relType = extractType(relationship.type);
+      if (relType === "FATHER" || relType === "MOTHER") {
+        relationship.type = PARENT_CHILD_REL;
+      } else if (relType === "SPOUSE") {
+        relationship.type = COUPLE_REL;
+      } else if (relType !== "Couple" && relType !== "ParentChild") {
+        console.log("Unexpected relationship type in OWS: " + relationship.type);
+      }
+    }
+    return mainFtPersonId;
+  }
+
+  // --receiveOws()--
+  modifyStatusMessage($status, fetching, owsId, "Fetching OWS " + owsId, "Received OWS " + owsId);
+  if (owsJson) {
+    let ows = owsMap.get(owsId);
+    ows.createDate = getFirst(owsJson.ordinanceWorkSets).createDate.original;
+    for (let ctr of getList(owsJson, "ctrs")) {
+      let ordinanceType = extractType(getProperty(ctr, "ordinanceType"));
+      let ordinanceStatus = extractType(getProperty(ctr, "ordinanceStatus"));
+      let officialType = getProperty(getFirst(ctr, "ctrExtendedDetail"), "officialType");
+      let performedDate = getProperty(ctr, "performedDate.original");
+      let templeCode = getProperty(ctr, "templeRef.templeCode");
+      let ordinance = new Ordinance(ctr.id, ordinanceType, ordinanceStatus, officialType, performedDate, templeCode);
+      ows.ordinances.push(ordinance);
+      console.log("OWS " + owsId + ": " + performedDate + " " + ordinanceType + " " + templeCode);
+    }
+    ows.sortOrdinances();
+    for (let ordinanceWorkSet of getList(owsJson, "ordinanceWorkSets")) {
+      if ("ows." + ordinanceWorkSet.id === owsId) {
+        let principalId = getRelativeId(ordinanceWorkSet, "principal");
+        // future: check to see if these IDs match up in the gedcomx.
+        let fatherId = getRelativeId(ordinanceWorkSet, "father");
+        let motherId = getRelativeId(ordinanceWorkSet, "mother");
+        let wifeId = getRelativeId(ordinanceWorkSet, "wife");
+        let husbandId = getRelativeId(ordinanceWorkSet, "husband");
+        let gedcomx = {};
+        gedcomx.persons = owsJson.persons;
+        gedcomx.relationships = owsJson.relationships;
+        console.log(getList(gedcomx, "relationships").length + " relationships in owsJson for " + owsId); //todo: remove this
+        principalId = fixPersonIdsAndRelationshipTypes(gedcomx, context.personId, principalId, fatherId, motherId, wifeId ? wifeId : husbandId);
+        ows.gedcomx = gedcomx;
+        ows.principalPersonId = principalId;
+      } else {
+        console.log("Got unexpected ows for owd id " + owsId);
+      }
+    }
+  }
+  else {
+    console.log("Could not get OWS Json for " + owsId);
+  }
+  handleIfFinishedFetching(fetching, context, changeLogMap, $mainTable, $status);
 }
 
 function fetchRelativesAndSources(changeLogMap, $status, context) {
@@ -1233,7 +1573,7 @@ function getRelativeRow(rel, key, interpretation, timestamp, factKey="facts") {
 }
 
 function getRelativeId(rel, key) {
-  return rel[key.toLowerCase()] ? rel[key.toLowerCase()].resourceId : null;
+  return key.toLowerCase() in rel && rel[key.toLowerCase()] ? rel[key.toLowerCase()].resourceId : null;
 }
 
 function getRelativeName(relativeId, timestamp) {
@@ -1860,7 +2200,7 @@ class MergeGroup {
 
 // Row of data for a person and their 1-hop relatives (record persona or Family Tree person--either original identity or result of a merge)
 class PersonRow {
-  constructor(mergeNode, personId, gedcomx, indent, maxIndent, isDupNode, grouper, sourceInfo, parentRow) {
+  constructor(mergeNode, personId, gedcomx, indent, maxIndent, isDupNode, grouper, sourceInfo, parentRow, ows) {
     this.id = "person-row-" + nextPersonRowId++;
     personRowMap[this.id] = this;
     grouperMap[this.id] = grouper;
@@ -1880,12 +2220,15 @@ class PersonRow {
     this.isDupNode = isDupNode;
     // List of PersonRow for sources that were first attached to this person (or this version of the person, if a merge node)
     this.childSourceRows = [];
+    // List of PersonRow for Ordinance Work Sets that were first attached to this person ID.
+    this.childOwsRows = [];
     // Parent in merge hierarchy
     this.parentRow = parentRow;
     this.childRows = [];
     if (parentRow) {
       parentRow.childRows.push(this);
     }
+    this.ows = ows;
   }
 
   updatePersonDisplay() {
@@ -2033,24 +2376,33 @@ class PersonRow {
     // Get a sort key to use for sorting by person ID. In Flat view, this is just the personId.
     // But in source view, it's the person ID for FT person rows; or for source rows, it's
     //    the sourceInfo.attachedToPersonId + "_" + sourceInfo.recordDateSortKey;
-    function personIdAndRecordDate(personId, sourceInfo) {
-      let recordDateSortKey = sourceInfo ? sourceInfo.recordDateSortKey : null;
+    function personIdAndRecordDate(personId, sourceInfo, ows) {
+      let recordDateSortKey = getRecordDateSortKey(sourceInfo, ows);
       let sortPersonId = sourceInfo && sourceInfo.attachedToPersonId ? sourceInfo.attachedToPersonId : personId;
-      return sortPersonId + (recordDateSortKey ? "_" + recordDateSortKey : "");
+      return sortPersonId + (isEmpty(recordDateSortKey) ? "" : "_" + recordDateSortKey);
     }
 
-    function recordDateSortKey(sourceInfo) {
-      return sourceInfo && sourceInfo.recordDateSortKey ? sourceInfo.recordDateSortKey : "";
+    function getRecordDateSortKey(sourceInfo, ows) {
+      if (sourceInfo && sourceInfo.recordDateSortKey) {
+        return "rec_" + sourceInfo.recordDateSortKey;
+      }
+      if (ows) {
+        if (ows.ordinances.length > 0) {
+          return "ord_" + ows.ordinances[0].ordinanceSortKey;
+        }
+        return "ord_?";
+      }
+      return "";
     }
 
     switch (columnName) {
       case COLUMN_COLLECTION:
         sortKey = this.sourceInfo ? this.sourceInfo.collectionName : "";
         break;
-      case COLUMN_PERSON_ID:          sortKey = personIdAndRecordDate(this.personId, this.sourceInfo);       break;
-      case COLUMN_ATTACHED_TO_IDS:    sortKey = padV(this.sourceInfo.attachedToPersonId);                    break;
-      case COLUMN_CREATED:            sortKey = String(this.mergeNode.firstEntry.updated).padStart(15, "0"); break;
-      case COLUMN_RECORD_DATE:        sortKey = recordDateSortKey(this.sourceInfo);     break;
+      case COLUMN_PERSON_ID:          sortKey = personIdAndRecordDate(this.personId, this.sourceInfo, this.ows); break;
+      case COLUMN_ATTACHED_TO_IDS:    sortKey = padV(this.sourceInfo.attachedToPersonId);                        break;
+      case COLUMN_CREATED:            sortKey = String(this.mergeNode.firstEntry.updated).padStart(15, "0");     break;
+      case COLUMN_RECORD_DATE:        sortKey = getRecordDateSortKey(this.sourceInfo, this.ows);                 break;
       case COLUMN_PERSON_NAME:        sortKey = getPersonName(this.person);             break;
       case COLUMN_PERSON_FACTS:       sortKey = getFirstFactDate(this.person);          break;
       case COLUMN_PERSON_FACTS_PLACE: sortKey = getFirstFactPlace(this.person);         break;
@@ -2305,12 +2657,16 @@ class PersonRow {
     return this.sourceInfo;
   }
 
+  isOwsRow() {
+    return this.ows;
+  }
+
   getIdClass() {
     return "cell-" + this.id;
   }
 
   getCellClass() {
-    return (this.isSourceRow() ? "source-row" : "merge-id") + " " + this.getIdClass();
+    return (this.isSourceRow() ? "source-row" : (this.isOwsRow() ? "ord-row" : "merge-id")) + " " + this.getIdClass();
   }
 
   getCollectionHtml(rowSpan, clickInfo) {
@@ -2323,20 +2679,28 @@ class PersonRow {
         html += encode(this.sourceInfo.collectionName);
       }
     }
+    else if (this.ows) {
+      html += this.ows.getOrdinancesHtml();
+    }
     return html + "</td>";
   }
 
   getRecordDateHtml(rowSpan, clickInfo) {
+    let recordDate = null;
+    if (this.sourceInfo) {
+      recordDate = this.sourceInfo.recordDate;
+    }
+    else if (this.ows) {
+      recordDate = this.ows.createDate.replaceAll(/ *\d\d:.*/g, "");
+    }
     return "<td class='" + this.getCellClass() + " main-row date rt'" + (rowSpan ? rowSpan : "")
-      + (clickInfo ? clickInfo : "") + ">" + (this.sourceInfo ? encode(this.sourceInfo.recordDate) : "") + "</td>";
+      + (clickInfo ? clickInfo : "") + ">" + (recordDate ? encode(recordDate) : "") + "</td>";
   }
 
   getPersonIdHtml(shouldIncludeVersion) {
-    if (this.isSourceRow()) {
-      if (this.sourceInfo.attachedToPersonId) {
-        return "<span class='relative-id'>" + encode("(" + this.sourceInfo.attachedToPersonId + ")") + "</span>";
-      }
-      return "";
+    if (this.isSourceRow() || this.isOwsRow()) {
+      let personId = this.isSourceRow() ? this.sourceInfo.attachedToPersonId : this.ows.originalPersonId;
+      return personId ? "<span class='relative-id'>" + encode("(" + personId + ")") + "</span>" : "";
     }
     else {
       let personIdHtml = encode(this.personId + (shouldIncludeVersion && this.mergeNode && this.mergeNode.version > 1 ? " (v" + this.mergeNode.version + ")" : ""));
@@ -2390,8 +2754,9 @@ class PersonRow {
     let shouldIndent = tabId === MERGE_VIEW;
     let colspan = shouldIndent ? " colspan='" + (1 + this.maxIndent - this.indent.length) + "'" : "";
     let bottomClass = " main-row";
+    let specialIdClass = this.isSourceRow() ? "source-row" : (this.isOwsRow() ? "ord-row" : null);
     let rowClasses = "class='"
-      + (this.isSourceRow() ? "source-row" : "merge-id" + (shouldIndent && this.isDupNode ? "-dup" : ""))
+      + (specialIdClass ? specialIdClass : "merge-id" + (shouldIndent && this.isDupNode ? "-dup" : ""))
       + bottomClass + "'";
 
     if (shouldIndent) {
@@ -2430,6 +2795,9 @@ class PersonRow {
 // Add a source persona PersonRow as a "child" of a FT person row.
   addSourceChild(personaRow) {
     this.childSourceRows.push(personaRow);
+  }
+  addOwsChild(owsPersonRow) {
+    this.childOwsRows.push(owsPersonRow);
   }
 }
 
@@ -2504,9 +2872,10 @@ function findMaxDepth(mergeNode) {
  * @param shouldIncludeMergeNodes - Flag for whether to include non-leaf-nodes in the resulting array.
  * @param personSourcesMap - Map of personId -> list of sourceInfo objects first attached to that person Id (or null if not included)
  * @param parentRow - Parent PersonRow (from a higher merge history node).
+ * @param personOrdinanceMap - Map of personId -> list of OrdinanceWorkSets for that person. null => ignore
  * @returns Array of MergeRow entries (i.e., the array mergeRows)
  */
-function buildMergeRows(mergeNode, indent, maxIndent, isDupNode, mergeRows, shouldIncludeMergeNodes, personSourcesMap, parentRow) {
+function buildMergeRows(mergeNode, indent, maxIndent, isDupNode, mergeRows, shouldIncludeMergeNodes, personSourcesMap, parentRow, personOrdinanceMap) {
   this.indent = indent;
   let mergeRow = null;
   if (shouldIncludeMergeNodes || mergeNode.isLeafNode()) {
@@ -2528,11 +2897,21 @@ function buildMergeRows(mergeNode, indent, maxIndent, isDupNode, mergeRows, shou
         mergeRow.addSourceChild(personaRow)
       }
     }
+    if (personOrdinanceMap) {
+      let owsList = personOrdinanceMap.get(mergeNode.personId);
+      if (owsList) {
+        for (let ows of owsList) {
+          let owsPersonRow = new PersonRow(null, ows.principalPersonId, ows.gedcomx, 0, 0, false, null, null, null, ows);
+          mergeRows.push(owsPersonRow);
+          mergeRow.addOwsChild(owsPersonRow);
+        }
+      }
+    }
   }
   if (!mergeNode.isLeafNode()) {
     let indentPrefix = indent.length > 0 ? (indent.substring(0, indent.length - 1) + (isDupNode ? "I" : "O")) : "";
-    buildMergeRows(mergeNode.dupNode, indentPrefix + "T", maxIndent, true, mergeRows, shouldIncludeMergeNodes, personSourcesMap, mergeRow);
-    buildMergeRows(mergeNode.prevNode, indentPrefix + "L", maxIndent, false, mergeRows, shouldIncludeMergeNodes, personSourcesMap, mergeRow);
+    buildMergeRows(mergeNode.dupNode, indentPrefix + "T", maxIndent, true, mergeRows, shouldIncludeMergeNodes, personSourcesMap, mergeRow, personOrdinanceMap);
+    buildMergeRows(mergeNode.prevNode, indentPrefix + "L", maxIndent, false, mergeRows, shouldIncludeMergeNodes, personSourcesMap, mergeRow, personOrdinanceMap);
   }
   return mergeRows;
 }
@@ -2658,7 +3037,7 @@ function getComboViewHtml() {
   let rootMergeNode = getRootMergeNode(allEntries);
   let maxDepth = findMaxDepth(rootMergeNode);
   let personSourcesMap = buildPersonSourcesMap(allEntries);
-  let personAndPersonaRows = buildMergeRows(rootMergeNode, "", maxDepth - 1, false, [], false, personSourcesMap);
+  let personAndPersonaRows = buildMergeRows(rootMergeNode, "", maxDepth - 1, false, [], false, personSourcesMap, null, personOrdinanceMap);
   let usedColumns = findUsedColumns(personAndPersonaRows);
   comboGrouper = new Grouper(personAndPersonaRows, usedColumns, maxDepth, COMBO_VIEW);
   comboGrouper.sort(COLUMN_PERSON_ID);
@@ -3922,8 +4301,8 @@ function getPersonId(person) {
 }
 
 function findPersonInGx(gedcomx, personId) {
-  personId = shortenPersonArk(personId);
   if (gedcomx && personId && gedcomx.hasOwnProperty("persons")) {
+    personId = shortenPersonArk(personId);
     for (let person of gedcomx.persons) {
       let gxPersonId = getPersonId(person)
       if (personId === gxPersonId || personId === person.id) {

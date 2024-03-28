@@ -312,10 +312,14 @@ function getFactPlace(fact) {
 }
 
 // Get the first "Persistent" identifier (or "Primary" identifier, or any other identifier) from the given GedcomX object
-function getIdentifier(gxObject) {
+// Or, if the idType is specified, get the first of that type.
+function getIdentifier(gxObject, idType) {
   let id = null;
   if (gxObject.identifiers) {
-    id = getFirst(gxObject.identifiers["http://gedcomx.org/Persistent"]);
+    if (idType) {
+      return getFirst(gxObject.identifiers[idType]);
+    }
+    id = getFirst(gxObject.identifiers[PERSISTENT_TYPE]);
     if (id === null) {
       id = getFirst(gxObject.identifiers["http://gedcomx.org/Primary"]);
       if (id === null) {

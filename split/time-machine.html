@@ -26,10 +26,10 @@
           "Usage: time-machine.html?[beta=true&amp;]pid=&lt;personId&gt;[&amp;sessionId=&lt;sessionId&gt;]");
       }
     }
-
+    let shouldFetchOrdinances = urlParams.has('ord');
     if (url) {
       let sessionId = urlParams.get('sessionId');
-      buildChangeLogView(url, sessionId, $("#main-table"), $status);
+      buildChangeLogView(url, sessionId, $("#main-table"), $status, shouldFetchOrdinances);
     }
   });
 </script>

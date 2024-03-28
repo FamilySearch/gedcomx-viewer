@@ -218,6 +218,10 @@ td {
     border: 1px solid #dccbb5;
     background-color: #dae9f1;
 }
+.ord-row {
+    border: 1px solid #ecf1e9;
+    background-color: #f8f8f3;
+}
 .end-gx {
     border: 1px solid #dad9ce;
     background-color: #faf8eb
