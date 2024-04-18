@@ -1,6 +1,6 @@
-// General-purpose utility functions
-import {PERSISTENT_TYPE} from './constants'
+const PERSISTENT_TYPE = "http://gedcomx.org/Persistent"
 
+// General-purpose utility functions
 function isEmpty(a) {
   return !a || a.length === 0;
 }

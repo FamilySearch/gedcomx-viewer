@@ -15,8 +15,6 @@
 */
 
 // Array of all entries from all change logs, sorted from newest to oldest timestamp, and then by column.
-import {CHILD_REL, COUPLE_REL, PARENT_CHILD_REL, PERSISTENT_TYPE, USYS_ID_TYPE} from '../constants'
-
 let allEntries = [];
 let mainPersonId = null;
 
@@ -32,6 +30,12 @@ let relativeSourcesReceived = false;
 
 // Map of duplicatePersonId -> array of [{ "survivor": <survivorPersonId>, "timestamp": <timestamp of merge>}]
 let mergeMap = new Map();
+
+const CHILD_REL = "child-and-parents-relationships"
+const COUPLE_REL = "http://gedcomx.org/Couple"
+const PARENT_CHILD_REL = "http://gedcomx.org/ParentChild"
+const PERSISTENT_TYPE = "http://gedcomx.org/Persistent";
+const USYS_ID_TYPE = "http://api.familysearch.org/temple/USYS_ID";
 
 // Fetch the change log entries for the person given by the change log URL.
 function buildChangeLogView(changeLogUrl, sessionId, $mainTable, $status, shouldFetchOrdinances) {
