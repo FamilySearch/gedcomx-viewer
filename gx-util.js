@@ -1,4 +1,6 @@
 // General-purpose utility functions
+import {PERSISTENT_TYPE} from './constants'
+
 function isEmpty(a) {
   return !a || a.length === 0;
 }
