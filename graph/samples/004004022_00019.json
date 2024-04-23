@@ -312,6 +312,16 @@
           } ]
         } ]
       } ]
+    } ],
+    "fields" : [ {
+      "type" : "http://gedcomx.org/Age",
+      "values" : [ {
+        "type" : "http://gedcomx.org/Original",
+        "text" : "54 de edad"
+      },{
+        "type" : "http://gedcomx.org/Interpreted",
+        "text" : "54"
+      } ]
     } ]
   }, {
     "id" : "r1p4",

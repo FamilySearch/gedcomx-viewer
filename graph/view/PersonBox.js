@@ -250,8 +250,8 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
             </span>
           </span>
         </div>\n`);
-      });
-    });
+      }).join("\n");
+    }).join("\n");
   }
 
   /**
