@@ -3,6 +3,7 @@
 //   9HMF-2S1 - Alice Moore. Example from Kathryn
 //   G2FN-RZY - Theoore Freise, which Robby and Karl were working on. Has lots of data and persons added after some merging.
 //   KWNR-S97 - John Taylor. We need to support attached sources w/o indexed personas.
+//   G92P-752 - Broken for Robby
 
 /* Still to do:
  - Select rows
@@ -34,7 +35,6 @@ let mergeMap = new Map();
 const CHILD_REL = "child-and-parents-relationships"
 const COUPLE_REL = "http://gedcomx.org/Couple"
 const PARENT_CHILD_REL = "http://gedcomx.org/ParentChild"
-const PERSISTENT_TYPE = "http://gedcomx.org/Persistent";
 const USYS_ID_TYPE = "http://api.familysearch.org/temple/USYS_ID";
 
 // Fetch the change log entries for the person given by the change log URL.
@@ -180,27 +180,27 @@ class Ordinance { // "ctr" = Certified Temple Record
 }
 
 class OrdinanceWorkSet { // "ows"
-   constructor(owsId, principalPersonId, currentPersonId, originalPersonId, role, date) {
-     this.principalPersonId = principalPersonId; // Family Tree person ID at the time the ordinances were submitted.
-     this.currentPersonId = currentPersonId; // latest, forwarded person id (according to TF) the ordinance is on.
-     this.originalPersonId = originalPersonId; // (latest, forwarded?) person id (according to TF) the ordinance was originally attached to(?)
-     this.roleInOws = role; // Role of this person in the OWS (e.g., ORD_FATHER if father of person getting baptized)
-     this.owsId = owsId;
-     this.modifiedDate = date;  // "modified" date from TF person. Should be reservation/submission date.
-     this.createDate = null; // createDate from ows. Probably the same as above. Like "26 Feb 2007 21:33:43 GMT".
-     this.ordinances = [];
-     this.gedcomx = null; // GedcomX with the person and perhaps parents and spouse.
-   }
-   sortOrdinances() {
-     this.ordinances.sort((a, b) => a.ordinanceSortKey.localeCompare(b.ordinanceSortKey));
-   }
-   getOrdinancesHtml() {
-     let ordinanceList = [];
-     for (let ord of this.ordinances) {
-       ordinanceList.push(encode(ord.getOrdString()));
-     }
-     return ordinanceList.join("<br>");
-   }
+  constructor(owsId, principalPersonId, currentPersonId, originalPersonId, role, date) {
+    this.principalPersonId = principalPersonId; // Family Tree person ID at the time the ordinances were submitted.
+    this.currentPersonId = currentPersonId; // latest, forwarded person id (according to TF) the ordinance is on.
+    this.originalPersonId = originalPersonId; // (latest, forwarded?) person id (according to TF) the ordinance was originally attached to(?)
+    this.roleInOws = role; // Role of this person in the OWS (e.g., ORD_FATHER if father of person getting baptized)
+    this.owsId = owsId;
+    this.modifiedDate = date;  // "modified" date from TF person. Should be reservation/submission date.
+    this.createDate = null; // createDate from ows. Probably the same as above. Like "26 Feb 2007 21:33:43 GMT".
+    this.ordinances = [];
+    this.gedcomx = null; // GedcomX with the person and perhaps parents and spouse.
+  }
+  sortOrdinances() {
+    this.ordinances.sort((a, b) => a.ordinanceSortKey.localeCompare(b.ordinanceSortKey));
+  }
+  getOrdinancesHtml() {
+    let ordinanceList = [];
+    for (let ord of this.ordinances) {
+      ordinanceList.push(encode(ord.getOrdString()));
+    }
+    return ordinanceList.join("<br>");
+  }
 }
 
 function fetchOrdinances($status, personId, fetching, context, changeLogMap, $mainTable) {
@@ -740,9 +740,9 @@ function getRecordDate(gedcomx) {
   }
   if (isEmpty(recordDate)) {
     let date = findPrimaryDate(gedcomx.persons) ||
-               findPrimaryDate(gedcomx.relationships) ||
-               findLatestDate(gedcomx.persons) ||
-               findLatestDate(gedcomx.relationships);
+      findPrimaryDate(gedcomx.relationships) ||
+      findLatestDate(gedcomx.persons) ||
+      findLatestDate(gedcomx.relationships);
     if (date) {
       recordDate = date;
     }
@@ -847,7 +847,7 @@ function formatTimestamp(ts, includeTimestamp) {
   let dateHtml = "<span class='ts-date'>" + String(date.getDate()) + "&nbsp;" + MONTHS[date.getMonth()] + "&nbsp;" + String(date.getFullYear()) +"</span>";
   if (includeTimestamp) {
     dateHtml += " <span class='ts-time'>" + pad(date.getHours()) + ":" + pad(date.getMinutes()) + ":" + pad(date.getSeconds())
-              + "." + String(ts).slice(String(ts).length - 3) + "</span>";
+             + "." + String(ts).slice(String(ts).length - 3) + "</span>";
   }
   return dateHtml;
 }
@@ -891,10 +891,10 @@ function makeMainHtml(context, changeLogMap, $mainTable) {
     "<div id='" + COMBO_VIEW + "'>Flat + sources view...</div>\n" +
     "<div id='" + SPLIT_VIEW + "'>Split view...</div>\n" +
     "<div id='details'></div>\n";
-    // "<div id='rel-graphs-container'>\n" +
-    // "  <div id='close-rel-graphs' onclick='hideRelGraphs()'>X</div>\n" +
-    // "  <div id='rel-graphs'></div>\n" +
-    // "</div>\n";
+  // "<div id='rel-graphs-container'>\n" +
+  // "  <div id='close-rel-graphs' onclick='hideRelGraphs()'>X</div>\n" +
+  // "  <div id='rel-graphs'></div>\n" +
+  // "</div>\n";
   html += "</div>";
   $mainTable.html(html);
   $("#rel-graphs-container").hide();
@@ -998,8 +998,8 @@ function getChangeLogTableHtml(allEntries, personIds, personMinMaxTs) {
       let rowspan = numRowsWithSameTimestamp(allEntries, entryIndex);
       let rowspanHtml = rowspan > 1 ? "rowspan='" + rowspan + "' " : "";
       html += "<td " + rowspanHtml +
-          //"onclick='displayRecords(this, " + entryIndex + ")' " +  (<== in case we implement this...)
-          "class='timestamp" + rowClass + "'>" + formatTimestamp(entry.updated, true) + "</td>";
+        //"onclick='displayRecords(this, " + entryIndex + ")' " +  (<== in case we implement this...)
+        "class='timestamp" + rowClass + "'>" + formatTimestamp(entry.updated, true) + "</td>";
     }
 
     for (let column = 0; column < personIds.length; column++) {
@@ -1278,10 +1278,10 @@ function getEntryDetailsHtml(entryIndex) {
       switch(objectType) {
         case "BirthName":
           html += changeHtml(operation, getNameChangeHtml(originalPerson), getNameChangeHtml(resultingPerson));
-            break;
+          break;
         case "SourceReference":
           html += changeHtml(operation, getSourceReferenceHtml(originalPerson), getSourceReferenceHtml(resultingPerson), false);
-            break;
+          break;
         case "Gender":
           html += changeHtml(operation, getGender(originalPerson), getGender(resultingPerson));
           break;
@@ -1463,7 +1463,7 @@ function getFactHtml(fact, ignoreStatus) {
       html += "<span class='date " + statusClass + "'>" + encode(date + ";") + "</span> <span class='place" + statusClass + "'>" + encode(place) + "</span>";
     } else {
       html += date ? "<span class='date" + statusClass + "'>" + encode(date) + "</span>"
-                   : "<span class='place" + statusClass + "'>" + encode(place) + "</span>";
+        : "<span class='place" + statusClass + "'>" + encode(place) + "</span>";
     }
   }
   else {
@@ -1761,8 +1761,8 @@ class MergeNode {
         if (new Date(entryTs).getFullYear() === 2015) {
           let changeInfo = entry.changeInfo[0];
           return !(extractType(changeInfo.operation) === "Create" &&
-                   extractType(changeInfo.objectType) === "SourceReference" &&
-                   extractType(changeInfo.objectModifier) === "Person");
+            extractType(changeInfo.objectType) === "SourceReference" &&
+            extractType(changeInfo.objectModifier) === "Person");
         }
         return true;
       }
@@ -3992,40 +3992,40 @@ function getVerticalGrouperHtml(grouper) {
   // Person ID row
   if (tabId !== SOURCES_VIEW) {
     addRow(COLUMN_PERSON_ID, "Person ID", true,
-        personRow => td(personRow, personRow.getPersonIdHtml(false), true));
+      personRow => td(personRow, personRow.getPersonIdHtml(false), true));
   }
   // Collection name & record date rows
   if (tabId === COMBO_VIEW || tabId === SOURCES_VIEW) {
     addRow(COLUMN_COLLECTION, "Collection", true,
-        personRow => personRow.getCollectionHtml(null, clickInfo(personRow)));
+      personRow => personRow.getCollectionHtml(null, clickInfo(personRow)));
     addRow(COLUMN_RECORD_DATE, "Record Date", true,
-        personRow => personRow.getRecordDateHtml(null, clickInfo(personRow)));
+      personRow => personRow.getRecordDateHtml(null, clickInfo(personRow)));
   }
   // Created timestamp row
   if (tabId === MERGE_VIEW || tabId === FLAT_VIEW) {
     addRow(COLUMN_CREATED, "Created", true,
-        personRow => personRow.getTimestampHtml(null, null, clickInfo(personRow)));
+      personRow => personRow.getTimestampHtml(null, null, clickInfo(personRow)));
   }
   // Person names row
   addRow(COLUMN_PERSON_NAME, "Name", true,
-      personRow => td(personRow, personRow.personDisplay.name));
+    personRow => td(personRow, personRow.personDisplay.name));
 
   // Person facts row
   // Future: Put "Birth:", etc., on left, and put events of that time in the same row.
   //  - Able to sort by that. Requires using COLUMN_FACTS + ".Birth" or something in order to sort and display.
   addRow(COLUMN_SPOUSE_FACTS, "Facts", false,
-      personRow => td(personRow, personRow.personDisplay.facts));
+    personRow => td(personRow, personRow.personDisplay.facts));
 
   // Relative rows: Fathers, mothers, then each spouse with their children.
   addRow(COLUMN_FATHER_NAME, "Father", false,
-      personRow => td(personRow, personRow.combineParents(personRow.fathers)));
+    personRow => td(personRow, personRow.combineParents(personRow.fathers)));
   addRow(COLUMN_MOTHER_NAME, "Mother", false,
-      personRow => td(personRow, personRow.combineParents(personRow.mothers)));
+    personRow => td(personRow, personRow.combineParents(personRow.mothers)));
   addSpouseFamilyRows();
 
   // Notes
   addRow(COLUMN_NOTES, "Notes", true,
-      personRow => personRow.getNoteCellHtml('identity-gx', '', ''));
+    personRow => personRow.getNoteCellHtml('identity-gx', '', ''));
   html += "</table>\n";
   return html;
 }
@@ -4090,7 +4090,7 @@ function sortHeaderTh(grouper, columnName, label, colspan) {
 function datePlaceLabelHtml(grouper, columnName, label) {
   return sortHeader(grouper, columnName, label, "sort-date")
     + (grouper ? "<span class='sort-place' onclick='sortColumn(\"" + columnName + "-place" + "\", \"" + grouper.id + "\")'>"
-    + encode(" place ") + "</span>" : "");
+      + encode(" place ") + "</span>" : "");
 }
 
 function headerId(grouper, columnName) {
@@ -4125,14 +4125,14 @@ function getTableHeader(grouper, shouldIndent) {
     html += sortHeaderTh(grouper, COLUMN_CREATED, "Created");
   }
   html += headerHtml(grouper, COLUMN_PERSON_NAME, "Name", true) +
-          headerHtml(grouper, COLUMN_PERSON_NAME, "Facts") +
-          headerHtml(grouper, COLUMN_FATHER_NAME, "Father") +
-          headerHtml(grouper, COLUMN_MOTHER_NAME, "Mother") +
-          headerHtml(grouper, COLUMN_SPOUSE_NAME, "Spouse") +
-          headerHtml(grouper, COLUMN_SPOUSE_FACTS, "Spouse facts") +
-          headerHtml(grouper, COLUMN_CHILD_NAME, "Children") +
-          headerHtml(grouper, COLUMN_CHILD_FACTS, "Child facts") +
-          headerHtml(grouper, COLUMN_NOTES, "Notes", true);
+    headerHtml(grouper, COLUMN_PERSON_NAME, "Facts") +
+    headerHtml(grouper, COLUMN_FATHER_NAME, "Father") +
+    headerHtml(grouper, COLUMN_MOTHER_NAME, "Mother") +
+    headerHtml(grouper, COLUMN_SPOUSE_NAME, "Spouse") +
+    headerHtml(grouper, COLUMN_SPOUSE_FACTS, "Spouse facts") +
+    headerHtml(grouper, COLUMN_CHILD_NAME, "Children") +
+    headerHtml(grouper, COLUMN_CHILD_FACTS, "Child facts") +
+    headerHtml(grouper, COLUMN_NOTES, "Notes", true);
   return html;
 }
 
@@ -4266,14 +4266,14 @@ function getRelativeHtml(relativeId, timestamp) {
 
 function getInitialGedcomx(personId) {
   return { "persons": [
-    {"id": personId,
-      "identifiers": {
-        "http://gedcomx.org/Primary": [
-          "https://familiysearch.org/ark:/61903/4:1:/" + personId
-        ]
+      {"id": personId,
+        "identifiers": {
+          "http://gedcomx.org/Primary": [
+            "https://familiysearch.org/ark:/61903/4:1:/" + personId
+          ]
+        }
       }
-    }
-  ] };
+    ] };
 }
 
 function shortenPersonArk(personArk) {
@@ -4805,7 +4805,7 @@ function updateGedcomx(gedcomx, entry, isOrig) {
         doInList(gxPerson, "facts", entryPerson, operation, isOrig, isPartOfMerge);
         break;
       case "Create-Person":
-        // Do nothing: We already have a GedcomX record with an empty person of this ID to start with.
+      // Do nothing: We already have a GedcomX record with an empty person of this ID to start with.
       case "Create-EvidenceReference":
         // Do nothing: We aren't handling memories at the moment.
         break;
