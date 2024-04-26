@@ -4,6 +4,7 @@
 //   G2FN-RZY - Theoore Freise, which Robby and Karl were working on. Has lots of data and persons added after some merging.
 //   KWNR-S97 - John Taylor. We need to support attached sources w/o indexed personas.
 //   G92P-752 - Broken for Robby
+//   KWNR-ZYT - Ineffective (duplicate) ordinances
 
 /* Still to do:
  - Select rows
@@ -457,6 +458,8 @@ function receiveOws(owsJson, owsId, context, fetching, changeLogMap, $mainTable,
         gedcomx.relationships = owsJson.relationships;
         console.log(getList(gedcomx, "relationships").length + " relationships in owsJson for " + owsId); //todo: remove this
         principalId = fixPersonIdsAndRelationshipTypes(gedcomx, context.personId, principalId, fatherId, motherId, wifeId ? wifeId : husbandId);
+        fixEventOrders(gedcomx);
+        removeDuplicateEvents(gedcomx);
         ows.gedcomx = gedcomx;
         ows.principalPersonId = principalId;
       } else {

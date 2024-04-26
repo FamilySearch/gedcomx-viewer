@@ -346,6 +346,34 @@ function getFirst(array) {
   return null;
 }
 
+function removeDuplicateEvents(doc) {
+  function sameOrig(dateOrPlace1, dateOrPlace2) {
+    return (!dateOrPlace1 && !dateOrPlace2) ||
+      (dateOrPlace1 && dateOrPlace2 && dateOrPlace1.original === dateOrPlace2.original);
+  }
+  function sameFact(fact1, fact2) {
+    return fact1 && fact2 && fact1.type === fact2.type && sameOrig(fact1.date, fact2.date) && sameOrig(fact1.place, fact2.place);
+  }
+  function removeDuplicateEventsFromEntity(entity) {
+    if (entity && entity.facts) {
+      for (let i = 0; i < entity.facts.length - 1; i++) {
+        for (let j = i + 1; j < entity.facts.length; j++) {
+          if (sameFact(entity.facts[i], entity.facts[j])) {
+            entity.facts.splice(j, 1);
+            j--;
+          }
+        }
+      }
+    }
+  }
+  for (let person of getList(doc, "persons")) {
+    removeDuplicateEventsFromEntity(person);
+  }
+  for (let relationship of getList(doc, "relationships")) {
+    removeDuplicateEventsFromEntity(relationship);
+  }
+}
+
 /**
  * Attempt to parse a date using the formats 3 July 1820; July 3, 1820; and 7/3/1820.
  * (Days and months are optional, i.e., "3 July 1820", "July 3, 1820", "July 1820", "1820", 7/3/1820 and 7/1820 are all ok.)
