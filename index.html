@@ -1150,6 +1150,11 @@
         doc.agents.push(publisherAgent);
       }
 
+      let certificate = $("#edit-record-metadata-certificate").val();
+      if (certificate) {
+        setFieldValue(doc, "http://familysearch.org/types/fields/SourceCertificateNbr", certificate);
+      }
+
       updateRecord(doc);
       $("#edit-record-metadata").modal("hide");
     }
@@ -1221,6 +1226,10 @@
       }
       else {
         $("#edit-record-metadata-publisher").val("");
+      }
+
+      if (metadata["Certificate Number"]) {
+        $("#edit-record-metadata-certificate").val(metadata["Certificate Number"]);
       }
 
       $("#edit-record-metadata").modal("show");
@@ -4085,6 +4094,8 @@
         <input id="edit-record-metadata-place" type="text" class="form-control"/>
         <label for="edit-record-metadata-publisher">Publisher</label>
         <input id="edit-record-metadata-publisher" type="text" class="form-control"/>
+        <label for="edit-record-metadata-certificate">Certificate number (as written on the document)</label>
+        <input id="edit-record-metadata-certificate" type="text" class="form-control"/>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>

@@ -674,3 +674,53 @@ function getList(container, listName) {
   }
   return container && container.hasOwnProperty(listName) && container[listName] ? container[listName] : [];
 }
+
+/**
+ * Set a field in the given object
+ * @param fieldHolder - GedcomX Record (i.e., document), Person or Relationship to set field value on.
+ * @param fieldType - FieldType URI (e.g., "http://gedcomx.org/Age" or "
+ * @param originalText - text to put in original field value (null => no original value)
+ * @param interpretedText - Optional additional value to use for interpreted value
+ */
+function setFieldValue(fieldHolder, fieldType, originalText, interpretedText) {
+  if (originalText || interpretedText) {
+    let fieldValues = [];
+    if (originalText) {
+      fieldValues.push({type: "http://gedcomx.com/Original", text: originalText});
+    }
+    if (interpretedText) {
+      fieldValues.push({type: "http://gedcomx.com/Interpreted", text: interpretedText});
+    }
+    let field = getField(fieldHolder, fieldType);
+    if (field) {
+      // Replace existing field values for this field.
+      field.values = fieldValues;
+    } else {
+      // Create new field with values.
+      if (!fieldHolder.fields) {
+        fieldHolder.fields = [];
+      }
+      fieldHolder.fields.push({
+        type: fieldType,
+        values: fieldValues
+      });
+    }
+  }
+}
+
+/**
+ * Find an existing GedcomX Field object in the given fieldHolder.
+ * @param fieldHolder - GedcomX document, person, relationship, etc., which could have a list of Field objects.
+ * @param fieldType - URI for the field type to look for
+ * @returns Field object with the given type, if any, or else null if not found.
+ */
+function getField(fieldHolder, fieldType) {
+  if (fieldHolder && fieldHolder.fields) {
+    for (let field of fieldHolder.fields) {
+      if (field.type === fieldType) {
+        return field;
+      }
+    }
+  }
+  return null;
+}

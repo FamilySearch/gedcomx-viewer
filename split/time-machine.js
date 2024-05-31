@@ -5,6 +5,7 @@
 //   KWNR-S97 - John Taylor. We need to support attached sources w/o indexed personas.
 //   G92P-752 - Broken for Robby
 //   KWNR-ZYT - Ineffective (duplicate) ordinances
+//   LZ62-TSV - Charlemagne. 13000 merges.
 
 /* Still to do:
  - Select rows
@@ -284,6 +285,10 @@ function receiveTfPerson(tf, personId, context, changeLogMap, fetching, $mainTab
       fetchOws(ows.owsId, context, fetching, changeLogMap, $mainTable, $status);
     }
   }
+  else {
+    modifyStatusMessage($status, fetching, personId + "-tf",
+      "Fetching ordinances from TF for " + personId, "Failed to receive ordinances from TF for " + personId);
+  }
   handleIfFinishedFetching(fetching, context, changeLogMap, $mainTable, $status);
 }
 
@@ -430,7 +435,7 @@ function receiveOws(owsJson, owsId, context, fetching, changeLogMap, $mainTable,
   }
 
   // --receiveOws()--
-  modifyStatusMessage($status, fetching, owsId, "Fetching OWS " + owsId, "Received OWS " + owsId);
+  modifyStatusMessage($status, fetching, owsId, "Fetching OWS " + owsId, owsJson ? "Received OWS " + owsId : "Failed to receive OWS " + owsId);
   if (owsJson) {
     let ows = owsMap.get(owsId);
     ows.createDate = getFirst(owsJson.ordinanceWorkSets).createDate.original;
