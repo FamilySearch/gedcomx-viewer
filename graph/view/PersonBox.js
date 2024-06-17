@@ -9,7 +9,7 @@ PersonBox.prototype.setPreviousPosition = function() {
 };
 
 // Move this PersonBox vertically down by the given delta-Y (which could be negative for up or positive for down).
-PersonBox.prototype.move = function(dy, dx) {
+PersonBox.prototype.move = function(dy) {
   this.top += dy;
   this.center += dy;
 };
@@ -241,16 +241,23 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
       if (type !== "Role" && type !== "Age") {
         return "";
       }
-      return field.values.map(value => {
-        return (`<div class="fact">
-          <span class="factType">
-            ${type}: 
-            <span class="fieldValue">
-              ${value.text}
-            </span>
-          </span>
-        </div>\n`);
-      }).join("\n");
+      let orig = null;
+      let interpreted = null;
+      for (let value of field.values) {
+        if (value.type === "http://gedcomx.org/Original") {
+          orig = encode(value.text);
+        } else if (value.type === "http://gedcomx.org/Interpreted") {
+          interpreted = encode(value.text);
+        }
+      }
+      let text;
+      if (orig && interpreted) {
+        text = interpreted + " <span class='orig-value'>(Orig: " + orig + ")</span>";
+      } else {
+        text = interpreted ? interpreted : orig;
+      }
+      return text ? "<div class='fact'><span class='factType'>" + encode(type) +
+        ": <span class='fieldValue'>" + text + "</span></span></div>\n" : "";
     }).join("\n");
   }
 

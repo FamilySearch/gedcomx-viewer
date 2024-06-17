@@ -149,6 +149,10 @@
     color: black;
 }
 
+.orig-value {
+    font-style: italic;
+}
+
 .personLine,.familyLine,.personDot {
     background-color: #8697b3;
     position: absolute;
