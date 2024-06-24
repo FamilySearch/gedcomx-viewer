@@ -686,10 +686,10 @@ function setFieldValue(fieldHolder, fieldType, originalText, interpretedText) {
   if (originalText || interpretedText) {
     let fieldValues = [];
     if (originalText) {
-      fieldValues.push({type: "http://gedcomx.com/Original", text: originalText});
+      fieldValues.push({type: "http://gedcomx.org/Original", text: originalText});
     }
     if (interpretedText) {
-      fieldValues.push({type: "http://gedcomx.com/Interpreted", text: interpretedText});
+      fieldValues.push({type: "http://gedcomx.org/Interpreted", text: interpretedText});
     }
     let field = getField(fieldHolder, fieldType);
     if (field) {
