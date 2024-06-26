@@ -1152,7 +1152,7 @@
 
       let certificate = $("#edit-record-metadata-certificate").val();
       if (certificate) {
-        setFieldValue(doc, "http://familysearch.org/types/fields/SourceCertificateNbr", certificate);
+        setFieldValue(doc, "http://familysearch.org/types/fields/SourceCertificateNbr", String(certificate));
       }
 
       updateRecord(doc);
