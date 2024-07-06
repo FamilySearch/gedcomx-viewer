@@ -1,4 +1,8 @@
 const PERSISTENT_TYPE = "http://gedcomx.org/Persistent"
+const GX_MALE = "http://gedcomx.org/Male";
+const GX_FEMALE = "http://gedcomx.org/Female";
+const GX_COUPLE = "http://gedcomx.org/Couple";
+const GX_PARENT_CHILD = "http://gedcomx.org/ParentChild";
 
 // General-purpose utility functions
 function isEmpty(a) {

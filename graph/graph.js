@@ -1,6 +1,3 @@
-const GX_COUPLE = "http://gedcomx.org/Couple";
-const GX_PARENT_CHILD = "http://gedcomx.org/ParentChild";
-
 /*
    Take a Gedcomx document of a record (or a portion of a tree), and create a RelatioshipGraph, with
      gx: GedcomX object
