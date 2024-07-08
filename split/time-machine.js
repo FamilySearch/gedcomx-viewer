@@ -746,6 +746,7 @@ function fetchRelativeSources($status, context) {
         receiveRelativeSources(gedcomx, $status, context, fetching, relativeId);
       },
       error: function() {
+        console.log("Failed to fetch sources for relative at " + sourceUrl);
         receiveRelativeSources(null, $status, context, fetching, relativeId);
       }
     });
