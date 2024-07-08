@@ -741,7 +741,7 @@ function fetchRelativeSources($status, context) {
         }
       },
       dataType: "json",
-      url: sourceUrl,
+      url: sourceUrl + (context.sessionId ? "?sessionId=" + context.sessionId : ""),
       success:function(gedcomx){
         receiveRelativeSources(gedcomx, $status, context, fetching, relativeId);
       },
