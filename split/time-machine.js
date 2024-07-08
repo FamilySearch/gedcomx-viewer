@@ -319,7 +319,7 @@ function getNormalizedDateElement(performedDate) {
 function fetchOrdinances($status, personId, fetching, context, changeLogMap, $mainTable) {
   updateStatus($status, "Fetching ordinances from TF for " + personId);
   fetching.push(personId + "-tf");
-  let url = "https://www.familysearch.org/service/tree/tree-data/labs/person/" + personId + "/ordinances"
+  let url = "https://www.familysearch.org/service/tree/tree-data/labs/person/" + personId + "/ordinances";
   $.ajax({
     beforeSend: function (request) {
       // request.setRequestHeader("User-Agent", "fs-wilsonr");
@@ -330,7 +330,7 @@ function fetchOrdinances($status, personId, fetching, context, changeLogMap, $ma
       }
     },
     dataType: "json",
-    url: url,
+    url: url + (context.sessionId ? "?sessionId=" + context.sessionId : ""),
     success: function (tf) {
       console.log("Success in fetching tf person " + personId);
       receiveOrdinances(tf, personId, context, changeLogMap, fetching, $mainTable, $status);
@@ -434,7 +434,7 @@ function fetchRelativesAndSources(changeLogMap, $status, context) {
         }
       },
       dataType: "json",
-      url: sourceUrl,
+      url: sourceUrl + (context.sessionId ? "?sessionId=" + context.sessionId : ""),
       success:function(gedcomx){
         receiveSourceDescription(gedcomx, $status, context, fetching, sourceUrl, sourceMap);
       },
@@ -570,7 +570,7 @@ function receiveSourceDescription(gedcomx, $status, context, fetching, sourceUrl
           }
         },
         dataType: "json",
-        url: sourceInfo.personaArk,
+        url: sourceInfo.personaArk + (context.sessionId ? "?sessionId=" + context.sessionId : ""),
         success: function (gedcomx) {
           receivePersona(gedcomx, $status, context, fetching, sourceInfo);
         },
@@ -741,7 +741,7 @@ function fetchRelativeSources($status, context) {
         }
       },
       dataType: "json",
-      url: sourceUrl,
+      url: sourceUrl + (context.sessionId ? "?sessionId=" + context.sessionId : ""),
       success:function(gedcomx){
         receiveRelativeSources(gedcomx, $status, context, fetching, relativeId);
       },
