@@ -92,3 +92,23 @@ pre {
     font-weight: normal;
     text-decoration: none;
 }
+
+#source-pane {
+    overflow: auto;
+    resize: horizontal;
+}
+#source-record-container {
+    /* make the two divs inside of this div be side-by-side. */
+    display: flex;
+    flex-wrap: nowrap;
+}
+#source-pane {
+    overflow: auto;
+    resize: horizontal;
+    width: 33%;
+    min-width: 100px;
+}
+#record-pane {
+    flex-grow: 1;
+    min-width: 100px;
+}

@@ -3044,7 +3044,6 @@
       $("#new-person-fact-type").on("change", changeFactType);
       $("#edit-person-fact-type").on("change", handleEditFactTypeChange);
 
-
       $(document).keydown(handleEditorKeydown);
 
       dragElement(document.getElementById("new-person"));
@@ -3229,8 +3228,8 @@
             </div>
           </div>
         </div>
-        <div class="row">
-          <div class="col-4">
+        <div class="row" id="source-record-container">
+          <div id="source-pane">
             <div id="source-viewer" class="sticky-top" style="max-height: 100vh; overflow: scroll">
               <div class="pt-4">&nbsp;</div>
               <div id="source-file" class="pt-4"></div>
@@ -3239,7 +3238,7 @@
               <div id="sft-summary"></div>
             </div>
           </div>
-          <div class="col-8 pt-4">
+          <div  id="record-pane">
             <div id="rec-list"></div>
             <div id="rel-chart"></div>
             <div id="record"></div>
@@ -4104,6 +4103,5 @@
     </div>
   </div>
 </div>
-
 </body>
 </html>
