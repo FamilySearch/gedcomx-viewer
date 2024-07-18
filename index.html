@@ -2822,6 +2822,30 @@
       }
     }
 
+    function resizeTableColumns(isResizing, prevX) {
+      return function (e) {
+        e.preventDefault();
+        isResizing = true;
+        prevX = e.clientX;
+
+        $(window).on('mousemove', function (e) {
+          if (!isResizing) return;
+          const dx = e.clientX - prevX;
+          prevX = e.clientX;
+          let newWidth = $('#source-pane').outerWidth() + dx;
+          newWidth = newWidth < 100 ? 100 : newWidth;
+          $('#source-pane').css('width', `${newWidth}px`);
+        });
+
+        $(window).on('mouseup', function () {
+          $(window).off('mousemove');
+          $(window).off('mouseup');
+          isResizing = false;
+          console.log("Done resizing");
+        });
+      };
+    }
+
     $(function () {
       $("#source-viewer").hide();
 
@@ -3046,6 +3070,10 @@
 
       $(document).keydown(handleEditorKeydown);
 
+      let isResizing = false;
+      let prevX = 0;
+      $('#splitter').on('mousedown', resizeTableColumns(isResizing, prevX));
+
       dragElement(document.getElementById("new-person"));
       dragElement(document.getElementById("new-relationship"));
       // See if the tab has been reloaded, in which case we want to restored the data that would otherwise be lost.
@@ -3228,21 +3256,25 @@
             </div>
           </div>
         </div>
-        <div class="row" id="source-record-container">
-          <div id="source-pane">
-            <div id="source-viewer" class="sticky-top" style="max-height: 100vh; overflow: scroll">
-              <div class="pt-4">&nbsp;</div>
-              <div id="source-file" class="pt-4"></div>
-              <div id="gx-editor" class="pt-2"></div>
-              <div><span id="image-link">IMAGE LINK</span>&nbsp;&nbsp;<span id="nbx-link">ENTITY VIEWER</span></div>
-              <div id="sft-summary"></div>
-            </div>
-          </div>
-          <div  id="record-pane">
-            <div id="rec-list"></div>
-            <div id="rel-chart"></div>
-            <div id="record"></div>
-          </div>
+        <div class="row">
+          <table>
+            <tr>
+              <td id="source-pane">
+                <div id="source-viewer" class="sticky-top" style="max-height: 100%; overflow: scroll">
+                  <div id="source-file" class="pt-4"></div>
+                  <div id="gx-editor" class="pt-2"></div>
+                  <div><span id="image-link">IMAGE LINK</span>&nbsp;&nbsp;<span id="nbx-link">ENTITY VIEWER</span></div>
+                  <div id="sft-summary"></div>
+                </div>
+              </td>
+              <td id="splitter"></td>
+              <td>
+                <div id="rec-list"></div>
+                <div id="rel-chart"></div>
+                <div id="record"></div>
+              </td>
+            </tr>
+          </table>
         </div>
       </div>
     </div>

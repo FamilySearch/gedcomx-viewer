@@ -94,21 +94,16 @@ pre {
 }
 
 #source-pane {
-    overflow: auto;
-    resize: horizontal;
-}
-#source-record-container {
-    /* make the two divs inside of this div be side-by-side. */
-    display: flex;
-    flex-wrap: nowrap;
-}
-#source-pane {
-    overflow: auto;
-    resize: horizontal;
-    width: 33%;
+    vertical-align: top;
     min-width: 100px;
+    width: 33%;
 }
 #record-pane {
-    flex-grow: 1;
     min-width: 100px;
+}
+
+#splitter {
+    width: 5px;
+    background-color: #ddd7cd;
+    cursor: col-resize;
 }
