@@ -104,6 +104,7 @@ pre {
 
 #splitter {
     width: 5px;
+    min-width: 5px;
     background-color: #ddd7cd;
     cursor: col-resize;
 }
