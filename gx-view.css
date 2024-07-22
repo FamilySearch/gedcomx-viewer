@@ -92,19 +92,3 @@ pre {
     font-weight: normal;
     text-decoration: none;
 }
-
-#source-pane {
-    vertical-align: top;
-    min-width: 100px;
-    width: 33%;
-}
-#record-pane {
-    min-width: 100px;
-}
-
-#splitter {
-    width: 5px;
-    min-width: 5px;
-    background-color: #ddd7cd;
-    cursor: col-resize;
-}
