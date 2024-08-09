@@ -37,7 +37,6 @@ let mergeMap = new Map();
 const CHILD_REL = "child-and-parents-relationships"
 const COUPLE_REL = "http://gedcomx.org/Couple"
 const PARENT_CHILD_REL = "http://gedcomx.org/ParentChild"
-const USYS_ID_TYPE = "http://api.familysearch.org/temple/USYS_ID";
 
 // Fetch the change log entries for the person given by the change log URL.
 function buildChangeLogView(changeLogUrl, sessionId, $mainTable, $status, shouldFetchOrdinances) {
@@ -185,6 +184,10 @@ class Ordinance { // "ctr" = Certified Temple Record
 
 class OrdinanceWorkSet { // "ows"
   constructor(ows, principalPersonId) {
+    function dateOf(type) {
+      let date = ordTypeMap[type];
+      return "\t" + (date ? date.substring(date.length - 4) : "");
+    }
     this.owsId = ows.owsId;
     this.principalPersonId = principalPersonId; // Family Tree person ID at the time the ordinances were submitted.
     this.currentPersonId = ows.personId; // latest, forwarded person id (according to TF) the ordinance is on.
@@ -194,11 +197,21 @@ class OrdinanceWorkSet { // "ows"
     this.modifiedDate = this.createDate; //todo: Change any uses of this to 'createDate' and then remove it.
     this.ordinances = []; // Array of Ordinance object, i.e., a CTR (Certified Temple Record)
 
+    let ordTypeMap = {};
+
     for (let ctr of getList(ows, "ctrs")) {
       let ordinance = new Ordinance(ctr);
       this.ordinances.push(ordinance);
+      let date = ordinance.performedDate ? ordinance.performedDate : "done";
+      ordTypeMap[ordinance.ordinanceType] = date;
     }
-    this.sortOrdinances();
+    sortOrdinances(this.ordinances);
+
+    // Output a tab-separated string with owsId, ows.personId, ows.role, ows.originallyAttachedTo, ows.self.personId
+    console.log(ows.owsId + "\t" + ows.personId + "\t" + ows.role + "\t" + ows.originallyAttachedTo + "\t" + ows.self.personId
+    + dateOf("BAPTISM_LDS") + dateOf("CONFIRMATION_LDS") + dateOf("INITIATORY")
+      + dateOf("ENDOWMENT") + dateOf("SEALING_TO_PARENTS") + dateOf("SEALING_TO_SPOUSE"));
+
 
     this.gedcomx = this.makeGedcomxFromOwsPersons(ows);
     let principalPerson = this.getPrincipal(this.gedcomx);
@@ -287,10 +300,6 @@ class OrdinanceWorkSet { // "ows"
     }
   }
 
-  sortOrdinances() {
-    this.ordinances.sort((a, b) => a.ordinanceSortKey.localeCompare(b.ordinanceSortKey));
-  }
-
   getOrdinancesHtml() {
     let ordinanceList = [];
     for (let ord of this.ordinances) {
@@ -298,6 +307,10 @@ class OrdinanceWorkSet { // "ows"
     }
     return ordinanceList.join("<br>");
   }
+}
+
+function sortOrdinances(ordinances) {
+  ordinances.sort((a, b) => a.ordinanceSortKey.localeCompare(b.ordinanceSortKey));
 }
 
 function getNormalizedDateElement(performedDate) {
@@ -2316,6 +2329,9 @@ class PersonRow {
     function personIdAndRecordDate(personId, sourceInfo, ows) {
       let recordDateSortKey = getRecordDateSortKey(sourceInfo, ows);
       let sortPersonId = sourceInfo && sourceInfo.attachedToPersonId ? sourceInfo.attachedToPersonId : personId;
+      if (ows && ows.currentPersonId) {
+        sortPersonId = ows.currentPersonId;
+      }
       return sortPersonId + (isEmpty(recordDateSortKey) ? "" : "_" + recordDateSortKey);
     }
 
@@ -3038,8 +3054,7 @@ function splitOnGroup(groupId) {
   }
 }
 
-// sourceGrouper - Grouper for the source view
-// sourceGroup - The group of sources being applied to infer how to split the person.
+//
 function splitOnInfoInGroup(tabId, keepRows, splitRows) {
   // Tell whether the given entity's status should cause it to be included in a list for a merge hierarchy row.
   //   Include if there is no status, but not if the status is 'deleted' or any of the merge statuses.
@@ -3075,6 +3090,24 @@ function splitOnInfoInGroup(tabId, keepRows, splitRows) {
       }
     }
   }
+  function gatherOwsFromGroup(personRows, owsIdSet, mainPersonId) {
+    for (let personRow of personRows) {
+      if (tabId === FLAT_VIEW || tabId === MERGE_VIEW) {
+        // No ordinance work set rows, so move ordinances over if this row's person ID was the one the ordinance was originally done for.
+        for (let ows of getList(personOrdinanceMap, mainPersonId)) {
+          if (ows.principalPersonId === personRow.personId) {
+            owsIdSet.add(ows.owsId);
+          }
+        }
+      }
+      else {
+        if (personRow.ows) {
+          owsIdSet.add(personRow.ows.owsId);
+        }
+      }
+    }
+  }
+
   function gatherNames(person, nameSet) {
     for (let name of getList(person, "names")) {
       if (shouldIncludeStatus(name)) {
@@ -3221,11 +3254,15 @@ function splitOnInfoInGroup(tabId, keepRows, splitRows) {
   }
 
   //--- splitOnInfoInGroup() ---
-  // Set of source ID numbers that are being split out
+  // Set of source ID numbers that are being kept or split out
   let keepSourceIds = new Set();
   let splitSourceIds = new Set();
   gatherSourcesFromGroup(splitRows, splitSourceIds);
   gatherSourcesFromGroup(keepRows, keepSourceIds);
+  let keepOwsIds = new Set();
+  let splitOwsIds = new Set();
+  gatherOwsFromGroup(splitRows, splitOwsIds, mainPersonId);
+  gatherOwsFromGroup(keepRows, keepOwsIds, mainPersonId);
   // Sets of record persona Arks that appear as relatives in sources that are being split out.
   let splitSourceNames = new Set();
   let splitTreeNames = new Set();
@@ -3288,6 +3325,9 @@ function splitOnInfoInGroup(tabId, keepRows, splitRows) {
       case TYPE_SOURCE:
         setDirectionBasedOnSetInclusion(element, element.sourceInfo.sourceId, keepSourceIds, splitSourceIds);
         break;
+      case TYPE_ORDINANCE:
+        setDirectionBasedOnSetInclusion(element, element.item.owsId, keepOwsIds, splitOwsIds);
+        break;
     }
   }
 }
@@ -3324,7 +3364,7 @@ const TYPE_PARENTS = "Parents"; // child-and-parents relationship from the perso
 const TYPE_SPOUSE = "Spouse"; // Couple relationship to a spouse
 const TYPE_CHILD = "Children"; // child-and-parents relationship to a child
 const TYPE_SOURCE = "Sources"; // attached source
-//future: const TYPE_ORDINANCE = "ordinance"; // linked ordinance
+const TYPE_ORDINANCE = "Ordinances"; // linked ordinance
 
 // One element of information from the original GedcomX that is either kept on the old person, or copied or moved out to the new person.
 class Element {
@@ -3356,30 +3396,6 @@ class Element {
 }
 
 let split = null;
-
-function getRelationshipMaps(gedcomx, personId, coupleMap, parentRelationships, childrenMap) {
-  for (let relationship of getList(gedcomx, "relationships").concat(getList(gedcomx, CHILD_REL))) {
-    if (relationship.status === DELETED_STATUS || relationship.status === MERGE_DELETED_STATUS) {
-      // Skip relationships that did not end up on the "survivor". (Someone may have to re-add these manually later.)
-      continue;
-    }
-    let spouseId = getSpouseId(relationship, personId);
-    if (relationship.type === COUPLE_REL) {
-      coupleMap.set(spouseId, relationship);
-    } else if (isChildRelationship(relationship)) {
-      if (personId === getRelativeId(relationship, "child")) {
-        parentRelationships.push(relationship);
-      } else {
-        let childRelList = childrenMap.get(spouseId);
-        if (!childRelList) {
-          childRelList = [];
-          childrenMap.set(spouseId, childRelList);
-        }
-        childRelList.push(relationship);
-      }
-    }
-  }
-}
 
 class Split {
   constructor(gedcomx) {
@@ -3484,14 +3500,14 @@ class Split {
           let entryPerson = findPersonByLocalId(entry, resultingId);
           let combo = operation + "-" + ((entryPerson.hasOwnProperty("facts") && entryPerson.facts.length === 1) ? "(Fact)" : objectType);
           if (combo === "Create-BirthName" || combo === "Update-BirthName") {
-            if (!alreadyHasName(person.names, entryPerson.names[0])) {
+            if (!alreadyHasName(person.names, entryPerson.names[0])) { //todo: && !alreadyHasName(extraNames, entryPerson.names[0])) {
               let nameCopy = copyObject(entryPerson.names[0]);
               nameCopy.elementSource = "From person: " + getPersonId(entryPerson);
               extraNames.push(nameCopy);
             }
           }
           else if (combo === "Create-(Fact)") {
-            if (!alreadyHasFact(allFacts, entryPerson.facts[0])) {
+            if (!alreadyHasFact(allFacts, entryPerson.facts[0])) { //todo: && !alreadyHasFact(extraFacts, entryPerson.facts[0])) {
               let factCopy = copyObject(entryPerson.facts[0]);
               factCopy.elementSource = "From person: " + getPersonId(entryPerson);
               allFacts.push(factCopy);
@@ -3533,7 +3549,39 @@ class Split {
       person.sources.sort(compareSourceReferences);
       addElements(person.sources, TYPE_SOURCE);
     }
+    if (personOrdinanceMap) {
+      let owsList = personOrdinanceMap.get(personId);
+      if (owsList) {
+        owsList = owsList.filter(ows => ows.roleInOws === "ORD_PRINCIPAL");
+        owsList.sort((a, b) => a.ordinances[0].ordinanceSortKey.localeCompare(b.ordinances[0].ordinanceSortKey));
+        addElements(owsList, TYPE_ORDINANCE);
+      }
+    }
     return elements;
+  }
+}
+
+function getRelationshipMaps(gedcomx, personId, coupleMap, parentRelationships, childrenMap) {
+  for (let relationship of getList(gedcomx, "relationships").concat(getList(gedcomx, CHILD_REL))) {
+    if (relationship.status === DELETED_STATUS || relationship.status === MERGE_DELETED_STATUS) {
+      // Skip relationships that did not end up on the "survivor". (Someone may have to re-add these manually later.)
+      continue;
+    }
+    let spouseId = getSpouseId(relationship, personId);
+    if (relationship.type === COUPLE_REL) {
+      coupleMap.set(spouseId, relationship);
+    } else if (isChildRelationship(relationship)) {
+      if (personId === getRelativeId(relationship, "child")) {
+        parentRelationships.push(relationship);
+      } else {
+        let childRelList = childrenMap.get(spouseId);
+        if (!childRelList) {
+          childRelList = [];
+          childrenMap.set(spouseId, childRelList);
+        }
+        childRelList.push(relationship);
+      }
+    }
   }
 }
 
@@ -3721,7 +3769,10 @@ function getElementHtml(element, personId, shouldDisplay) {
         elementHtml = encode(sourceInfo.collectionName);
       }
       return wrapTooltip(element, elementHtml, sourceInfo.gedcomx ? getGedcomxSummary(sourceInfo.gedcomx, sourceInfo.personId) : null);
-    // future: TYPE_ORDINANCE...
+    case TYPE_ORDINANCE:
+      let ows = element.item;
+      elementHtml = ows.getOrdinancesHtml();
+      break;
   }
   return wrapTooltip(element, elementHtml, element.elementSource ? encode(element.elementSource) : null);
 }
