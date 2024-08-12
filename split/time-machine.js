@@ -6,13 +6,18 @@
 //   G92P-752 - Broken for Robby
 //   KWNR-ZYT - Ineffective (duplicate) ordinances
 //   LZ62-TSV - Charlemagne. 13000 merges.
+//   L25C-9Z7 - Guy with multiple ordinances.
 
 /* Still to do:
+ - Show summary rows for "split" group and "remain" group
+   - Just above "split" group, show
+     a) "remain" group summary row.
+     b) Divider line
+     c) "split" group summary row.
  - Select rows
    - Drag to move to new or existing group
    - Double-click value to select everyone with that value
  - Collapse merge node (and summarize all info in that one row).
- - Ordinances
  - Memories
  - Move "lollipops" (conclusions made after creation or merge) separately from identities.
 */
@@ -112,18 +117,23 @@ function receiveChangeLog(gedcomx, personId, context, changeLogMap, fetching, $m
   modifyStatusMessage($status, fetching, personId,
     "Fetching" + (receivedNextUrl ? " next" : "") + " change log for " + personId,
     "Received" + (receivedNextUrl ? " next" : "") + " change log for " + personId);
-  let changeLogEntries = makeChangeLogEntries(gedcomx);
-  if (personId in changeLogMap) {
-    changeLogEntries = changeLogMap[personId].concat(changeLogEntries);
+  if (gedcomx) {
+    let changeLogEntries = makeChangeLogEntries(gedcomx);
+    if (personId in changeLogMap) {
+      changeLogEntries = changeLogMap[personId].concat(changeLogEntries);
+    }
+    changeLogMap[personId] = changeLogEntries;
+    let nextUrl = "next" in gedcomx.links ? gedcomx.links.next.href : null;
+    if (nextUrl) {
+      fetchChangeLog(personId, context, changeLogMap, fetching, $mainTable, $status, nextUrl);
+    }
+    let mergedIds = getNewMergeIds(personId, changeLogEntries);
+    for (let newMergeId of mergedIds) {
+      fetchChangeLog(newMergeId, context, changeLogMap, fetching, $mainTable, $status);
+    }
   }
-  changeLogMap[personId] = changeLogEntries;
-  let nextUrl = "next" in gedcomx.links ? gedcomx.links.next.href : null;
-  if (nextUrl) {
-    fetchChangeLog(personId, context, changeLogMap, fetching, $mainTable, $status, nextUrl);
-  }
-  let mergedIds = getNewMergeIds(personId, changeLogEntries);
-  for (let newMergeId of mergedIds) {
-    fetchChangeLog(newMergeId, context, changeLogMap, fetching, $mainTable, $status);
+  else {
+    console.log("Warning: Failed to fetch gedcomx for " + personId);
   }
   handleIfFinishedFetching(fetching, context, changeLogMap, $mainTable, $status);
 }
@@ -1002,7 +1012,7 @@ function getNewMergeIds(personId, changeLogEntries) {
   let mergeIds = []
   if (changeLogEntries) {
     for (let entry of changeLogEntries) {
-      if (entry.changeInfo[0].operation.endsWith("/Merge")) {
+      if (entry.changeInfo && entry.changeInfo.length > 0 && entry.changeInfo[0].operation && entry.changeInfo[0].operation.endsWith("/Merge")) {
         let removedChangeId = entry.changeInfo[0].removed.resourceId;
         for (let person of entry.content.gedcomx.persons) {
           if (person.id === removedChangeId) {
@@ -1808,18 +1818,23 @@ class FamilyDisplay {
       });
     }
     let movedChild = false;
+
     for (let i = this.children.length - 1; i >= 0; i--) {
       let childInfo = childInfos[i];
       if (childInfo.birthDateNum) {
+        // Position that 'childInfo' is currently at, which may have been moved earlier than 'i'.
+        // let currentIndex = i;
         for (let prevIndex = i - 1; prevIndex >= 0; prevIndex--) {
           let prevInfo = childInfos[prevIndex];
           if (prevInfo.birthDateNum && prevInfo.birthDateNum > childInfo.birthDateNum) {
-            // delete childInfo from its current place in the array
-            childInfos.splice(i, 1);
-            // insert childInfo into its new place at 'prevIndex'
-            childInfos.splice(prevIndex, 0, childInfo);
-            i++; // make up for the i-- that is about to happen so that we don't skip an element that just moved into this spot.
+            // Insert childInfo into position 'prevIndex', and move all other values down one, until 'i'.
+            for (let j = i; j > prevIndex; j--) {
+              childInfos[j] = childInfos[j - 1];
+            }
+            childInfos[prevIndex] = childInfo;
+            // currentIndex = prevIndex;
             movedChild = true;
+            i++; // make up for the i-- that is about to happen so that we don't skip an element that just moved into this spot.
             break; // break out of the inner loop. If there's another even-earlier child, this element will get another chance to find it.
           }
         }
