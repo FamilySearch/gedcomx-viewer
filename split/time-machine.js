@@ -1782,68 +1782,101 @@ class FamilyDisplay {
     }
     this.children = [];
   }
+
+  getBirthDateNumber(child) {
+    let person = child.person;
+    let dateNumber = null;
+    if (person.facts) {
+      for (let fact of person.facts) {
+        let type = extractType(fact.type);
+        if (type === 'Birth' || ((type === 'Christening' || type === 'Baptism') && !dateNumber)) {
+          let date = getFactDate(fact);
+          if (date) {
+            let newDateNumber = parseDateIntoNumber(date);
+            if (newDateNumber) {
+              dateNumber = newDateNumber;
+            }
+          }
+        }
+      }
+    }
+    return dateNumber;
+  }
+
   sortChildren() {
-    function getBirthDateNumber(person) {
-      let dateNumber = null;
-      if (person.facts) {
-        for (let fact of person.facts) {
-          let type = extractType(fact.type);
-          if (type === 'Birth' || ((type === 'Christening' || type === 'Baptism') && !dateNumber)) {
-            let date = getFactDate(fact);
-            if (date) {
-              let newDateNumber = parseDateIntoNumber(date);
-              if (newDateNumber) {
-                dateNumber = newDateNumber;
-              }
-            }
-          }
-        }
-      }
-      return dateNumber;
-    }
+    minimalSort(this.children, this.getBirthDateNumber);
+  }
+}
 
-    if (this.children.length < 2) {
-      return;
+// Sort the given list according to the given sort key function, while keeping the elements in as much the same order
+//   as possible when there are equal values or no sort keys on some elements.
+// Any element that is out of order will be moved up in the list just enough to be before any that are "greater than" it.
+function minimalSort(list, getSortNumberFunction) {
+  // Sort by (a) sort key, and, if equal, then by (b) original order.
+  function compareSortObjects(a, b) {
+    let diff = a.sortKey - b.sortKey;
+    if (diff === 0) {
+      return a.originalIndex - b.originalIndex;
     }
-    // Move each child who has a birth date up before the first one who has a later birth date.
-    // This sorts the children such that (a) any with birth dates are in the right order, and
-    // (b) all other children remain otherwise in as much the same order as possible.
-    let childInfos = [];
-    let originalOrder = 0;
-    for (let child of this.children) {
-      childInfos.push({
-        child: child,
-        originalOrder: originalOrder++,
-        birthDateNum: getBirthDateNumber(child.person)
-      });
-    }
-    let movedChild = false;
+    return diff;
+  }
 
-    for (let i = this.children.length - 1; i >= 0; i--) {
-      let childInfo = childInfos[i];
-      if (childInfo.birthDateNum) {
-        // Position that 'childInfo' is currently at, which may have been moved earlier than 'i'.
-        // let currentIndex = i;
-        for (let prevIndex = i - 1; prevIndex >= 0; prevIndex--) {
-          let prevInfo = childInfos[prevIndex];
-          if (prevInfo.birthDateNum && prevInfo.birthDateNum > childInfo.birthDateNum) {
-            // Insert childInfo into position 'prevIndex', and move all other values down one, until 'i'.
-            for (let j = i; j > prevIndex; j--) {
-              childInfos[j] = childInfos[j - 1];
-            }
-            childInfos[prevIndex] = childInfo;
-            // currentIndex = prevIndex;
-            movedChild = true;
-            i++; // make up for the i-- that is about to happen so that we don't skip an element that just moved into this spot.
-            break; // break out of the inner loop. If there's another even-earlier child, this element will get another chance to find it.
-          }
-        }
+  //--- minimalSort ---
+  // Create sort objects
+  let sortObjects = [];
+  let sortObjectsWithKeys = [];
+  for (let i = 0; i < list.length; i++) {
+    let sortObject = {
+      originalIndex: i,
+      minPos: null, // position of the earliest element that is greater than this one
+      sortKey: getSortNumberFunction(list[i]),
+      element: list[i]
+    }
+    sortObjects.push(sortObject);
+    if (sortObject.sortKey) {
+      sortObjectsWithKeys.push(sortObject);
+    }
+  }
+
+  if (sortObjectsWithKeys.length === 0) {
+    // No sort keys, so no sorting needed.
+    return;
+  }
+
+  sortObjectsWithKeys.sort(compareSortObjects);
+  let movedAny = false;
+  // Set minPos to be the place where each element (with a sort key) should be moved to.
+  let nextObject = sortObjectsWithKeys[sortObjectsWithKeys.length - 1];
+  for (let i = sortObjectsWithKeys.length - 2; i >= 0; i--) {
+    let sortObject = sortObjectsWithKeys[i];
+    if (sortObject.originalIndex > nextObject.originalIndex) {
+      sortObject.minPos = nextObject.minPos;
+      movedAny = true;
+    }
+    nextObject = sortObject;
+  }
+
+  let sortedObjects = [];
+  let withKeysIndex = 0;
+
+  for (let i = 0; i < sortObjects.length; i++) {
+    let sortObject = sortObjects[i];
+    if (sortObject.minPos === i) {
+      // This element is the earliest one that others may be getting inserted in front of.
+      while (withKeysIndex < sortObjectsWithKeys.length && sortObjectsWithKeys[withKeysIndex].minPos === i) {
+        sortedObjects.push(sortObjectsWithKeys[withKeysIndex++]);
       }
     }
-    if (movedChild) {
-      for (let i = 0; i < childInfos.length; i++) {
-        this.children[i] = childInfos[i].child;
-      }
+    else if (sortObject.minPos === null) {
+      sortedObjects.push(sortObject);
+    }
+  }
+  if (sortedObjects.length !== list.length) {
+    console.log("Error: sortedObjects.length (" + sortedObjects.length + ") !== list.length (" + list.length + ")");
+  }
+  if (movedAny) {
+    for (let i = 0; i < list.length; i++) {
+      list[i] = sortedObjects[i].element;
     }
   }
 }
