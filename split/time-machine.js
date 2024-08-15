@@ -1,7 +1,7 @@
 // IDs to try out:
 //   LZBY-X8J - Clarence Gray. 5 PIDs that all merge into the same one. (Wife Bertha Nickell (later Bishop): L2DF-DRG)
 //   9HMF-2S1 - Alice Moore. Example from Kathryn
-//   G2FN-RZY - Theoore Freise, which Robby and Karl were working on. Has lots of data and persons added after some merging.
+//  *G2FN-RZY - Theoore Freise, which Robby and Karl were working on. Has lots of data and persons added after some merging.
 //   KWNR-S97 - John Taylor. We need to support attached sources w/o indexed personas.
 //   G92P-752 - Broken for Robby
 //   KWNR-ZYT - Ineffective (duplicate) ordinances
@@ -822,6 +822,7 @@ const SOURCES_VIEW = "sources-view";
 const COMBO_VIEW   = "combo-view";
 const SPLIT_VIEW   = "split-view";
 const viewList = [HELP_VIEW, CHANGE_LOG_VIEW, MERGE_VIEW, FLAT_VIEW, SOURCES_VIEW, COMBO_VIEW, SPLIT_VIEW];
+const SPLIT_PERSON_ID = "<New Person ID>";
 
 function getCurrentTab() {
   return viewList[$("#tabs").tabs("option", "active")];
@@ -1261,7 +1262,7 @@ function getEntryDetailsHtml(entryIndex) {
         case "Fact":
         default:
           if (hasFact(originalPerson) || hasFact(resultingPerson)) {
-            html += changeHtml(operation, getFactsHtml(originalPerson), getFactsHtml(resultingPerson), false);
+            html += changeHtml(operation, getFactsHtml(originalPerson, true), getFactsHtml(resultingPerson, true), false);
           }
           else {
             handled = false;
@@ -1387,11 +1388,11 @@ function hasFact(person, key="facts") {
   return person && key && person[key] && person[key].length > 0;
 }
 
-function getFactsHtml(entity, key="facts") {
+function getFactsHtml(entity, includeFactId, key="facts") {
   if (hasFact(entity, key)) {
     let factHtmlList = [];
     for (let fact of entity[key]) {
-      factHtmlList.push(getFactHtml(fact));
+      factHtmlList.push(getFactHtml(fact, false, includeFactId));
       factHtmlList.push(getChangeMessage(fact));
     }
     return combineHtmlLists(factHtmlList);
@@ -1405,7 +1406,8 @@ function trimPlace(place) {
     .replace(", United States", "")
     .replace(", Vereinigte Staaten von Amerika", "") : null;
 }
-function getFactHtml(fact, ignoreStatus) {
+
+function getFactHtml(fact, ignoreStatus, includeFactId) {
   let type = extractType(fact.type);
   let date = fact.date ? fact.date.original : null;
   let place = fact.place ? trimPlace(fact.place.original) : null;
@@ -1428,6 +1430,9 @@ function getFactHtml(fact, ignoreStatus) {
   }
   else {
     html += "</span>";
+  }
+  if (includeFactId && fact.id) {
+    html += "<br>&nbsp;&nbsp;<span class='conclusion-id'>" + encode("Fact id: " + fact.id) + "</span>";
   }
   return html;
 }
@@ -1528,7 +1533,7 @@ function getRelativeRow(rel, key, interpretation, timestamp, factKey="facts") {
   let relativeName = getRelativeName(relativeId, timestamp);
   return "<tr><td>" + encode(key) + "</td><td>" + encode(label) + "</td><td>"
     + encode(relativeId)+ "</td><td>" + encode(relativeName) + "</td>"
-    + "<td>" + getFactsHtml(rel, factKey) + "</td>"
+    + "<td>" + getFactsHtml(rel, false, factKey) + "</td>"
     + "</tr>\n";
 }
 
@@ -1657,31 +1662,6 @@ function assume(assumption) {
   }
 }
 
-// function displayRecords(element, entryIndex) {
-//   let gedcomxColumns = buildGedcomxColumns(entryIndex);
-//   //future...
-// }
-
-// function buildGedcomxColumns(entryIndex) {
-//   // Map of column# -> GedcomX object for that column
-//   let columnGedcomxMap = {};
-//   // Move entryIndex to the top of the list of changes that were all done at the same time.
-//   while (entryIndex > 0 && allEntries[entryIndex - 1].updated === allEntries[entryIndex].updated) {
-//     entryIndex--;
-//   }
-//   // Apply each change to the gedcomx at that entry's column.
-//   for (let i = allEntries.length - 1; i >= entryIndex; i--) {
-//     let entry = allEntries[i];
-//     let gedcomx = columnGedcomxMap[entry.column];
-//     if (!gedcomx) {
-//       gedcomx = getInitialGedcomx(entry.personId);
-//       columnGedcomxMap[entry.column] = gedcomx;
-//     }
-//     updateGedcomx(gedcomx, entry);
-//   }
-//   return columnGedcomxMap;
-// }
-
 // ========== MergeNode =============================
 class MergeNode {
   // Constructor with required personId and, when created as the result of a merge, also survivor and duplicate merge nodes.
@@ -1695,7 +1675,7 @@ class MergeNode {
     // GedcomX within 24 hours of the person's creation, or at the initial time of merge.
     this.gedcomx = survivorGx ? copySurvivorGedcomx(survivorGx) : getInitialGedcomx(personId);
     // Flag for whether only changes in 2012 or within 24 hours of creation have been made to this person's GedcomX so far
-    this.isInitialIdentity = true;
+    this.isInitialIdentity = !survivorMergeNode && !duplicateMergeNode;
 
     this.parentNode = null;
     this.prevNode = survivorMergeNode;
@@ -1952,6 +1932,8 @@ class DisplayOptions {
     this.shouldShowAttachedTo = false;
     // Flag for whether to do a vertical display
     this.vertical = false;
+    // Flag for whether to show summaries of 'keep' and 'split' just above the split group (if any).
+    this.shouldShowSummaries = false;
   }
 }
 
@@ -1993,6 +1975,8 @@ function handleOptionChange() {
   displayOptions.shouldShowAdditions = $("#additions-checkbox").prop("checked");
   displayOptions.shouldShowDeletions = $("#deletions-checkbox").prop("checked");
   displayOptions.vertical = $("#vertical-checkbox").prop("checked");
+  let summaryCheckbox = $("#summary-checkbox");
+  displayOptions.shouldShowSummaries = summaryCheckbox && summaryCheckbox.prop("checked");
   updatePersonFactsDisplay();
   updateIncludedColumns();
   updateTabsHtml();
@@ -2047,6 +2031,10 @@ class Grouper {
     this.usedColumns = usedColumns; // Set of COL_*
     this.maxDepth = maxDepth;
     this.prevSelectLocation = null;
+    // groupId of the group that has most recently had its "Split on Group" button clicked.
+    this.splitGroupId = null;
+    // Flag for whether to show 'keep' summary and 'split' summary just above the split group (if any).
+    this.showSummaries = false;
     for (let mergeRow of mergeRows) {
       grouperMap[mergeRow.id] = this;
     }
@@ -2156,6 +2144,22 @@ class Grouper {
       let mergeGroup = this.mergeGroups[g];
       if (mergeGroup.groupId === groupId && isEmpty(mergeGroup.personRows)) {
         this.mergeGroups.splice(g, 1);
+      }
+    }
+  }
+
+  checkGroupOrder() {
+    // Make sure that the main person ID is always in the first group.
+    for (let g = 0; g < this.mergeGroups.length; g++) {
+      let mergeGroup = this.mergeGroups[g];
+      for (let personRow of mergeGroup.personRows) {
+        if (personRow.personId === mainPersonId) {
+          if (g > 0) {
+            let mainGroup = this.mergeGroups.splice(g, 1)[0];
+            this.mergeGroups.unshift(mainGroup);
+          }
+          return;
+        }
       }
     }
   }
@@ -2466,7 +2470,6 @@ class PersonRow {
   }
 
   handleCoupleAndTernaryRelationships(gedcomx, personId, fatherMap, motherMap, familyMap, includePersonId) {
-    console.log("Handing relationships...");
     for (let relationship of getList(gedcomx, "relationships").concat(getList(gedcomx, CHILD_REL))) {
       if (!shouldDisplayStatus(relationship.status)) {
         continue;
@@ -2861,12 +2864,11 @@ function findMaxDepth(mergeNode) {
 // ==================================================
 // ===== Merge Hierarchy HTML =======================
 /**
- * Build MergeRow array, representing the HTML table rows for each MergeNode in the hierarchy.
- * Indentation strings use the following codes to decide what connector to include at each indentation position:
+ * Build MergeRow array, representing the HTML table rows for each MergeNode in the list or hierarchy.
+ * Indentation strings use the following codes to decide what connector to include at each indentation position (for merge hierarchy):
  *   O=none, I = vertical, L = L-connector, T = vertical line with horizontal connector
  * @param mergeNode - MergeNode to use for building a row
  * @param indent - String indicating what kind of connector to put at each indentation position.
- *
  * @param maxIndent - maximum number of indentations for any merge node
  * @param isDupNode - Flag for whether this is a "duplicate" node (as opposed to the survivor of a merge)
  * @param mergeRows - Array of MergeRows to add to
@@ -2907,7 +2909,6 @@ function buildMergeRows(mergeNode, indent, maxIndent, isDupNode, mergeRows, shou
             mergeRows.push(owsPersonRow);
             mergeRow.addOwsChild(owsPersonRow);
           }
-          //todo: Handle ordinances where the target person is a parent in a child's OWS.
         }
       }
     }
@@ -2963,6 +2964,7 @@ function addGroup(grouperId) {
   let mergeRows = grouper.removeSelectedRows();
   let mergeGroup = new MergeGroup("Group " + (grouper.mergeGroups.length + 1), mergeRows, grouper);
   grouper.mergeGroups.push(mergeGroup);
+  grouper.checkGroupOrder();
   updateFlatViewHtml(grouper);
 }
 
@@ -2972,6 +2974,7 @@ function addSelectedToGroup(groupId) {
   if (mergeGroup) {
     let selectedRows = grouper.removeSelectedRows();
     mergeGroup.personRows.push(...selectedRows);
+    grouper.checkGroupOrder();
     updateFlatViewHtml(grouper);
   }
 }
@@ -3085,6 +3088,7 @@ function splitOnSelectedMergeRows() {
   let selectedMergeRows = getRowsBySelection(mergeGrouper.mergeGroups[0].personRows, true);
   splitOnInfoInGroup(MERGE_VIEW, unselectedMergeRows, selectedMergeRows);
   updateSplitViewHtml();
+  //todo: Make this work in conjunction with the combo view...
   $("#tabs").tabs("option", "active", viewList.indexOf(SPLIT_VIEW));
 }
 
@@ -3097,12 +3101,13 @@ function splitOnGroup(groupId) {
     let splitRows = mergeGroup.personRows;
     let otherRows = getOtherPersonRows(grouper, mergeGroup);
     splitOnInfoInGroup(grouper.tabId, otherRows, splitRows);
-    updateSplitViewHtml();
-    $("#tabs").tabs("option", "active", viewList.indexOf(SPLIT_VIEW));
+    grouper.splitGroupId = groupId;
+    displayOptions.shouldShowSummaries = true;
+    updateTabsHtml();
+    // $("#tabs").tabs("option", "active", viewList.indexOf(SPLIT_VIEW));
   }
 }
 
-//
 function splitOnInfoInGroup(tabId, keepRows, splitRows) {
   // Tell whether the given entity's status should cause it to be included in a list for a merge hierarchy row.
   //   Include if there is no status, but not if the status is 'deleted' or any of the merge statuses.
@@ -3416,9 +3421,10 @@ const TYPE_ORDINANCE = "Ordinances"; // linked ordinance
 
 // One element of information from the original GedcomX that is either kept on the old person, or copied or moved out to the new person.
 class Element {
-  constructor(id, item, type, direction, famId) {
-    this.id = id; // index in split.elements[]
+  constructor(elementIndex, item, type, direction, famId) {
+    this.elementIndex = elementIndex; // index in split.elements[]
     this.item = item; // name, gender, fact, field, relationship or source [or eventually ordinance] being decided upon.
+    item.elementIndex = elementIndex; // back-reference to this Element
     this.type = type; // Type of item (see TYPE_* above)
     this.direction = direction; // Direction for this piece of information: DIR_KEEP/COPY/MOVE
     this.famId = famId; // optional value identifying which family (i.e., spouseId) this relationship element is part of, to group children by spouse.
@@ -3445,13 +3451,20 @@ class Element {
 
 let split = null;
 
+/* Class representing the decisions about how to split a person.
+   Contains a list of elements, each of which represents a piece of information that needs to be decided upon.
+   Each element can be kept on the "survivor" (direction=DIR_KEEP), moved to the "split" (direction=DIR_MOVE),
+     copied to both (direction=DIR_COPY), or left undecided (direction=DIR_NULL).
+   Elements that come from a source that are not marked as 'selected' are not kept on either person.
+ */
 class Split {
   constructor(gedcomx) {
     this.gedcomx = gedcomx; // Current, merged person's full GedcomX.
     let personId = gedcomx.persons[0].id;
     this.personId = personId;
-    // Elements of information, including name, gender, facts, parent relationships, couple relationships, child relationships and sources.
-    // couple and child relationships are ordered such that for each couple relationships, child relationships with that spouse
+    // Elements of information, including name, gender, facts, parent relationships, couple relationships,
+    //   child relationships, sources and ordinances.
+    // Couple and child relationships are ordered such that for each couple relationships, child relationships with that spouse
     //   follow in the elements list. Then any child relationships with no spouse id follow after that.
     this.elements = this.initElements(gedcomx, personId);
   }
@@ -3607,6 +3620,90 @@ class Split {
     }
     return elements;
   }
+
+  // Get a GedcomX object constructed from the split 'elements' list, either for the 'keep' side (true) or the 'split' side (false)
+  getSplitGedcomx(isKeep) {
+    let personId = isKeep ? mainPersonId : SPLIT_PERSON_ID;
+    let mainPerson = { "id" : personId,
+      "identifiers" : {
+        "http://gedcomx.org/Primary" : [ "https://familysearch.org/ark:/61903/4:1:" + personId ]
+      }
+    };
+    let gedcomx = {
+      "persons" : [ mainPerson ]
+    };
+    for (let element of this.elements) {
+      let item = element.item;
+      if (element.direction === DIR_COPY || (element.direction === DIR_KEEP && isKeep) || (element.direction === DIR_MOVE && !isKeep)) {
+        switch (element.type) {
+          case TYPE_NAME:
+            addToList(mainPerson, "names", item);
+            break;
+          case TYPE_GENDER:
+            mainPerson.gender = item;
+            break;
+          case TYPE_FACT:
+            addToList(mainPerson, "facts", item);
+            break;
+          case TYPE_SPOUSE:
+            addToList(gedcomx, "relationships", this.copyObjectWithElement(item));
+            break;
+          case TYPE_PARENTS:
+          case TYPE_CHILD:
+            // Operate on a copy of the relationship, since we might modify the person IDs
+            addToList(gedcomx, CHILD_REL, this.copyObjectWithElement(item));
+            break;
+          // Ignore sources and ordinances, because they are already displayed separately as part of the groups.
+        }
+      }
+    }
+    let relativeIds= new Set();
+    if (gedcomx.relationships) {
+      // The GedcomX created for the 'keep' or 'split' half has relationships between the person and various relatives.
+      // For each relationship, add the relative's ID to the given set, so that we can add those persons into the GedcomX as well.
+      // Also, if !isKeep, then map the person ID of the mainPersonId to SPLIT_PERSON_ID.
+      for (let relationship of gedcomx.relationships) {
+        this.fixRelative(isKeep, relationship.person1, relativeIds);
+        this.fixRelative(isKeep, relationship.person2, relativeIds);
+      }
+    }
+    if (gedcomx[CHILD_REL]) {
+      for (let rel of gedcomx[CHILD_REL]) {
+        this.fixRelative(isKeep, rel.parent1, relativeIds);
+        this.fixRelative(isKeep, rel.parent2, relativeIds);
+        this.fixRelative(isKeep, rel.child, relativeIds);
+      }
+    }
+    for (let person of this.gedcomx.persons) {
+      if (relativeIds.has(person.id)) {
+        gedcomx.persons.push(person);
+      }
+    }
+    return gedcomx;
+  }
+
+  fixRelative(isKeep, relativeReference, relativeIdSet) {
+    if (relativeReference) {
+      let relativeId = relativeReference.resourceId; // if it is null, parse it from the resource after the "#"
+      if (relativeId !== mainPersonId) {
+        relativeIdSet.add(relativeId);
+      } else if (!isKeep) {
+        relativeReference.resourceId = SPLIT_PERSON_ID;
+        relativeReference.resource = "https://familysearch.org/ark:/61903/4:1:" + SPLIT_PERSON_ID;
+      }
+    }
+  }
+
+  // Copy an item that happens to also have an 'element' pointer back to the element that contained the item.
+  // Temporarily set this value to null, and then restore it to both the original item and the copy.
+  copyObjectWithElement(item) {
+    let element = item.element;
+    item.element = null;
+    let copy = copyObject(item);
+    item.element = element;
+    copy.element = element;
+    return copy;
+  }
 }
 
 function getRelationshipMaps(gedcomx, personId, coupleMap, parentRelationships, childrenMap) {
@@ -3712,7 +3809,7 @@ function getSplitViewHtml() {
   function makeButton(label, direction, element) {
     let isActive = direction !== element.direction;
     return "<button class='dir-button' " +
-      (isActive ? "onclick='moveElement(\"" + direction + "\", " + element.id + ")'" : "disabled") + ">" +
+      (isActive ? "onclick='moveElement(\"" + direction + "\", " + element.elementIndex + ")'" : "disabled") + ">" +
       encode(label) + "</button>";
   }
   function getHeadingHtml(element) {
@@ -3723,7 +3820,7 @@ function getSplitViewHtml() {
       if (!prevElement || element.type !== prevElement.type) {
         // For "Names" and "Facts", add an expand/collapse button after the label
         isExpanded = element.isExpanded;
-        buttonHtml = "<button class='collapse-button' onclick='toggleSplitExpanded(" + element.id + ")'>" + encode(isExpanded ? "-" : "+") + "</button>";
+        buttonHtml = "<button class='collapse-button' onclick='toggleSplitExpanded(" + element.elementIndex + ")'>" + encode(isExpanded ? "-" : "+") + "</button>";
       }
     } else {
       isExpanded = false;
@@ -3795,7 +3892,7 @@ function getElementHtml(element, personId, shouldDisplay) {
       elementHtml = "&nbsp;" + encode( gender.type ? extractType(gender.type) : "Unknown");
       break;
     case TYPE_FACT:
-      elementHtml = "&nbsp;" + getFactHtml(element.item, true);
+      elementHtml = "&nbsp;" + getFactHtml(element.item, true, false);
       break;
     case TYPE_PARENTS:
       elementHtml = "&nbsp;" + getParentsHtml(element.item);
@@ -3831,8 +3928,8 @@ function wrapTooltip(element, mainHtml, tooltipHtml) {
     return "<td class='identity-gx " + undecidedClass + "'>" + mainHtml + "</td>";
   }
   return "<td class='split-extra tooltip" + undecidedClass + "'>"
-    + (element.isExtra() ? "<input id='extra-" + element.id + "' type='checkbox' onchange='toggleElement(" + element.id + ")'" + (element.isSelected ? " checked" : "") + ">" : "")
-    + "<label for='extra-" + element.id + "' class='tooltip'>" + mainHtml + "<span class='tooltiptext'>" + tooltipHtml + "</span></label></td>";
+    + (element.isExtra() ? "<input id='extra-" + element.elementIndex + "' type='checkbox' onchange='toggleElement(" + element.elementIndex + ")'" + (element.isSelected ? " checked" : "") + ">" : "")
+    + "<label for='extra-" + element.elementIndex + "' class='tooltip'>" + mainHtml + "<span class='tooltiptext'>" + tooltipHtml + "</span></label></td>";
 }
 
 // Get an HTML summary of the info in the given gedcomx file.
@@ -4078,6 +4175,16 @@ function getGrouperHtml(grouper) {
 
   for (let groupIndex = 0; groupIndex < grouper.mergeGroups.length; groupIndex++) {
     let personGroup = grouper.mergeGroups[groupIndex];
+    if (personGroup.groupId === grouper.splitGroupId) {
+      html += "<tr class='group-header'><td class='group-header' colspan='" + numColumns + "'>" +
+        "<input type='checkbox' id='summary-checkbox' onChange='handleOptionChange()'" +
+        (displayOptions.shouldShowSummaries ? " checked" : "") + ">Show summaries</input></td></tr>\n";
+      if (displayOptions.shouldShowSummaries) {
+        html += getSummaryHtml(true, grouper);
+        html += "<tr class='summary-divider'><td class='summary-divider' colspan='" + numColumns + "'></td></tr>";
+        html += getSummaryHtml(false, grouper);
+      }
+    }
     if (grouper.mergeGroups.length > 1) {
       html += "<tr class='group-header'>" + "<td class='group-header' colspan='" + numColumns + "'>" +
         getGroupHeadingHtml(personGroup, groupIndex) + "</td></tr>";
@@ -4089,6 +4196,12 @@ function getGrouperHtml(grouper) {
   html += "</table>\n";
   html += getAddGroupButtonHtml(grouper);
   return html;
+}
+
+function getSummaryHtml(isKeep, grouper) {
+  let gedcomx = split.getSplitGedcomx(isKeep);
+  let personRow = new PersonRow(null, isKeep ? mainPersonId : SPLIT_PERSON_ID, gedcomx, 0, 0, false, grouper, null, null, null);
+  return "<tr class='summary-row'>" + personRow.getHtml(grouper.usedColumns, grouper.tabId) + "</tr>";
 }
 
 function getAddGroupButtonHtml(grouper) {
@@ -4379,23 +4492,24 @@ function compareFacts(fact1, fact2) {
   return compareDates(date1, date2);
 }
 
-// Add the given fact to the given person. Insert it before any other fact that it is
+// Add a copy of the given fact to the given person. Insert it before any other fact that it is
 //   earlier than (by date; or birth < christening < most other events < death < burial).
 function addFact(person, fact, isOrig, isPartOfMerge) {
-  fact.status = getAddStatus(isOrig, isPartOfMerge);
+  let factCopy = copyObject(fact);
+  factCopy.status = getAddStatus(isOrig, isPartOfMerge);
   if (!person.hasOwnProperty("facts")) {
     person.facts = [];
   }
   let factIndex = 0;
   while (factIndex < person.facts.length) {
-    if (compareFacts(fact, person.facts[factIndex]) < 0) {
+    if (compareFacts(factCopy, person.facts[factIndex]) < 0) {
       // new fact is 'less than' the fact at index [factIndex], so insert it there.
-      person.facts.splice(factIndex, 0, fact);
+      person.facts.splice(factIndex, 0, factCopy);
       return;
     }
     factIndex++;
   }
-  person.facts.push(fact);
+  person.facts.push(factCopy);
 }
 
 /**
@@ -4459,13 +4573,14 @@ function updateChildAndParentsRelationship(gedcomx, entry, resultingId, isOrig, 
 }
 
 function addToList(listHolder, listName, element, isOrig, isPartOfMerge) {
+  let elementCopy = copyObject(element);
   if (listHolder.hasOwnProperty(listName)) {
-    listHolder[listName].push(element);
+    listHolder[listName].push(elementCopy);
   }
   else {
-    listHolder[listName] = [element];
+    listHolder[listName] = [elementCopy];
   }
-  element.status = getAddStatus(isOrig, isPartOfMerge);
+  elementCopy.status = getAddStatus(isOrig, isPartOfMerge);
 }
 
 
@@ -4479,9 +4594,9 @@ function addToList(listHolder, listName, element, isOrig, isPartOfMerge) {
  * @param isOrig - Flag for whether the change is happening during the initial creation of the person (part of its "original intended identity")
  * @param isPartOfMerge - Flag for whether this 'add' or 'update' is part of information coming from the duplicate as part of a merge.
  */
-function updateInList(listContainer, listName, elementListContainer, isOrig, isPartOfMerge) {
+function updateInList(listContainer, listName, elementListContainer, isOrig, isPartOfMerge, origElementListContainer) {
   function hasSameId(a, b) {
-    if (a.hasOwnProperty("id") && a["id"] === elementWithId["id"]) {
+    if (a.hasOwnProperty("id") && a["id"] === b["id"]) {
       return true;
     }
     let idA = getPrimaryIdentifier(a);
@@ -4489,22 +4604,23 @@ function updateInList(listContainer, listName, elementListContainer, isOrig, isP
     return !!(idA && idA === idB);
   }
 
-  let elementWithId = elementListContainer[listName][0];
+  let updatedElementWithId = copyObject(elementListContainer[listName][0]);
+  let origElementWithId = origElementListContainer ? origElementListContainer[listName][0] : updatedElementWithId;
   let existingList = listContainer[listName];
   if (existingList) {
     for (let i = 0; i < existingList.length; i++) {
-      if (hasSameId(existingList[i], elementWithId)) {
+      if (hasSameId(existingList[i], origElementWithId)) {
         if (setDeletedStatus(existingList[i], isOrig)) {
-          existingList[i] = elementWithId;
+          existingList[i] = updatedElementWithId;
         } else {
-          existingList.push(elementWithId);
+          existingList.push(updatedElementWithId);
         }
-        elementWithId.status = getAddStatus(isOrig, isPartOfMerge);
+        updatedElementWithId.status = getAddStatus(isOrig, isPartOfMerge);
         return;
       }
     }
   }
-  console.log("Failed to find element in " + listName + "[] with id " + elementWithId["id"]);
+  console.log("Failed to find element in " + listName + "[] with id " + updatedElementWithId["id"]);
 }
 
 /**
@@ -4561,12 +4677,12 @@ function removeFromListById(listContainer, listName, elementListContainer, isOri
   console.log("Failed to element in list " + listName);
 }
 
-function doInList(listContainer, listName, elementListContainer, operation, isOrig, isPartOfMerge) {
+function doInList(listContainer, listName, elementListContainer, operation, isOrig, isPartOfMerge, origElementListContainer) {
   if (operation === "Create") {
     addToList(listContainer, listName, elementListContainer[listName][0], isOrig, isPartOfMerge);
   }
   else if (operation === "Update") {
-    updateInList(listContainer, listName, elementListContainer, isOrig, isOrig, isPartOfMerge);
+    updateInList(listContainer, listName, elementListContainer, isOrig, isPartOfMerge, origElementListContainer);
   }
   else if (operation === "Delete") {
     removeFromListById(listContainer, listName, elementListContainer, isOrig);
@@ -4796,6 +4912,7 @@ function updateGedcomx(gedcomx, entry, isOrig) {
   let objectType = extractType(getProperty(changeInfo, "objectType"));
   let objectModifier = extractType(getProperty(changeInfo, "objectModifier"));
   let combo = operation + "-" + objectType;
+  let origId = getProperty(changeInfo, "original.resourceId");
   let resultingId = getProperty(changeInfo, operation === "Delete" ? "removed.resourceId" : "resulting.resourceId");
   let isPartOfMerge = entry.mergeSurvivorId || entry.mergeDuplicateId;
 
@@ -4807,18 +4924,20 @@ function updateGedcomx(gedcomx, entry, isOrig) {
   }
   else if (objectModifier === "Person" && objectType !== "NotAMatch") {
     let gxPerson = findPersonInGx(gedcomx, entry.personId);
+    let origPerson = findPersonByLocalId(entry, origId);
     let entryPerson = findPersonByLocalId(entry, resultingId);
     if (entryPerson.hasOwnProperty("facts") && entryPerson.facts.length === 1) {
       combo = operation + "-" + "(Fact)";
     }
     switch (combo) {
       case "Create-Gender":
-        gxPerson.gender = entryPerson.gender;
+        gxPerson.gender = copyObject(entryPerson.gender);
         gxPerson.gender.status = getAddStatus(isOrig, isPartOfMerge);
         break;
       case "Update-Gender":
-        entryPerson.gender.status = oppositeGender(gxPerson.gender, entryPerson.gender) ? CHANGED_STATUS : getAddStatus(isOrig);
-        gxPerson.gender = entryPerson.gender;
+        let prevGender = gxPerson.gender;
+        gxPerson.gender = copyObject(entryPerson.gender);
+        gxPerson.gender.status = oppositeGender(gxPerson.gender, prevGender) ? CHANGED_STATUS : getAddStatus(isOrig);
         break;
       case "Delete-Gender":
         if (setDeletedStatus(gxPerson["gender"], isOrig, isPartOfMerge)) {
@@ -4828,12 +4947,12 @@ function updateGedcomx(gedcomx, entry, isOrig) {
       case "Create-BirthName":
       case "Update-BirthName":
       case "Delete-BirthName":
-        doInList(gxPerson, "names", entryPerson, operation, isOrig, isPartOfMerge);
+        doInList(gxPerson, "names", entryPerson, operation, isOrig, isPartOfMerge, origPerson);
         break;
       case "Create-SourceReference":
       case "Update-SourceReference":
       case "Delete-SourceReference":
-        doInList(gxPerson, "sources", entryPerson, operation, isOrig, isPartOfMerge);
+        doInList(gxPerson, "sources", entryPerson, operation, isOrig, isPartOfMerge, origPerson);
         break;
       case "Create-(Fact)":
         console.assert(entryPerson.hasOwnProperty("facts") && entryPerson.facts.length === 1, "Expected one fact in entry");
@@ -4842,6 +4961,9 @@ function updateGedcomx(gedcomx, entry, isOrig) {
         break;
       case "Delete-(Fact)":
         doInList(gxPerson, "facts", entryPerson, operation, isOrig, isPartOfMerge);
+        break;
+      case "Update-(Fact)":
+        doInList(gxPerson, "facts", entryPerson, operation, isOrig, isPartOfMerge, origPerson);
         break;
       case "Create-Person":
       // Do nothing: We already have a GedcomX record with an empty person of this ID to start with.

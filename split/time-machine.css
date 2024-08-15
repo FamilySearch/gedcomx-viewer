@@ -108,7 +108,10 @@ td {
 .new-value {
     color: green;
 }
-
+.conclusion-id {
+    color: dimgrey;
+    font-size: small;
+}
 .delete-value {
     color:red;
 }
