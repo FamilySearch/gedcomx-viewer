@@ -192,7 +192,7 @@ function parseLineToBasic(line) {
   return obj
 }
 
-function parseSummary(summary) {
+function parseSummaryIntoSummaryModel(summary) {
 
   const lines = summary.split('\n').map(parseLineToBasic)
   // console.log(lines)

@@ -41,8 +41,7 @@
         dataType: "text",
         url: url,
         success: function (summaryText) {
-          let summary = parseSummary(summaryText);
-          let sampleGx = summaryToGx(summary);
+          let sampleGx = summaryToGx(summaryText);
           //todo: handle whole RecordSet, not just first record.
           buildMultipleRelGraphs(sampleGx, new ChartOptions({isEditable: true, shouldShowConfidence: true, shouldDisplayIds: false}));
         }

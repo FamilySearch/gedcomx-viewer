@@ -443,7 +443,7 @@ function summaryRecordToGx(sRecord) {
  * Assumes two images with local IDs "Page1" and "Page2"
  * @param summaryModel - Summary object from Image-to-summary
  */
-function summaryToGx(summaryModel) {
+function summaryModelToGx(summaryModel) {
   let recordSet = convertSummaryArrayToGx(summaryModel.records, summaryRecordToGx);
   // For reach image, add a SourceDescription with id "sd_p0", "sd_p1", etc., to all of the GedcomX records.
   if (summaryModel.meta && summaryModel.meta.imageDimensions) {
@@ -470,4 +470,9 @@ function summaryToGx(summaryModel) {
   }
 
   return recordSet;
+}
+
+function summaryToGx(i2sSummary) {
+  let summaryModel = parseSummaryIntoSummaryModel(i2sSummary);
+  return summaryModelToGx(summaryModel);
 }
