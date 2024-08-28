@@ -238,7 +238,7 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
     }
     return fields.map(field => {
       const type = field?.type?.substring(field.type.lastIndexOf("/") + 1);
-      if (type !== "Role" && type !== "Age") {
+      if (type !== "Role" && type !== "Age" && type !== "SourceCertificateNbr") {
         return "";
       }
       let orig = null;
@@ -256,7 +256,8 @@ function PersonBox(personNode, relChart, personAbove, personBelow, generationInd
       } else {
         text = interpreted ? interpreted : orig;
       }
-      return text ? "<div class='fact'><span class='factType'>" + encode(type) +
+      let displayType = (type === "SourceCertificateNbr" ? "Certificate" : type);
+      return text ? "<div class='fact'><span class='factType'>" + encode(displayType) +
         ": <span class='fieldValue'>" + text + "</span></span></div>\n" : "";
     }).join("\n");
   }
