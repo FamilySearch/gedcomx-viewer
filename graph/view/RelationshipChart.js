@@ -45,7 +45,7 @@ function ChartOptions({ prevChart= null,
   this.isUndo = isUndo;
 }
 
-function prevRelChartOptions(prevRelChart, imgOverlayToGx, isUndo) {
+function prevRelChartOptions(prevRelChart, isUndo, imgOverlayToGx) {
   return new ChartOptions({
     prevChart : prevRelChart,
     imgOverlayToGx: imgOverlayToGx,
@@ -326,7 +326,7 @@ function initUndo(relChart, chartOptions) {
   relChart.gedcomxChangePosition = chartOptions.prevChart ? chartOptions.prevChart.gedcomxChangePosition : 0;
 
   if (!chartOptions.isUndo) {
-    relChart.gedcomxChangeHistory[relChart.gedcomxChangePosition++] = JSON.parse(JSON.stringify(relChart.relGraph.gx));
+    relChart.gedcomxChangeHistory[relChart.gedcomxChangePosition++] = copyGedcomx(relChart.relGraph.gx);
     if (relChart.gedcomxChangePosition < relChart.gedcomxChangeHistory.length) {
       // Did a change after doing multiple "undos". So ignore the rest of the change history.
       relChart.gedcomxChangeHistory.length = relChart.gedcomxChangePosition;
@@ -337,14 +337,14 @@ function initUndo(relChart, chartOptions) {
 function undoGraph(relChart) {
   if (relChart && relChart.gedcomxChangePosition > 1) {
     let gx = copyGedcomx(relChart.gedcomxChangeHistory[--relChart.gedcomxChangePosition - 1]);
-    buildRelGraph(gx, prevRelChartOptions(relChart, null, true));
+    updateRecord(gx, true);
   }
 }
 
 function redoGraph(relChart) {
   if (relChart && relChart.gedcomxChangePosition < relChart.gedcomxChangeHistory.length) {
     let gx = copyGedcomx(relChart.gedcomxChangeHistory[relChart.gedcomxChangePosition++]);
-    buildRelGraph(gx, prevRelChartOptions(relChart, null, true));
+    updateRecord(gx, true);
   }
 }
 

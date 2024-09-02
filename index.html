@@ -202,13 +202,15 @@
           if ((key === 'Z' && e.shiftKey) || key === 'Y') {
             // Ctrl/Cmd-shift Z or Cmd-Y => Redo
             redoRecordSet();
-            e.stopPropagation();
+            // Prevent graph.js from receiving redo, since it is already taken care of.
+            e.stopImmediatePropagation();
             e.preventDefault(); // Prevent browser from treating Cmd-Y as "Show all history".
           }
           else if (key === 'Z') { // lower-case z, no shift
             // Ctrl/Cmd-Z => Undo
             undoRecordSet();
-            e.stopPropagation();
+            // Prevent graph.js from receiving Cmd-Z and re-doing the undo
+            e.stopImmediatePropagation();
             e.preventDefault();
           }
         }
@@ -218,13 +220,13 @@
     /**
      *  Having made a change to the given record, update the display of it.
      *
-     *  @param doc The record to update.
-     *  @param url (optional) The url or filename of the record, if applicable. (Ignored if null)
-     *  @param editorAlreadyUpdated (optional) Flag for whether the 'editor' is already updated (avoids closing editor when it is being edited still).
-     *  @param isClean - flag for whether this is a fresh update of the record, so the dirty bit should be cleared rather than set (like usual).
-     *  @param fromUndoLog - flag for whether this update is coming from the undo history, in which case the undo history should not be updated.
+     * @param doc The record to update.
+     * @param fromUndoLog - flag for whether this update is coming from the undo history, in which case the undo history should not be updated.
+     * @param editorAlreadyUpdated (optional) Flag for whether the 'editor' is already updated (avoids closing editor when it is being edited still).
+     * @param url (optional) The url or filename of the record, if applicable. (Ignored if null)
+     * @param isClean - flag for whether this is a fresh update of the record, so the dirty bit should be cleared rather than set (like usual).
      */
-    function updateRecord(doc, url, editorAlreadyUpdated, isClean, fromUndoLog) {
+    function updateRecord(doc, fromUndoLog, editorAlreadyUpdated, url, isClean) {
       url = url ? url : currentUrl;
       currentUrl = url;
       if (doc.records && doc.records.length > 0) {
@@ -304,7 +306,7 @@
       updateSelectablePersons(doc, $("#copy-person-fact-target-persons"));
 
       // Rebuild the relationship graph. Set global variable (defined in RelChartBuilder.js).
-      relChart = buildGraph(doc, true, relChart, true);
+      relChart = buildGraph(doc, true, relChart, fromUndoLog);
      }
 
     /**
@@ -792,7 +794,7 @@
         if (relChart) {
           relChart = null; // avoid animation at beginning when switching to different records.
         }
-        updateRecord(recordInfo.gxRecord, null, false, true);
+        updateRecord(recordInfo.gxRecord, false, false, null, true);
       }
     }
 
@@ -2730,7 +2732,7 @@
       else if (backup.text) {
         setRecordSourceDocument(backup.text, backup.filename);
       }
-      updateRecord(backup.doc, backup.url, false, true, true);
+      updateRecord(backup.doc, true, false, backup.url, true);
       $("#download-gx").attr("download", backup.filename ? backup.filename.replace(/(.txt|.nbx|.nbx.xml)?$/, ".gx.json") : "gx.json");
     }
 
@@ -2739,7 +2741,7 @@
         setRecordSourceDocument(null);
         recordInfos = [];
         currentRecordIndex = -1;
-        updateRecord({}, null, false, true);
+        updateRecord({}, false, false, null, true);
       }
     }
 
@@ -2807,7 +2809,7 @@
         recordInfos = [];
         currentRecordIndex = -1;
         relChart = null; // clear out any previous RelationshipChart
-        updateRecord(makeEmptyRecord(), null, false, true);
+        updateRecord(makeEmptyRecord(), false, false, null, true);
         for (let i = 0; i < files.length; i++) {
           let f = files[i];
           let reader = new FileReader();

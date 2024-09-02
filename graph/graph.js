@@ -44,8 +44,8 @@
  * @param isDraggable - Flag for whether the rel chart should be draggable.
  * @returns {RelationshipChart}
  */
-function buildGraph(gx, isEditable, prevChart, ignoreUndo, imgOverlayToGx, isDraggable) {
-  return buildRelGraph(gx, prevChart ? prevRelChartOptions(prevChart): new ChartOptions({
+function buildGraph(gx, isEditable, prevChart, ignoreUndo, imgOverlayToGx = null, isDraggable = false) {
+  return buildRelGraph(gx, prevChart ? prevRelChartOptions(prevChart, ignoreUndo): new ChartOptions({
     isEditable: isEditable,
     prevChart: prevChart,
     ignoreUndo: ignoreUndo,
@@ -74,6 +74,9 @@ function buildMultipleRelGraphs(gxRecordSet, chartOptions) {
  * @returns {RelationshipChart}
  */
 function buildRelGraph(gx, chartOptions, relChartDiv='rel-chart') {
+  if (!chartOptions && currentRelChart) {
+    chartOptions = prevRelChartOptions(currentRelChart);
+  }
   if (!chartOptions.imgOverlayToGx && chartOptions.prevChart) {
     chartOptions.imgOverlayToGx = chartOptions.prevChart.imgOverlayToGx; // in case this is non-null.
   }

@@ -58,9 +58,10 @@
      * Redraw the chart with an updated GedcomX document.
      * Note that record.html has "updateRecord(doc)" as well, so we're using the same function name for both.
      * @param doc - GedcomX document to rebuild the chart with.
+     * @param fromUndoLog - Flag for if the update is due to an undo/redo.
      */
-    function updateRecord(doc) {
-      buildRelGraph(doc, prevRelChartOptions(currentRelChart));
+    function updateRecord(doc, fromUndoLog) {
+      buildRelGraph(doc, prevRelChartOptions(currentRelChart, fromUndoLog));
     }
   </script>
 </body>

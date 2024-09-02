@@ -52,21 +52,20 @@
       let isTree = false;
       if (url && url.includes(":")) {
         let matches = url.match(/.*1:1:(.*)/);
-        if (matches) {
+        if (matches) { // CDS/SLS record persona
           let personaId = matches[1];
           url = "https://api.familysearch.org/platform/records/personas/" + personaId + "?access_token=" + sessionId;
         }
         else {
           matches = url.match(/.*4:1:(.*)/);
-          if (matches) {
+          if (matches) { // Family Tree person
             let personId = matches[1];
             isTree = true;
             url = "https://api.familysearch.org/platform/tree/persons/" + personId + "?access_token=" + sessionId;
           }
           else {
             matches = url.match(/.*2:2:(.*)/);
-            if (matches) {
-              let personId = matches[1];
+            if (matches) { // LLS "Genealogies" tree person
               isTree = true;
               url = url + "?access_token=" + sessionId;
             }
@@ -98,12 +97,13 @@
     });
 
     /**
-     * Redraw the chart with an updated GedcomX document.
-     * Note that record.html has "updateRecord(doc)" as well, so we're using the same function name for both.
-     * @param doc - GedcomX document to rebuild the chart with.
+     *  Having made a change to the given record, update the display of it.
+     *
+     * @param doc The record to update.
+     * @param fromUndoLog - flag for whether this update is coming from the undo history, in which case the undo history should not be updated.
      */
-    function updateRecord(doc) {
-      buildRelGraph(doc, prevRelChartOptions(currentRelChart));
+    function updateRecord(doc, fromUndoLog) {
+      buildRelGraph(doc, prevRelChartOptions(currentRelChart, fromUndoLog));
     }
   </script>
 </body>
