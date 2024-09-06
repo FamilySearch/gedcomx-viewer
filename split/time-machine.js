@@ -1971,16 +1971,23 @@ function initOptionsDisplay() {
 }
 
 function handleOptionChange() {
+  function updateIfVisible(divId, currentValue) {
+    let checkbox = $("#" + divId);
+    let state = checkbox ? checkbox.prop("checked") : undefined;
+    if (state === undefined) {
+      checkbox = $("#v-" + divId);
+      state = checkbox ? checkbox.prop("checked") : undefined;
+    }
+    return state === undefined ? currentValue : state;
+  }
   displayOptions.factsToInclude = $("input[name = 'fact-level']:checked").val();
   displayOptions.shouldShowChildren = $("#children-checkbox").prop("checked");
   displayOptions.shouldRepeatInfoFromMerge = $("#merge-info-checkbox").prop("checked");
   displayOptions.shouldShowAdditions = $("#additions-checkbox").prop("checked");
   displayOptions.shouldShowDeletions = $("#deletions-checkbox").prop("checked");
   displayOptions.vertical = $("#vertical-checkbox").prop("checked");
-  let summaryCheckbox = $("#summary-checkbox");
-  displayOptions.shouldShowSummaries = summaryCheckbox && summaryCheckbox.prop("checked");
-  let extraValuesCheckbox = $("#show-extra-values-checkbox");
-  displayOptions.shouldExpandHiddenValues = extraValuesCheckbox && extraValuesCheckbox.prop("checked");
+  displayOptions.shouldShowSummaries = updateIfVisible("summary-checkbox", displayOptions.shouldShowSummaries);
+  displayOptions.shouldExpandHiddenValues = updateIfVisible("show-extra-values-checkbox", displayOptions.shouldExpandHiddenValues);
   updatePersonFactsDisplay();
   updateIncludedColumns();
   updateTabsHtml();
@@ -3193,12 +3200,26 @@ function buildPersonSourcesMap(entries) {
 }
 //====== Split ========
 
+// Summary person rows.
+let keepPersonRow = null;
+let splitPersonRow = null;
+
+function updateSummaryRows() {
+  function makeSummaryPersonRow(isKeep) {
+    let gedcomx = split.getSplitGedcomx(isKeep);
+    return new PersonRow(null, isKeep ? mainPersonId : SPLIT_PERSON_ID, gedcomx, 0, 0,
+      false, mergeGrouper, null, null, null, isKeep ? DIR_KEEP : DIR_MOVE);
+  }
+  keepPersonRow = makeSummaryPersonRow(true);
+  splitPersonRow = makeSummaryPersonRow(false);
+}
+
 // Use the selected PersonRows in the merge hierarchy view to select
 function splitOnSelectedMergeRows() {
   let unselectedMergeRows = getRowsBySelection(mergeGrouper.mergeGroups[0].personRows, false);
   let selectedMergeRows = getRowsBySelection(mergeGrouper.mergeGroups[0].personRows, true);
   splitOnInfoInGroup(MERGE_VIEW, unselectedMergeRows, selectedMergeRows);
-  updateSplitViewHtml();
+  updateTabsHtml();
   //todo: Make this work in conjunction with the combo view...
   $("#tabs").tabs("option", "active", viewList.indexOf(SPLIT_VIEW));
 }
@@ -3494,6 +3515,7 @@ function splitOnInfoInGroup(tabId, keepRows, splitRows) {
         break;
     }
   }
+  updateSummaryRows();
 }
 
 const COLUMN_COLLECTION         = "collection";
@@ -3888,25 +3910,27 @@ function getFullText(name) {
   return fullText ? fullText : "<no name>";
 }
 
-// Don't delete: Really is used, IntelliJ just can't tell.
 function moveElement(direction, elementId) {
   let element = split.elements[elementId];
   element.direction = direction;
   if (element.direction !== DIR_KEEP && element.isExtra() && !element.isSelected) {
     element.isSelected = true;
   }
+  updateSummaryRows();
   updateSplitViewHtml();
   updateFlatViewHtml(comboGrouper);
 }
 
 function toggleSplitExpanded(elementIndex) {
   split.elements[elementIndex].isExpanded = !split.elements[elementIndex].isExpanded;
+  updateSummaryRows();
   updateSplitViewHtml();
   updateFlatViewHtml(comboGrouper);
 }
 
 function toggleElement(elementId) {
   split.elements[elementId].isSelected = !split.elements[elementId].isSelected;
+  updateSummaryRows();
   updateSplitViewHtml();
   updateFlatViewHtml(comboGrouper);
 }
@@ -3921,8 +3945,11 @@ function updateComboViewHtml() {
 
 function makeButton(label, direction, element) {
   let isActive = direction !== element.direction;
-  return "<button class='dir-button' " +
-    (isActive ? "onclick='moveElement(\"" + direction + "\", " + element.elementIndex + ")'" : "disabled") + ">" +
+  if (isActive) {
+    return "<button class='dir-button' onclick='moveElement(\"" + direction + "\", " + element.elementIndex + ")'>" +
+      encode(label) + "</button>";
+  }
+  return "<button class='dir-button' disabled>" +
     encode(label) + "</button>";
 }
 
@@ -4092,11 +4119,27 @@ function getVerticalGrouperHtml(grouper) {
     }
   }
 
-  function addRow(columnId, rowLabel, shouldAlwaysInclude, personRowFunction) {
-    if (shouldAlwaysInclude || grouper.usedColumns.has(columnId)) {
-      html += "<tr>" + headerHtml(grouper, columnId, rowLabel, shouldAlwaysInclude, true);
+  function getSummaryCellHtml(columnIdForRow, isKeep) {
+    return "...";
+  }
+
+  function addRow(columnIdForRow, rowLabel, shouldAlwaysInclude, personRowFunction) {
+    if (shouldAlwaysInclude || grouper.usedColumns.has(columnIdForRow)) {
+      html += "<tr>" + headerHtml(grouper, columnIdForRow, rowLabel, shouldAlwaysInclude, true);
       for (let groupIndex = 0; groupIndex < grouper.mergeGroups.length; groupIndex++) {
         let group = grouper.mergeGroups[groupIndex];
+        if (group.groupId === grouper.splitGroupId) {
+          html += "<td class='group-header'>";
+          if (displayOptions.shouldShowSummaries) {
+            html += getSummaryCellHtml(columnIdForRow, true);
+          }
+          html += "</td>";
+          if (displayOptions.shouldShowSummaries) {
+            padGroup(groupIndex);
+            html += "<td>" + getSummaryCellHtml(columnIdForRow, false) + "</td>";
+            padGroup(groupIndex);
+          }
+        }
         for (let personRow of group.personRows) {
           html += personRowFunction(personRow);
         }
@@ -4107,10 +4150,20 @@ function getVerticalGrouperHtml(grouper) {
   }
 
   function addGroupNamesRow() {
-    // Top row: <blank column header><group header, colspan=#person'rows' in group><gap>...
+    // Top row: <drag width control><group header, colspan=#person'rows' in group><gap>...
+    // If viewing summaries, then also include <gap><show summaries button><gap><show hidden button>
     html += "<tr><td class='drag-width' id='drag-table'><div class='drag-table-handle'>" + encode("<=width=>") + "</div></td>"; // leave one cell for the left header column
     for (let groupIndex = 0; groupIndex < grouper.mergeGroups.length; groupIndex++) {
       let group = grouper.mergeGroups[groupIndex];
+      if (group.groupId === grouper.splitGroupId) {
+        // <td><show summaries button></td>[<gap><td><show hidden values button></td><gap>]
+        html += "<td class='group-header'>" + showSummariesButtonHtml(true) + "</td>";
+        if (displayOptions.shouldShowSummaries) {
+          padGroup(groupIndex);
+          html += "<td class='group-header'>" + showHiddenValuesButtonHtml(true) + "</td>";
+          padGroup(groupIndex);
+        }
+      }
       let colspan = group.personRows.length > 1 ? " colspan='" + group.personRows.length + "'" : "";
       html += "<td class='group-header'" + colspan + ">";
       if (grouper.mergeGroups.length > 1) {
@@ -4282,6 +4335,16 @@ function getVerticalGrouperHtml(grouper) {
   return html;
 }
 
+function showSummariesButtonHtml(isVertical) {
+  return "<input type='checkbox' id='" + (isVertical ? "v-" : "") + "summary-checkbox' onChange='handleOptionChange()'" +
+  (displayOptions.shouldShowSummaries ? " checked" : "") + ">Show summaries</input>";
+}
+
+function showHiddenValuesButtonHtml(isVertical) {
+  return "<input type='checkbox' id='" + (isVertical ? "v-" : "") + "show-extra-values-checkbox' onChange='handleOptionChange()'" +
+    (displayOptions.shouldExpandHiddenValues ? " checked" : "") + ">Show extra values</input>";
+}
+
 function getGrouperHtml(grouper) {
   if (displayOptions.vertical && (getCurrentTab() === FLAT_VIEW || getCurrentTab() === SOURCES_VIEW || getCurrentTab() === COMBO_VIEW)) {
     return getVerticalGrouperHtml(grouper);
@@ -4293,11 +4356,13 @@ function getGrouperHtml(grouper) {
     let personGroup = grouper.mergeGroups[groupIndex];
     if (personGroup.groupId === grouper.splitGroupId) {
       html += "<tr class='group-header'><td class='group-header' colspan='3'>" +
-        "<input type='checkbox' id='summary-checkbox' onChange='handleOptionChange()'" +
-        (displayOptions.shouldShowSummaries ? " checked" : "") + ">Show summaries</input></td>" +
-        "<td class='group-header' colspan='" + (numColumns - 3) +"'>" +
-        "<input type='checkbox' id='show-extra-values-checkbox' onChange='handleOptionChange()'" +
-        (displayOptions.shouldExpandHiddenValues ? " checked" : "") + ">Show extra values</input></td></tr>\n";
+        showSummariesButtonHtml(false) + "</td>" +
+        "<td class='group-header' colspan='" + (numColumns - 3) +"'>";
+      if (displayOptions.shouldShowSummaries) {
+        // Don't bother showing "show extra values" checkbox if we're not showing summaries.
+        html += showHiddenValuesButtonHtml(false);
+      }
+      html += "</td></tr>\n";
       if (displayOptions.shouldShowSummaries) {
         html += getSummaryHtml(true, grouper);
         html += "<tr class='summary-divider'><td class='summary-divider' colspan='" + numColumns + "'></td></tr>";
@@ -4318,8 +4383,7 @@ function getGrouperHtml(grouper) {
 }
 
 function getSummaryHtml(isKeep, grouper) {
-  let gedcomx = split.getSplitGedcomx(isKeep);
-  let personRow = new PersonRow(null, isKeep ? mainPersonId : SPLIT_PERSON_ID, gedcomx, 0, 0, false, grouper, null, null, null, isKeep ? DIR_KEEP : DIR_MOVE);
+  let personRow = isKeep ? keepPersonRow : splitPersonRow;
   return personRow.getHtml(grouper.usedColumns, grouper.tabId, isKeep);
 }
 
