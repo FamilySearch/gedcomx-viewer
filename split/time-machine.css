@@ -193,7 +193,7 @@ td {
     background-color: #f3e4d6;
     border: 1px solid #9d8345;
     border-radius: 5px;
-    box-shadow: black;
+    box-shadow: 10px 10px 5px 0 black;
 }
 #fact-level-radio {
     display: inline;
@@ -455,4 +455,8 @@ a:hover {
 .new-group-td {
     min-width: 90px;
     vertical-align: bottom;
+}
+.summary-row {
+    border: 1px solid #80cc7c;
+    background-color: #c0efbe;
 }

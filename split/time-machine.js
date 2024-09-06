@@ -212,8 +212,7 @@ class OrdinanceWorkSet { // "ows"
     for (let ctr of getList(ows, "ctrs")) {
       let ordinance = new Ordinance(ctr);
       this.ordinances.push(ordinance);
-      let date = ordinance.performedDate ? ordinance.performedDate : "done";
-      ordTypeMap[ordinance.ordinanceType] = date;
+      ordTypeMap[ordinance.ordinanceType] = ordinance.performedDate ? ordinance.performedDate : "done";
     }
     sortOrdinances(this.ordinances);
 
@@ -344,7 +343,7 @@ function fetchOrdinances($status, personId, fetching, context, changeLogMap, $ma
   fetching.push(personId + "-tf");
   let url = "https://www.familysearch.org/service/tree/tree-data/labs/person/" + personId + "/ordinances";
   $.ajax({
-    beforeSend: function (request) {
+    beforeSend: function(request) {
       // request.setRequestHeader("User-Agent", "fs-wilsonr");
       request.setRequestHeader("User-Agent-Chain", "fs-wilsonr");
       request.setRequestHeader("Accept", "application/json");
@@ -354,11 +353,11 @@ function fetchOrdinances($status, personId, fetching, context, changeLogMap, $ma
     },
     dataType: "json",
     url: url,
-    success: function (tf) {
+    success: function(tf) {
       console.log("Success in fetching tf person " + personId);
       receiveOrdinances(tf, personId, context, changeLogMap, fetching, $mainTable, $status);
     },
-    error: function (data) {
+    error: function() {
       console.log("Failed to fetch tf person " + personId);
       receiveOrdinances(null, personId, context, changeLogMap, fetching, $mainTable, $status);
     }
@@ -412,7 +411,7 @@ function receiveOrdinances(ordinancesJson, personId, context, changeLogMap, fetc
         console.log("Duplicate OWS id: " + ows.owsId);
       }
       owsMap.set(ows.owsId, ows);
-      computeIfAbsent(personOrdinanceMap, personId, key => []).push(ows);
+      computeIfAbsent(personOrdinanceMap, personId, () => []).push(ows);
     }
   }
   else {
@@ -822,7 +821,7 @@ const SOURCES_VIEW = "sources-view";
 const COMBO_VIEW   = "combo-view";
 const SPLIT_VIEW   = "split-view";
 const viewList = [HELP_VIEW, CHANGE_LOG_VIEW, MERGE_VIEW, FLAT_VIEW, SOURCES_VIEW, COMBO_VIEW, SPLIT_VIEW];
-const SPLIT_PERSON_ID = "<New Person ID>";
+const SPLIT_PERSON_ID = "<New ID>";
 
 function getCurrentTab() {
   return viewList[$("#tabs").tabs("option", "active")];
@@ -1732,10 +1731,11 @@ class MergeNode {
 
 // ===============
 class PersonDisplay {
-  constructor(person, nameClass, status, coupleRelationship, shouldIncludeId) {
+  constructor(person, nameClass, status, coupleRelationship, shouldIncludeId, childAndParentsRelationship) {
     this.person = person;
     this.name = "<span class='" + nameClass + (status ? " " + status : "") + "'>" + encode(getPersonName(person)) + "</span>";
     this.coupleRelationship = coupleRelationship;
+    this.childAndParentsRelationship = childAndParentsRelationship;
     if (nameClass !== "person" && shouldIncludeId) {
       this.name += " <span class='relative-id'>(" + encode(person.id) + ")</span>";
     }
@@ -1934,6 +1934,8 @@ class DisplayOptions {
     this.vertical = false;
     // Flag for whether to show summaries of 'keep' and 'split' just above the split group (if any).
     this.shouldShowSummaries = false;
+    // Flag for whether to show hidden values in the summary rows in the combo view. (Does not affect split view).
+    this.shouldExpandHiddenValues = true;
   }
 }
 
@@ -1977,6 +1979,8 @@ function handleOptionChange() {
   displayOptions.vertical = $("#vertical-checkbox").prop("checked");
   let summaryCheckbox = $("#summary-checkbox");
   displayOptions.shouldShowSummaries = summaryCheckbox && summaryCheckbox.prop("checked");
+  let extraValuesCheckbox = $("#show-extra-values-checkbox");
+  displayOptions.shouldExpandHiddenValues = extraValuesCheckbox && extraValuesCheckbox.prop("checked");
   updatePersonFactsDisplay();
   updateIncludedColumns();
   updateTabsHtml();
@@ -2074,10 +2078,8 @@ class Grouper {
         }
       }
     }
-    if (!rowLocation) {
-      console.log("Could not find row with id " + rowId);
-      return null;
-    }
+    console.log("Could not find row with id " + rowId);
+    return null;
   }
 
   toggleRow(rowId) {
@@ -2202,7 +2204,7 @@ class MergeGroup {
 
 // Row of data for a person and their 1-hop relatives (record persona or Family Tree person--either original identity or result of a merge)
 class PersonRow {
-  constructor(mergeNode, personId, gedcomx, indent, maxIndent, isDupNode, grouper, sourceInfo, parentRow, ows) {
+  constructor(mergeNode, personId, gedcomx, indent, maxIndent, isDupNode, grouper, sourceInfo, parentRow, ows, summaryDir) {
     this.id = "person-row-" + nextPersonRowId++;
     personRowMap[this.id] = this;
     grouperMap[this.id] = grouper;
@@ -2231,6 +2233,7 @@ class PersonRow {
       parentRow.childRows.push(this);
     }
     this.ows = ows;
+    this.summaryDirection = summaryDir; // DIR_KEEP or DIR_SPLIT for keep vs. split person summary row. Null if not summary row.
   }
 
   updatePersonDisplay() {
@@ -2494,7 +2497,7 @@ class PersonRow {
         }
         if (isChildRel) {
           let childId = getRelativeId(relationship, "child");
-          familyDisplay.children.push(new PersonDisplay(findPersonInGx(gedcomx, childId), "child", relationship.status,null, includePersonId)); // future: add lineage facts somehow.
+          familyDisplay.children.push(new PersonDisplay(findPersonInGx(gedcomx, childId), "child", relationship.status,null, includePersonId, relationship)); // future: add lineage facts somehow.
         }
       }
     }
@@ -2558,7 +2561,7 @@ class PersonRow {
     return parentsList.join("<br>");
   }
 
-  getRowPersonCells(gedcomx, personId, rowClass, usedColumns, bottomClass, allRowsClass) {
+  getRowPersonCells(gedcomx, personId, rowClass, usedColumns, bottomClass, allRowsClass, rowSpan, splitDirection) {
     function addColumn(key, rowspan, content, extraClass) {
       if (usedColumns.has(key)) {
         html += "<td class='" + rowClass + extraClass + "'" + rowspan + ">" + (content ? content : "") + "</td>";
@@ -2566,39 +2569,125 @@ class PersonRow {
     }
 
     // htmlHolder is an array of 0 or 1 HTML strings. If not empty, and we're adding a new row, add this just before closing the row.
-    function startNewRowIfNotFirst(isFirst, rowClass, htmlHolder) {
+    function startNewRowIfNotFirst(isFirst, rowClass, htmlHolder, isSummaryRow) {
       if (!isFirst) {
         if (htmlHolder.length > 0) {
           html += htmlHolder.pop();
         }
-        html += "</tr>\n<tr" + (rowClass ? " class='" + rowClass + "' onclick='handleRowClick(event, \"" + rowClass + "\")'" : "") + ">";
+        html += "</tr>\n";
+        if (isSummaryRow) {
+          html += "<tr class='summary-row'>";
+        }
+        else {
+          html += "<tr" + (rowClass ? " class='" + rowClass + "' onclick='handleRowClick(event, \"" + rowClass + "\")'" : "") + ">";
+        }
       }
       return false;
     }
 
-    let rowspan = getRowspanParameter(this.getNumChildrenRows());
-    let html = "<td class='" + rowClass + bottomClass + "'" + rowspan + ">" + this.personDisplay.name + "</td>\n";
-    addColumn("person-facts", rowspan, this.personDisplay.facts, bottomClass);
-    addColumn("father-name", rowspan, this.combineParents(this.fathers), bottomClass);
-    addColumn("mother-name", rowspan, this.combineParents(this.mothers), bottomClass);
+    function getButtonsHtml(item) {
+      let element = split.elements[item.elementIndex];
+      // Up, =, down buttons
+      let buttonsHtml = makeButton("↑", DIR_KEEP, element) + makeButton("=", DIR_COPY, element) + makeButton("↓", DIR_MOVE, element) + " ";
+      if (element.isExtra() && (element.isVisible() || displayOptions.shouldExpandHiddenValues)) {
+        // Add checkbox for information that is not on the current merged person.
+        buttonsHtml += "<input id='extra-" + element.elementIndex + "' type='checkbox' onchange='toggleElement(" + element.elementIndex + ")'" + (element.isSelected ? " checked" : "") + "> ";
+      }
+      return buttonsHtml;
+    }
+
+    function shouldDisplaySummaryElement(objectWithElementIndex) {
+      let element = split.elements[objectWithElementIndex.elementIndex];
+      return element.isVisible() || displayOptions.shouldExpandHiddenValues;
+    }
+
+    function getSummaryNamesHtml(person) {
+      function getNameFormsHtml(name) {
+        // Combine multiple name forms into a single string separated by "/", like "Kim Jeong-Un / 김정은 / 金正恩".
+        let nameFormHtmls = [];
+        for (let nameForm of getList(name, "nameForms")) {
+          nameFormHtmls.push(nameForm.fullText ? nameForm.fullText : "<unknown>");
+        }
+        return encode(nameFormHtmls.join(" / "));
+      }
+
+      let namesHtml = "<td class='" + rowClass + bottomClass + "'" + rowSpan + ">";
+      if (person.names && person.names.length > 0) {
+        let namesHtmlList = [];
+        for (let name of person.names) {
+          if (shouldDisplaySummaryElement(name)) {
+            namesHtmlList.push(getButtonsHtml(name) + getNameFormsHtml(name));
+          }
+        }
+        namesHtml += namesHtmlList.join("<br>");
+      }
+      else {
+        namesHtml += encode("<no name>");
+      }
+      return namesHtml + "</td>\n";
+    }
+
+    function getSummaryFactsHtml(person) {
+      let factsHtml = "<td class='" + rowClass + bottomClass + "'" + rowSpan + ">";
+      if (person.facts && person.facts.length > 0) {
+        for (let fact of person.facts) {
+          if (shouldDisplaySummaryElement(fact)) {
+            factsHtml += getButtonsHtml(fact) + getFactHtml(fact, true, false) + "<br>";
+          }
+        }
+      }
+      return factsHtml + "</td>\n";
+    }
+
+    function getSummaryParentsHtml(direction) {
+      if (usedColumns.has("father-name") || usedColumns.has("mother-name")) {
+        // Instead of a list of father names in one column, and a list of mother names in the other,
+        //   put each pair of parents on each line, like "Fred Williams & Judy Smith", and let the couple be selectable.
+        let parentsHtml = "<td class='" + rowClass + bottomClass + "'" + rowSpan +
+          (usedColumns.has("father-name") && usedColumns.has("mother-name") ? " colspan='2'" : "") + ">";
+        for (let element of split.elements) {
+          if (element.type === TYPE_PARENTS && (element.direction === direction || element.direction === DIR_COPY)) {
+            parentsHtml += getButtonsHtml(element) + getParentsHtml(element.item, encode(" & ")) + "<br>\n";
+          }
+        }
+        return parentsHtml + "</td>\n";
+      }
+    }
+
+    // === getRowPersonCells ===
+    let html = "";
+    if (this.isSummaryRow()) {
+      html += getSummaryNamesHtml(this.person);
+      html += getSummaryFactsHtml(this.person);
+      html += getSummaryParentsHtml(splitDirection);
+    }
+    else {
+      html += "<td class='" + rowClass + bottomClass + "'" + rowSpan + ">" + this.personDisplay.name + "</td>\n";
+      addColumn("person-facts", rowSpan, this.personDisplay.facts, bottomClass);
+      addColumn("father-name", rowSpan, this.combineParents(this.fathers), bottomClass);
+      addColumn("mother-name", rowSpan, this.combineParents(this.mothers), bottomClass);
+    }
+
     let isFirstSpouse = true;
-    let noteCellHtmlHolder = this.getNoteCellHtml(rowClass, bottomClass, rowspan);
+    let noteCellHtmlHolder = this.getNoteCellHtml(rowClass, bottomClass, rowSpan);
 
     if (this.families.length > 0) {
       for (let spouseIndex = 0; spouseIndex < this.families.length; spouseIndex++) {
         let spouseFamily = this.families[spouseIndex];
-        isFirstSpouse = startNewRowIfNotFirst(isFirstSpouse, allRowsClass, noteCellHtmlHolder);
+        isFirstSpouse = startNewRowIfNotFirst(isFirstSpouse, allRowsClass, noteCellHtmlHolder, this.isSummaryRow());
         let familyBottomClass = spouseIndex === this.families.length - 1 ? bottomClass : "";
         let childrenRowSpan = getRowspanParameter(displayOptions.shouldShowChildren ? spouseFamily.children.length : 1);
-        addColumn("spouse-name", childrenRowSpan, spouseFamily.spouse ? spouseFamily.spouse.name : "", familyBottomClass);
+        let spouseButtonsHtml = this.isSummaryRow() ? getButtonsHtml(spouseFamily.spouse.coupleRelationship): "";
+        addColumn("spouse-name", childrenRowSpan, spouseButtonsHtml + (spouseFamily.spouse ? spouseFamily.spouse.name : ""), familyBottomClass);
         addColumn("spouse-facts", childrenRowSpan, spouseFamily.spouse ? spouseFamily.spouse.facts : "", familyBottomClass);
         if (spouseFamily.children.length > 0 && displayOptions.shouldShowChildren) {
           let isFirstChild = true;
           for (let childIndex = 0; childIndex < spouseFamily.children.length; childIndex++) {
             let child = spouseFamily.children[childIndex];
-            isFirstChild = startNewRowIfNotFirst(isFirstChild, allRowsClass, noteCellHtmlHolder);
+            isFirstChild = startNewRowIfNotFirst(isFirstChild, allRowsClass, noteCellHtmlHolder, this.isSummaryRow());
             let childBottomClass = childIndex === spouseFamily.children.length - 1 ? familyBottomClass : "";
-            addColumn(COLUMN_CHILD_NAME, "", child.name, childBottomClass);
+            let childButtonsHtml = this.isSummaryRow() ? getButtonsHtml(child.childAndParentsRelationship): "";
+            addColumn(COLUMN_CHILD_NAME, "", childButtonsHtml + child.name, childBottomClass);
             addColumn(COLUMN_CHILD_FACTS, "", child.facts, childBottomClass);
           }
         } else {
@@ -2665,12 +2754,25 @@ class PersonRow {
     return this.ows;
   }
 
+  isSummaryRow() {
+    return this.summaryDirection;
+  }
+
   getIdClass() {
     return "cell-" + this.id;
   }
 
   getCellClass() {
-    return (this.isSourceRow() ? "source-row" : (this.isOwsRow() ? "ord-row" : "merge-id")) + " " + this.getIdClass();
+    if (this.isSummaryRow()) {
+      return "summary-row";
+    }
+    if (this.isSourceRow()) {
+      return "source-row";
+    }
+    if (this.isOwsRow()) {
+      return "ord-row";
+    }
+    return "merge-id" + (this.isDupNode ? "-dup" : "");
   }
 
   getCollectionHtml(rowSpan, clickInfo) {
@@ -2685,6 +2787,12 @@ class PersonRow {
     }
     else if (this.ows) {
       html += this.ows.getOrdinancesHtml();
+    }
+    else if (this.summaryDirection === DIR_KEEP) {
+      html += "<b>Person to keep</b>";
+    }
+    else if (this.summaryDirection === DIR_MOVE) {
+      html += "<b>Person to split out</b>";
     }
     return html + "</td>";
   }
@@ -2716,7 +2824,7 @@ class PersonRow {
   }
 
   // get HTML for this person row
-  getHtml(usedColumns, tabId) {
+  getHtml(usedColumns, tabId, isKeep) {
     function getIndentationHtml(indentCodes) {
       let indentHtml = "";
       for (let indentCode of indentCodes) {
@@ -2754,14 +2862,17 @@ class PersonRow {
     }
 
     let rowSpan = getRowspanParameter(this.getNumChildrenRows());
-    let html = "<tr class='" + this.id + "' onclick='handleRowClick(event, \"" + this.id + "\")'>";
+    let html;
+    if (this.isSummaryRow()) {
+      html = "<tr class='summary-row'>";
+    }
+    else {
+      html = "<tr class='" + this.id + "' onclick='handleRowClick(event, \"" + this.id + "\")'>";
+    }
     let shouldIndent = tabId === MERGE_VIEW;
     let colspan = shouldIndent ? " colspan='" + (1 + this.maxIndent - this.indent.length) + "'" : "";
     let bottomClass = " main-row";
-    let specialIdClass = this.isSourceRow() ? "source-row" : (this.isOwsRow() ? "ord-row" : null);
-    let rowClasses = "class='"
-      + (specialIdClass ? specialIdClass : "merge-id" + (shouldIndent && this.isDupNode ? "-dup" : ""))
-      + bottomClass + "'";
+    let rowClasses = "class='" + this.getCellClass() + bottomClass + "'";
 
     if (shouldIndent) {
       // Merge view: indentation and person id that spans columns as needed.
@@ -2786,7 +2897,7 @@ class PersonRow {
 
     // Person info
     let rowClass = this.mergeNode && !this.mergeNode.isLeafNode() ? 'merge-node' : 'identity-gx';
-    html += this.getRowPersonCells(this.gedcomx, this.personId, rowClass, usedColumns, bottomClass, this.id);
+    html += this.getRowPersonCells(this.gedcomx, this.personId, rowClass, usedColumns, bottomClass, this.id, rowSpan, isKeep ? DIR_KEEP : DIR_MOVE);
     html += "</tr>\n";
     return html;
   }
@@ -3423,8 +3534,8 @@ const TYPE_ORDINANCE = "Ordinances"; // linked ordinance
 class Element {
   constructor(elementIndex, item, type, direction, famId) {
     this.elementIndex = elementIndex; // index in split.elements[]
-    this.item = item; // name, gender, fact, field, relationship or source [or eventually ordinance] being decided upon.
-    item.elementIndex = elementIndex; // back-reference to this Element
+    this.item = item; // name, gender, fact, field, relationship, source or ordinance being decided upon.
+    item.elementIndex = elementIndex; // Set this item's index into the GedcomX object, so we can find it later.
     this.type = type; // Type of item (see TYPE_* above)
     this.direction = direction; // Direction for this piece of information: DIR_KEEP/COPY/MOVE
     this.famId = famId; // optional value identifying which family (i.e., spouseId) this relationship element is part of, to group children by spouse.
@@ -3785,16 +3896,19 @@ function moveElement(direction, elementId) {
     element.isSelected = true;
   }
   updateSplitViewHtml();
+  updateFlatViewHtml(comboGrouper);
 }
 
 function toggleSplitExpanded(elementIndex) {
   split.elements[elementIndex].isExpanded = !split.elements[elementIndex].isExpanded;
   updateSplitViewHtml();
+  updateFlatViewHtml(comboGrouper);
 }
 
 function toggleElement(elementId) {
   split.elements[elementId].isSelected = !split.elements[elementId].isSelected;
   updateSplitViewHtml();
+  updateFlatViewHtml(comboGrouper);
 }
 
 function updateSplitViewHtml() {
@@ -3805,13 +3919,14 @@ function updateComboViewHtml() {
   $("#" + COMBO_VIEW).html(getComboViewHtml());
 }
 
+function makeButton(label, direction, element) {
+  let isActive = direction !== element.direction;
+  return "<button class='dir-button' " +
+    (isActive ? "onclick='moveElement(\"" + direction + "\", " + element.elementIndex + ")'" : "disabled") + ">" +
+    encode(label) + "</button>";
+}
+
 function getSplitViewHtml() {
-  function makeButton(label, direction, element) {
-    let isActive = direction !== element.direction;
-    return "<button class='dir-button' " +
-      (isActive ? "onclick='moveElement(\"" + direction + "\", " + element.elementIndex + ")'" : "disabled") + ">" +
-      encode(label) + "</button>";
-  }
   function getHeadingHtml(element) {
     let headingClass = (element.type === TYPE_CHILD && prevElement.type === TYPE_SPOUSE) ? "split-children" : "split-heading";
     let tdHeading = "<td class='" + headingClass + "'>";
@@ -3832,7 +3947,7 @@ function getSplitViewHtml() {
   }
   // -- getSplitViewHtml()
   let html = "<table class='split-table'>\n";
-  html += "<thead><tr><th>Remaining Person</th><th></th><th>Split-out Person</th></tr></thead>\n";
+  html += "<thead><tr><th>Person to keep</th><th></th><th>Person to split out</th></tr></thead>\n";
   html += "<tbody>";
   let prevElement = null;
   let isExpanded = false;
@@ -3862,17 +3977,18 @@ function getSplitViewHtml() {
   return html;
 }
 
-function getElementHtml(element, personId, shouldDisplay) {
-  function getParentsHtml(relationship) {
-    let parentHtmls = [];
-    for (let parentNumber of ["parent1", "parent2"]) {
-      let relativeId = getRelativeId(relationship, parentNumber);
-      if (relativeId) {
-        parentHtmls.push(getRelativeHtml(relativeId, relationship.updated));
-      }
+function getParentsHtml(relationship, delimiterHtml = "<br>&nbsp;") {
+  let parentHtmls = [];
+  for (let parentNumber of ["parent1", "parent2"]) {
+    let relativeId = getRelativeId(relationship, parentNumber);
+    if (relativeId) {
+      parentHtmls.push(getRelativeHtml(relativeId, relationship.updated));
     }
-    return parentHtmls.join("<br>&nbsp;");
   }
+  return parentHtmls.join(delimiterHtml);
+}
+
+function getElementHtml(element, personId, shouldDisplay) {
 
   if (!shouldDisplay) {
     return "<td class='identity-gx'></td>";
@@ -4176,9 +4292,12 @@ function getGrouperHtml(grouper) {
   for (let groupIndex = 0; groupIndex < grouper.mergeGroups.length; groupIndex++) {
     let personGroup = grouper.mergeGroups[groupIndex];
     if (personGroup.groupId === grouper.splitGroupId) {
-      html += "<tr class='group-header'><td class='group-header' colspan='" + numColumns + "'>" +
+      html += "<tr class='group-header'><td class='group-header' colspan='3'>" +
         "<input type='checkbox' id='summary-checkbox' onChange='handleOptionChange()'" +
-        (displayOptions.shouldShowSummaries ? " checked" : "") + ">Show summaries</input></td></tr>\n";
+        (displayOptions.shouldShowSummaries ? " checked" : "") + ">Show summaries</input></td>" +
+        "<td class='group-header' colspan='" + (numColumns - 3) +"'>" +
+        "<input type='checkbox' id='show-extra-values-checkbox' onChange='handleOptionChange()'" +
+        (displayOptions.shouldExpandHiddenValues ? " checked" : "") + ">Show extra values</input></td></tr>\n";
       if (displayOptions.shouldShowSummaries) {
         html += getSummaryHtml(true, grouper);
         html += "<tr class='summary-divider'><td class='summary-divider' colspan='" + numColumns + "'></td></tr>";
@@ -4200,8 +4319,8 @@ function getGrouperHtml(grouper) {
 
 function getSummaryHtml(isKeep, grouper) {
   let gedcomx = split.getSplitGedcomx(isKeep);
-  let personRow = new PersonRow(null, isKeep ? mainPersonId : SPLIT_PERSON_ID, gedcomx, 0, 0, false, grouper, null, null, null);
-  return "<tr class='summary-row'>" + personRow.getHtml(grouper.usedColumns, grouper.tabId) + "</tr>";
+  let personRow = new PersonRow(null, isKeep ? mainPersonId : SPLIT_PERSON_ID, gedcomx, 0, 0, false, grouper, null, null, null, isKeep ? DIR_KEEP : DIR_MOVE);
+  return personRow.getHtml(grouper.usedColumns, grouper.tabId, isKeep);
 }
 
 function getAddGroupButtonHtml(grouper) {
@@ -4583,7 +4702,6 @@ function addToList(listHolder, listName, element, isOrig, isPartOfMerge) {
   elementCopy.status = getAddStatus(isOrig, isPartOfMerge);
 }
 
-
 /**
  * Replace the element in listContainer[listName] that has the same id as elementListContainer[listName][0]
  *   with that element. For example, replace person["names"][2] with elementListContainer["names"][0]
@@ -4593,6 +4711,7 @@ function addToList(listHolder, listName, element, isOrig, isPartOfMerge) {
  * @param elementListContainer - Object (like a change log person) that has a list of the given name with a single entry.
  * @param isOrig - Flag for whether the change is happening during the initial creation of the person (part of its "original intended identity")
  * @param isPartOfMerge - Flag for whether this 'add' or 'update' is part of information coming from the duplicate as part of a merge.
+ * @param origElementListContainer - Original container (like a person) before making a copy of it, to get id from it.
  */
 function updateInList(listContainer, listName, elementListContainer, isOrig, isPartOfMerge, origElementListContainer) {
   function hasSameId(a, b) {
@@ -5134,6 +5253,15 @@ Combines the Flat view and Sources view.
   sources were first attached to that person ID (and sort those by record date).</li>
   <li>This is probably the best view to work in most of the time, as it lets you use the sources to make good
   decisions, but also lets you decide on the Family Tree persons as well.</li>
+  <li>Click on the red "Apply selected rows to Split" button to apply information from that group to the Split view.</li>
+  <li>This will also create two "Summary" rows: One with the person to "keep", and the other with the person to "split out."</li>
+  <ul>
+    <li>Click the up or down arrows next to a name, fact, pair of parents, spouse or child to move that person to the
+        other group, or click "=" to copy it to both.</li>
+    <li>Values with a checkbox next to them are from a source or from a person that was merged out of existence.
+        Check those values to keep them.</li>
+    <li>Toggle the "Show extra values" checkbox to show or hide these extra values.</li>
+  </ul>
 </ul>
 <h3>Split view</h3>
 <p>This screen lets you decide, for every bit of information, whether it should remain with the existing person,
@@ -5147,6 +5275,8 @@ be split out to the new person, or be copied so that it is on both (like is typi
   <li>Check boxes next to any of those "hidden" values to show that they should be kept/added.</li>
   <li>Sometimes you'll have to choose which value (like which of several possible birth dates) you want
   to choose for one person or the other.</li>
+  <li>As mentioned above, the Combo view has a corresponding pair of "summary" rows that are in sync with the Split view.
+      It may be easier to make decisions in the Combo view, where you can see the information from the other views.</li>
 </ul>
 <h3>Actually fixing a munged person</h3>
 The tool unfortunately does not actually split a person for real at this time. It is meant to be a prototype to
