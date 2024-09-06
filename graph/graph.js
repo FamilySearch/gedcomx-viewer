@@ -174,9 +174,6 @@ function handleGraphKeydown(e) {
         }
         e.stopPropagation();
         break;
-      case '9':
-        removeAllRelationships(relChart.getGedcomX());
-        break;
       case 'I':
         relChart.shouldDisplayIds = !relChart.shouldDisplayIds;
         updateRecord(relChart.getGedcomX());
@@ -204,7 +201,6 @@ function handleGraphKeydown(e) {
       case 'P':
       case 'S':
       case 'C':
-      case 'B':
       case 'M':
         if (typeof toggleRelatives != 'undefined') {
           toggleRelatives(key, e.shiftKey, getPersonIdsOfPersonBoxes(relChart.selectedPersonBoxes));
