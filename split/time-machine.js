@@ -2391,8 +2391,8 @@ class PersonRow {
     function personIdAndRecordDate(personId, sourceInfo, ows) {
       let recordDateSortKey = getRecordDateSortKey(sourceInfo, ows);
       let sortPersonId = sourceInfo && sourceInfo.attachedToPersonId ? sourceInfo.attachedToPersonId : personId;
-      if (ows && ows.currentPersonId) {
-        sortPersonId = ows.currentPersonId;
+      if (ows && ows.originalPersonId) {
+        sortPersonId = ows.originalPersonId;
       }
       return sortPersonId + (isEmpty(recordDateSortKey) ? "" : "_" + recordDateSortKey);
     }
@@ -2769,7 +2769,7 @@ class PersonRow {
     return "cell-" + this.id;
   }
 
-  getCellClass() {
+  getCellClass(tabId) {
     if (this.isSummaryRow()) {
       return "summary-row";
     }
@@ -2779,7 +2779,7 @@ class PersonRow {
     if (this.isOwsRow()) {
       return "ord-row";
     }
-    return "merge-id" + (this.isDupNode ? "-dup" : "");
+    return "merge-id" + (tabId === MERGE_VIEW && this.isDupNode ? "-dup" : "");
   }
 
   getCollectionHtml(rowSpan, clickInfo) {
@@ -2879,7 +2879,7 @@ class PersonRow {
     let shouldIndent = tabId === MERGE_VIEW;
     let colspan = shouldIndent ? " colspan='" + (1 + this.maxIndent - this.indent.length) + "'" : "";
     let bottomClass = " main-row";
-    let rowClasses = "class='" + this.getCellClass() + bottomClass + "'";
+    let rowClasses = "class='" + this.getCellClass(tabId) + bottomClass + "'";
 
     if (shouldIndent) {
       // Merge view: indentation and person id that spans columns as needed.
