@@ -22,6 +22,10 @@
   <script type="text/javascript">
     $(document).ready(function(){
       const viewer = document.querySelector('fs-single-image-viewer');
+      let params = window.location.search;
+      let urlParams = new URLSearchParams(params);
+      let sessionId = urlParams.get('sessionId');
+
       if (window.opener && window.opener.getCurrentGx()) {
         window.opener.imageChildWindow = document;
         let doc = window.opener.getCurrentGx();
@@ -32,7 +36,7 @@
         // Not opened from a parent window, so use hard-coded sample json.
         $.getJSON("sample.json", function (sampleGx) {
           sampleGx = fixGedcomx(sampleGx);
-          overlayBoxes(viewer, sampleGx);
+          overlayBoxes(viewer, sampleGx, sessionId);
         });
       }
     });

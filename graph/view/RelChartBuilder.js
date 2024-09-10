@@ -494,16 +494,16 @@ RelChartBuilder.prototype.correlateHighlights = function(doc, relToGx, imgToGx) 
     return reversedMap;
   }
 
-  function highlight(elements, myElement, elementsClass, myClass) {
-    if (!isEmpty(this.relChart.highlightsToProcess)) {
+  function highlight(relChart, elements, myElement, elementsClass, myClass) {
+    if (!isEmpty(relChart.highlightsToProcess)) {
       // Image viewer highlight elements don't exist when the graph is first being built, so wait until the first highlight is
       //  done before triggering that.
-      for (let h of this.relChart.highlightsToProcess) {
+      for (let h of relChart.highlightsToProcess) {
         $("#" + h.imgElement).hover(
-            function() {h(h.relElements, h.imgElement, "record-highlight", null);},
+            function() {highlight(relChart, h.relElements, h.imgElement, "record-highlight", null);},
             function() {unhighlight(h.relElements, h.imgElement, "record-highlight", null);});
       }
-      this.relChart.highlightsToProcess = []; // now handled, so clear it.
+      relChart.highlightsToProcess = []; // now handled, so clear it.
     }
     if (elements) {
       for (let element of elements) {
@@ -554,7 +554,7 @@ RelChartBuilder.prototype.correlateHighlights = function(doc, relToGx, imgToGx) 
       else {
         let relElements = gxToRel[gxId];
         if (!empty(relElements)) {
-          highlightsToProcess.push({imgElement: imgElement, relElements: relElements});
+          this.relChart.highlightsToProcess.push({imgElement: imgElement, relElements: relElements});
           // Add this imgElement to the list of imgElements associated with each of these relElements, so
           //  we can do highlighting in the reverse direction.
           for (let relElement of relElements) {
@@ -575,9 +575,10 @@ RelChartBuilder.prototype.correlateHighlights = function(doc, relToGx, imgToGx) 
   for (let relElement in relToImg) {
     if (relToImg.hasOwnProperty(relElement)) {
       let imgElements = relToImg[relElement];
+      let relChart = this.relChart;
       if (!empty(imgElements)) {
         $("#" + relElement).hover(
-            function() {highlight(imgElements, relElement, "img-highlight", "record-highlight");},
+            function() {highlight(relChart, imgElements, relElement, "img-highlight", "record-highlight");},
             function() {unhighlight(imgElements, relElement, "img-highlight", "record-highlight");});
       }
     }

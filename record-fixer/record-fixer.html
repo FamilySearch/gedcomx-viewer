@@ -74,7 +74,7 @@ Upon reading the GedcomX record, it will look to see what image Ark the record c
       }
     }
 
-    let sessionId = urlParams.get('access_token');
+    let sessionId = urlParams.get('access_token') || urlParams.get('sessionId');
     if (sessionId) {
       url += "?access_token=" + sessionId;
     }
