@@ -1883,6 +1883,7 @@ function handleRowClick(event, rowId) {
   }
 }
 
+// Referenced from 'clickInfo()', but IntelliJ doesn't recognize that.
 function handleColumnClick(event, rowId) {
   let grouper = grouperMap[rowId];
   console.log("Clicked column " + rowId + (event.shiftKey ? " + shift" : "") + (event.ctrlKey ? " + ctrl" : "") + (event.metaKey ? " + meta" : ""));
@@ -2592,10 +2593,12 @@ class PersonRow {
       return false;
     }
 
-    function getButtonsHtml(item) {
+    function getButtonsHtml(item, isKeep) {
       let element = split.elements[item.elementIndex];
       // Up, =, down buttons
-      let buttonsHtml = makeButton("↑", DIR_KEEP, element) + makeButton("=", DIR_COPY, element) + makeButton("↓", DIR_MOVE, element) + " ";
+      let buttonsHtml = (isKeep ? "" : makeButton("↑", DIR_KEEP, element))
+        + makeButton("=", DIR_COPY, element)
+        + (isKeep ? makeButton("↓", DIR_MOVE, element) : "") + " ";
       if (element.isExtra() && (element.isVisible() || displayOptions.shouldExpandHiddenValues)) {
         // Add checkbox for information that is not on the current merged person.
         buttonsHtml += "<input id='extra-" + element.elementIndex + "' type='checkbox' onchange='toggleElement(" + element.elementIndex + ")'" + (element.isSelected ? " checked" : "") + "> ";
@@ -2623,7 +2626,7 @@ class PersonRow {
         let namesHtmlList = [];
         for (let name of person.names) {
           if (shouldDisplaySummaryElement(name)) {
-            namesHtmlList.push(getButtonsHtml(name) + getNameFormsHtml(name));
+            namesHtmlList.push(getButtonsHtml(name, splitDirection === DIR_KEEP) + getNameFormsHtml(name));
           }
         }
         namesHtml += namesHtmlList.join("<br>");
@@ -2639,7 +2642,7 @@ class PersonRow {
       if (person.facts && person.facts.length > 0) {
         for (let fact of person.facts) {
           if (shouldDisplaySummaryElement(fact)) {
-            factsHtml += getButtonsHtml(fact) + getFactHtml(fact, true, false) + "<br>";
+            factsHtml += getButtonsHtml(fact, splitDirection === DIR_KEEP) + getFactHtml(fact, true, false) + "<br>";
           }
         }
       }
@@ -2654,7 +2657,7 @@ class PersonRow {
           (usedColumns.has("father-name") && usedColumns.has("mother-name") ? " colspan='2'" : "") + ">";
         for (let element of split.elements) {
           if (element.type === TYPE_PARENTS && (element.direction === direction || element.direction === DIR_COPY)) {
-            parentsHtml += getButtonsHtml(element) + getParentsHtml(element.item, encode(" & ")) + "<br>\n";
+            parentsHtml += getButtonsHtml(element, direction === DIR_KEEP) + getParentsHtml(element.item, encode(" & ")) + "<br>\n";
           }
         }
         return parentsHtml + "</td>\n";
@@ -2684,7 +2687,7 @@ class PersonRow {
         isFirstSpouse = startNewRowIfNotFirst(isFirstSpouse, allRowsClass, noteCellHtmlHolder, this.isSummaryRow());
         let familyBottomClass = spouseIndex === this.families.length - 1 ? bottomClass : "";
         let childrenRowSpan = getRowspanParameter(displayOptions.shouldShowChildren ? spouseFamily.children.length : 1);
-        let spouseButtonsHtml = this.isSummaryRow() ? getButtonsHtml(spouseFamily.spouse.coupleRelationship): "";
+        let spouseButtonsHtml = this.isSummaryRow() ? getButtonsHtml(spouseFamily.spouse.coupleRelationship, splitDirection === DIR_KEEP): "";
         addColumn("spouse-name", childrenRowSpan, spouseButtonsHtml + (spouseFamily.spouse ? spouseFamily.spouse.name : ""), familyBottomClass);
         addColumn("spouse-facts", childrenRowSpan, spouseFamily.spouse ? spouseFamily.spouse.facts : "", familyBottomClass);
         if (spouseFamily.children.length > 0 && displayOptions.shouldShowChildren) {
@@ -2693,7 +2696,7 @@ class PersonRow {
             let child = spouseFamily.children[childIndex];
             isFirstChild = startNewRowIfNotFirst(isFirstChild, allRowsClass, noteCellHtmlHolder, this.isSummaryRow());
             let childBottomClass = childIndex === spouseFamily.children.length - 1 ? familyBottomClass : "";
-            let childButtonsHtml = this.isSummaryRow() ? getButtonsHtml(child.childAndParentsRelationship): "";
+            let childButtonsHtml = this.isSummaryRow() ? getButtonsHtml(child.childAndParentsRelationship, splitDirection === DIR_KEEP): "";
             addColumn(COLUMN_CHILD_NAME, "", childButtonsHtml + child.name, childBottomClass);
             addColumn(COLUMN_CHILD_FACTS, "", child.facts, childBottomClass);
           }
@@ -2770,16 +2773,20 @@ class PersonRow {
   }
 
   getCellClass(tabId) {
+    let cellClass;
     if (this.isSummaryRow()) {
-      return "summary-row";
+      cellClass = "summary-row";
     }
-    if (this.isSourceRow()) {
-      return "source-row";
+    else if (this.isSourceRow()) {
+      cellClass = "source-row";
     }
-    if (this.isOwsRow()) {
-      return "ord-row";
+    else if (this.isOwsRow()) {
+      cellClass = "ord-row";
     }
-    return "merge-id" + (tabId === MERGE_VIEW && this.isDupNode ? "-dup" : "");
+    else {
+      cellClass ="merge-id" + (tabId === MERGE_VIEW && this.isDupNode ? "-dup" : "");
+    }
+    return cellClass + " " + this.getIdClass();
   }
 
   getCollectionHtml(rowSpan, clickInfo) {
@@ -3561,8 +3568,9 @@ class Element {
     this.type = type; // Type of item (see TYPE_* above)
     this.direction = direction; // Direction for this piece of information: DIR_KEEP/COPY/MOVE
     this.famId = famId; // optional value identifying which family (i.e., spouseId) this relationship element is part of, to group children by spouse.
+    this.relative = null; // spouse or child GedcomX person.
     this.canExpand = false;
-    // Flag for whether following elements of the same type AND with an 'elementSource' should be displayed.
+    // Flag for whether following elements of the same type AND with an 'elementSource' (i.e., not from the current person) should be displayed.
     this.isExpanded = false;
     // Where this came from, if it isn't the main current person.
     this.elementSource = null;
@@ -3603,8 +3611,14 @@ class Split {
   }
 
   initElements(gedcomx, personId) {
-    function addElement(item, type, famId) {
+    function addElement(item, type, famId, personIdForFacts) {
       let element = new Element(elementIndex++, item, type, DIR_KEEP, famId);
+      if (personIdForFacts) {
+        let relative = findPersonInGx(gedcomx, personIdForFacts);
+        if (relative) {
+          element.relative = relative;
+        }
+      }
       if (item.elementSource) {
         element.elementSource = item.elementSource;
         delete item["elementSource"];
@@ -3631,7 +3645,7 @@ class Split {
     function addRelationshipElements(gedcomx) {
       function addChildrenElements(spouseId) {
         for (let childRel of getList(childrenMap, spouseId)) {
-          addElement(childRel, TYPE_CHILD);
+          addElement(childRel, TYPE_CHILD, spouseId, getRelativeId(childRel, "child"));
         }
       }
       // child-and-parents relationships in which the person is a child, i.e., containing the person's parents
@@ -3645,7 +3659,7 @@ class Split {
         addElement(parentRel, TYPE_PARENTS);
       }
       for (let [spouseId, coupleRel] of coupleMap) {
-        addElement(coupleRel, TYPE_SPOUSE);
+        addElement(coupleRel, TYPE_SPOUSE, spouseId, spouseId);
         addChildrenElements(spouseId);
       }
       for (let spouseId in childrenMap) {
@@ -3916,6 +3930,17 @@ function moveElement(direction, elementId) {
   if (element.direction !== DIR_KEEP && element.isExtra() && !element.isSelected) {
     element.isSelected = true;
   }
+  if (element.type === TYPE_SPOUSE) {
+    // When moving a spouse, move all the children of that spouse as well. They can be moved back individually.
+    for (let i = elementId + 1; i < split.elements.length; i++) {
+      let childElement = split.elements[i];
+      if (childElement.type === TYPE_CHILD && childElement.famId === element.famId) {
+        childElement.direction = direction;
+      } else {
+        break;
+      }
+    }
+  }
   updateSummaryRows();
   updateSplitViewHtml();
   updateFlatViewHtml(comboGrouper);
@@ -3984,7 +4009,7 @@ function getSplitViewHtml() {
       continue; // skip elements that have been deleted. (Perhaps we eventually make these available to "reclaim" when splitting out a person)
     }
     if (!prevElement || element.type !== prevElement.type || element.famId !== prevElement.famId) {
-      html += getHeadingHtml(element);
+      html += getHeadingHtml(element); // may update isExpanded
     }
 
     if (isExpanded || element.isVisible()) {
@@ -4065,13 +4090,17 @@ function getElementHtml(element, personId, shouldDisplay) {
   return wrapTooltip(element, elementHtml, element.elementSource ? encode(element.elementSource) : null);
 }
 
+function getExtraValueCheckbox(element) {
+  return element.isExtra() ? "<input id='extra-" + element.elementIndex + "' type='checkbox' onchange='toggleElement(" + element.elementIndex + ")'" + (element.isSelected ? " checked" : "") + ">" : "";
+}
+
 function wrapTooltip(element, mainHtml, tooltipHtml) {
   let undecidedClass = element.direction === DIR_NULL ? " undecided" : "";
   if (!tooltipHtml) {
     return "<td class='identity-gx " + undecidedClass + "'>" + mainHtml + "</td>";
   }
   return "<td class='split-extra tooltip" + undecidedClass + "'>"
-    + (element.isExtra() ? "<input id='extra-" + element.elementIndex + "' type='checkbox' onchange='toggleElement(" + element.elementIndex + ")'" + (element.isSelected ? " checked" : "") + ">" : "")
+    + getExtraValueCheckbox(element)
     + "<label for='extra-" + element.elementIndex + "' class='tooltip'>" + mainHtml + "<span class='tooltiptext'>" + tooltipHtml + "</span></label></td>";
 }
 
@@ -4113,31 +4142,120 @@ function deleteEmptyGroup(groupId) {
 }
 
 function getVerticalGrouperHtml(grouper) {
+
   function padGroup(groupIndex) {
     if (groupIndex < grouper.mergeGroups.length - 1) {
       html += "<td class='group-divider'></td>";
     }
   }
 
-  function getSummaryCellHtml(columnIdForRow, isKeep) {
-    return "...";
+  function shouldInclude(element, type, isKeep) {
+    return element.type === type
+      && (displayOptions.shouldExpandHiddenValues || element.isVisible())
+      && (element.direction === DIR_COPY || (isKeep && element.direction === DIR_KEEP) || (!isKeep && element.direction === DIR_MOVE))
   }
 
-  function addRow(columnIdForRow, rowLabel, shouldAlwaysInclude, personRowFunction) {
+  function horizontalButtonsHtml(element, isKeep) {
+    let html = (isKeep ? "" : makeButton("<", DIR_KEEP, element))
+    + makeButton("=", DIR_COPY, element)
+    + (isKeep ? makeButton(">", DIR_MOVE, element) : "");
+    let checkbox = getExtraValueCheckbox(element);
+    return html + (checkbox ? checkbox : " ");
+  }
+
+  function getSummaryCellHtml(columnIdForRow, isKeep, relativeElement) {
+    if (columnIdForRow === COLUMN_MOTHER_NAME && grouper.usedColumns.has(COLUMN_FATHER_NAME)) {
+      return ""; // mother column is grouped in same row as father row, so no cell used.
+    }
+    let rowspan = (columnIdForRow === COLUMN_FATHER_NAME && grouper.usedColumns.has(COLUMN_MOTHER_NAME)) ? " rowspan='2'" : "";
+    let html = "<td class='summary-row" + (columnIdForRow === COLUMN_PERSON_ID ? " drag-width" : "") + "'" + rowspan + ">";
+    let personRow = isKeep ? keepPersonRow : splitPersonRow;
+    switch (columnIdForRow) {
+      case COLUMN_PERSON_ID:
+        html += personRow.getPersonIdHtml(false);
+        break;
+      case COLUMN_COLLECTION:
+        if (isKeep) {
+          html += "<b>Person to keep</b>";
+        }
+        else {
+          html += "<b>Person to split out</b>";
+        }
+        break;
+      case COLUMN_PERSON_NAME:
+        let nameRows = [];
+        split.elements.forEach(element => {
+          if (shouldInclude(element, TYPE_NAME, isKeep)) {
+            nameRows.push(horizontalButtonsHtml(element, isKeep) + getFullText(element.item));
+          }
+        });
+        html += nameRows.join("<br>\n");
+        break;
+
+      case COLUMN_PERSON_FACTS:
+        let factRows = [];
+        split.elements.forEach(element => {
+          if (shouldInclude(element, TYPE_FACT, isKeep)) {
+            factRows.push(horizontalButtonsHtml(element, isKeep) + getFactHtml(element.item, true));
+          }
+        });
+        html += factRows.join("<br>\n");
+        break;
+      case COLUMN_FATHER_NAME:
+      case COLUMN_MOTHER_NAME:
+        // Father & mother are grouped into the same row (with rowspan=2 if both are present)
+        let parentRows = [];
+        split.elements.forEach(element => {
+          if (shouldInclude(element, TYPE_PARENTS, isKeep)) {
+            parentRows.push(horizontalButtonsHtml(element, isKeep) + getParentsHtml(element.item, "<br>&amp; "));
+          }
+        });
+        html += parentRows.join("<br>\n");
+        break;
+      case COLUMN_SPOUSE_NAME:
+      case COLUMN_CHILD_NAME:
+        if (relativeElement) {
+          html += horizontalButtonsHtml(relativeElement, isKeep)
+            + getRelativeHtml(relativeElement.relative.id, relativeElement.item.updated);
+        }
+        break;
+      case COLUMN_SPOUSE_FACTS:
+      case COLUMN_CHILD_FACTS:
+        if (relativeElement) {
+          html += getFactsHtml(relativeElement.relative, isKeep);
+        }
+        break;
+      case COLUMN_ATTACHED_TO_IDS:
+      case COLUMN_CREATED:
+      case COLUMN_RECORD_DATE:
+        // Leave blank.
+        break;
+
+        /*
+        const TYPE_NAME = "Name";
+        const TYPE_GENDER = "Gender";
+        const TYPE_FACT = "Facts";
+        const TYPE_PARENTS = "Parents"; // child-and-parents relationship from the person to their parents
+        const TYPE_SPOUSE = "Spouse"; // Couple relationship to a spouse
+        const TYPE_CHILD = "Children"; // child-and-parents relationship to a child
+         */
+    }
+    return html + "</td>";
+  }
+
+  function addRow(columnIdForRow, rowLabel, shouldAlwaysInclude, personRowFunction, keepRelativeElement, splitRelativeElement) {
     if (shouldAlwaysInclude || grouper.usedColumns.has(columnIdForRow)) {
       html += "<tr>" + headerHtml(grouper, columnIdForRow, rowLabel, shouldAlwaysInclude, true);
       for (let groupIndex = 0; groupIndex < grouper.mergeGroups.length; groupIndex++) {
         let group = grouper.mergeGroups[groupIndex];
         if (group.groupId === grouper.splitGroupId) {
-          html += "<td class='group-header'>";
           if (displayOptions.shouldShowSummaries) {
-            html += getSummaryCellHtml(columnIdForRow, true);
+            html += getSummaryCellHtml(columnIdForRow, true, keepRelativeElement);
+            html += getSummaryCellHtml(columnIdForRow, false, splitRelativeElement);
+            padGroup(groupIndex - 1);
           }
-          html += "</td>";
-          if (displayOptions.shouldShowSummaries) {
-            padGroup(groupIndex);
-            html += "<td>" + getSummaryCellHtml(columnIdForRow, false) + "</td>";
-            padGroup(groupIndex);
+          else {
+            html += "<td></td>";
           }
         }
         for (let personRow of group.personRows) {
@@ -4159,9 +4277,8 @@ function getVerticalGrouperHtml(grouper) {
         // <td><show summaries button></td>[<gap><td><show hidden values button></td><gap>]
         html += "<td class='group-header'>" + showSummariesButtonHtml(true) + "</td>";
         if (displayOptions.shouldShowSummaries) {
-          padGroup(groupIndex);
           html += "<td class='group-header'>" + showHiddenValuesButtonHtml(true) + "</td>";
-          padGroup(groupIndex);
+          padGroup(groupIndex - 1);
         }
       }
       let colspan = group.personRows.length > 1 ? " colspan='" + group.personRows.length + "'" : "";
@@ -4182,6 +4299,43 @@ function getVerticalGrouperHtml(grouper) {
   }
 
   function addSpouseFamilyRows() {
+    class FamInfo {
+      constructor(famId) {
+        this.famId = famId;
+        this.spouseElement = null;
+        this.childElements = [];
+      }
+    }
+
+    function getFamInfos(splitDirection) {
+      if (!displayOptions.shouldShowSummaries || !grouper.splitGroupId) {
+        return null;
+      }
+      let famInfos = [];
+      let famIdMap = new Map();
+      for (let element of split.elements) {
+        if ((element.direction === DIR_COPY || element.direction === splitDirection) &&
+            (element.type === TYPE_SPOUSE || element.type === TYPE_CHILD)) {
+          let famInfo = famIdMap.get(element.famId);
+          if (!famInfo) {
+            famInfo = new FamInfo(element.famId);
+            famIdMap.set(element.famId, famInfo);
+            famInfos.push(famInfo);
+          }
+          if (element.type === TYPE_SPOUSE) {
+            if (famInfo.spouseElement) {
+              console.log("Error: multiple spouse elements for family " + element.famId);
+            }
+            famInfo.spouseElement = element;
+          }
+          else if (element.type === TYPE_CHILD) {
+            famInfo.childElements.push(element);
+          }
+        }
+      }
+      return famInfos;
+    }
+
     function findFamilyDisplay(personRow, spouseIndex) {
       let index = 0;
       for (let familyDisplay of personRow.familyMap.values()) {
@@ -4192,7 +4346,7 @@ function getVerticalGrouperHtml(grouper) {
       return null;
     }
 
-    function getMaxSpouses(grouper) {
+    function getMaxSpouses() {
       let maxSpouses = 0;
       for (let group of grouper.mergeGroups) {
         for (let personRow of group.personRows) {
@@ -4202,6 +4356,12 @@ function getVerticalGrouperHtml(grouper) {
           }
         }
       }
+      if (keepFamInfos && keepFamInfos.length > maxSpouses) {
+        maxSpouses = keepFamInfos.length;
+      }
+      if (splitFamInfos && splitFamInfos.length > maxSpouses) {
+        maxSpouses = splitFamInfos.length;
+      }
       return maxSpouses;
     }
 
@@ -4210,6 +4370,14 @@ function getVerticalGrouperHtml(grouper) {
         for (let personRow of group.personRows) {
           let familyDisplay = findFamilyDisplay(personRow, spouseIndex);
           if (familyDisplay && familyDisplay.spouse && familyDisplay.spouse.facts) {
+            return true;
+          }
+        }
+      }
+      for (let famInfos of summaryFamInfoLists) {
+        if (famInfos && spouseIndex < famInfos.length) {
+          let famInfo = famInfos[spouseIndex];
+          if (famInfo.spouseElement && !isEmpty(famInfo.spouseElement.relative.facts)) {
             return true;
           }
         }
@@ -4261,24 +4429,57 @@ function getVerticalGrouperHtml(grouper) {
           }
         }
       }
+      // Look at the summary elements
+      for (let famInfos of summaryFamInfoLists) {
+        if (famInfos && spouseIndex < famInfos.length) {
+          let famInfo = famInfos[spouseIndex];
+          for (let childIndex = 0; childIndex < famInfo.childElements.length; childIndex++) {
+            if (childIndex >= hasChildFacts.length) {
+              hasChildFacts.push(false);
+            }
+            if (!isEmpty(famInfo.childElements[childIndex].relative.facts)) {
+              hasChildFacts[childIndex] = true;
+            }
+          }
+        }
+      }
       return hasChildFacts;
     }
 
-    let maxSpouses = getMaxSpouses(grouper);
+    const keepFamInfos = getFamInfos(DIR_KEEP);
+    const splitFamInfos = getFamInfos(DIR_MOVE);
+    const summaryFamInfoLists = [keepFamInfos, splitFamInfos];
+
+    const maxSpouses = getMaxSpouses();
     for (let spouseIndex = 0; spouseIndex < maxSpouses; spouseIndex++) {
       let spouseLabel = "Spouse" + (spouseIndex > 0 ? " " + (spouseIndex + 1) : "");
-      addRow(COLUMN_SPOUSE_NAME, spouseLabel, true, personRow => td(personRow, getSpouseName(personRow, spouseIndex)));
+      let keepFamInfo = keepFamInfos && spouseIndex < keepFamInfos.length ? keepFamInfos[spouseIndex] : null;
+      let splitFamInfo = splitFamInfos && spouseIndex < splitFamInfos.length ? splitFamInfos[spouseIndex] : null;
+      let keepSpouseElement = keepFamInfo ? keepFamInfo.spouseElement : null;
+      let splitSpouseElement = splitFamInfo ? splitFamInfo.spouseElement : null;
+
+      addRow(COLUMN_SPOUSE_NAME, spouseLabel, true,
+          personRow => td(personRow, getSpouseName(personRow, spouseIndex)),
+        keepSpouseElement, splitSpouseElement);
       if (anySpouseHasFacts(grouper, spouseIndex)) {
-        addRow(COLUMN_SPOUSE_FACTS, spouseLabel + " facts", true, personRow => td(personRow, getSpouseFacts(personRow, spouseIndex)));
+        addRow(COLUMN_SPOUSE_FACTS, spouseLabel + " facts", true,
+            personRow => td(personRow, getSpouseFacts(personRow, spouseIndex)),
+          keepSpouseElement, splitSpouseElement);
       }
       if (displayOptions.shouldShowChildren) {
         // Array of boolean telling whether the nth child row needs facts for any of the person rows.
         let hasChildFacts = seeWhichChildrenHaveFacts(grouper, spouseIndex);
         for (let childIndex = 0; childIndex < hasChildFacts.length; childIndex++) {
           let childLabel = "- Child" + (hasChildFacts.length > 1 ? " " + (childIndex + 1) : "");
-          addRow(COLUMN_CHILD_NAME, childLabel, true, personRow => td(personRow, getChildName(personRow, spouseIndex, childIndex)));
+          let keepChildElement = keepFamInfo && childIndex < keepFamInfo.childElements.length ? keepFamInfo.childElements[childIndex] : null;
+          let splitChildElement = splitFamInfo && childIndex < splitFamInfo.childElements.length ? splitFamInfo.childElements[childIndex] : null;
+          addRow(COLUMN_CHILD_NAME, childLabel, true,
+              personRow => td(personRow, getChildName(personRow, spouseIndex, childIndex)),
+            keepChildElement, splitChildElement);
           if (hasChildFacts[childIndex]) {
-            addRow(COLUMN_CHILD_FACTS, " facts", true, personRow => td(personRow, getChildFacts(personRow, spouseIndex, childIndex)));
+            addRow(COLUMN_CHILD_FACTS, " facts", true,
+                personRow => td(personRow, getChildFacts(personRow, spouseIndex, childIndex)),
+              keepChildElement, splitChildElement);
           }
         }
       }
@@ -4318,7 +4519,7 @@ function getVerticalGrouperHtml(grouper) {
   // Person facts row
   // Future: Put "Birth:", etc., on left, and put events of that time in the same row.
   //  - Able to sort by that. Requires using COLUMN_FACTS + ".Birth" or something in order to sort and display.
-  addRow(COLUMN_SPOUSE_FACTS, "Facts", false,
+  addRow(COLUMN_PERSON_FACTS, "Facts", false,
     personRow => td(personRow, personRow.personDisplay.facts));
 
   // Relative rows: Fathers, mothers, then each spouse with their children.
@@ -4346,7 +4547,7 @@ function showHiddenValuesButtonHtml(isVertical) {
 }
 
 function getGrouperHtml(grouper) {
-  if (displayOptions.vertical && (getCurrentTab() === FLAT_VIEW || getCurrentTab() === SOURCES_VIEW || getCurrentTab() === COMBO_VIEW)) {
+  if (displayOptions.vertical && (grouper.tabId === FLAT_VIEW || grouper.tabId === SOURCES_VIEW || grouper.tabId === COMBO_VIEW)) {
     return getVerticalGrouperHtml(grouper);
   }
   let html = getTableHeader(grouper, false);
@@ -4392,7 +4593,7 @@ function getAddGroupButtonHtml(grouper) {
 }
 
 function getGroupHeadingHtml(personGroup, groupIndex) {
-  let isEmptyGroup = isEmpty(personGroup.personRows.length);
+  let isEmptyGroup = isEmpty(personGroup.personRows);
   // Close button for empty groups
   return (isEmptyGroup ? "<button class='close-button' onclick='deleteEmptyGroup(\"" + personGroup.groupId + "\")'>X</button>" : "")
     // Group name
@@ -4460,7 +4661,7 @@ function getTableHeader(grouper, shouldIndent) {
     html += sortHeaderTh(grouper, COLUMN_CREATED, "Created");
   }
   html += headerHtml(grouper, COLUMN_PERSON_NAME, "Name", true) +
-    headerHtml(grouper, COLUMN_PERSON_NAME, "Facts") +
+    headerHtml(grouper, COLUMN_PERSON_FACTS, "Facts") +
     headerHtml(grouper, COLUMN_FATHER_NAME, "Father") +
     headerHtml(grouper, COLUMN_MOTHER_NAME, "Mother") +
     headerHtml(grouper, COLUMN_SPOUSE_NAME, "Spouse") +

@@ -181,8 +181,8 @@ RelChartBuilder.prototype.addRelatives = function(personBox, subtree) {
   do {
     personBox.subtree = subtree;
 
-    this.addSpouses(personBox, subtree, needsRelativesQueue);
     this.addParents(personBox, subtree, needsRelativesQueue);
+    this.addSpouses(personBox, subtree, needsRelativesQueue);
 
     personBox = needsRelativesQueue.length > 0 ? needsRelativesQueue.splice(0, 1)[0] : null;
   } while (personBox);
