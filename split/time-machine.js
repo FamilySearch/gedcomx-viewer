@@ -3925,21 +3925,44 @@ function getFullText(name) {
 }
 
 function moveElement(direction, elementId) {
+
+  // When moving a spouse, move all the children of that spouse as well. They can be moved back individually.
+  function moveChildrenOfSpouse() {
+    for (let i = elementId + 1; i < split.elements.length; i++) {
+      let childElement = split.elements[i];
+      if (childElement.type === TYPE_CHILD && childElement.famId === element.famId) {
+        childElement.direction = direction;
+      } else {
+        return;
+      }
+    }
+  }
+
+  // When moving a child, have that child's parent become "copy" in both, if not already.
+  function copyParentOfChild() {
+    for (let i = elementId - 1; i >= 0; i--) {
+      let spouseElement = split.elements[i];
+      if (spouseElement.type === TYPE_SPOUSE && spouseElement.famId === element.famId) {
+        spouseElement.direction = DIR_COPY;
+        return;
+      }
+      else if (spouseElement.type !== TYPE_CHILD || spouseElement.famId !== element.famId) {
+        return;
+      }
+    }
+  }
+
+  //=== moveElement ===
   let element = split.elements[elementId];
   element.direction = direction;
   if (element.direction !== DIR_KEEP && element.isExtra() && !element.isSelected) {
     element.isSelected = true;
   }
   if (element.type === TYPE_SPOUSE) {
-    // When moving a spouse, move all the children of that spouse as well. They can be moved back individually.
-    for (let i = elementId + 1; i < split.elements.length; i++) {
-      let childElement = split.elements[i];
-      if (childElement.type === TYPE_CHILD && childElement.famId === element.famId) {
-        childElement.direction = direction;
-      } else {
-        break;
-      }
-    }
+    moveChildrenOfSpouse();
+  }
+  if (element.type === TYPE_CHILD) {
+    copyParentOfChild();
   }
   updateSummaryRows();
   updateSplitViewHtml();
@@ -4458,6 +4481,7 @@ function getVerticalGrouperHtml(grouper) {
       let keepSpouseElement = keepFamInfo ? keepFamInfo.spouseElement : null;
       let splitSpouseElement = splitFamInfo ? splitFamInfo.spouseElement : null;
 
+      addBlankRow();
       addRow(COLUMN_SPOUSE_NAME, spouseLabel, true,
           personRow => td(personRow, getSpouseName(personRow, spouseIndex)),
         keepSpouseElement, splitSpouseElement);
@@ -4488,6 +4512,10 @@ function getVerticalGrouperHtml(grouper) {
 
   function clickInfo(personRow) {
     return " onclick='handleColumnClick(event, \"" + personRow.id + "\");'";
+  }
+
+  function addBlankRow() {
+    html += "<tr><th class='blank-row'></th><td class='blank-row' colspan='100%'></td></tr>\n";
   }
 
   // --- getVerticalGrouperHtml ---
@@ -4523,6 +4551,9 @@ function getVerticalGrouperHtml(grouper) {
     personRow => td(personRow, personRow.personDisplay.facts));
 
   // Relative rows: Fathers, mothers, then each spouse with their children.
+  if (grouper.usedColumns.has(COLUMN_FATHER_NAME) || grouper.usedColumns.has(COLUMN_MOTHER_NAME)) {
+    addBlankRow();
+  }
   addRow(COLUMN_FATHER_NAME, "Father", false,
     personRow => td(personRow, personRow.combineParents(personRow.fathers)));
   addRow(COLUMN_MOTHER_NAME, "Mother", false,

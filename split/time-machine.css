@@ -460,3 +460,7 @@ a:hover {
     border: 1px solid #80cc7c;
     background-color: #c0efbe;
 }
+.blank-row {
+    background-color: #8aa576;
+    height: 7px;
+}
