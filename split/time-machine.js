@@ -740,6 +740,7 @@ function finishedReceivingSources($status, context) {
   updateComboViewHtml();
   makeTableHeadersDraggable();
   fetchRelativeSources($status, context);
+  initPrevRowPositions();
 }
 
 // Begin fetching the list of source descriptions for each relative,
@@ -2000,6 +2001,7 @@ function displayAvailableOptions() {
   setVisibility("settings", activeTab !== CHANGE_LOG_VIEW && activeTab !== SPLIT_VIEW);
   setVisibility("vertical-option", activeTab === FLAT_VIEW || activeTab === SOURCES_VIEW || activeTab === COMBO_VIEW || activeTab === HELP_VIEW);
   setVisibility("repeat-info-option", activeTab === MERGE_VIEW || activeTab === HELP_VIEW);
+  initPrevRowPositions();
 }
 
 function setVisibility(elementId, isVisible) {
@@ -2881,7 +2883,7 @@ class PersonRow {
       html = "<tr class='summary-row'>";
     }
     else {
-      html = "<tr class='" + this.id + "' onclick='handleRowClick(event, \"" + this.id + "\")'>";
+      html = "<tr class='" + this.id + "' onclick='handleRowClick(event, \"" + this.id + "\")' id='" + getRowId(tabId, this.id) + "'>";
     }
     let shouldIndent = tabId === MERGE_VIEW;
     let colspan = shouldIndent ? " colspan='" + (1 + this.maxIndent - this.indent.length) + "'" : "";
@@ -3112,9 +3114,47 @@ function updateTabsHtml() {
   updateSplitViewHtml();
 }
 
+// Map of rowId -> {x, y} of where that row was last time.
+let prevRowPositionsMap = new Map();
+
+function initPrevRowPositions() {
+  animateRows(flatGrouper, true);
+  animateRows(sourceGrouper, true);
+  animateRows(comboGrouper, true);
+}
+
+function animateRows(grouper, isInitialization) {
+  if (!grouper) {
+    return;
+  }
+  for (let group of grouper.mergeGroups) {
+    console.log("--- Grouper " + grouper.tabId);
+    let newPositionMap = new Map();
+    for (let personRow of group.personRows) {
+      let rowId = getRowId(grouper.tabId, personRow.id);
+      let $row = $("#" + rowId);
+      newPositionMap.set(rowId, {"left": $row.offset().left, "top": $row.offset().top});
+    }
+    for (let personRow of group.personRows) {
+      let rowId = getRowId(grouper.tabId, personRow.id);
+      let $row = $("#" + rowId);
+      let prevPosition = prevRowPositionsMap.get(rowId);
+      let newPosition = newPositionMap.get(rowId);
+      prevRowPositionsMap.set(rowId, newPosition);
+      console.log(rowId + ": " + (prevPosition ? prevPosition.left + ", " + prevPosition.top + " => " : "") + newPosition.left + ", " + newPosition.top);
+      if (prevPosition && !isInitialization) {
+        // animate row's position from prevPosition to new position
+        $row.css({"position": "relative", "left": prevPosition.left - newPosition.left, "top": prevPosition.top - newPosition.top, "width": "100%"});
+        $row.animate({"left": 0, "top": 0}, 500);
+      }
+    }
+  }
+}
+
 function updateFlatViewHtml(grouper) {
   $("#" + grouper.tabId).html(getGrouperHtml(grouper));
   highlightSelectedRows(grouper);
+  animateRows(grouper);
   makeTableHeadersDraggable();
 }
 
@@ -4575,6 +4615,10 @@ function showSummariesButtonHtml(isVertical) {
 function showHiddenValuesButtonHtml(isVertical) {
   return "<input type='checkbox' id='" + (isVertical ? "v-" : "") + "show-extra-values-checkbox' onChange='handleOptionChange()'" +
     (displayOptions.shouldExpandHiddenValues ? " checked" : "") + ">Show extra values</input>";
+}
+
+function getRowId(tabId, personRowId) {
+  return tabId + "-" + personRowId;
 }
 
 function getGrouperHtml(grouper) {
