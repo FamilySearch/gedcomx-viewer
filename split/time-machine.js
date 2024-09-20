@@ -739,8 +739,8 @@ function finishedReceivingSources($status, context) {
   updateSplitViewHtml();
   updateComboViewHtml();
   makeTableHeadersDraggable();
+  animateRows()
   fetchRelativeSources($status, context);
-  initPrevRowPositions();
 }
 
 // Begin fetching the list of source descriptions for each relative,
@@ -874,6 +874,7 @@ function makeMainHtml(context, changeLogMap, $mainTable) {
   $(document).keydown(handleMergeKeypress);
   initOptionsDisplay();
   makeTableHeadersDraggable();
+  animateRows(comboGrouper);
 }
 
 let columnPressed = false;
@@ -1897,7 +1898,7 @@ function handleColumnClick(event, rowId) {
 }
 
 // ===============
-// Map of groupId -> Grouper object that the groupId is found in.
+// Map of groupId (and also personRowId and grouperId and tabId) -> Grouper object that the groupId or person row is found in.
 let grouperMap = {};
 // Map of personRowId -> PersonRow object with that id
 let personRowMap = {};
@@ -1937,7 +1938,7 @@ class DisplayOptions {
     // Flag for whether to show summaries of 'keep' and 'split' just above the split group (if any).
     this.shouldShowSummaries = false;
     // Flag for whether to show hidden values in the summary rows in the combo view. (Does not affect split view).
-    this.shouldExpandHiddenValues = true;
+    this.shouldExpandHiddenValues = false;
   }
 }
 
@@ -1987,7 +1988,11 @@ function handleOptionChange() {
   displayOptions.shouldRepeatInfoFromMerge = $("#merge-info-checkbox").prop("checked");
   displayOptions.shouldShowAdditions = $("#additions-checkbox").prop("checked");
   displayOptions.shouldShowDeletions = $("#deletions-checkbox").prop("checked");
+  let prevVertical = displayOptions.vertical;
   displayOptions.vertical = $("#vertical-checkbox").prop("checked");
+  if (prevVertical !== displayOptions.vertical) {
+    resetAnimation = true;
+  }
   displayOptions.shouldShowSummaries = updateIfVisible("summary-checkbox", displayOptions.shouldShowSummaries);
   displayOptions.shouldExpandHiddenValues = updateIfVisible("show-extra-values-checkbox", displayOptions.shouldExpandHiddenValues);
   updatePersonFactsDisplay();
@@ -2001,7 +2006,6 @@ function displayAvailableOptions() {
   setVisibility("settings", activeTab !== CHANGE_LOG_VIEW && activeTab !== SPLIT_VIEW);
   setVisibility("vertical-option", activeTab === FLAT_VIEW || activeTab === SOURCES_VIEW || activeTab === COMBO_VIEW || activeTab === HELP_VIEW);
   setVisibility("repeat-info-option", activeTab === MERGE_VIEW || activeTab === HELP_VIEW);
-  initPrevRowPositions();
 }
 
 function setVisibility(elementId, isVisible) {
@@ -2053,6 +2057,7 @@ class Grouper {
       grouperMap[mergeRow.id] = this;
     }
     grouperMap[this.id] = this;
+    grouperMap[tabId] = this;
   }
 
   sort(columnName) {
@@ -2160,20 +2165,15 @@ class Grouper {
     }
   }
 
-  checkGroupOrder() {
-    // Make sure that the main person ID is always in the first group.
-    for (let g = 0; g < this.mergeGroups.length; g++) {
-      let mergeGroup = this.mergeGroups[g];
-      for (let personRow of mergeGroup.personRows) {
-        if (personRow.personId === mainPersonId) {
-          if (g > 0) {
-            let mainGroup = this.mergeGroups.splice(g, 1)[0];
-            this.mergeGroups.unshift(mainGroup);
-          }
-          return;
+  isMainPersonIdSelected() {
+    for (let group of this.mergeGroups) {
+      for (let mergeRow of group.personRows) {
+        if (mergeRow.personId === mainPersonId && mergeRow.isSelected) {
+          return true;
         }
       }
     }
+    return false;
   }
 }
 
@@ -2613,6 +2613,18 @@ class PersonRow {
       return element.isVisible() || displayOptions.shouldExpandHiddenValues;
     }
 
+    // Wrap the contents of a table cell in a div with an id that can be used to animate the cell's contents.
+    // item: the object with an elementIndex that this cell is displaying, representing an element in the Split object.
+    // isKeep: true if this cell is displaying the 'keep' version of the element, false if it's displaying the 'split' version.
+    // contentHtml: the HTML content of the cell to display.
+    // isFacts: true if this cell is displaying facts for a spouse or child (which is not an independently-selectable element
+    //          and thus doesn't have its own buttons or element id. These divs will get an id ending in ".facts")
+    function wrapElement(item, isKeep, contentHtml, isFacts) {
+      let cellId = getCellId(item.elementIndex, isKeep, isFacts);
+      return "<div class='element-wrapper' id='" + cellId + "'>"
+        + (isFacts ? "" : getButtonsHtml(item, isKeep)) + contentHtml + "</div>";
+    }
+
     function getSummaryNamesHtml(person) {
       function getNameFormsHtml(name) {
         // Combine multiple name forms into a single string separated by "/", like "Kim Jeong-Un / 김정은 / 金正恩".
@@ -2626,9 +2638,10 @@ class PersonRow {
       let namesHtml = "<td class='" + rowClass + bottomClass + "'" + rowSpan + ">";
       if (person.names && person.names.length > 0) {
         let namesHtmlList = [];
-        for (let name of person.names) {
+        for (let n = 0; n < person.names.length; n++) {
+          let name = person.names[n];
           if (shouldDisplaySummaryElement(name)) {
-            namesHtmlList.push(getButtonsHtml(name, splitDirection === DIR_KEEP) + getNameFormsHtml(name));
+            namesHtmlList.push(wrapElement(name, splitDirection === DIR_KEEP, getNameFormsHtml(name)));
           }
         }
         namesHtml += namesHtmlList.join("<br>");
@@ -2644,7 +2657,7 @@ class PersonRow {
       if (person.facts && person.facts.length > 0) {
         for (let fact of person.facts) {
           if (shouldDisplaySummaryElement(fact)) {
-            factsHtml += getButtonsHtml(fact, splitDirection === DIR_KEEP) + getFactHtml(fact, true, false) + "<br>";
+            factsHtml += wrapElement(fact, splitDirection === DIR_KEEP, getFactHtml(fact, true, false)) + "<br>";
           }
         }
       }
@@ -2659,7 +2672,7 @@ class PersonRow {
           (usedColumns.has("father-name") && usedColumns.has("mother-name") ? " colspan='2'" : "") + ">";
         for (let element of split.elements) {
           if (element.type === TYPE_PARENTS && (element.direction === direction || element.direction === DIR_COPY)) {
-            parentsHtml += getButtonsHtml(element, direction === DIR_KEEP) + getParentsHtml(element.item, encode(" & ")) + "<br>\n";
+            parentsHtml += wrapElement(element, direction === DIR_KEEP, getParentsHtml(element.item, encode(" & "))) + "<br>\n";
           }
         }
         return parentsHtml + "</td>\n";
@@ -2689,18 +2702,33 @@ class PersonRow {
         isFirstSpouse = startNewRowIfNotFirst(isFirstSpouse, allRowsClass, noteCellHtmlHolder, this.isSummaryRow());
         let familyBottomClass = spouseIndex === this.families.length - 1 ? bottomClass : "";
         let childrenRowSpan = getRowspanParameter(displayOptions.shouldShowChildren ? spouseFamily.children.length : 1);
-        let spouseButtonsHtml = this.isSummaryRow() ? getButtonsHtml(spouseFamily.spouse.coupleRelationship, splitDirection === DIR_KEEP): "";
-        addColumn("spouse-name", childrenRowSpan, spouseButtonsHtml + (spouseFamily.spouse ? spouseFamily.spouse.name : ""), familyBottomClass);
-        addColumn("spouse-facts", childrenRowSpan, spouseFamily.spouse ? spouseFamily.spouse.facts : "", familyBottomClass);
+
+        let spouseNameHtml = spouseFamily.spouse ? spouseFamily.spouse.name : "";
+        let spouseFactsHtml = spouseFamily.spouse ? spouseFamily.spouse.facts : "";
+        if (this.isSummaryRow()) {
+          // Wrap the spouse name and facts in a div that can be animated. Also add buttons to the spouseNameHtml.
+          spouseNameHtml = wrapElement(spouseFamily.spouse.coupleRelationship, splitDirection === DIR_KEEP, spouseNameHtml);
+          spouseFactsHtml = wrapElement(spouseFamily.spouse.coupleRelationship, splitDirection === DIR_KEEP, spouseFactsHtml, true);
+        }
+        addColumn("spouse-name", childrenRowSpan, spouseNameHtml, familyBottomClass);
+        addColumn("spouse-facts", childrenRowSpan, spouseFactsHtml, familyBottomClass);
+
         if (spouseFamily.children.length > 0 && displayOptions.shouldShowChildren) {
           let isFirstChild = true;
           for (let childIndex = 0; childIndex < spouseFamily.children.length; childIndex++) {
             let child = spouseFamily.children[childIndex];
             isFirstChild = startNewRowIfNotFirst(isFirstChild, allRowsClass, noteCellHtmlHolder, this.isSummaryRow());
             let childBottomClass = childIndex === spouseFamily.children.length - 1 ? familyBottomClass : "";
-            let childButtonsHtml = this.isSummaryRow() ? getButtonsHtml(child.childAndParentsRelationship, splitDirection === DIR_KEEP): "";
-            addColumn(COLUMN_CHILD_NAME, "", childButtonsHtml + child.name, childBottomClass);
-            addColumn(COLUMN_CHILD_FACTS, "", child.facts, childBottomClass);
+
+            let childNameHtml = child.name;
+            let childFactsHtml = child.facts;
+            if (this.isSummaryRow()) {
+              // Wrap the child name and facts in a div that can be animated. Also add buttons to the childNameHtml.
+              childNameHtml = wrapElement(child.childAndParentsRelationship, splitDirection === DIR_KEEP, childNameHtml);
+              childFactsHtml = wrapElement(child.childAndParentsRelationship, splitDirection === DIR_KEEP, childFactsHtml, true);
+            }
+            addColumn(COLUMN_CHILD_NAME, "", childNameHtml, childBottomClass);
+            addColumn(COLUMN_CHILD_FACTS, "", childFactsHtml, childBottomClass);
           }
         } else {
           addColumn(COLUMN_CHILD_NAME, "", "", familyBottomClass);
@@ -3083,25 +3111,38 @@ function findUsedColumns(personRows) {
   return usedColumns;
 }
 
+function mainPersonIdSelected(grouperId) {
+  let grouper = grouperMap[grouperId];
+  if (grouper.isMainPersonIdSelected()) {
+    alert("The main person Id (" + mainPersonId + ") must remain in the first group, so that it is above the 'person to keep' in the split summary.");
+    return true;
+  }
+  return false;
+}
+
 // Function called when the "add group" button is clicked in the Flat view.
 // If any rows are selected, they are moved to the new group.
 // If this is only the second group, then the first group begins displaying its header.
 function addGroup(grouperId) {
+  if (mainPersonIdSelected(grouperId)) {
+    return;
+  }
   let grouper = grouperMap[grouperId];
   let mergeRows = grouper.removeSelectedRows();
   let mergeGroup = new MergeGroup("Group " + (grouper.mergeGroups.length + 1), mergeRows, grouper);
   grouper.mergeGroups.push(mergeGroup);
-  grouper.checkGroupOrder();
   updateFlatViewHtml(grouper);
 }
 
 function addSelectedToGroup(groupId) {
+  if (mainPersonIdSelected(groupId)) {
+    return;
+  }
   let grouper = grouperMap[groupId];
   let mergeGroup = grouper.findGroup(groupId);
   if (mergeGroup) {
     let selectedRows = grouper.removeSelectedRows();
     mergeGroup.personRows.push(...selectedRows);
-    grouper.checkGroupOrder();
     updateFlatViewHtml(grouper);
   }
 }
@@ -3115,47 +3156,120 @@ function updateTabsHtml() {
 }
 
 // Map of rowId -> {x, y} of where that row was last time.
-let prevRowPositionsMap = new Map();
+let prevPositionMap = new Map();
+let resetAnimation = false;
 
 function initPrevRowPositions() {
-  animateRows(flatGrouper, true);
-  animateRows(sourceGrouper, true);
-  animateRows(comboGrouper, true);
+  switch (getCurrentTab()) {
+    case FLAT_VIEW: animateRows(flatGrouper, true); break;
+    case SOURCES_VIEW: animateRows(sourceGrouper, true); break;
+    case COMBO_VIEW: animateRows(comboGrouper, true); break;
+  }
 }
 
-function animateRows(grouper, isInitialization) {
-  if (!grouper) {
+function notSamePosition(a, b) {
+  return Math.abs(a.left - b.left) > .5 || Math.abs(a.top - b.top) > .5;
+}
+
+const animationSpeed = 500;
+function animateRows(grouper) {
+  if (!grouper || grouper !== grouperMap[getCurrentTab()]) {
     return;
   }
-  for (let group of grouper.mergeGroups) {
-    console.log("--- Grouper " + grouper.tabId);
-    let newPositionMap = new Map();
-    for (let personRow of group.personRows) {
-      let rowId = getRowId(grouper.tabId, personRow.id);
-      let $row = $("#" + rowId);
-      newPositionMap.set(rowId, {"left": $row.offset().left, "top": $row.offset().top});
-    }
-    for (let personRow of group.personRows) {
-      let rowId = getRowId(grouper.tabId, personRow.id);
-      let $row = $("#" + rowId);
-      let prevPosition = prevRowPositionsMap.get(rowId);
-      let newPosition = newPositionMap.get(rowId);
-      prevRowPositionsMap.set(rowId, newPosition);
-      console.log(rowId + ": " + (prevPosition ? prevPosition.left + ", " + prevPosition.top + " => " : "") + newPosition.left + ", " + newPosition.top);
-      if (prevPosition && !isInitialization) {
-        // animate row's position from prevPosition to new position
-        $row.css({"position": "relative", "left": prevPosition.left - newPosition.left, "top": prevPosition.top - newPosition.top, "width": "100%"});
-        $row.animate({"left": 0, "top": 0}, 500);
+  if (!displayOptions.vertical) {
+    for (let group of grouper.mergeGroups) {
+      let newPositionMap = new Map();
+      for (let personRow of group.personRows) {
+        let rowId = getRowId(grouper.tabId, personRow.id);
+        let $row = $("#" + rowId);
+        newPositionMap.set(rowId, {"left": $row.offset().left, "top": $row.offset().top});
+      }
+      for (let personRow of group.personRows) {
+        let rowId = getRowId(grouper.tabId, personRow.id);
+        let $row = $("#" + rowId);
+        let prevPosition = prevPositionMap.get(rowId);
+        let newPosition = newPositionMap.get(rowId);
+        prevPositionMap.set(rowId, newPosition);
+        if (!resetAnimation && prevPosition && (prevPosition.left || prevPosition.top) && (newPosition.left || newPosition.top) && notSamePosition(prevPosition, newPosition)) {
+          // animate row's position from prevPosition to new position
+          $row.css({
+            "position": "relative",
+            "left": prevPosition.left - newPosition.left,
+            "top": prevPosition.top - newPosition.top,
+            "width": "100%"
+          });
+          $row.animate({"left": 0, "top": 0}, animationSpeed);
+        }
       }
     }
   }
+  // Animate cells of summary elements
+  if (displayOptions.shouldShowSummaries && grouper.splitGroupId) {
+    function animateSummaryCell(cellId, prevPosition, newPosition, otherPosition) {
+      if (!resetAnimation && newPosition && (newPosition.left || newPosition.top)) {
+        if (otherPosition && !prevPosition) {
+          // If going from "Keep" to "Copy" or "Split", then animate from the old keep to the new split position
+          // (whether moving or copying). And vice versa.
+          prevPosition = otherPosition;
+        }
+        let $cell = $("#" + cellId);
+        if ($cell && prevPosition && (prevPosition.left || prevPosition.top)) {
+          $cell.css({"position": "relative", "left": prevPosition.left - newPosition.left, "top": prevPosition.top - newPosition.top, "width": "100%"});
+          $cell.animate({"left": 0, "top": 0}, animationSpeed);
+        }
+      }
+    }
+
+    function animateSummaryElement(element, doRelativeFacts) {
+      let keepCellId = getCellId(element.elementIndex, true, doRelativeFacts);
+      let splitCellId = getCellId(element.elementIndex, false, doRelativeFacts);
+      let prevKeepPos = prevPositionMap.get(keepCellId);
+      let prevSplitPos = prevPositionMap.get(splitCellId);
+      let newKeepPos = newPositionMap.get(keepCellId);
+      let newSplitPos = newPositionMap.get(splitCellId);
+      if (keepCellId === "combo-view_element-6_keep") {
+        console.log(keepCellId + ": " + JSON.stringify(prevKeepPos) + " -> " + JSON.stringify(newKeepPos));
+      }
+      animateSummaryCell(keepCellId, prevKeepPos, newKeepPos, prevSplitPos);
+      animateSummaryCell(splitCellId, prevSplitPos, newSplitPos, prevKeepPos);
+      prevPositionMap.set(keepCellId, newKeepPos);
+      prevPositionMap.set(splitCellId, newSplitPos);
+    }
+
+    let newPositionMap = new Map();
+    for (let element of split.elements) {
+      for (let isKeep of [true, false]) {
+        for (let isFacts of [false, true]) {
+          // (Spouse and Child summary elements can have a facts column that is not independently selectable)
+          if (!isFacts || (element.type === TYPE_SPOUSE || element.type === TYPE_CHILD)) {
+            let cellId = getCellId(element.elementIndex, isKeep, isFacts);
+            let $cell = $("#" + cellId);
+            if ($cell && $cell.offset()) {
+              newPositionMap.set(cellId, {"left": $cell.offset().left, "top": $cell.offset().top});
+            }
+          }
+        }
+      }
+    }
+    for (let element of split.elements) {
+      animateSummaryElement(element, false);
+      if (element.type === TYPE_SPOUSE || element.type === TYPE_CHILD) {
+        animateSummaryElement(element, true);
+      }
+    }
+  }
+  resetAnimation = false;
+}
+
+function getCellId(elementIndex, isKeep, isFacts) {
+  return getCurrentTab() + "_element-" + elementIndex + "_" + (isKeep ? "keep" : "split") + (isFacts ? "_facts" : "");
 }
 
 function updateFlatViewHtml(grouper) {
   $("#" + grouper.tabId).html(getGrouperHtml(grouper));
   highlightSelectedRows(grouper);
-  animateRows(grouper);
   makeTableHeadersDraggable();
+  animateRows(grouper);
 }
 
 function highlightSelectedRows(grouper) {
@@ -4618,7 +4732,7 @@ function showHiddenValuesButtonHtml(isVertical) {
 }
 
 function getRowId(tabId, personRowId) {
-  return tabId + "-" + personRowId;
+  return (displayOptions.vertical ? "v_" : "") + tabId + "-" + personRowId;
 }
 
 function getGrouperHtml(grouper) {

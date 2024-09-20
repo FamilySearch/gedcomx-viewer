@@ -464,3 +464,6 @@ a:hover {
     background-color: #8aa576;
     height: 7px;
 }
+.element-wrapper {
+    display: inline-block;
+}
