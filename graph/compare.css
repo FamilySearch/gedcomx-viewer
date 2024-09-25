@@ -1,0 +1,28 @@
+.stats {
+    border: 1px solid #d2baf4;
+    border-collapse: collapse;
+}
+
+.stats td, .stats th {
+    font-weight: normal;
+    font-family: sans-serif;
+}
+.stats td, .stats th {
+    border: 1px solid #f2e6ff;
+}
+
+.rel-graphs {
+    border: 1px solid #c2dcbd;
+    border-collapse: collapse;
+}
+th {
+    text-align: left;
+}
+.rel-graphs td {
+    position: relative;
+}
+.rel-graphs {
+}
+.rel-graphs td, .rel-graphs th {
+    border: 1px solid #cbe1bf;
+}

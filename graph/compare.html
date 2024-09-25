@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Gedcomx Comparison Utility</title>
+  <link rel="stylesheet" type="text/css" href="graph.css">
+  <link rel="stylesheet" type="text/css" href="compare.css">
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+
+  <script src="model/model-util.js"></script>
+  <script src="model/PersonNode.js"></script>
+  <script src="model/FamilyNode.js"></script>
+  <script src="model/RelationshipGraph.js"></script>
+
+  <script src="../gx-util.js"></script>
+  <script src="../gx-fix.js"></script>
+  <script src="view/Generation.js"></script>
+  <script src="view/LinkedHashSet.js"></script>
+  <script src="view/IntegerByRef.js"></script>
+  <script src="view/PersonBox.js"></script>
+  <script src="view/FamilyLine.js"></script>
+  <script src="view/ChartCompressor.js"></script>
+  <script src="view/RelationshipChart.js"></script>
+  <script src="view/RelChartBuilder.js"></script>
+  <script src="view/EditChart.js"></script>
+  <script src="tree/TreeFetch.js"></script>
+  <script src="graph.js"></script>
+  <script src="compare.js"></script>
+</head>
+<body>
+<div id="comparison"></div>
+
+<script>
+  // Generate an HTML page with a list of NBX articles. For each, show (a) the truth data, and (b) the output of the current model.
+  // 1. Run ace-nlp's Application.
+  // 2. Run ace-nlp's NewspaperScoringATest.score...<whichever test you want to run>.
+  // 3. Run pipenv shell, . .bash_profile, ace-dev-login
+  // 4. Run aws-dev-console and find the path to the generated test data, like ps-services...ace-nlp/test-runs/<date> ace-nlp acceptance fs <#>/<DIR>/
+  // 5. Copy the files down using "aws s3 cp "s3://<above path>/" . --recursive", in an "output" directory.
+  // 6. Copy the truth data from ace-acceptance to a sibling "truth" directory, and nbx files into a sibling "nbx" directory.
+  // 7. Run this script to generate the comparison HTML.
+  $(document).ready(function(){
+    buildComparison("comparison", "landvoice");
+  });
+</script>
+</body>
+</html>
