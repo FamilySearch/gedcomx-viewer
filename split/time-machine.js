@@ -42,9 +42,11 @@ let mergeMap = new Map();
 const CHILD_REL = "child-and-parents-relationships"
 const COUPLE_REL = "http://gedcomx.org/Couple"
 const PARENT_CHILD_REL = "http://gedcomx.org/ParentChild"
+let $statusDiv = null;
 
 // Fetch the change log entries for the person given by the change log URL.
 function buildChangeLogView(changeLogUrl, sessionId, $mainTable, $status, shouldFetchOrdinances) {
+  $statusDiv = $status;
   let context = parsePersonUrl(changeLogUrl);
   mainPersonId = context.personId;
   if (sessionId) {
@@ -56,10 +58,10 @@ function buildChangeLogView(changeLogUrl, sessionId, $mainTable, $status, should
   // List of urls currently being fetched.
   let fetching = [];
 
-  updateStatus($status, "Fetching change logs...");
+  updateStatus("Fetching change logs...");
   // Recursively fetch this person's change log and that of anyone merged in.
   // Once last change log has been fetched, the last ajax call will call makeChangeLogHtml()
-  fetchChangeLog(context.personId, context, changeLogMap, fetching, $mainTable, $status, null, shouldFetchOrdinances);
+  fetchChangeLog(context.personId, context, changeLogMap, fetching, $mainTable, null, shouldFetchOrdinances);
 }
 
 /**
@@ -70,16 +72,15 @@ function buildChangeLogView(changeLogUrl, sessionId, $mainTable, $status, should
  * @param changeLogMap - Map of personId to list of change log entries for that person id.
  * @param fetching - list of person IDs currently being fetched.
  * @param $mainTable - JQuery element to put the resulting HTML into when ready
- * @param $status - JQuery element to update with status messages
  * @param nextUrl - "next" Url for a person's change log, if this is a next link call (none => fetch person's change log from scratch)
  * @param shouldFetchOrdinances - flag for whether to fetch ordinances (currently only works within FamilySearch VPN).
  */
-function fetchChangeLog(personId, context, changeLogMap, fetching, $mainTable, $status, nextUrl, shouldFetchOrdinances) {
+function fetchChangeLog(personId, context, changeLogMap, fetching, $mainTable, nextUrl, shouldFetchOrdinances) {
   if (!nextUrl && (changeLogMap.hasOwnProperty(personId) || fetching.includes(personId))) {
     return; // Already took care of this one
   }
   fetching.push(personId);
-  updateStatus($status, "Fetching " + (nextUrl ? "next " : "") + "change log for " + personId);
+  updateStatus("Fetching " + (nextUrl ? "next " : "") + "change log for " + personId);
   let url = nextUrl ? nextUrl : context.baseUrl + personId + "/changes";
   $.ajax({
     beforeSend: function(request) {
@@ -93,12 +94,12 @@ function fetchChangeLog(personId, context, changeLogMap, fetching, $mainTable, $
     dataType: "json",
     url: url,
     success:function(gedcomx){
-      receiveChangeLog(gedcomx, personId, context, changeLogMap, fetching, $mainTable, $status, nextUrl);
+      receiveChangeLog(gedcomx, personId, context, changeLogMap, fetching, $mainTable, nextUrl);
     }
   });
 
   if (shouldFetchOrdinances) {
-    fetchOrdinances($status, personId, fetching, context, changeLogMap, $mainTable);
+    fetchOrdinances(personId, fetching, context, changeLogMap, $mainTable);
   }
 }
 
@@ -110,13 +111,10 @@ function fetchChangeLog(personId, context, changeLogMap, fetching, $mainTable, $
  * @param changeLogMap - Map of person ID -> list of change log entries for that person id.
  * @param fetching - List of person IDs currently being fetched
  * @param $mainTable - JQuery element to put the resulting HTML into when ready
- * @param $status - JQuery element to update with status messages
  * @param receivedNextUrl - flag for whether this is a 'next' URL.
  */
-function receiveChangeLog(gedcomx, personId, context, changeLogMap, fetching, $mainTable, $status, receivedNextUrl) {
-  modifyStatusMessage($status, fetching, personId,
-    "Fetching" + (receivedNextUrl ? " next" : "") + " change log for " + personId,
-    "Received" + (receivedNextUrl ? " next" : "") + " change log for " + personId);
+function receiveChangeLog(gedcomx, personId, context, changeLogMap, fetching, $mainTable, receivedNextUrl) {
+  modifyStatusMessage(fetching, personId, "Fetching" + (receivedNextUrl ? " next" : "") + " change log for " + personId, "Received" + (receivedNextUrl ? " next" : "") + " change log for " + personId);
   if (gedcomx) {
     let changeLogEntries = makeChangeLogEntries(gedcomx);
     if (personId in changeLogMap) {
@@ -125,26 +123,26 @@ function receiveChangeLog(gedcomx, personId, context, changeLogMap, fetching, $m
     changeLogMap[personId] = changeLogEntries;
     let nextUrl = "next" in gedcomx.links ? gedcomx.links.next.href : null;
     if (nextUrl) {
-      fetchChangeLog(personId, context, changeLogMap, fetching, $mainTable, $status, nextUrl);
+      fetchChangeLog(personId, context, changeLogMap, fetching, $mainTable, nextUrl);
     }
     let mergedIds = getNewMergeIds(personId, changeLogEntries);
     for (let newMergeId of mergedIds) {
-      fetchChangeLog(newMergeId, context, changeLogMap, fetching, $mainTable, $status);
+      fetchChangeLog(newMergeId, context, changeLogMap, fetching, $mainTable);
     }
   }
   else {
     console.log("Warning: Failed to fetch gedcomx for " + personId);
   }
-  handleIfFinishedFetching(fetching, context, changeLogMap, $mainTable, $status);
+  handleIfFinishedFetching(fetching, context, changeLogMap, $mainTable);
 }
 
-function handleIfFinishedFetching(fetching, context, changeLogMap, $mainTable, $status) {
+function handleIfFinishedFetching(fetching, context, changeLogMap, $mainTable) {
   if (fetching.length === 0) {
     // All the change logs that needed to be fetched have now been fetched, and this is the last one.
     // So create the Html.
     makeMainHtml(context, changeLogMap, $mainTable);
     // Then, kick off the fetching of relatives and sources info, and update the table when done.
-    fetchRelativesAndSources(changeLogMap, $status, context);
+    fetchRelativesAndSources(changeLogMap, context);
   }
 }
 
@@ -338,8 +336,8 @@ function getNormalizedDateElement(performedDate) {
   return null;
 }
 
-function fetchOrdinances($status, personId, fetching, context, changeLogMap, $mainTable) {
-  updateStatus($status, "Fetching ordinances from TF for " + personId);
+function fetchOrdinances(personId, fetching, context, changeLogMap, $mainTable) {
+  updateStatus("Fetching ordinances from TF for " + personId);
   fetching.push(personId + "-tf");
   let url = "https://www.familysearch.org/service/tree/tree-data/labs/person/" + personId + "/ordinances";
   $.ajax({
@@ -355,11 +353,11 @@ function fetchOrdinances($status, personId, fetching, context, changeLogMap, $ma
     url: url,
     success: function(tf) {
       console.log("Success in fetching tf person " + personId);
-      receiveOrdinances(tf, personId, context, changeLogMap, fetching, $mainTable, $status);
+      receiveOrdinances(tf, personId, context, changeLogMap, fetching, $mainTable);
     },
     error: function() {
       console.log("Failed to fetch tf person " + personId);
-      receiveOrdinances(null, personId, context, changeLogMap, fetching, $mainTable, $status);
+      receiveOrdinances(null, personId, context, changeLogMap, fetching, $mainTable);
     }
   });
   return url;
@@ -400,10 +398,9 @@ function fetchOrdinances($status, personId, fetching, context, changeLogMap, $ma
         .uri (owsId, like "ows.MC7B-XRV")
    Then fetch the OWS for each ordinance reference.
  */
-function receiveOrdinances(ordinancesJson, personId, context, changeLogMap, fetching, $mainTable, $status) {
+function receiveOrdinances(ordinancesJson, personId, context, changeLogMap, fetching, $mainTable) {
   if (ordinancesJson) {
-    modifyStatusMessage($status, fetching, personId + "-tf",
-      "Fetching ordinances from TF for " + personId, "Received ordinances from TF for " + personId);
+    modifyStatusMessage(fetching, personId + "-tf", "Fetching ordinances from TF for " + personId, "Received ordinances from TF for " + personId);
 
     for (let owsEntry of getList(ordinancesJson, "owsList")) {
       let ows = new OrdinanceWorkSet(owsEntry, personId);
@@ -415,20 +412,19 @@ function receiveOrdinances(ordinancesJson, personId, context, changeLogMap, fetc
     }
   }
   else {
-    modifyStatusMessage($status, fetching, personId + "-tf",
-      "Fetching ordinances from TF for " + personId, "Failed to receive ordinances from TF for " + personId);
+    modifyStatusMessage(fetching, personId + "-tf", "Fetching ordinances from TF for " + personId, "Failed to receive ordinances from TF for " + personId);
   }
-  handleIfFinishedFetching(fetching, context, changeLogMap, $mainTable, $status);
+  handleIfFinishedFetching(fetching, context, changeLogMap, $mainTable);
 }
 
-function modifyStatusMessage($status, fetching, fetchingEntryToRemove, originalMessage, newMessage) {
-  let logHtml = $status.html();
+function modifyStatusMessage(fetching, fetchingEntryToRemove, originalMessage, newMessage) {
+  let logHtml = $statusDiv.html();
   logHtml = logHtml.replace(originalMessage, newMessage);
-  $status.html(logHtml);
+  $statusDiv.html(logHtml);
   fetching.splice(fetching.indexOf(fetchingEntryToRemove), 1); // Remove personId from the fetching array
 }
 
-function fetchRelativesAndSources(changeLogMap, $status, context) {
+function fetchRelativesAndSources(changeLogMap, context) {
   // Populate sourceMap[sourceUrl] = null, and relativeMap[relativeId].
   // so that the keys of these maps can be used to fill in the values.
   for (let personId of Object.keys(changeLogMap)) {
@@ -446,7 +442,7 @@ function fetchRelativesAndSources(changeLogMap, $status, context) {
 
   let fetching = [...Object.keys(sourceMap)];
 
-  setStatus($status, "Fetching " + fetching.length + " sources...");
+  setStatus("Fetching " + fetching.length + " sources...");
   for (let sourceUrl of Object.keys(sourceMap)) {
     $.ajax({
       beforeSend: function(request) {
@@ -458,10 +454,10 @@ function fetchRelativesAndSources(changeLogMap, $status, context) {
       dataType: "json",
       url: sourceUrl,
       success:function(gedcomx){
-        receiveSourceDescription(gedcomx, $status, context, fetching, sourceUrl, sourceMap);
+        receiveSourceDescription(gedcomx, context, fetching, sourceUrl, sourceMap);
       },
       error: function() {
-        receiveSourceDescription(null, $status, context, fetching, sourceUrl, sourceMap)
+        receiveSourceDescription(null, context, fetching, sourceUrl, sourceMap)
       }
     });
   }
@@ -535,6 +531,7 @@ class SourceInfo {
     this.recordDate = null;
     this.recordDateSortKey = null;
     this.attachedToPersonId = null; // Person ID attached to, including version number if > 1 (like "MMMM-MMM (v2)")
+    this.stapledOrdinancePersonId = null; // See notes on getStapledOrdinancePersonId()
   }
 
   // Now that the SourceDescription for this source has been fetched, update this SourceInfo with information from it.
@@ -568,13 +565,12 @@ class RelativeInfo {
 /**
  * Receive a SourceDescription from an AJAX call.
  * @param gedcomx - GedcomX containing the SourceDescription
- * @param $status - JQuery element in which to update status messages
  * @param context - Context info such as session ID.
  * @param fetching - List of sourceUrls still being fetched.
  * @param sourceUrl - SourceUrl fetched for this call
  * @param sourceMap - (Global) map of sourceUrl -> SourceInfo for that source (which is filled out here).
  */
-function receiveSourceDescription(gedcomx, $status, context, fetching, sourceUrl, sourceMap) {
+function receiveSourceDescription(gedcomx, context, fetching, sourceUrl, sourceMap) {
   fetching.splice(fetching.indexOf(sourceUrl), 1);
   if (gedcomx && "sourceDescriptions" in gedcomx && gedcomx.sourceDescriptions.length) {
     let sourceInfo = sourceMap[sourceUrl];
@@ -594,18 +590,18 @@ function receiveSourceDescription(gedcomx, $status, context, fetching, sourceUrl
         dataType: "json",
         url: sourceInfo.personaArk,
         success: function (gedcomx) {
-          receivePersona(gedcomx, $status, context, fetching, sourceInfo);
+          receivePersona(gedcomx, context, fetching, sourceInfo);
         },
         error: function() {
-          receivePersona(null, $status, context, fetching, sourceInfo);
+          receivePersona(null, context, fetching, sourceInfo);
         }
       });
     }
     if (fetching.length) {
-      setStatus($status, "Fetching " + fetching.length + "/" + sourceMap.size + " sources...");
+      setStatus("Fetching " + fetching.length + "/" + sourceMap.size + " sources...");
     }
     else {
-      finishedReceivingSources($status);
+      finishedReceivingSources();
     }
   }
 }
@@ -708,7 +704,7 @@ function getRecordDate(gedcomx) {
   return recordDate;
 }
 
-function receivePersona(gedcomx, $status, context, fetching, sourceInfo) {
+function receivePersona(gedcomx, context, fetching, sourceInfo) {
   if (gedcomx) {
     fixEventOrders(gedcomx);
     sourceInfo.gedcomx = gedcomx;
@@ -722,25 +718,26 @@ function receivePersona(gedcomx, $status, context, fetching, sourceInfo) {
     sourceInfo.collectionName = getCollectionName(gedcomx);
     sourceInfo.recordDate = getRecordDate(gedcomx);
     sourceInfo.recordDateSortKey = sourceInfo.recordDate ? parseDateIntoNumber(sourceInfo.recordDate).toString() : null;
+    sourceInfo.stapledOrdinancePersonId = getStapledOrdinancePersonId(person);
   }
   fetching.splice(fetching.indexOf(sourceInfo.personaArk), 1);
   if (fetching.length) {
-    setStatus($status, "Fetching " + fetching.length + "/" + Object.keys(sourceMap).length + " sources...");
+    setStatus("Fetching " + fetching.length + "/" + Object.keys(sourceMap).length + " sources...");
   }
   else {
-    finishedReceivingSources($status, context);
+    finishedReceivingSources(context);
   }
 }
 
-function finishedReceivingSources($status, context) {
-  clearStatus($status);
+function finishedReceivingSources(context) {
+  clearStatus();
   $("#" + SOURCES_VIEW).html(getSourcesViewHtml());
   split = new Split(mergeGrouper.mergeGroups[0].personRows[0].gedcomx);
   updateSplitViewHtml();
   updateComboViewHtml();
   makeTableHeadersDraggable();
   animateRows()
-  fetchRelativeSources($status, context);
+  fetchRelativeSources(context);
 }
 
 // Begin fetching the list of source descriptions for each relative,
@@ -750,10 +747,10 @@ function finishedReceivingSources($status, context) {
 // For example, say person A has husband B in Family Tree; and that a marriage record R has a bride X and groom Y;
 //   If X is attached to A, then if Y is also attached to B, then we can say that this source "supports" the
 //   Couple relationship between A&B, because X&Y are a couple and A=X and B=Y.
-function fetchRelativeSources($status, context) {
+function fetchRelativeSources(context) {
   let fetching = [...relativeMap.keys()];
 
-  setStatus($status, "Fetching " + fetching.length + " relatives' sources...");
+  setStatus("Fetching " + fetching.length + " relatives' sources...");
   for (let relativeId of relativeMap.keys()) {
     let sourceUrl = "https://www.familysearch.org/platform/tree/persons/" + relativeId + "/sources";
     $.ajax({
@@ -766,17 +763,17 @@ function fetchRelativeSources($status, context) {
       dataType: "json",
       url: sourceUrl,
       success:function(gedcomx){
-        receiveRelativeSources(gedcomx, $status, context, fetching, relativeId);
+        receiveRelativeSources(gedcomx, context, fetching, relativeId);
       },
       error: function() {
         console.log("Failed to fetch sources for relative at " + sourceUrl);
-        receiveRelativeSources(null, $status, context, fetching, relativeId);
+        receiveRelativeSources(null, context, fetching, relativeId);
       }
     });
   }
 }
 
-function receiveRelativeSources(gedcomx, $status, context, fetching, relativeId) {
+function receiveRelativeSources(gedcomx, context, fetching, relativeId) {
   fetching.splice(fetching.indexOf(relativeId), 1);
   if (gedcomx && "sourceDescriptions" in gedcomx && gedcomx.sourceDescriptions.length) {
     let relativeInfo = relativeMap.get(relativeId);
@@ -787,11 +784,11 @@ function receiveRelativeSources(gedcomx, $status, context, fetching, relativeId)
     }
   }
   if (fetching.length) {
-    setStatus($status, "Fetching " + fetching.length + "/" + Object.keys(sourceMap).length + " relatives' sources...");
+    setStatus("Fetching " + fetching.length + "/" + Object.keys(sourceMap).length + " relatives' sources...");
   }
   else {
     // Finished receiving relative sources
-    clearStatus($status);
+    clearStatus();
     relativeSourcesReceived = true;
   }
 }
@@ -810,6 +807,26 @@ function formatTimestamp(ts, includeTimestamp) {
              + "." + String(ts).slice(String(ts).length - 3) + "</span>";
   }
   return dateHtml;
+}
+
+// Hundreds of millions of names from the controlled extraction program were imported into both Family Tree and Historical Records.
+//   The personas in the indexed Historical Records have a Field with type "FsPrTreeId" (or FsPrFthrTreeId or FsPrMthrTreeId, etc.).
+//   This method finds that field and returns the J-Encoded person ID from it.
+//   This person ID should correspond to the "originallyAttachedTo" person ID in an ordinance work set.
+// There is sometimes a question as to which resulting person an ordinance should go with. But if the ordinance was done
+//   as part of the extraction program, then the ordinance should remain "stapled" to the record persona. So wherever
+//   one goes, the other must go, too.
+function getStapledOrdinancePersonId(person) {
+  if (person && person.fields) {
+    for (let field of person.fields) {
+      const fieldType = extractType(field.type);
+      if (fieldType && fieldType.startsWith("Fs") && fieldType.endsWith("TreeId")) {
+        const numericCpPersonId = field.values[0].text;
+        return jencode(Number(numericCpPersonId));
+      }
+    }
+  }
+  return null;
 }
 
 // ==================== HTML ===================================
@@ -1157,16 +1174,16 @@ function markMergePersonIds(entries) {
   }
 }
 
-function updateStatus($status, message) {
-  $status.append(encode(message) + "<br/>\n");
+function updateStatus(message) {
+  $statusDiv.append(encode(message) + "<br/>\n");
 }
 
-function setStatus($status, message) {
-  $status.html(encode(message));
+function setStatus(message) {
+  $statusDiv.html(encode(message));
 }
 
-function clearStatus($status) {
-  $status.html("");
+function clearStatus() {
+  $statusDiv.html("");
 }
 
 function showChangeLogEntryDetails(entryIndex){
@@ -2244,6 +2261,7 @@ class PersonRow {
     }
     this.ows = ows;
     this.summaryDirection = summaryDir; // DIR_KEEP or DIR_SPLIT for keep vs. split person summary row. Null if not summary row.
+    this.stapledRows = null; // list of other PersonRows that are "stapled" to this one and must be kept in the same group.
   }
 
   updatePersonDisplay() {
@@ -2765,6 +2783,7 @@ class PersonRow {
   }
 
   select() {
+    clearStatus();
     if (!this.isSelected) {
       $("." + this.id).addClass(ROW_SELECTION);
       $("." + this.getIdClass().trim()).addClass(ROW_SELECTION);
@@ -2772,16 +2791,28 @@ class PersonRow {
       for (let childRow of this.childRows) {
         childRow.select();
       }
+      if (this.stapledRows) {
+        for (let stapledRow of this.stapledRows) {
+          stapledRow.select();
+        }
+        setStatus("Extraction ordinances and corresponding sources will be kept together.");
+      }
     }
   }
 
   deselect() {
+    clearStatus();
     if (this.isSelected) {
       $("." + this.id).removeClass(ROW_SELECTION);
       $("." + this.getIdClass()).removeClass(ROW_SELECTION);
       this.isSelected = false;
       for (let childRow of this.childRows) {
         childRow.deselect();
+      }
+      if (this.stapledRows) {
+        for (let stapledRow of this.stapledRows) {
+          stapledRow.deselect();
+        }
       }
     }
   }
@@ -2951,10 +2982,11 @@ class PersonRow {
       (clickInfo ? clickInfo : "") + ">" + formatTimestamp(this.mergeNode.firstEntry.updated) + "</td>";
   }
 
-// Add a source persona PersonRow as a "child" of a FT person row.
+  // Add a source persona PersonRow as a "child" of a FT person row.
   addSourceChild(personaRow) {
     this.childSourceRows.push(personaRow);
   }
+  // Add an ordinance PersonRow as a "child" of a FT person row.
   addOwsChild(owsPersonRow) {
     this.childOwsRows.push(owsPersonRow);
   }
@@ -3324,6 +3356,7 @@ function getComboViewHtml() {
   let maxDepth = findMaxDepth(rootMergeNode);
   let personSourcesMap = buildPersonSourcesMap(allEntries);
   let personAndPersonaRows = buildMergeRows(rootMergeNode, "", maxDepth - 1, false, [], false, personSourcesMap, null, personOrdinanceMap);
+  linkStapledOrdinancesToRecordPersonas(personAndPersonaRows);
   let usedColumns = findUsedColumns(personAndPersonaRows);
   comboGrouper = new Grouper(personAndPersonaRows, usedColumns, maxDepth, COMBO_VIEW);
   comboGrouper.sort(COLUMN_PERSON_ID);
@@ -3359,6 +3392,49 @@ function buildPersonSourcesMap(entries) {
   }
   return personSourcesMap;
 }
+
+function linkStapledOrdinancesToRecordPersonas(personRows) {
+  // (Note: It is possible that additional ordinances were done for this person after the extraction ordinances were done.
+  // If the person was "hijacked" by that point, the ordinances might really belong to someone other than the person
+  // in the indexed record. But this would be very rare, so we're going to assume that the ordinance should be on the same
+  // resulting person as the indexed record that was extracted. As a workaround, a user could manually move the source
+  // after the split).
+
+  // Map of CP person ID to list of PersonRow objects for extraction ordinances for that person.
+  const pidOrdinanceRowMap = new Map();
+  // Map of CP person ID to list of PersonRow objects for indexed record personas
+  const pidPersonaRowMap = new Map();
+
+  for (let personRow of personRows) {
+    if (personRow.ows) {
+      let pid = personRow.ows.supposedOriginalPersonId;
+      if (pid) {
+        let owsList = computeIfAbsent(pidOrdinanceRowMap, pid, () => []);
+        owsList.push(personRow);
+      }
+    }
+    else if (personRow.sourceInfo) {
+      let pid = personRow.sourceInfo.stapledOrdinancePersonId;
+      if (pid) {
+        let personaList = computeIfAbsent(pidPersonaRowMap, pid, () => []);
+        personaList.push(personRow);
+      }
+    }
+  }
+
+  for (let [pid, ordinanceRows] of pidOrdinanceRowMap) {
+    let personaRows = pidPersonaRowMap.get(pid);
+    if (personaRows) {
+      for (let ordinanceRow of ordinanceRows) {
+        ordinanceRow.stapledRows = personaRows;
+      }
+      for (let personaRow of personaRows) {
+        personaRow.stapledRows = ordinanceRows;
+      }
+    }
+  }
+}
+
 //====== Split ========
 
 // Summary person rows.
@@ -3765,7 +3841,11 @@ class Split {
   }
 
   initElements(gedcomx, personId) {
+
     function addElement(item, type, famId, personIdForFacts) {
+      if (!item) {
+        return null;
+      }
       let element = new Element(elementIndex++, item, type, DIR_KEEP, famId);
       if (personIdForFacts) {
         let relative = findPersonInGx(gedcomx, personIdForFacts);
@@ -3784,6 +3864,7 @@ class Split {
       elements.push(element);
       return element;
     }
+
     function addElements(list, type, shouldSetCanExpand) {
       if (list) {
         let isFirst = true;
@@ -3796,6 +3877,7 @@ class Split {
         }
       }
     }
+
     function addRelationshipElements(gedcomx) {
       function addChildrenElements(spouseId) {
         for (let childRel of getList(childrenMap, spouseId)) {
@@ -3822,6 +3904,7 @@ class Split {
         }
       }
     }
+
     function populateExtraNamesAndFacts() {
       // Tell whether the given newName already exists in names[] (i.e., if they have the same full text on the first name form)
       function alreadyHasName(names, newName) {
@@ -3894,6 +3977,7 @@ class Split {
         }
       }
     }
+
     // --- initElements()...
     let elementIndex = 0;
     let elements = [];
