@@ -9,17 +9,15 @@
 //   L25C-9Z7 - Guy with multiple ordinances.
 
 /* Still to do:
- - Show summary rows for "split" group and "remain" group
-   - Just above "split" group, show
-     a) "remain" group summary row.
-     b) Divider line
-     c) "split" group summary row.
+ = Call split endpoint.
+ - Note rows
+ - Memory rows
+ - Include deleted relationships
+ - Use higher-level nodes in combo view (to include conclusions added after first 24 hours)
  - Select rows
    - Drag to move to new or existing group
    - Double-click value to select everyone with that value
  - Collapse merge node (and summarize all info in that one row).
- - Memories
- - Move "lollipops" (conclusions made after creation or merge) separately from identities.
 */
 
 // Array of all entries from all change logs, sorted from newest to oldest timestamp, and then by column.
@@ -441,25 +439,29 @@ function fetchRelativesAndSources(changeLogMap, context) {
   }
 
   let fetching = [...Object.keys(sourceMap)];
-
-  setStatus("Fetching " + fetching.length + " sources...");
-  for (let sourceUrl of Object.keys(sourceMap)) {
-    $.ajax({
-      beforeSend: function(request) {
-        request.setRequestHeader("Accept", "application/json");
-        if (context.sessionId) {
-          request.setRequestHeader("Authorization", "Bearer " + context.sessionId);
+  if (fetching.length > 0) {
+    setStatus("Fetching " + fetching.length + " sources...");
+    for (let sourceUrl of Object.keys(sourceMap)) {
+      $.ajax({
+        beforeSend: function (request) {
+          request.setRequestHeader("Accept", "application/json");
+          if (context.sessionId) {
+            request.setRequestHeader("Authorization", "Bearer " + context.sessionId);
+          }
+        },
+        dataType: "json",
+        url: sourceUrl,
+        success: function (gedcomx) {
+          receiveSourceDescription(gedcomx, context, fetching, sourceUrl, sourceMap);
+        },
+        error: function () {
+          receiveSourceDescription(null, context, fetching, sourceUrl, sourceMap)
         }
-      },
-      dataType: "json",
-      url: sourceUrl,
-      success:function(gedcomx){
-        receiveSourceDescription(gedcomx, context, fetching, sourceUrl, sourceMap);
-      },
-      error: function() {
-        receiveSourceDescription(null, context, fetching, sourceUrl, sourceMap)
-      }
-    });
+      });
+    }
+  }
+  else {
+    finishedReceivingSources(context);
   }
 }
 
@@ -1234,7 +1236,7 @@ function getEntryDetailsHtml(entryIndex) {
     html += "<span class='change-reason'>" + encode("Reason: " + changeInfo.reason).replaceAll("\n", "<br>") + "</span><br>";
   }
   if (entry.changeInfo.length > 1) {
-    console.log("Warning: Got " + entry.changeInfo.length + " elements in entry.changeInfo[]");
+    console.log("Warning: Got " + entry.changeInfo.length + " elements in entry.changeInfo[]. Only expected 1");
   }
   let originalId = getChangeId(changeInfo, true);
   let resultingId = getChangeId(changeInfo, false);
@@ -1256,7 +1258,7 @@ function getEntryDetailsHtml(entryIndex) {
       let resultingPerson = findPersonByLocalId(entry, resultingId);
       switch(objectType) {
         case "BirthName":
-          html += changeHtml(operation, getNameChangeHtml(originalPerson), getNameChangeHtml(resultingPerson));
+          html += changeHtml(operation, getNameChangeHtml(originalPerson), getNameChangeHtml(resultingPerson), false);
           break;
         case "SourceReference":
           html += changeHtml(operation, getSourceReferenceHtml(originalPerson), getSourceReferenceHtml(resultingPerson), false);
@@ -1893,7 +1895,6 @@ function handleMergeKeypress(event) {
 
 function handleRowClick(event, rowId) {
   let grouper = grouperMap[rowId];
-  console.log("Clicked row " + rowId + (event.shiftKey ? " + shift" : "") + (event.ctrlKey ? " + ctrl" : "") + (event.metaKey ? " + meta" : ""));
   if (event.shiftKey) {
     grouper.selectUntil(rowId);
   }
@@ -4876,7 +4877,7 @@ function getGroupHeadingHtml(personGroup, groupIndex) {
     // "Add to Group" button
     + "<button class='add-to-group-button' onclick='addSelectedToGroup(\"" + personGroup.groupId + "\")'>Add to group</button>"
     // "Apply to Split" button
-    + (groupIndex < 1 || isEmptyGroup ? "" : "<button class='apply-button' onclick='splitOnGroup(\"" + personGroup.groupId + "\")'>Apply to Split</button>");
+    + (groupIndex < 1 || isEmptyGroup ? "" : "<button class='apply-button' onclick='splitOnGroup(\"" + personGroup.groupId + "\")'>Preview split</button>");
 }
 
 function sortColumn(columnName, grouperId) {
@@ -5727,11 +5728,7 @@ relationships, source attachments, etc.</p>
   <li><b>Assign</b> information to the "remaining" or "split-out" persons.</li>
   <li><b>Create</b> a new person (or restore a previously-existing one) and move information over to them.</li>
 </ol>
-<p>This prototype explores how we might <b>group</b> identities and sources, and <b>assign</b> bits of information
-in a helpful, efficient and hopefully non-error-prone way. It is <i>not</i> intended to be announcement of any
-particular upcoming feature at FamilySearch. While it reads information from Family Tree, it does not actually
-update the Family Tree data. That being said, it may be useful in analyzing real cases in order to better fix them
-manually for now.</p>
+
 <h2>Instructions</h2>
 <p>To use this prototype, first log in to FamilySearch. Then replace the "PID" parameter in the URL with the person
 ID of someone in Family Tree that may be munged. Then explore the data in each of the various tabs.</p>
@@ -5739,14 +5736,16 @@ ID of someone in Family Tree that may be munged. Then explore the data in each o
 On most of the views, you can do the following:
 <ul>
   <li><b>Resize</b>. Drag the column headers to resize the columns.</li>
-  <li><b>Sort</b>. Click on a column header to sort (except in Merge view). Click on the "place" word to sort by place.</li>
-  <li><b>Select</b>. Click on a row to select or deselect it. Shift-click to select a range of rows.</li>
+  <li><b>Sort</b>. Click on a column header to sort (except in Merge view). Click on the "place" word to sort by place instead of date.</li>
+  <li><b>Select</b>. Click on a row to select or deselect it. Shift-click to select a range of rows. Hit "escape" to clear selections.</li>
   <li><b>Group</b>. Click "Create Group" to move the selected rows to a new group, or "Add to group" to add selected rows to it.
     <ul><li>Click on the name of the group to give it a helpful name or add notes.</li></ul>
   </li>
-  <li><b>Notes</b>. Click on a cell in the "Notes" field to add a note. (Rich edit like bold and italics are available).</li>
-  <li><b>Apply</b>. Click the red "Apply to Split" button to infer what information should be kept/copied/split out in the Split view.</li>
-  <li><b>Display options</b>. The display options at the top show or hide information, so you can change your focus and fit things on the screen.
+  <li><b>Notes</b>. Click on a cell in the "Notes" field to add a note for your own use. (Rich edit like bold and italics are available).</li>
+  <li><b>Apply</b>. Click the purple "Preview split" button to use that group as the one to split out.
+                    This will cause a summary view to appear in the Combo View.</li>
+  <li><b>Display options</b>. The display options at the top show or hide information, so you can change your focus and 
+       fit things on the screen. Sometimes it's helpful to hide some information temporarily.
     <ul>
         <li>Facts: display All facts, just vitals (Birth, christening, death, burial and marriage), or no events.</li>
         <li>Show additions: Show information that was added after a person was originally created (i.e., after 24 hours).
@@ -5791,10 +5790,10 @@ Combines the Flat view and Sources view.
   sources were first attached to that person ID (and sort those by record date).</li>
   <li>This is probably the best view to work in most of the time, as it lets you use the sources to make good
   decisions, but also lets you decide on the Family Tree persons as well.</li>
-  <li>Click on the red "Apply selected rows to Split" button to apply information from that group to the Split view.</li>
+  <li>Click on the purple "Preview split" button to apply information from that group to the Split view.</li>
   <li>This will also create two "Summary" rows: One with the person to "keep", and the other with the person to "split out."</li>
   <ul>
-    <li>Click the up or down arrows next to a name, fact, pair of parents, spouse or child to move that person to the
+    <li>Click the up or down arrows next to a name, fact, pair of parents, spouse or child to move that information to the
         other group, or click "=" to copy it to both.</li>
     <li>Values with a checkbox next to them are from a source or from a person that was merged out of existence.
         Check those values to keep them.</li>
@@ -5803,9 +5802,9 @@ Combines the Flat view and Sources view.
 </ul>
 <h3>Split view</h3>
 <p>This screen lets you decide, for every bit of information, whether it should remain with the existing person,
-be split out to the new person, or be copied so that it is on both (like is typically done with the gender).</p>
+be split out to the new person, or be copied so that it is on both (if the information is true about both people).</p>
 <p>Since it would be difficult to know how to best split things up if doing it by hand, use one of the other
-  views and click on "Apply to Split" to pre-populate the decisions in the Split view, and then fine-tune it by hand.</p>
+  views and click on "Preview split" to pre-populate the decisions in the Split view, and then fine-tune it by hand.</p>
 <ul>
   <li>Click &lt;, = or &gt; to keep, copy or split out a piece of information.</li>
   <li>Click the "+"/"-" buttons to show/hide names and facts that appear in sources or earlier versions of a

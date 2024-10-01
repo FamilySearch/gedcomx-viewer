@@ -348,6 +348,14 @@ td {
     display: inline-block;
     float: right;
     vertical-align: top;
+    color: #2b1373;
+    background-color: #dab5de;
+    margin: 2px;
+}
+.perform-split-button {
+    display: inline-block;
+    float: right;
+    vertical-align: top;
     color: #731313;
     background-color: #deb6b5;
     margin: 2px;
