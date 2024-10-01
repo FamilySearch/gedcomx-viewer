@@ -337,7 +337,7 @@ function getNormalizedDateElement(performedDate) {
 function fetchOrdinances(personId, fetching, context, changeLogMap, $mainTable) {
   updateStatus("Fetching ordinances from TF for " + personId);
   fetching.push(personId + "-tf");
-  let url = "https://www.familysearch.org/service/tree/tree-data/labs/person/" + personId + "/ordinances";
+  let url = "https://" + (context.baseUrl.includes("beta.familysearch") ? "beta" : "www") + ".familysearch.org/service/tree/tree-data/labs/person/" + personId + "/ordinances";
   $.ajax({
     beforeSend: function(request) {
       // request.setRequestHeader("User-Agent", "fs-wilsonr");
@@ -2186,7 +2186,7 @@ class Grouper {
   isMainPersonIdSelected() {
     for (let group of this.mergeGroups) {
       for (let mergeRow of group.personRows) {
-        if (mergeRow.personId === mainPersonId && mergeRow.isSelected) {
+        if (mergeRow.personId === mainPersonId && !mergeRow.isNoteRow && mergeRow.isSelected) {
           return true;
         }
       }
@@ -2232,7 +2232,7 @@ class MergeGroup {
 
 // Row of data for a person and their 1-hop relatives (record persona or Family Tree person--either original identity or result of a merge)
 class PersonRow {
-  constructor(mergeNode, personId, gedcomx, indent, maxIndent, isDupNode, grouper, sourceInfo, parentRow, ows, summaryDir) {
+  constructor(mergeNode, personId, gedcomx, indent, maxIndent, isDupNode, grouper, sourceInfo, parentRow, ows, summaryDir, isNoteRow) {
     this.id = "person-row-" + nextPersonRowId++;
     personRowMap[this.id] = this;
     grouperMap[this.id] = grouper;
@@ -2263,6 +2263,7 @@ class PersonRow {
     this.ows = ows;
     this.summaryDirection = summaryDir; // DIR_KEEP or DIR_SPLIT for keep vs. split person summary row. Null if not summary row.
     this.stapledRows = null; // list of other PersonRows that are "stapled" to this one and must be kept in the same group.
+    this.isNoteRow = isNoteRow; // flag for whether this is just a "Note" row, so gedcomx has 1 person with only "notes".
   }
 
   updatePersonDisplay() {
@@ -2410,13 +2411,13 @@ class PersonRow {
     // Get a sort key to use for sorting by person ID. In Flat view, this is just the personId.
     // But in source view, it's the person ID for FT person rows; or for source rows, it's
     //    the sourceInfo.attachedToPersonId + "_" + sourceInfo.recordDateSortKey;
-    function personIdAndRecordDate(personId, sourceInfo, ows) {
+    function personIdAndRecordDate(personId, sourceInfo, ows, isNoteRow) {
       let recordDateSortKey = getRecordDateSortKey(sourceInfo, ows);
       let sortPersonId = sourceInfo && sourceInfo.attachedToPersonId ? sourceInfo.attachedToPersonId : personId;
       if (ows && ows.originalPersonId) {
         sortPersonId = ows.originalPersonId;
       }
-      return sortPersonId + (isEmpty(recordDateSortKey) ? "" : "_" + recordDateSortKey);
+      return sortPersonId + (isNoteRow ? "note" : "") + (isEmpty(recordDateSortKey) ? "" : "_" + recordDateSortKey);
     }
 
     function getRecordDateSortKey(sourceInfo, ows) {
@@ -2436,7 +2437,7 @@ class PersonRow {
       case COLUMN_COLLECTION:
         sortKey = this.sourceInfo ? this.sourceInfo.collectionName : "";
         break;
-      case COLUMN_PERSON_ID:          sortKey = personIdAndRecordDate(this.personId, this.sourceInfo, this.ows); break;
+      case COLUMN_PERSON_ID:          sortKey = personIdAndRecordDate(this.personId, this.sourceInfo, this.ows, this.isNoteRow); break;
       case COLUMN_ATTACHED_TO_IDS:    sortKey = padV(this.sourceInfo.attachedToPersonId);                        break;
       case COLUMN_CREATED:            sortKey = String(this.mergeNode.firstEntry.updated).padStart(15, "0");     break;
       case COLUMN_RECORD_DATE:        sortKey = getRecordDateSortKey(this.sourceInfo, this.ows);                 break;
@@ -2452,6 +2453,9 @@ class PersonRow {
       case COLUMN_CHILD_FACTS:        sortKey = getFirstChildFactDate(this.families);   break;
       case COLUMN_CHILD_FACTS_PLACE:  sortKey = getFirstChildFactPlace(this.families);  break;
       case COLUMN_NOTES:              sortKey = this.note;                              break;
+    }
+    if (sortKey === "<no name>") {
+      sortKey = null; // Make no-name items sort to bottom.
     }
     this.sortKey = sortKey;
   }
@@ -2698,12 +2702,27 @@ class PersonRow {
       }
     }
 
+    function getNoteColspan() {
+      let colspan = 1; // name
+      for (let column of [COLUMN_PERSON_FACTS, COLUMN_FATHER_NAME, COLUMN_MOTHER_NAME,
+        COLUMN_SPOUSE_NAME, COLUMN_SPOUSE_FACTS, COLUMN_CHILD_NAME, COLUMN_CHILD_FACTS]) {
+        if (usedColumns.has(column)) {
+          colspan++;
+        }
+      }
+      return colspan;
+    }
+
     // === getRowPersonCells ===
     let html = "";
     if (this.isSummaryRow()) {
       html += getSummaryNamesHtml(this.person);
       html += getSummaryFactsHtml(this.person);
       html += getSummaryParentsHtml(splitDirection);
+    }
+    else if (this.isNoteRow) {
+      html += "<td class='" + rowClass + bottomClass + " note-row'" + " colspan='" + getNoteColspan() + "'>" +
+        this.getNoteContentHtml() + "</td>\n";
     }
     else {
       html += "<td class='" + rowClass + bottomClass + "'" + rowSpan + ">" + this.personDisplay.name + "</td>\n";
@@ -2715,7 +2734,7 @@ class PersonRow {
     let isFirstSpouse = true;
     let noteCellHtmlHolder = this.getNoteCellHtml(rowClass, bottomClass, rowSpan);
 
-    if (this.families.length > 0) {
+    if (this.families.length > 0 && !this.isNoteRow) {
       for (let spouseIndex = 0; spouseIndex < this.families.length; spouseIndex++) {
         let spouseFamily = this.families[spouseIndex];
         isFirstSpouse = startNewRowIfNotFirst(isFirstSpouse, allRowsClass, noteCellHtmlHolder, this.isSummaryRow());
@@ -2870,7 +2889,20 @@ class PersonRow {
     else if (this.summaryDirection === DIR_MOVE) {
       html += "<b>Person to split out</b>";
     }
+    else if (this.isNoteRow) {
+      html += "Note: " + this.getNoteSubjectHtml();
+    }
     return html + "</td>";
+  }
+
+  getNoteSubjectHtml() {
+    let noteSubject = this.gedcomx.persons[0].notes[0].subject;
+    return noteSubject ? encode(noteSubject) : "";
+  }
+
+  getNoteContentHtml() {
+    let text = this.gedcomx.persons[0].notes[0].text;
+    return text ? encode(text).replaceAll("\n", "<br>") : "";
   }
 
   getRecordDateHtml(rowSpan, clickInfo) {
@@ -2886,8 +2918,8 @@ class PersonRow {
   }
 
   getPersonIdHtml(shouldIncludeVersion) {
-    if (this.isSourceRow() || this.isOwsRow()) {
-      let personId = this.isSourceRow() ? this.sourceInfo.attachedToPersonId : this.ows.originalPersonId;
+    if (this.isSourceRow() || this.isOwsRow() || this.isNoteRow) {
+      let personId = this.getPersonId();
       return personId ? "<span class='relative-id'>" + encode("(" + personId + ")") + "</span>" : "";
     }
     else {
@@ -2897,6 +2929,16 @@ class PersonRow {
       }
       return personIdHtml;
     }
+  }
+
+  getPersonId() {
+    if (this.isSourceRow()) {
+      return this.sourceInfo.attachedToPersonId;
+    }
+    if (this.isOwsRow()) {
+      return this.ows.originalPersonId;
+    }
+    return this.personId;
   }
 
   // get HTML for this person row
@@ -3064,9 +3106,10 @@ function findMaxDepth(mergeNode) {
  * @param personSourcesMap - Map of personId -> list of sourceInfo objects first attached to that person Id (or null if not included)
  * @param parentRow - Parent PersonRow (from a higher merge history node).
  * @param personOrdinanceMap - Map of personId -> list of OrdinanceWorkSets for that person. null => ignore
+ * @param shouldIncludeNoteRows - Flag for whether to include person note rows.
  * @returns Array of MergeRow entries (i.e., the array mergeRows)
  */
-function buildMergeRows(mergeNode, indent, maxIndent, isDupNode, mergeRows, shouldIncludeMergeNodes, personSourcesMap, parentRow, personOrdinanceMap) {
+function buildMergeRows(mergeNode, indent, maxIndent, isDupNode, mergeRows, shouldIncludeMergeNodes, personSourcesMap, parentRow, personOrdinanceMap, shouldIncludeNoteRows) {
   this.indent = indent;
   let mergeRow = null;
   if (shouldIncludeMergeNodes || mergeNode.isLeafNode()) {
@@ -3100,13 +3143,41 @@ function buildMergeRows(mergeNode, indent, maxIndent, isDupNode, mergeRows, shou
         }
       }
     }
+    if (shouldIncludeNoteRows) {
+      const noteRecords = getNoteRecords(findPersonInGx(mergeNode.gedcomx, mergeNode.personId));
+      if (noteRecords) {
+        for (let noteRecord of noteRecords) {
+          let noteRow = new PersonRow(null, mergeNode.personId, noteRecord, 0, 0, false, null, null, null, null, null, true);
+          mergeRows.push(noteRow);
+        }
+      }
+    }
   }
   if (!mergeNode.isLeafNode()) {
     let indentPrefix = indent.length > 0 ? (indent.substring(0, indent.length - 1) + (isDupNode ? "I" : "O")) : "";
-    buildMergeRows(mergeNode.dupNode, indentPrefix + "T", maxIndent, true, mergeRows, shouldIncludeMergeNodes, personSourcesMap, mergeRow, personOrdinanceMap);
-    buildMergeRows(mergeNode.prevNode, indentPrefix + "L", maxIndent, false, mergeRows, shouldIncludeMergeNodes, personSourcesMap, mergeRow, personOrdinanceMap);
+    buildMergeRows(mergeNode.dupNode, indentPrefix + "T", maxIndent, true, mergeRows, shouldIncludeMergeNodes, personSourcesMap, mergeRow, personOrdinanceMap, shouldIncludeNoteRows);
+    buildMergeRows(mergeNode.prevNode, indentPrefix + "L", maxIndent, false, mergeRows, shouldIncludeMergeNodes, personSourcesMap, mergeRow, personOrdinanceMap, shouldIncludeNoteRows);
   }
   return mergeRows;
+}
+
+// If the person has notes, then return a list of mostly-empty gedcomx records, each with just one person with
+//   just a personId and notes. Excludes notes that were inherited from a merge
+function getNoteRecords(person) {
+  const noteRecords = [];
+  if (person && person.notes) {
+    for (let note of person.notes) {
+      let noteRecord = {
+        "persons": [{
+          "id": person.id,
+          "identifiers": person.identifiers,
+          "notes": [note]
+        }]
+      };
+      noteRecords.push(noteRecord);
+    }
+  }
+  return noteRecords;
 }
 
 // Get a set of columns that are needed for display in the table, as a set of Strings like "person/father/mother/spouse/child-name/facts"
@@ -3356,7 +3427,7 @@ function getComboViewHtml() {
   let rootMergeNode = getRootMergeNode(allEntries);
   let maxDepth = findMaxDepth(rootMergeNode);
   let personSourcesMap = buildPersonSourcesMap(allEntries);
-  let personAndPersonaRows = buildMergeRows(rootMergeNode, "", maxDepth - 1, false, [], false, personSourcesMap, null, personOrdinanceMap);
+  let personAndPersonaRows = buildMergeRows(rootMergeNode, "", maxDepth - 1, false, [], false, personSourcesMap, null, personOrdinanceMap, true);
   linkStapledOrdinancesToRecordPersonas(personAndPersonaRows);
   let usedColumns = findUsedColumns(personAndPersonaRows);
   comboGrouper = new Grouper(personAndPersonaRows, usedColumns, maxDepth, COMBO_VIEW);
@@ -5627,6 +5698,11 @@ function updateGedcomx(gedcomx, entry, isOrig) {
       // Do nothing: We already have a GedcomX record with an empty person of this ID to start with.
       case "Create-EvidenceReference":
         // Do nothing: We aren't handling memories at the moment.
+        break;
+      case "Create-Note":
+      case "Update-Note":
+      case "Delete-Note":
+        doInList(gxPerson, "notes", entryPerson, operation, isOrig, isPartOfMerge, origPerson);
         break;
       default:
         console.log("Unimplemented change log entry type: " + combo + " for Person");

@@ -14,7 +14,7 @@
     let $status = $("#status");
     let params = window.location.search;
     let urlParams = new URLSearchParams(params);
-    let beta = urlParams.get('beta') || window.location.href.includes("beta.familysearch.org");
+    let beta = urlParams.has('beta') || window.location.href.includes("beta.familysearch.org");
     let url = urlParams.get('url');
     if (!url) {
       let personId = urlParams.get('pid');
