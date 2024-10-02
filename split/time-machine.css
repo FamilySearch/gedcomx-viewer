@@ -374,13 +374,13 @@ a:hover {
     text-align: right;
 }
 /* Status */
-.added,.merge-added {
+.added,.merge-added,.kept-added {
     color: darkgreen;
 }
 .changed {
     color: #c29459;
 }
-.deleted,.merge-deleted {
+.deleted,.merge-deleted,.kept-deleted {
     color: darkred;
     text-decoration-line: line-through;
 }

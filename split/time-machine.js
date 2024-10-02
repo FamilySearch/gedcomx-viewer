@@ -1432,7 +1432,7 @@ function getFactHtml(fact, ignoreStatus, includeFactId) {
   let date = fact.date ? fact.date.original : null;
   let place = fact.place ? trimPlace(fact.place.original) : null;
   let value = fact.value ? fact.value : null;
-  let statusClass = fact.status && !ignoreStatus ? " " + fact.status : "";
+  let statusClass = (fact.status && !ignoreStatus) ? " " + fact.status : "";
   let html = "<span class='fact-type" + statusClass + "'>"
     + (fact.status === ADDED_STATUS && !ignoreStatus ? "+" : "")
     + encode(type ? type : "<unknown fact type>");
@@ -1705,6 +1705,10 @@ class MergeNode {
 
   isLeafNode() {
     return !this.prevNode && !this.dupNode;
+  }
+
+  isLatestVersion() {
+    return !this.parentNode || this.parentNode.personId !== this.personId;
   }
 
   /**
@@ -2023,7 +2027,7 @@ function displayAvailableOptions() {
   let activeTab = getCurrentTab();
   setVisibility("settings", activeTab !== CHANGE_LOG_VIEW && activeTab !== SPLIT_VIEW);
   setVisibility("vertical-option", activeTab === FLAT_VIEW || activeTab === SOURCES_VIEW || activeTab === COMBO_VIEW || activeTab === HELP_VIEW);
-  setVisibility("repeat-info-option", activeTab === MERGE_VIEW || activeTab === HELP_VIEW);
+  setVisibility("repeat-info-option", true);
 }
 
 function setVisibility(elementId, isVisible) {
@@ -3035,7 +3039,7 @@ class PersonRow {
     }
 
     // Person info
-    let rowClass = this.isNoteRow ? 'note-row' : 'identity-gx'; //this.mergeNode && !this.mergeNode.isLeafNode() ? 'merge-node' : 'identity-gx';
+    let rowClass = this.isNoteRow ? 'note-row' : 'identity-gx';
     html += this.getRowPersonCells(this.gedcomx, this.personId, rowClass, usedColumns, bottomClass, this.id, rowSpan, isKeep ? DIR_KEEP : DIR_MOVE);
     html += "</tr>\n";
     return html;
@@ -3109,7 +3113,18 @@ function getRootMergeNode(allEntries) {
     latestMergeNode = mergeNode;
   }
   console.assert(Object.keys(personNodeMap).length === 1, "Expected 1 key in personNodeMap, but got " + Object.keys(personNodeMap).length);
+  fixMergeNodeEventOrder(latestMergeNode);
   return latestMergeNode;
+}
+
+function fixMergeNodeEventOrder(mergeNode) {
+  if (mergeNode.gedcomx) {
+    fixEventOrders(mergeNode.gedcomx);
+  }
+  if (!mergeNode.isLeafNode()) {
+    fixMergeNodeEventOrder(mergeNode.prevNode);
+    fixMergeNodeEventOrder(mergeNode.dupNode);
+  }
 }
 
 function findMaxDepth(mergeNode) {
@@ -3142,7 +3157,7 @@ function findMaxDepth(mergeNode) {
 function buildMergeRows(mergeNode, indent, maxIndent, isDupNode, mergeRows, shouldIncludeMergeNodes, personSourcesMap, parentRow, personOrdinanceMap, shouldIncludeNoteRows) {
   this.indent = indent;
   let mergeRow = null;
-  if (shouldIncludeMergeNodes || mergeNode.isLeafNode()) {
+  if (shouldIncludeMergeNodes || mergeNode.isLatestVersion()) {
     mergeRow = new PersonRow(mergeNode, mergeNode.personId, mergeNode.gedcomx, indent, maxIndent, isDupNode, null, null, parentRow);
     mergeRows.push(mergeRow);
     if (personSourcesMap) {
@@ -5096,9 +5111,10 @@ function getFactListHtml(person) {
       return [];
     }
     let filtered = [];
+    const isHierarchyView = getCurrentTab() === MERGE_VIEW;
     for (let fact of facts) {
       let factType = extractType(fact.type);
-      if (shouldIncludeType(factType) && shouldDisplayStatus(fact.status)) {
+      if (shouldIncludeType(factType) && shouldDisplayStatus(fact.status, isHierarchyView)) {
         filtered.push(fact);
       }
     }
@@ -5352,6 +5368,7 @@ function addToList(listHolder, listName, element, isOrig, isPartOfMerge) {
  * @param isOrig - Flag for whether the change is happening during the initial creation of the person (part of its "original intended identity")
  * @param isPartOfMerge - Flag for whether this 'add' or 'update' is part of information coming from the duplicate as part of a merge.
  * @param origElementListContainer - Original container (like a person) before making a copy of it, to get id from it.
+ *            (This is from the change log entry, so won't have a status).
  */
 function updateInList(listContainer, listName, elementListContainer, isOrig, isPartOfMerge, origElementListContainer) {
   function hasSameId(a, b) {
@@ -5367,19 +5384,41 @@ function updateInList(listContainer, listName, elementListContainer, isOrig, isP
   let origElementWithId = origElementListContainer ? origElementListContainer[listName][0] : updatedElementWithId;
   let existingList = listContainer[listName];
   if (existingList) {
-    for (let i = 0; i < existingList.length; i++) {
+    for (let i = existingList.length - 1; i >= 0; i--) {
       if (hasSameId(existingList[i], origElementWithId)) {
-        if (setDeletedStatus(existingList[i], isOrig)) {
+        if (isSameInformation(updatedElementWithId, existingList[i], listName)) {
+          updatedElementWithId.status = existingList[i].status;
           existingList[i] = updatedElementWithId;
-        } else {
-          existingList.push(updatedElementWithId);
         }
-        updatedElementWithId.status = getAddStatus(isOrig, isPartOfMerge);
+        else {
+          if (setDeletedStatus(existingList[i], isOrig)) {
+            existingList[i] = updatedElementWithId;
+          } else {
+            existingList.push(updatedElementWithId);
+          }
+          updatedElementWithId.status = getAddStatus(isOrig, isPartOfMerge);
+        }
         return;
       }
     }
   }
   console.log("Failed to find element in " + listName + "[] with id " + updatedElementWithId["id"]);
+}
+
+function isSameInformation(a, b, listName) {
+  function same(path) {
+    return getProperty(a, path) === getProperty(b, path);
+  }
+  switch (listName) {
+    case "names":
+      return a["nameForms"][0]["fullText"] === b["nameForms"][0]["fullText"];
+    case "facts":
+      return same("type") && same("date.original") && same("place.original") && same("value");
+    case "sources":
+      return same("about");
+    case "notes":
+      return same("subject") && same("text");
+  }
 }
 
 /**
@@ -5461,7 +5500,7 @@ function copySurvivorGedcomx(gedcomx) {
   function mapStatus(obj) {
     if (obj && obj.status) {
       if (obj.status === ORIG_STATUS || obj.status === ADDED_STATUS || obj.status === DELETED_STATUS || obj.status === CHANGED_STATUS) {
-        obj.status = "merge-" + obj.status;
+        obj.status = "kept-" + obj.status;
       }
     }
   }
@@ -5477,6 +5516,9 @@ function copySurvivorGedcomx(gedcomx) {
     }
     for (let source of getList(person, "sources")) {
       mapStatus(source);
+    }
+    for (let note of getList(person, "notes")) {
+      mapStatus(note);
     }
   }
   for (let relationship of getList(gedcomx, "relationships").concat(getList(gedcomx, CHILD_REL))) {
@@ -5567,7 +5609,7 @@ function updateRelatives(gedcomx, entry, relationship, isOrig, isPartOfMerge) {
    "Status" idea:
    - "orig": We want to show what a person looked like originally when first created (i.e., when migrated in 2012, or within
      24 hours of being created after that, and before ever being merged).
-   - "deleted": But we also want to show what original information was deleted (shown in red or something),
+   - "deleted": But we also want to show what original information was deleted (shown in red),
      so instead of removing it from the GedcomX, we mark it with a status of 'deleted', so we can display it if needed.
      One exception is that if we are deleting something 'orig' within that first 24-hour period, we actually remove it,
      since the original identity didn't end up with it, either.
@@ -5577,15 +5619,19 @@ function updateRelatives(gedcomx, entry, relationship, isOrig, isPartOfMerge) {
         part of the original identity. It actually goes away.
    - "changed": Since gender can only have one value, it is marked as "changed" if it has changed after the initial identity
        period. This only happens if it actually changed from Male to Female or vice-versa. "Unknown" is considered "deleted".
-   - "merge-orig/added/deleted": After a merge, we want to know which things came in to the person as a result of a merge,
-     including everything that "remained" on the survivor. These are marked with "merge-orig" for things that were "orig";
-     "merge-added" for things that were added after the original identity, and "merge-deleted" for things that were once
-     "orig" or "merge-orig" but were deleted before the most recent merge. When showing a merge node, we will generally
-     not show any of the "merge-..." things, because they'll be shown below. But if we "roll up" the merge node, then
-     all of these things are available to show.
+   - "merge-orig/added/deleted": After a merge, we want to know which things came in to the person as a result of a merge.
+     These are marked with "merge-orig" for things that were "orig"; "merge-added" for things that were added after the
+     original identity, and "merge-deleted" for things that were once "orig" or "merge-orig" but were deleted before the
+     most recent merge. When showing a merge node, we will generally not show any of the "merge-..." things, because
+     they'll be shown below. But if we "roll up" the merge node, then all of these things are available to show.
+   - "kept-orig/added/deleted": After a merge, we want to know which things are on the merge node because they were already
+     there before the merge, so that we can show/hide this in the merge hierarchy view. In the flat or combo view, we
+     want to be able to know which things were 'kept-orig' for this person id separately from those that were 'merge-orig'
+     that came in from another person id during a merge.
    - When information is added to a merge node's GedcomX, the normal "added" tag is used.
    - If something is deleted that had a tag of "added", it is removed, since there's no need to display it at all.
-   - If something is deleted that had a tag of "orig" or "merge-orig", it is marked with "deleted", since we need to show
+   - If something is deleted during the original period, before a merge, it will be removed completely, since it was likely a mistake.
+   - If something is deleted later that had a tag of "orig" or "merge-orig" or "kept-orig", it is marked with "deleted", since we need to show
      that it was part of the original identity but is now gone, whether it is rolled up (in which case this is the only
      way it will be shown) or not (in which case the original value is in a lower point in the hierarchy).
    - If something is deleted that had a tag of "merge-added", it is marked as "merge-deleted". It will need to be
@@ -5598,28 +5644,38 @@ const ORIG_STATUS         = 'orig'; // Part of the original identity.
 const ADDED_STATUS        = 'added'; // Added after original identity, or after most recent merge
 const CHANGED_STATUS      = 'changed'; // Gender changed (M<=>F) after original identity, or after most recent merge.
 const DELETED_STATUS      = 'deleted'; // Deleted a value added after the original identity, but before the most recent merge.
-const MERGE_ORIG_STATUS   = 'merge-orig'; // On original identity and brought in during merge
-const MERGE_ADDED_STATUS  = 'merge-added'; // Add after original identity and brought in during merge
-const MERGE_DELETED_STATUS= 'merge-deleted'; // On original identity but deleted before the most recent merge
+const MERGE_ORIG_STATUS   = 'merge-orig'; // On original identity of duplicate and brought in during merge
+const MERGE_ADDED_STATUS  = 'merge-added'; // Added after original identity of duplicate and brought in during merge
+const MERGE_DELETED_STATUS= 'merge-deleted'; // On duplicate but deleted before the most recent merge
+const KEPT_ORIG_STATUS    = 'kept-orig'; // On original identity of survivor and kept during merge
+const KEPT_ADDED_STATUS   = 'kept-added'; // Added after original identity of survivor and kept during merge
+const KEPT_DELETED_STATUS = 'kept-deleted'; // On survivor but deleted before the most recent merge
 
 // Tell whether an object (fact or relationship) should be included, based on
 // 1) 'status', the object's status and
 // 2) the display options (shouldIncludeAdditions; shouldShowDeletions; shouldIncludeInfoFromMerge)
-function shouldDisplayStatus(status) {
+function shouldDisplayStatus(status, isHierarchyView) {
   if (!status || status === ORIG_STATUS) {
     return true;
   }
   switch(status) {
+    // Future: May need to refine this for merge hierarchy view, in which case we'll need to pass in 'isMergeHierarchy'
     case ADDED_STATUS:
     case CHANGED_STATUS:
       return displayOptions.shouldShowAdditions;
     case DELETED_STATUS:
-      return displayOptions.shouldShowAdditions && displayOptions.shouldShowDeletions;
+      return displayOptions.shouldShowDeletions && displayOptions.shouldShowAdditions;
     case MERGE_ORIG_STATUS:
     case MERGE_ADDED_STATUS:
       return displayOptions.shouldRepeatInfoFromMerge;
     case MERGE_DELETED_STATUS:
-      return displayOptions.shouldRepeatInfoFromMerge && displayOptions.shouldShowDeletions;
+      return displayOptions.shouldShowDeletions && displayOptions.shouldRepeatInfoFromMerge;
+    case KEPT_ORIG_STATUS:
+      return displayOptions.shouldRepeatInfoFromMerge || !isHierarchyView;
+    case KEPT_ADDED_STATUS:
+      return displayOptions.shouldShowAdditions && (displayOptions.shouldRepeatInfoFromMerge || !isHierarchyView);
+    case KEPT_DELETED_STATUS:
+      return displayOptions.shouldShowDeletions && (displayOptions.shouldRepeatInfoFromMerge || !isHierarchyView);
   }
   return true;
 }
@@ -5627,24 +5683,28 @@ function shouldDisplayStatus(status) {
 // See above for details on status.
 // Update the given status from orig or merge-orig to deleted; or merge-added to merge-deleted.
 // If 'isOrig' is true, then the deletion is being done during the original identity phrase, so the object can be actually deleted.
+// If 'isPartOfMerge' is true, then the deletion is being done off of the survivor during a merge.
 // Return true if the given entity should be actually deleted (i.e., if the status is "added" or isOrig is true), or false if it should be kept.
-function setDeletedStatus(entity, isOrig) {
+function setDeletedStatus(entity, isOrig, isPartOfMerge) {
   let status = entity.status;
   if (status === ADDED_STATUS || isOrig) {
     return true;
   }
   else {
-    if (status === ORIG_STATUS || status === MERGE_ORIG_STATUS) {
-      status = DELETED_STATUS;
+    if (status === ORIG_STATUS) {
+      status = isPartOfMerge ? KEPT_DELETED_STATUS : DELETED_STATUS;
     }
-    else if (status === MERGE_ADDED_STATUS) {
+    else if (status === MERGE_ORIG_STATUS || status === MERGE_ADDED_STATUS) {
       status = MERGE_DELETED_STATUS;
     }
+    else if (status === KEPT_ORIG_STATUS || status === KEPT_ADDED_STATUS) {
+      status = KEPT_DELETED_STATUS;
+    }
     else if (status === DELETED_STATUS || status === MERGE_DELETED_STATUS) {
-      console.log("Deleting deleted gender");
+      console.log("Deleting deleted gender or something.");
     }
     else {
-      console.log("Unrecognized status when deleting gender: " + status);
+      console.log("Unrecognized status when deleting gender or something: " + status);
     }
     entity.status = status;
     return false;
