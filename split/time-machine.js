@@ -2264,6 +2264,7 @@ class PersonRow {
     this.summaryDirection = summaryDir; // DIR_KEEP or DIR_SPLIT for keep vs. split person summary row. Null if not summary row.
     this.stapledRows = null; // list of other PersonRows that are "stapled" to this one and must be kept in the same group.
     this.isNoteRow = isNoteRow; // flag for whether this is just a "Note" row, so gedcomx has 1 person with only "notes".
+    this.isNoteCollapsed = false;
   }
 
   updatePersonDisplay() {
@@ -2710,7 +2711,7 @@ class PersonRow {
           colspan++;
         }
       }
-      return colspan;
+      return colspan > 1 ? " colspan='" + colspan + "'" : "";
     }
 
     // === getRowPersonCells ===
@@ -2721,8 +2722,8 @@ class PersonRow {
       html += getSummaryParentsHtml(splitDirection);
     }
     else if (this.isNoteRow) {
-      html += "<td class='" + rowClass + bottomClass + " note-row'" + " colspan='" + getNoteColspan() + "'>" +
-        this.getNoteContentHtml() + "</td>\n";
+      html += "<td class='note-row " + rowClass + bottomClass + "'" + getNoteColspan() + " id='note-row-cell-" + this.id + "'>" +
+        this.getNoteRowContentHtml() + "</td>\n";
     }
     else {
       html += "<td class='" + rowClass + bottomClass + "'" + rowSpan + ">" + this.personDisplay.name + "</td>\n";
@@ -2774,7 +2775,7 @@ class PersonRow {
         }
       }
     }
-    else {
+    else if (!this.isNoteRow) {
       addColumn(COLUMN_SPOUSE_NAME, "", "", bottomClass);
       addColumn(COLUMN_SPOUSE_FACTS, "", "", bottomClass);
       addColumn(COLUMN_CHILD_NAME, "", "", bottomClass);
@@ -2864,6 +2865,9 @@ class PersonRow {
     else if (this.isOwsRow()) {
       cellClass = "ord-row";
     }
+    else if (this.isNoteRow) {
+      cellClass = "note-row";
+    }
     else {
       cellClass ="merge-id" + (tabId === MERGE_VIEW && this.isDupNode ? "-dup" : "");
     }
@@ -2900,9 +2904,26 @@ class PersonRow {
     return noteSubject ? encode(noteSubject) : "";
   }
 
-  getNoteContentHtml() {
+  getNoteRowContentHtml() {
     let text = this.gedcomx.persons[0].notes[0].text;
-    return text ? encode(text).replaceAll("\n", "<br>") : "";
+    if (!text) {
+      return "";
+    }
+    let html = "";
+    if (text.length > 120 || text.includes("\n")) {
+      html += "<img alt='" + (this.isNoteCollapsed ? "(more)" : "(less)")
+        + "' class='arrow-image' src='../graph/images/arrows/" + (this.isNoteCollapsed ? "right" : "down")
+        + ".png' onclick='toggleCollapseNote(event, \"" + this.id + "\")'>";
+      if (this.isNoteCollapsed) {
+        if (text.length > 120) {
+          text = text.substring(0, 120) + "...";
+        }
+        if (text.includes("\n")) {
+          text = text.replace(/\n[\s\S]*/, "...");
+        }
+      }
+    }
+    return html + encode(text).replaceAll("\n", "<br>");
   }
 
   getRecordDateHtml(rowSpan, clickInfo) {
@@ -3014,7 +3035,7 @@ class PersonRow {
     }
 
     // Person info
-    let rowClass = this.mergeNode && !this.mergeNode.isLeafNode() ? 'merge-node' : 'identity-gx';
+    let rowClass = this.isNoteRow ? 'note-row' : 'identity-gx'; //this.mergeNode && !this.mergeNode.isLeafNode() ? 'merge-node' : 'identity-gx';
     html += this.getRowPersonCells(this.gedcomx, this.personId, rowClass, usedColumns, bottomClass, this.id, rowSpan, isKeep ? DIR_KEEP : DIR_MOVE);
     html += "</tr>\n";
     return html;
@@ -3032,6 +3053,15 @@ class PersonRow {
   // Add an ordinance PersonRow as a "child" of a FT person row.
   addOwsChild(owsPersonRow) {
     this.childOwsRows.push(owsPersonRow);
+  }
+}
+
+function toggleCollapseNote(event, rowId) {
+  doNotSelect(event);
+  let personRow = personRowMap[rowId];
+  if (personRow) {
+    personRow.isNoteCollapsed = !personRow.isNoteCollapsed;
+    $("#note-row-cell-" + rowId).html(personRow.getNoteRowContentHtml());
   }
 }
 

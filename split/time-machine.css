@@ -222,8 +222,12 @@ td {
     background-color: #dae9f1;
 }
 .ord-row {
-    border: 1px solid #ecf1e9;
+    border: 2px solid #ecf1e9;
     background-color: #ffffff;
+}
+.note-row {
+    border: 2px solid #e1d1b8;
+    background-color: #f8f1e8;
 }
 .end-gx {
     border: 1px solid #dad9ce;
@@ -474,4 +478,8 @@ a:hover {
 }
 .element-wrapper {
     display: inline-block;
+}
+.arrow-image {
+    height: 1em;
+    width: auto;
 }
