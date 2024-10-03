@@ -7,6 +7,7 @@
 //   KWNR-ZYT - Ineffective (duplicate) ordinances
 //   LZ62-TSV - Charlemagne. 13000 merges.
 //   L25C-9Z7 - Guy with multiple ordinances.
+//   GT54-3CQ - Guy with stapled ordinances
 
 /* Still to do:
  = Call split endpoint.
@@ -2916,7 +2917,7 @@ class PersonRow {
     let html = "";
     if (text.length > 120 || text.includes("\n")) {
       html += "<img alt='" + (this.isNoteCollapsed ? "(more)" : "(less)")
-        + "' class='arrow-image' src='../graph/images/arrows/" + (this.isNoteCollapsed ? "right" : "down")
+        + "' class='arrow-image' src='https://familysearch.github.io/gedcomx-viewer/graph/images/arrows/" + (this.isNoteCollapsed ? "right" : "down")
         + ".png' onclick='toggleCollapseNote(event, \"" + this.id + "\")'>";
       if (this.isNoteCollapsed) {
         if (text.length > 120) {
