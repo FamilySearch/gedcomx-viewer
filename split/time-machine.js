@@ -3144,6 +3144,31 @@ function findMaxDepth(mergeNode) {
  * Indentation strings use the following codes to decide what connector to include at each indentation position (for merge hierarchy):
  *   O=none, I = vertical, L = L-connector, T = vertical line with horizontal connector
  * @param mergeNode - MergeNode to use for building a row
+ * @param maxIndent - maximum number of indentations for any merge node
+ * @param shouldIncludeMergeNodes - Flag for whether to include non-leaf-nodes in the resulting array.
+ * @param personSourcesMap - Map of personId -> list of sourceInfo objects first attached to that person Id (or null if not included)
+ * @param parentRow - Parent PersonRow (from a higher merge history node).
+ * @param personOrdinanceMap - Map of personId -> list of OrdinanceWorkSets for that person. null => ignore
+ * @param shouldIncludeNoteRows - Flag for whether to include person note rows.
+ * @returns Array of MergeRow entries (i.e., the array mergeRows)
+ */
+function buildMergeRows(mergeNode, maxIndent, shouldIncludeMergeNodes, personSourcesMap, parentRow, personOrdinanceMap, shouldIncludeNoteRows) {
+  const mergeRows = [];
+  updateMergeRows(mergeNode, "", maxIndent, false, mergeRows, shouldIncludeMergeNodes, personSourcesMap, parentRow, personOrdinanceMap, shouldIncludeNoteRows);
+  if (!shouldIncludeMergeNodes) {
+    // Clear out children of merge nodes so that selecting a parent node won't select child nodes.
+    for (let mergeRow of mergeRows) {
+      mergeRow.childRows = [];
+    }
+  }
+  return mergeRows;
+}
+
+/**
+ * Build MergeRow array, representing the HTML table rows for each MergeNode in the list or hierarchy.
+ * Indentation strings use the following codes to decide what connector to include at each indentation position (for merge hierarchy):
+ *   O=none, I = vertical, L = L-connector, T = vertical line with horizontal connector
+ * @param mergeNode - MergeNode to use for building a row
  * @param indent - String indicating what kind of connector to put at each indentation position.
  * @param maxIndent - maximum number of indentations for any merge node
  * @param isDupNode - Flag for whether this is a "duplicate" node (as opposed to the survivor of a merge)
@@ -3155,7 +3180,7 @@ function findMaxDepth(mergeNode) {
  * @param shouldIncludeNoteRows - Flag for whether to include person note rows.
  * @returns Array of MergeRow entries (i.e., the array mergeRows)
  */
-function buildMergeRows(mergeNode, indent, maxIndent, isDupNode, mergeRows, shouldIncludeMergeNodes, personSourcesMap, parentRow, personOrdinanceMap, shouldIncludeNoteRows) {
+function updateMergeRows(mergeNode, indent, maxIndent, isDupNode, mergeRows, shouldIncludeMergeNodes, personSourcesMap, parentRow, personOrdinanceMap, shouldIncludeNoteRows) {
   this.indent = indent;
   let mergeRow = null;
   if (shouldIncludeMergeNodes || mergeNode.isLatestVersion()) {
@@ -3201,10 +3226,9 @@ function buildMergeRows(mergeNode, indent, maxIndent, isDupNode, mergeRows, shou
   }
   if (!mergeNode.isLeafNode()) {
     let indentPrefix = indent.length > 0 ? (indent.substring(0, indent.length - 1) + (isDupNode ? "I" : "O")) : "";
-    buildMergeRows(mergeNode.dupNode, indentPrefix + "T", maxIndent, true, mergeRows, shouldIncludeMergeNodes, personSourcesMap, mergeRow, personOrdinanceMap, shouldIncludeNoteRows);
-    buildMergeRows(mergeNode.prevNode, indentPrefix + "L", maxIndent, false, mergeRows, shouldIncludeMergeNodes, personSourcesMap, mergeRow, personOrdinanceMap, shouldIncludeNoteRows);
+    updateMergeRows(mergeNode.dupNode, indentPrefix + "T", maxIndent, true, mergeRows, shouldIncludeMergeNodes, personSourcesMap, mergeRow, personOrdinanceMap, shouldIncludeNoteRows);
+    updateMergeRows(mergeNode.prevNode, indentPrefix + "L", maxIndent, false, mergeRows, shouldIncludeMergeNodes, personSourcesMap, mergeRow, personOrdinanceMap, shouldIncludeNoteRows);
   }
-  return mergeRows;
 }
 
 // If the person has notes, then return a list of mostly-empty gedcomx records, each with just one person with
@@ -3436,7 +3460,7 @@ function highlightSelectedRows(grouper) {
 function getFlatViewHtml(entries) {
   let rootMergeNode = getRootMergeNode(entries);
   let maxDepth = findMaxDepth(rootMergeNode);
-  let mergeRows = buildMergeRows(rootMergeNode, "", maxDepth - 1, false, [], false);
+  let mergeRows = buildMergeRows(rootMergeNode, maxDepth - 1, false);
   let usedColumns = findUsedColumns(mergeRows);
 
   flatGrouper = new Grouper(mergeRows, usedColumns, maxDepth, FLAT_VIEW);
@@ -3473,7 +3497,7 @@ function getComboViewHtml() {
   let rootMergeNode = getRootMergeNode(allEntries);
   let maxDepth = findMaxDepth(rootMergeNode);
   let personSourcesMap = buildPersonSourcesMap(allEntries);
-  let personAndPersonaRows = buildMergeRows(rootMergeNode, "", maxDepth - 1, false, [], false, personSourcesMap, null, personOrdinanceMap, true);
+  let personAndPersonaRows = buildMergeRows(rootMergeNode, maxDepth - 1, false, personSourcesMap, null, personOrdinanceMap, true);
   linkStapledOrdinancesToRecordPersonas(personAndPersonaRows);
   let usedColumns = findUsedColumns(personAndPersonaRows);
   comboGrouper = new Grouper(personAndPersonaRows, usedColumns, maxDepth, COMBO_VIEW);
@@ -5066,7 +5090,7 @@ function getTableHeader(grouper, shouldIndent) {
 function getMergeHierarchyHtml(entries) {
   let rootMergeNode = getRootMergeNode(entries);
   let maxDepth = findMaxDepth(rootMergeNode);
-  let mergeRows = buildMergeRows(rootMergeNode, "", maxDepth - 1, false, [], true);
+  let mergeRows = buildMergeRows(rootMergeNode, maxDepth - 1, true);
   let usedColumns = findUsedColumns(mergeRows);
 
   mergeGrouper = new Grouper(mergeRows, usedColumns, maxDepth, MERGE_VIEW);
