@@ -2169,7 +2169,7 @@ class Grouper {
       for (let r = 0; r < group.personRows.length; r++) {
         let mergeRow = group.personRows[r];
         if (mergeRow.isSelected) {
-          mergeRow.deselect();
+          mergeRow.deselect(true);
           selectedRows.push(mergeRow);
           group.personRows.splice(r, 1);
           r--;
@@ -2826,7 +2826,7 @@ class PersonRow {
     }
   }
 
-  deselect() {
+  deselect(shouldIgnoreStapled) {
     clearStatus();
     if (this.isSelected) {
       $("." + this.id).removeClass(ROW_SELECTION);
@@ -2835,7 +2835,7 @@ class PersonRow {
       for (let childRow of this.childRows) {
         childRow.deselect();
       }
-      if (this.stapledRows) {
+      if (!shouldIgnoreStapled && this.stapledRows) {
         for (let stapledRow of this.stapledRows) {
           stapledRow.deselect();
         }
@@ -3294,10 +3294,10 @@ function mainPersonIdSelected(grouperId) {
   return false;
 }
 
-// Function called when the "add group" button is clicked in the Flat view.
+// Function called when the "New group" button is clicked in the Flat view.
 // If any rows are selected, they are moved to the new group.
 // If this is only the second group, then the first group begins displaying its header.
-function addGroup(grouperId) {
+function createGroup(grouperId) {
   if (mainPersonIdSelected(grouperId)) {
     return;
   }
@@ -3308,7 +3308,7 @@ function addGroup(grouperId) {
   updateFlatViewHtml(grouper);
 }
 
-function addSelectedToGroup(groupId) {
+function moveSelectedToGroup(groupId) {
   if (mainPersonIdSelected(groupId)) {
     return;
   }
@@ -5004,7 +5004,7 @@ function getSummaryHtml(isKeep, grouper) {
 }
 
 function getAddGroupButtonHtml(grouper) {
-  return "<button class='add-group-button' onclick='addGroup(\"" + grouper.id + "\")'>New group</button>\n";
+  return "<button class='add-group-button' onclick='createGroup(\"" + grouper.id + "\")'>New group</button>\n";
 }
 
 function getGroupHeadingHtml(personGroup, groupIndex) {
@@ -5016,7 +5016,7 @@ function getGroupHeadingHtml(personGroup, groupIndex) {
     + "' onkeyup='updateGroupName(\"" + personGroup.groupId + "\")'>"
     + encode(personGroup.groupName) + "</div>"
     // "Add to Group" button
-    + "<button class='add-to-group-button' onclick='addSelectedToGroup(\"" + personGroup.groupId + "\")'>Add to group</button>"
+    + "<button class='add-to-group-button' onclick='moveSelectedToGroup(\"" + personGroup.groupId + "\")'>Add to group</button>"
     // "Apply to Split" button
     + (groupIndex < 1 || isEmptyGroup ? "" : "<button class='apply-button' onclick='splitOnGroup(\"" + personGroup.groupId + "\")'>Preview split</button>");
 }
