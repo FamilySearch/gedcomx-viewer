@@ -1107,8 +1107,12 @@
       }
 
       let type = $("#edit-record-metadata-type").val();
-      if (type && type !== "http://gedcomx.org/" + type) {
-        sd.coverage[0].recordType = "http://gedcomx.org/" + type;
+      let url = "http://gedcomx.org/";
+      if (type === "PrayerCard") {
+        url = "http://familysearch.org/types/records/";
+      }
+      if (type && type !== url + type) {
+        sd.coverage[0].recordType = url + type;
       }
 
       let date = $("#edit-record-metadata-date").val();
@@ -4080,6 +4084,7 @@
           <option value="Obituary">Obituary</option>
           <option value="Passenger">Passenger</option>
           <option value="Pension">Pension</option>
+          <option value="PrayerCard">Prayer Card</option>
           <option value="Probate">Probate</option>
           <option value="RelatedDocument">RelatedDocument</option>
           <option value="ReligiousCreeds">ReligiousCreeds</option>
