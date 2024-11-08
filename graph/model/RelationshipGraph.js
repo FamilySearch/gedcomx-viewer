@@ -236,6 +236,10 @@ function addFamiliesToPersonNodes(graph) {
   }
 }
 
+// Map of relationship type in URI (like "Couple" for "http://gedcomx.org/Couple") to an array of labels:
+//  [maleLabel, femaleLabel, neutralLabel, maleLabelReverse, femaleLabelReverse, neutralLabelReverse]
+//  The reverse labels are optional if they are the same as the non-reverse labels.
+//  If the label is same in both directions and for male and female, and is the same as the label, then it can be omitted. (like "Cousin").
 RelationshipGraph.prototype.relTypeMap = {
   "Couple": ["Husband", "Wife", "Spouse"],
   "ParentChild": ["Father", "Mother", "Parent", "Son", "Daughter", "Child"],
@@ -250,7 +254,16 @@ RelationshipGraph.prototype.relTypeMap = {
   "GreatGrandparent": ["Great-grandfather", "Great-grandmother", "Great-grandparent", "Great-grandson", "Great-granddaughter", "Great-grandchild"],
   "SiblingInLaw": ["Brother-in-law", "Sister-in-law", "Sibling-in-Law"],
   "StepSibling": ["Stepbrother", "Stepsister", "Stepsibling"],
-  "AncestorDescendant": ["Ancestor", "Ancestor", "Ancestor", "Descendant", "Descendant", "Descendant"]
+  "AncestorDescendant": ["Ancestor", "Ancestor", "Ancestor", "Descendant", "Descendant", "Descendant"],
+  // Additional values needed for supporting I2S Summary format:
+  "AdoptiveParent": ["Adoptive father", "Adoptive mother", "Adoptive parent", "Adopted son", "Adopted daughter", "Adopted child"],
+  "Divorce": ["Divorced husband", "Divorced wife", "Divorced spouse"],
+  "DomesticPartnership": ["Domestic partner", "Domestic partner", "Domestic partner"],
+  "EnslavedBy": ["Enslaved by", "Enslaved by", "Enslaved by", "Enslaved", "Enslaved", "Enslaved"],
+  "FosterParent": ["Foster father", "Foster mother", "Foster parent", "Foster son", "Foster daughter", "Foster child"],
+  "GuardianParent": ["Guardian", "Guardian", "Guardian", "Ward", "Ward", "Ward"],
+  "StepParent": ["Stepfather", "Stepmother", "Stepparent", "Stepson", "Stepdaughter", "Stepchild"],
+  "SurrogateParent": ["Surrogate father", "Surrogate mother", "Surrogate parent", "Surrogate son", "Surrogate daughter", "Surrogate child"]
 };
 
 /**
