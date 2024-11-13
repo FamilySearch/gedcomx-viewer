@@ -1278,10 +1278,10 @@
         person.facts = [];
         person.fields = [];
         if (age && age.length > 0) {
-          person.fields.push(makeAgeField(age));
+          addField(person, makeAgeField(age));
         }
         if (role) {
-          person.fields.push(makeRoleField(role));
+          addField(person, makeRoleField(role));
         }
 
         let name = {};
@@ -1987,6 +1987,13 @@
       };
     }
 
+    function addField(fieldHolder, field) {
+      if (!fieldHolder.fields) {
+        fieldHolder.fields = [];
+      }
+      fieldHolder.fields.push(field);
+    }
+
     function addPersonFact() {
       let doc = editor.get();
 
@@ -2005,17 +2012,12 @@
       let age = $("#new-person-fact-age").val();
       if (factType.endsWith("/Age")) {
         if (age) {
-          let field = makeAgeField(age)
-
-          if (!person.fields) {
-            person.fields = [];
-          }
-          person.fields.push(field);
+          addField(person, makeAgeField(age));
         }
       } else if (factType === GX_ROLE) {
         const role = $("#new-person-fact-role").val();
         if (role) {
-          person.fields.push(makeRoleField(role));
+          addField(person, makeRoleField(role));
         }
       } else {
         let fact = {};
@@ -2116,7 +2118,7 @@
 
           const role = $("#new-person-fact-role2").val();
           if (role) {
-            person.fields.push(makeRoleField(role));
+            addField(person, makeRoleField(role));
           }
 
           const fact = {
@@ -2184,10 +2186,7 @@
         if (fact) {
           // We had a fact, but turned it into an age. So delete that fact before adding a new age.
           person.facts = person.facts.filter(function(fact) {return fact.id !== fid});
-          if (!person.fields) {
-            person.fields = [];
-          }
-          person.fields.push(ageField);
+          addField(person, ageField);
         }
         else if (age) {
           // The Age field is being edited, so update it
