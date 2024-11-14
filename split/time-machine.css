@@ -483,3 +483,22 @@ a:hover {
     height: 1em;
     width: auto;
 }
+
+.current-value-checkbox:checked {
+    accent-color: green;
+}
+.current-value-checkbox:not(:checked) {
+    display: none;
+}
+.current-value-checkbox:not(:checked) + label::before {
+    display: inline-block;
+    position: relative;
+    content: ' ';
+    width: 11px; /* make it the size of normal checkboxes */
+    height: 11px;
+    border: 1px solid red;
+    background-color: lightpink;
+    border-radius: 3px;
+    margin-left: 4px; /* line it up with normal checkboxes */
+    margin-right: 3px;
+}
