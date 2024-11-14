@@ -42,16 +42,19 @@
  * @param ignoreUndo - Flag for whether to ignore the undo logic (set to true for undo/redo actions).
  * @param imgOverlayToGx - Map of DOM element ID of an image overlay rectangle to the id of the GedcomX element that it goes with. Ignored if null.
  * @param isDraggable - Flag for whether the rel chart should be draggable.
+ * @param relChartDiv - id to put the relationship chart in (default="rel-chart")
  * @returns {RelationshipChart}
  */
-function buildGraph(gx, isEditable, prevChart, ignoreUndo, imgOverlayToGx = null, isDraggable = false) {
-  return buildRelGraph(gx, prevChart ? prevRelChartOptions(prevChart, ignoreUndo): new ChartOptions({
+function buildGraph(gx, isEditable, prevChart, ignoreUndo, imgOverlayToGx = null, isDraggable = false,
+                    relChartDiv='rel-chart') {
+  return buildRelGraph(gx, prevChart ? prevRelChartOptions(prevChart, ignoreUndo):
+    new ChartOptions({
     isEditable: isEditable,
     prevChart: prevChart,
     ignoreUndo: ignoreUndo,
     imgOverlayToGx: imgOverlayToGx,
     isDraggable: isDraggable
-  }));
+  }), relChartDiv);
 }
 
 function buildMultipleRelGraphs(gxRecordSet, chartOptions) {
