@@ -7,7 +7,9 @@
     <script src="https://code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
     <script src="../gx-util.js"></script>
     <script src="../graph/ark-util.js"></script>
-    <script src="time-machine.js"></script>
+  <script src="time-machine.js"></script>
+  <script src="fetch-data.js"></script>
+  <script src="ordinance.js"></script>
     <link rel="stylesheet" type="text/css" href="time-machine.css">
 <script type="text/javascript">
   $(document).ready(function(){
@@ -29,7 +31,7 @@
     let shouldFetchOrdinances = urlParams.has('ord');
     if (url) {
       let sessionId = urlParams.get('sessionId');
-      buildChangeLogView(url, sessionId, $("#main-table"), $status, shouldFetchOrdinances);
+      buildSplitter(url, sessionId, $("#main-table"), $status, shouldFetchOrdinances);
     }
   });
 </script>
