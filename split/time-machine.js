@@ -547,6 +547,7 @@ function getEntryDetailsHtml(entryIndex) {
       let resultingPerson = findPersonByLocalId(entry, resultingId);
       switch(objectType) {
         case "BirthName":
+        case "Nickname":
           html += changeHtml(operation, getNameChangeHtml(originalPerson), getNameChangeHtml(resultingPerson), false);
           break;
         case "SourceReference":
@@ -563,6 +564,9 @@ function getEntryDetailsHtml(entryIndex) {
           break;
         case "Note":
           html += changeHtml(operation, getNoteHtml(originalPerson), getNoteHtml(resultingPerson), false);
+          break;
+        case "NotAMatch":
+          // Do nothing. We will leave these on the combined person, but won't copy them to the new extracted person.
           break;
         case "Birth":
         case "Christening":
@@ -3023,6 +3027,7 @@ const TYPE_ORDINANCE = "Ordinances"; // linked ordinance
           else {
             switch (objectType) {
               case "BirthName":
+              case "Nickname":
                 return [TYPE_NAME, getPersonName(entryPerson)];
               case "Gender":
                 return [TYPE_GENDER, entryPerson.gender.type ? extractType(entryPerson.gender.type) : "Unknown"];
@@ -5599,7 +5604,10 @@ function updateGedcomx(gedcomx, entry, isOrig) {
       case "Create-BirthName":
       case "Update-BirthName":
       case "Delete-BirthName":
-        doInList(gxPerson, "names", entryPerson, operation, isOrig, isPartOfMerge, origPerson);
+      case "Create-Nickname":
+      case "Update-Nickname":
+      case "Delete-Nickname":
+        doInList(gxPerson, "names", entryPerson, operation, isOrig, isPartOfMerge, origPerson, changeId);
         break;
       case "Create-SourceReference":
       case "Update-SourceReference":
