@@ -651,6 +651,7 @@ function getEntryDetailsHtml(entryIndex) {
   if (!handled) {
     console.log("Unhandled operation: modified object: " + modifiedObjectType + "; object: " + objectType + "; operation: " + operation);
   }
+  html += "Change id: " + encode(entry.id) + "<br>";
   return html.replace(/<br>[\n]*$/, "");
 }
 
@@ -3858,14 +3859,14 @@ class Split {
           let combo = operation + "-" + ((entryPerson.hasOwnProperty("facts") && entryPerson.facts.length === 1) ? "(Fact)" : objectType);
           if (combo === "Create-BirthName" || combo === "Update-BirthName") {
             if (!alreadyHasName(person.names, entryPerson.names[0])) { //todo: && !alreadyHasName(extraNames, entryPerson.names[0])) {
-              let nameCopy = copyObject(entryPerson.names[0]);
+              let nameCopy = copyObject(entryPerson.names[0], entry.id);
               nameCopy.elementSource = "From person: " + getPersonId(entryPerson);
               extraNames.push(nameCopy);
             }
           }
           else if (combo === "Create-(Fact)") {
             if (!alreadyHasFact(allFacts, entryPerson.facts[0])) { //todo: && !alreadyHasFact(extraFacts, entryPerson.facts[0])) {
-              let factCopy = copyObject(entryPerson.facts[0]);
+              let factCopy = copyObject(entryPerson.facts[0], entry.id);
               factCopy.elementSource = "From person: " + getPersonId(entryPerson);
               allFacts.push(factCopy);
             }
@@ -5107,8 +5108,8 @@ function compareFacts(fact1, fact2) {
 
 // Add a copy of the given fact to the given person. Insert it before any other fact that it is
 //   earlier than (by date; or birth < christening < most other events < death < burial).
-function addFact(person, fact, isOrig, isPartOfMerge) {
-  let factCopy = copyObject(fact);
+function addFact(person, fact, isOrig, isPartOfMerge, changeId) {
+  let factCopy = copyObject(fact, changeId);
   factCopy.status = getAddStatus(isOrig, isPartOfMerge);
   if (!person.hasOwnProperty("facts")) {
     person.facts = [];
@@ -5185,8 +5186,8 @@ function updateChildAndParentsRelationship(gedcomx, entry, resultingId, isOrig, 
   addToList(gedcomx, CHILD_REL, relCopy);
 }
 
-function addToList(listHolder, listName, element, isOrig, isPartOfMerge) {
-  let elementCopy = copyObject(element);
+function addToList(listHolder, listName, element, isOrig, isPartOfMerge, changeId) {
+  let elementCopy = copyObject(element, changeId);
   if (listHolder.hasOwnProperty(listName)) {
     listHolder[listName].push(elementCopy);
   }
@@ -5208,7 +5209,7 @@ function addToList(listHolder, listName, element, isOrig, isPartOfMerge) {
  * @param origElementListContainer - Original container (like a person) before making a copy of it, to get id from it.
  *            (This is from the change log entry, so won't have a status).
  */
-function updateInList(listContainer, listName, elementListContainer, isOrig, isPartOfMerge, origElementListContainer) {
+function updateInList(listContainer, listName, elementListContainer, isOrig, isPartOfMerge, origElementListContainer, changeId) {
   function hasSameId(a, b) {
     if (a.hasOwnProperty("id") && a["id"] === b["id"]) {
       return true;
@@ -5218,7 +5219,7 @@ function updateInList(listContainer, listName, elementListContainer, isOrig, isP
     return !!(idA && idA === idB);
   }
 
-  let updatedElementWithId = copyObject(elementListContainer[listName][0]);
+  let updatedElementWithId = copyObject(elementListContainer[listName][0], changeId);
   let origElementWithId = origElementListContainer ? origElementListContainer[listName][0] : updatedElementWithId;
   let existingList = listContainer[listName];
   if (existingList) {
@@ -5313,12 +5314,12 @@ function removeFromListById(listContainer, listName, elementListContainer, isOri
   console.log("Failed to element in list " + listName);
 }
 
-function doInList(listContainer, listName, elementListContainer, operation, isOrig, isPartOfMerge, origElementListContainer) {
+function doInList(listContainer, listName, elementListContainer, operation, isOrig, isPartOfMerge, origElementListContainer, changeId) {
   if (operation === "Create") {
-    addToList(listContainer, listName, elementListContainer[listName][0], isOrig, isPartOfMerge);
+    addToList(listContainer, listName, elementListContainer[listName][0], isOrig, isPartOfMerge, changeId);
   }
   else if (operation === "Update") {
-    updateInList(listContainer, listName, elementListContainer, isOrig, isPartOfMerge, origElementListContainer);
+    updateInList(listContainer, listName, elementListContainer, isOrig, isPartOfMerge, origElementListContainer, changeId);
   }
   else if (operation === "Delete") {
     removeFromListById(listContainer, listName, elementListContainer, isOrig);
@@ -5329,8 +5330,12 @@ function getFirst(list) {
   return list && list.length > 0 ? list[0] : null;
 }
 
-function copyObject(object) {
-  return object ? JSON.parse(JSON.stringify(object)) : null;
+function copyObject(object, changeId) {
+  let copy = object ? JSON.parse(JSON.stringify(object)) : null;
+  if (changeId) {
+    copy.changeId = changeId;
+  }
+  return copy;
 }
 
 // Copy the survivor's gedcomx object, mapping status to "merge-" + original status.
@@ -5564,6 +5569,7 @@ function getAddStatus(isOrig, isPartOfMerge) {
  */
 function updateGedcomx(gedcomx, entry, isOrig) {
   let changeInfo = entry.changeInfo[0];
+  let changeId = entry.id;
   // Create/Update/Delete/Merge
   let operation = extractType(getProperty(changeInfo, "operation"));
   let objectType = extractType(getProperty(changeInfo, "objectType"));
@@ -5588,12 +5594,12 @@ function updateGedcomx(gedcomx, entry, isOrig) {
     }
     switch (combo) {
       case "Create-Gender":
-        gxPerson.gender = copyObject(entryPerson.gender);
+        gxPerson.gender = copyObject(entryPerson.gender, changeId);
         gxPerson.gender.status = getAddStatus(isOrig, isPartOfMerge);
         break;
       case "Update-Gender":
         let prevGender = gxPerson.gender;
-        gxPerson.gender = copyObject(entryPerson.gender);
+        gxPerson.gender = copyObject(entryPerson.gender, changeId);
         gxPerson.gender.status = oppositeGender(gxPerson.gender, prevGender) ? CHANGED_STATUS : getAddStatus(isOrig);
         break;
       case "Delete-Gender":
@@ -5612,18 +5618,18 @@ function updateGedcomx(gedcomx, entry, isOrig) {
       case "Create-SourceReference":
       case "Update-SourceReference":
       case "Delete-SourceReference":
-        doInList(gxPerson, "sources", entryPerson, operation, isOrig, isPartOfMerge, origPerson);
+        doInList(gxPerson, "sources", entryPerson, operation, isOrig, isPartOfMerge, origPerson, changeId);
         break;
       case "Create-(Fact)":
         console.assert(entryPerson.hasOwnProperty("facts") && entryPerson.facts.length === 1, "Expected one fact in entry");
         console.assert(extractType(entryPerson["facts"][0].type) === objectType || objectType === "Fact", "Mismatched fact type in fact creation: " + extractType(entryPerson["facts"][0].type) + " != " + objectType);
-        addFact(gxPerson, entryPerson.facts[0], isOrig, isPartOfMerge);
+        addFact(gxPerson, entryPerson.facts[0], isOrig, isPartOfMerge, changeId);
         break;
       case "Delete-(Fact)":
         doInList(gxPerson, "facts", entryPerson, operation, isOrig, isPartOfMerge);
         break;
       case "Update-(Fact)":
-        doInList(gxPerson, "facts", entryPerson, operation, isOrig, isPartOfMerge, origPerson);
+        doInList(gxPerson, "facts", entryPerson, operation, isOrig, isPartOfMerge, origPerson, changeId);
         break;
       case "Create-Person":
       // Do nothing: We already have a GedcomX record with an empty person of this ID to start with.
@@ -5633,7 +5639,7 @@ function updateGedcomx(gedcomx, entry, isOrig) {
       case "Create-Note":
       case "Update-Note":
       case "Delete-Note":
-        doInList(gxPerson, "notes", entryPerson, operation, isOrig, isPartOfMerge, origPerson);
+        doInList(gxPerson, "notes", entryPerson, operation, isOrig, isPartOfMerge, origPerson, changeId);
         break;
       default:
         console.log("Unimplemented change log entry type: " + combo + " for Person");
