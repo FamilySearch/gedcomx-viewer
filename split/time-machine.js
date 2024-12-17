@@ -2866,27 +2866,31 @@ function performSplit(grouperId) {
 
 /*
   TfPersonSplitSpecification, from tf-json-binding:
-  // Extracted person specifications. Things to add to the "split" person.
+  // -- Extracted person specifications. Things to add to the "split" person.
   private Map<String, List<String>> changeIdsOfConclusionsToCopyByPersonId;
   private Map<String, List<String>> changeIdsOfEntityRefsToCopyByPersonId;
   private Map<String, List<String>> changeIdsOfNotesToCopyByPersonId;
+
+  private List<TfConclusion> conclusionsToAddToCombined; // Conclusions to copy from a source persona to the "keep" person.
+
   private List<String> idsOfCoupleRelationshipsToCopy;
   private List<String> idsOfParentChildRelationshipsToCopy;
 
-  private List<TfConclusion> conclusionsToAdd; // Conclusions to copy from a source persona to the "split" person.
-  todo: List<TfConclusion> conclusionsToEdit; // Conclusions to add to the Combined/"keep" person
+  private List<TfConclusion> conclusionsToAddToExtracted; // Conclusions to copy from a source persona to the "split" person.
 
-  // Combined person specifications. Things to add to the "keep" person.
-  private Map<String, List<String>> changeIdsOfConclusionsToEditByPersonId;
-  private Map<String, List<String>> changeIdsOfEntityRefsToEditByPersonId;
-  private Map<String, List<String>> changeIdsOfNotesToEditByPersonId;
-  //todo: List<String> idsOfCoupleRelationshipsToEdit;
-  //todo: List<String> idsOfParentChildRelationshipsToEdit;
+  // -- Combined person specifications. Things to add to the "keep" person.
+  // (TfItemChange.id = conclusionId, .changeId = changeId)
+  private Map<String, List<TfItemChange>> changeIdsOfConclusionsToEditByPersonId;
+  private Map<String, List<TfItemChange>> changeIdsOfEntityRefsToEditByPersonId;
+  private Map<String, List<TfItemChange>> changeIdsOfNotesToEditByPersonId;
 
   // Things to delete off of the "Combined"/"keep" person (usually just things copied/moved to the "split" person).
   private List<String> idsOfConclusionsToDelete;
   private List<String> idsOfEntityRefsToDelete;
   private List<String> idsOfNotesToDelete;
+
+  private List<TfConclusion> conclusionsToAddToCombined;
+
   private List<String> idsOfCoupleRelationshipsToDelete;
   private List<String> idsOfParentChildRelationshipsToDelete;
 
@@ -2908,50 +2912,6 @@ function performSplit(grouperId) {
     ]
   }
 }
-  TfConclusion:
-    conclusionId
-    type: NAME, GENDER, FACT, CONTRIBUTION_TRACKED_ID, UNKNOWN
-    commandUuid
-    attribution: TfAttribution
-      changeMessage
-      modified (presumably timestamp)
-      contributor.id
-      submitter.id
-    // NAME:
-    preferred: boolean
-    value: TfConclusionValue [Compatible with GedcomX Name object, assuming 'type' can be a URI]
-      type
-      nameForms[]:
-        lang
-        fullText
-        order (String)
-        parts[]:
-          type
-          value
-   // GENDER [Compatible with GedcomX]
-    value.type
-   // FACT [Compatible with GedcomX
-    type
-    value: TfFactValue
-      date: TfFactDate
-        original
-        formal
-        normalized[].lang, .value
-      place: TfFactPlace
-        original
-        names[].lang, .value [In GedcomX, this is "normalized"[].lang, .value]
-        // In GedcomX, latitude and longitude are in a PlaceDescription referenced by the PlaceReference object.
-        latitude, longitude (Double)
-        // In GedcomX, the PlaceDescription object has a ResourceReference with a place URI ending in a place ID.
-        id (Integer)
-      value
-      // Not part of standard GedcomX:
-      userDefinedType
-      userDefinedDataType
-      userCertified (for LIFE_SKETCH conclusions)
-      generatedNumber (for GENERATION conclusions)
-      associatedParent
-
  */
 
 class SplitObject {
@@ -2962,6 +2922,7 @@ class SplitObject {
     this.changeIdsOfEntityRefsToCopyByPersonId = {};
     this.changeIdsOfNotesToCopyByPersonId = {};
 
+    // Maps of personId -> list of {id: conclusionId, changeId: changeId).
     this.changeIdsOfConclusionsToEditByPersonId = {};
     this.changeIdsOfEntityRefsToEditByPersonId = {};
     this.changeIdsOfNotesToEditByPersonId = {};
@@ -2969,17 +2930,21 @@ class SplitObject {
     // Lists of TfConclusion objects, created from conclusions on source personas rather than from Family Tree change log entries.
     //   (Similar to GedcomX, but see above for differences.)
     // List of TfConclusion objects to add to the "split" (extracted) person.
-    this.conclusionsToAdd = [];
+    this.conclusionsToAddToExtracted = [];
     // List of TfConclusion objects to add to the "keep" (combined) person
-    //todo: this.conclusionsToEdit = [];
+    this.conclusionsToAddToCombined = [];
 
     // List of relationship IDs to copy to the "split" ("extracted") person. Presumably, the Combined/keep person ID
     //   in these relationships will be replaced with the new person's ID.
     this.idsOfCoupleRelationshipsToCopy = [];
     this.idsOfParentChildRelationshipsToCopy = [];
 
-    //List of relationship IDs to add to the "keep" ("combined") person. But how would we know which person ID
-    //  to replace with the new person's ID?
+    //List of relationship IDs to add to the "keep" ("combined") person, i.e., relationships that used to exist on
+    //  some previous version of the person, but were left behind during a merge or deleted later.
+    //If the relationship is actually still being used, we will need to create a new one.
+    //If the relationship is no longer used, then we need to know which person ID in the relationship is the one
+    //  being replaced by the "keep" ("combined") person's ID.
+    //So we might decide that we should instead create a list of relationship objects to add rather than relationship IDs to resurrect.
     //todo: this.idsOfCoupleRelationshipsToEdit = [];
     //todo: this.idsOfParentChildRelationshipsToEdit = [];
 
@@ -3017,7 +2982,7 @@ const TYPE_ORDINANCE = "Ordinances"; // linked ordinance
       let changeInfo = entry.changeInfo[0];
       let operation = extractType(getProperty(changeInfo, "operation"));
       let resultingId = getProperty(changeInfo, "resulting.resourceId");
-      if (operation === "Create" || operation === "Change") {
+      if (operation === "Create" || operation === "Update") {
         let objectType = extractType(getProperty(changeInfo, "objectType"));
         let objectModifier = extractType(getProperty(changeInfo, "objectModifier"));
         if (objectModifier === "Person" && objectType !== "NotAMatch") {
@@ -3078,7 +3043,7 @@ const TYPE_ORDINANCE = "Ordinances"; // linked ordinance
           }
         }
       }
-      return null;
+      return [null, null];
     }
 
     function getElementInfoString(element) {
@@ -3123,12 +3088,14 @@ const TYPE_ORDINANCE = "Ordinances"; // linked ordinance
       return [keepPersonIds, splitPersonIds];
     }
 
-    // personChangeMap: map of personId -> change entry for a change with a particular info string for a particular type
+    // Get an array of [bestKeepEntry, bestSplitEntry] with the best (latest) change entry from the given
+    //  map of personId -> change entry for a change with a particular info string for a particular type
     //    of info for that person id.
-    // Return the latest change entry for the person IDs in the appropriate list (keepPersonIds for direction DIR_KEEP,
-    //   splitPersonIds for direction DIR_MOVE, and bothIds for direction DIR_COPY). If there is no matching change
-    //   entry for the appropriate list, look in the other. If none is found, then return null.
-    function chooseBestChangeEntry(personChangeMap, keepPersonIds, splitPersonIds, bothIds, direction) {
+    // For DIR_KEEP or DIR_COPY, the bestKeepEntry is the latest entry from the keepPersonIds, or if not found,
+    //    from the splitPersonIds. Similarly, for DIR_MOVE or DIR_COPY, the bestSplitEntry is the latest entry
+    //    from the splitPersonIds, or if not found, from the keepPersonIds.
+    // If no entry is found for either direction, then return null, indicating that the information came from a source.
+    function chooseBestChangeEntry(personChangeMap, keepPersonIds, splitPersonIds, direction) {
       function getLatestEntry(personIds, otherPersonIds) {
         let latestEntry = null;
         for (let personId of personIds) {
@@ -3145,36 +3112,37 @@ const TYPE_ORDINANCE = "Ordinances"; // linked ordinance
         return latestEntry;
       }
 
-      let bestEntry = null;
-      if (direction === DIR_KEEP) {
-        bestEntry = getLatestEntry(keepPersonIds, splitPersonIds);
+      let bestKeepEntry = null;
+      let bestSplitEntry = null;
+      if (direction === DIR_KEEP || direction === DIR_COPY) {
+        bestKeepEntry = getLatestEntry(keepPersonIds, splitPersonIds);
       }
-      else if (direction === DIR_MOVE) {
-        bestEntry = getLatestEntry(splitPersonIds, keepPersonIds);
+      if (direction === DIR_MOVE || direction === DIR_COPY) {
+        bestSplitEntry = getLatestEntry(splitPersonIds, keepPersonIds);
       }
-      else if (direction === DIR_COPY) {
-        bestEntry = getLatestEntry(bothIds, null);
-      }
-      return bestEntry;
+      return bestKeepEntry || bestSplitEntry ? [bestKeepEntry, bestSplitEntry] : null;
     }
 
     // Map of information type -> infoString -> personId -> change entry
     // Where
     // - 'type' is the split element type  (TYPE_NAME...TYPE_SOURCE)
     // - 'infoString' is a string representation of the information (e.g., a full name, a fact "type: date; place", etc.)
-    // - 'personId' are the person IDs of the persons that have this information in their change log,
+    // - 'personId' are the person IDs of the persons that have this information in their change log
+    // For ordinances we have TYPE_ORDINANCE -> owsId -> personId -> Ows object
     function getTypeInfoPersonChangeMap() {
       const typeInfoPersonIdChangeEntryMap = new Map();
 
       for (let entry of allEntries) {
         let [type, info] = getEntryChangeTypeAndInfo(entry);
-        let personId = entry.personId;
-        let infoPersonChangeMap = computeIfAbsent(typeInfoPersonIdChangeEntryMap, type, () => new Map());
-        let personChangeMap = computeIfAbsent(infoPersonChangeMap, info, () => new Map());
-        if (!personChangeMap.has(personId)) {
-          // Entries are sorted newest to oldest, so if we have already seen this value on this person ID,
-          //   then it's older and can be ignored.
-          personChangeMap.set(personId, entry);
+        if (type && info) {
+          let personId = entry.personId;
+          let infoPersonChangeMap = computeIfAbsent(typeInfoPersonIdChangeEntryMap, type, () => new Map());
+          let personChangeMap = computeIfAbsent(infoPersonChangeMap, info, () => new Map());
+          if (!personChangeMap.has(personId)) {
+            // Entries are sorted newest to oldest, so if we have already seen this value on this person ID,
+            //   then it's older and can be ignored.
+            personChangeMap.set(personId, entry);
+          }
         }
       }
       for (let owsId of owsRefMap.keys()) {
@@ -3189,99 +3157,139 @@ const TYPE_ORDINANCE = "Ordinances"; // linked ordinance
       return typeInfoPersonIdChangeEntryMap;
     }
 
-    function addToChangeIdMap(changeIdMap, personId, changeId) {
-      let changeIdList = computeIfAbsent(changeIdMap, personId, () => []);
-      changeIdList.push(changeId);
+    function addToChangeIdMap(changeIdMap, changeEntry) {
+      let changeIdList = computeIfAbsent(changeIdMap, changeEntry.personId, () => []);
+      changeIdList.push(changeEntry.id);
     }
 
-    function updateSplitMaps(changeEntry, direction, keepMap, splitMap, isCurrent) {
-      let personId = changeEntry.personId;
-      let changeId = changeEntry.id;
+    function updateSplitMaps(changeEntries, direction, keepMap, splitMap, deleteMap, isCurrent) {
+      let keepChangeEntry = changeEntries[0];
+      let splitChangeEntry = changeEntries[1];
+      // let personId = changeEntry.personId;
+      // let changeId = changeEntry.id;
       switch (direction) {
         case DIR_KEEP:
           if (!isCurrent) {
-            addToChangeIdMap(keepMap, personId, changeId);
+            addToChangeIdMap(keepMap, keepChangeEntry);
           }
           break;
         case DIR_MOVE:
-          addToChangeIdMap(splitMap, personId, changeId);
+          addToChangeIdMap(splitMap, splitChangeEntry);
           if (isCurrent) {
-            this.idsOfConclusionsToDelete.push(changeId);
+            deleteMap.push(keepChangeEntry.id);
           }
           break;
         case DIR_COPY:
           if (!isCurrent) {
-            addToChangeIdMap(keepMap, personId, changeId);
+            addToChangeIdMap(keepMap, keepChangeEntry);
           }
-          addToChangeIdMap(splitMap, personId, changeId);
+          addToChangeIdMap(splitMap, splitChangeEntry);
           break;
       }
     }
 
-    function updateSplitLists(changeEntry, direction, keepList, splitList) {
-      let personId = changeEntry.personId;
-      let changeId = changeEntry.id;
+    function getRelationshipIdFromChangeEntry(changeEntry) {
+      let gedcomx = changeEntry.content.gedcomx;
+      let rel = gedcomx[CHILD_REL];
+      if (!rel) {
+        rel = gedcomx[COUPLE_REL];
+      }
+      return extractType(rel.identifiers["http://gedcomx.org/Primary"][0]);
+    }
+
+    // Add the relationship IDs to the appropriate lists
+    // relIdsToCopy - list of relationship IDs to copy to the split person
+    // relIdsToDelete - list of relationship IDs to delete from the keep person
+    function updateSplitLists(changeEntries, direction, relIdsToCopy, relIdsToDelete) {
+      let keepRelationshipId = getRelationshipIdFromChangeEntry(changeEntries[0]);
+      let splitRelationshipId = getRelationshipIdFromChangeEntry(changeEntries[1]);
+
+      //future: let keepList = this.idsOfParentChildRelationshipsToEdit;
       switch (direction) {
         case DIR_KEEP:
-          keepList.push(changeId);
+          //future: if not already there, then: relIdsToAdd.push(keepRelationshipId);
           break;
         case DIR_MOVE:
-          splitList.push(changeId);
-          if (personId === mainPersonId) {
-            //todo: We don't know that this is a current conclusion, so we may not need to delete it.
-            // (We could add to delete list and then check later?)
-            this.idsOfConclusionsToDelete.push(changeEntry.id);
-          }
+          relIdsToCopy.push(splitRelationshipId);
+          //future: if isCurrent then:
+          relIdsToDelete.push(keepRelationshipId);
           break;
         case DIR_COPY:
-          keepList.push(personId);
-          splitList.push(personId);
+          //future: if !isCurrent then: relIdsToAdd.push(keepRelationshipId);
+          relIdsToCopy.push(splitRelationshipId);
           break;
       }
     }
 
-// - 'change entry' is the LATEST change entry with that info string for that person Id.
+    function copyOrMoveChangeEntry(element, changeEntries, isCurrent) {
+      switch (element.type) {
+        case TYPE_NAME:
+        case TYPE_FACT:
+        case TYPE_GENDER:
+          updateSplitMaps(changeEntries, element.direction,
+            this.changeIdsOfConclusionsToEditByPersonId,
+            this.changeIdsOfConclusionsToCopyByPersonId, this.idsOfConclusionsToDelete, isCurrent);
+          break;
+        case TYPE_PARENTS:
+        case TYPE_CHILD:
+          updateSplitLists(changeEntries, element.direction, this.idsOfParentChildRelationshipsToCopy,
+            this.idsOfParentChildRelationshipsToDelete);
+          break;
+        case TYPE_SPOUSE:
+          updateSplitLists(changeEntries, element.direction, this.idsOfCoupleRelationshipsToCopy,
+            this.idsOfCoupleRelationshipsToDelete);
+          break;
+        case TYPE_SOURCE:
+        case TYPE_ORDINANCE:
+          updateSplitMaps(changeEntries, element.direction, this.changeIdsOfEntityRefsToEditByPersonId,
+            this.changeIdsOfEntityRefsToCopyByPersonId, this.idsOfEntityRefsToDelete, isCurrent);
+          break;
+        case TYPE_NOTE:
+          updateSplitMaps(changeEntries, element.direction, this.changeIdsOfNotesToEditByPersonId,
+            this.changeIdsOfNotesToCopyByPersonId, this.idsOfNotesToDelete, isCurrent);
+          break;
+      }
+    }
+
+    //=============================================================================================================
+    // ==== initSplitObject ====
+    // - map of type -> info string -> person Id -> change entry, which is the LATEST change entry with that info string
+    //    for that person Id.
     const typeInfoPersonIdChangeEntryMap = getTypeInfoPersonChangeMap();
 
     let [keepPersonIds, splitPersonIds] = getKeepAndSplitPersonIds(grouper);
-    let bothIds = keepPersonIds.concat(splitPersonIds);
-    let currentTypeInfoMap = getLatestTypeInfoMap(grouper);
 
     for (let element of split.elements) {
       let isCurrent = !element.isExtra();
       let infoString = getElementInfoString(element);
       let infoPersonChangeMap = typeInfoPersonIdChangeEntryMap.get(element.type);
-      // Map of personId -> latest change entry with that info string for that person ID.
-      let personChangeMap = infoPersonChangeMap.get(infoString);
-      // If there are multiple person IDs with the same info string, then
-      //  a) find the most recent one where the personId is in the group that the element is in
-      //     (i.e., in the keep group if the element is a keep or copy element; or in the split
-      //     group if the element is a split or copy element).
-      //  b) If the person ID isn't in the right group, take the most recent from the other group.
-      //  c) If there isn't a change log entry at all that has the info, then this info is coming
-      //     from a source instead, so it will go in the "conclusionsToAdd" list.
-      let changeEntry = chooseBestChangeEntry(personChangeMap, keepPersonIds, splitPersonIds, bothIds, element.direction);
-      if (changeEntry) {
-        switch (element.type) {
-          case TYPE_NAME:
-          case TYPE_FACT:
-          case TYPE_GENDER:
-            updateSplitMaps(changeEntry, element.direction, this.changeIdsOfConclusionsToEditByPersonId, this.changeIdsOfConclusionsToCopyByPersonId, isCurrent);
-            break;
-          case TYPE_PARENTS:
-          case TYPE_CHILD:
-            updateSplitLists(changeEntry, element.direction, null /*todo:this.idsOfParentChildRelationshipsToEdit*/, this.idsOfParentChildRelationshipsToCopy, isCurrent);
-            break;
-          case TYPE_SPOUSE:
-            break;
-          case TYPE_SOURCE:
-          case TYPE_ORDINANCE:
-            updateSplitMaps(changeEntry, element.direction, this.changeIdsOfEntityRefsToEditByPersonId, this.changeIdsOfEntityRefsToCopyByPersonId, isCurrent);
-            break;
-          case TYPE_NOTE:
-            updateSplitMaps(changeEntry, element.direction, this.changeIdsOfNotesToEditByPersonId, this.changeIdsOfNotesToCopyByPersonId, isCurrent);
-            break;
+      if (infoPersonChangeMap) {
+        // Map of personId -> latest change entry with that info string for that person ID.
+        let personChangeMap = infoPersonChangeMap.get(infoString);
+        // If there are multiple person IDs with the same info string, then
+        //  a) find the most recent one where the personId is in the group that the element is in
+        //     (i.e., in the keep group if the element is a keep or copy element; or in the split
+        //     group if the element is a split or copy element).
+        //  b) If the person ID isn't in the right group, take the most recent from the other group.
+        //  c) If there isn't a change log entry at all that has the info, then this info is coming
+        //     from a source instead, so it will go in the "conclusionsToAdd" list.
+        let changeEntries = chooseBestChangeEntry(personChangeMap, keepPersonIds, splitPersonIds, element.direction);
+
+        if (changeEntries) {
+          copyOrMoveChangeEntry(element, changeEntries, isCurrent);
+        } else {
+          // This info is coming from a source, so add it to the appropriate list of conclusions to add.
+          let tfConclusion = new TfConclusion(element.type, element.item);
+          if (!isCurrent && (element.direction === DIR_KEEP || element.direction === DIR_COPY)) {
+            this.conclusionsToAddToCombined.push(tfConclusion);
+          }
+          if (element.direction === DIR_MOVE || element.direction === DIR_COPY) {
+            this.conclusionsToAddToExtracted.push(tfConclusion);
+          }
         }
+      }
+      else {
+        console.log("No infoPersonChangeMap for " + element.type + ": " + infoString);
       }
     }
     /*
@@ -3317,8 +3325,139 @@ const TYPE_ORDINANCE = "Ordinances"; // linked ordinance
   }
 }
 
+/*
+  TfConclusion:
+    conclusionId
+    type: NAME, GENDER, FACT, CONTRIBUTION_TRACKED_ID, UNKNOWN
+    commandUuid
+    attribution: TfAttribution
+      changeMessage
+      modified       => Filled in automatically by TF
+      contributor.id => Filled in automatically by TF
+      submitter.id   => Filled in automatically by TF
+    // NAME:
+    preferred: boolean
+    value: TfConclusionValue [Compatible with GedcomX Name object, assuming 'type' can be a URI]
+      type
+      nameForms[]:
+        lang
+        fullText
+        order (String)
+        parts[]:
+          type
+          value
+   // GENDER [Compatible with GedcomX]
+    value.type (like "http://gedcomx.org/Male" or ...Female or ...Unknown)
+   // FACT [Compatible with GedcomX]
+    type (like "http://gedcomx.org/Birth" or "USER_DEFINED")
+    value: TfFactValue
+      date: TfFactDate
+        original (conclusion value)
+        [formal => We can wait until later]
+        [normalized[].lang, .value => Ignore]
+      place: TfFactPlace
+        original (conclusion value)
+        [names[].lang, .value [In GedcomX, this is "normalized"[].lang, .value]]
+        // In GedcomX, latitude and longitude are in a PlaceDescription referenced by the PlaceReference object.
+        [latitude, longitude (Double) => Ignore]
+        // In GedcomX, the PlaceDescription object has a ResourceReference with a place URI ending in a place ID.
+        [id (Integer) => Ignore for now]
+      value (like "Farmer" for occupation)
+      // Not part of standard GedcomX:
+      userDefinedType (like "data:,Workhouse admission")
+      [userDefinedDataType (=> ignore)]
+      [userCertified (for LIFE_SKETCH conclusions)]
+      [generatedNumber (for GENERATION conclusions)]
+      [associatedParent]
+ */
+class TfConclusion {
+  constructor(elementType, item) {
+    switch (elementType) {
+      case TYPE_NAME:
+        this.type = "NAME";
+        this.value = {
+          type: item.type,
+          nameForms: copyObject(item.nameForms)
+        };
+        break;
+      case TYPE_GENDER:
+        this.type = "GENDER";
+        this.value = {
+          type: item.type
+        };
+        break;
+      case TYPE_FACT:
+        this.type = "FACT";
+        this.value = {};
+        if (TfFactTypes.has(item.type)) {
+          this.value.type = item.type;
+        }
+        else {
+          this.value.type = "USER_DEFINED";
+          this.value.userDefinedType = "data:," + getTypeNameFromTypeUri(item.type);
+        }
+        if (item.date && item.date.original) {
+          this.value.date = {original: item.date.original};
+        }
+        if (item.place && item.place.original) {
+          this.value.place = {original: item.place.original};
+        }
+        if (item.value) {
+          this.value.value = item.value;
+        }
+        break;
+      default:
+        console.log("Waring: Unsupported element type " + elementType + " in TfConclusion");
+    }
+  }
+}
+
+const TfFactTypes = new Set([
+  "http://gedcomx.org/Birth",
+  "http://gedcomx.org/Christening",
+  "http://gedcomx.org/Death",
+  "http://gedcomx.org/Burial",
+  "http://gedcomx.org/Stillbirth",
+  "http://gedcomx.org/BarMitzvah",
+  "http://gedcomx.org/BatMitzvah",
+  "http://gedcomx.org/Immigration",
+  "http://gedcomx.org/MilitaryService",
+  "http://gedcomx.org/Naturalization",
+  "http://gedcomx.org/Residence",
+  "http://gedcomx.org/Religion",
+  "http://gedcomx.org/Occupation",
+  "http://gedcomx.org/Cremation",
+  "http://gedcomx.org/Caste",
+  "http://gedcomx.org/Clan",
+  "http://gedcomx.org/NationalId",
+  "http://gedcomx.org/Nationality",
+  "http://gedcomx.org/PhysicalDescription",
+  "http://gedcomx.org/Ethnicity"
+]);
+
+// Convert a URI like "http://familysearch.org/types/facts/WorkhouseAdmission" to "Workhouse admission".
+//   Strip to the last "/", split the title-cased words with a space, and keep the first word capitalized,
+//   but lower-case the rest.
+function getTypeNameFromTypeUri(uri) {
+  // Extract the last segment of the URI
+  const lastSegment = uri.substring(uri.lastIndexOf('/') + 1);
+
+  // Split the segment into words based on capital letters
+  const words = lastSegment.match(/[A-Z][a-z]*/g);
+
+  // Convert the first word to capitalized and the rest to lower case
+  const formattedWords = words.map((word, index) => {
+    return index === 0 ? word : word.toLowerCase();
+  });
+
+  // Join the words with spaces and return the result
+  return formattedWords.join(' ');
+}
+
 function createSplitObject(grouper) {
   let split = new SplitObject(grouper);
+  console.log("Split object:\n" + JSON.stringify(split, null, 2));
+
   // Map of changeId -> {type, info string, GedcomX item}
   let changeIdMap = null;
   // Display the split object in the console for debugging.
@@ -3327,6 +3466,7 @@ function createSplitObject(grouper) {
   // - Find the root merge node (or the PersonRow for the person in the grouper) to get the GedcomX.
   // - Get a map of info -> html for current info (conclusions, entity refs, notes).
   // - Display (a) current info, (b) keep info, (c) split info
+  return split;
 }
 
 // Use the selected PersonRows in the merge hierarchy view to select
@@ -3705,9 +3845,8 @@ class Element {
     return !this.isExtra() || this.isSelected;
   }
 
-  // Tell whether this element is an "extra" value that can be hidden, i.e., one from a source.
-  // todo: Decide whether this should really reflect (a) values currently on the latest combined person; or
-  // (b) values on the original identity of the person with the combined person's person ID. (<- Seems arbitrary).
+  // Tell whether this element is an "extra" value that can be hidden, i.e., one from a source, or a value that
+  //   was either added to the "survivor" and later deleted, or was on a "duplicate" and not brought over during a merge.
   isExtra() {
     if (this.elementSource) {
       return true;
@@ -5208,6 +5347,7 @@ function addToList(listHolder, listName, element, isOrig, isPartOfMerge, changeI
  * @param isPartOfMerge - Flag for whether this 'add' or 'update' is part of information coming from the duplicate as part of a merge.
  * @param origElementListContainer - Original container (like a person) before making a copy of it, to get id from it.
  *            (This is from the change log entry, so won't have a status).
+ * @param changeId - Id of the change log entry that this change is part of.
  */
 function updateInList(listContainer, listName, elementListContainer, isOrig, isPartOfMerge, origElementListContainer, changeId) {
   function hasSameId(a, b) {
