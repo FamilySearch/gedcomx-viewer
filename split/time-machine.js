@@ -49,23 +49,28 @@ let relativeSourcesReceived = false;
 // Map of duplicatePersonId -> array of [{ "survivor": <survivorPersonId>, "timestamp": <timestamp of merge>}]
 let mergeMap = new Map();
 
-const CHILD_REL = "child-and-parents-relationships"
-const COUPLE_REL = "http://gedcomx.org/Couple"
-const PARENT_CHILD_REL = "http://gedcomx.org/ParentChild"
+const CHILD_REL = "child-and-parents-relationships";
+const RELATIONSHIPS = "relationships";
+const COUPLE_REL = "http://gedcomx.org/Couple";
+const PARENT_CHILD_REL = "http://gedcomx.org/ParentChild";
 let $statusDiv = null;
 
 // Flag for whether there is a 'restore' in any of the change logs. If so, we can't handle splitting yet.
 let hasRestoreInChangeLog = false;
+// Flag for whether there is a memory (i.e. "Person Evidence Reference") in any of the change logs.
+let hasMemory = false;
 
 // Fetch the change log entries for the person given by the change log URL.
-function buildSplitter(changeLogUrl, sessionId, $mainTable, $status, shouldFetchOrdinances) {
+function buildSplitter(changeLogUrl, sessionId, $mainTable, $status, shouldFetchOrdinances, prodSessionId) {
   $statusDiv = $status;
   let context = parsePersonUrl(changeLogUrl);
   mainPersonId = context.personId;
   if (sessionId) {
     context["sessionId"] = sessionId;
   }
-
+  if (prodSessionId) {
+    context["prodSessionId"] = prodSessionId;
+  }
   // Map of personId -> array of change log entries for that person, most recent first.
   let changeLogMap = {};
   // List of urls currently being fetched.
@@ -2850,17 +2855,25 @@ function updateSummaryRows() {
 }
 
 function performSplit(grouperId) {
+  if (hasMemory && hasRestoreInChangeLog) {
+    alert("This person has a memory and a 'Restore' in the change log, and the split tool can't handle those yet.");
+    return;
+  }
+  if (hasMemory) {
+    alert("This person has a memory, and the split tool can't handle that yet.");
+    return;
+  }
   if (hasRestoreInChangeLog) {
     alert("This person has a 'Restore' in the change log, and the split tool can't handle that yet.");
     return;
   }
   let grouper = grouperMap[grouperId];
   let splitObject = createSplitObject(grouper);
-  if (confirm("This is a <b>message</b>")) {
-    alert("Splitting...");
+  if (confirm("Should we really pretend to split?")) {
+    console.log("Pretending to split...");
   }
   else {
-    alert("Split cancelled.");
+    console.log("Split cancelled.");
   }
 }
 
@@ -2914,9 +2927,10 @@ function performSplit(grouperId) {
 }
  */
 
+// Object to use with the Split API
 class SplitObject {
   constructor(grouper) {
-    // Maps of personId -> list of changeIds from that personId's change log to copy to the "split" ("extracted") person,
+    // Maps of personId -> list of {id: <conclusionId>, changeId: <changeId>} from that personId's change log to copy to the "split" ("extracted") person,
     //   or to add (aka "edit") to the "keep" ("combined") person.
     this.changeIdsOfConclusionsToCopyByPersonId = {};
     this.changeIdsOfEntityRefsToCopyByPersonId = {};
@@ -3080,8 +3094,8 @@ const TYPE_ORDINANCE = "Ordinances"; // linked ordinance
       for (let group of grouper.mergeGroups) {
         let listToAddTo = group.groupId === grouper.splitGroupId ? splitPersonIds : keepPersonIds;
         for (let personRow of group.personRows) {
-          if (personRow.mergeRow && personRow.mergeRow.personId) {
-            listToAddTo.push(personRow.mergeRow.personId);
+          if (personRow.mergeNode && personRow.mergeNode.personId) {
+            listToAddTo.push(personRow.mergeNode.personId);
           }
         }
       }
@@ -3157,16 +3171,46 @@ const TYPE_ORDINANCE = "Ordinances"; // linked ordinance
       return typeInfoPersonIdChangeEntryMap;
     }
 
+    function getConclusionIdFromChangeEntry(changeEntry) {
+      let gedcomx = changeEntry.content.gedcomx;
+      let person = gedcomx.persons[0];
+      if (person.gender) {
+        return person.gender.id;
+      }
+      if (person.names) {
+        return person.names[0].id;
+      }
+      if (person.facts) {
+        return person.facts[0].id;
+      }
+      throw new Error("Unexpected change type");
+    }
+
     function addToChangeIdMap(changeIdMap, changeEntry) {
-      let changeIdList = computeIfAbsent(changeIdMap, changeEntry.personId, () => []);
-      changeIdList.push(changeEntry.id);
+      let changeIdList = getOrMakeList(changeIdMap, changeEntry.personId);
+      if (!changeIdList) {
+        changeIdList = [];
+        changeIdMap[changeEntry.personId] = changeIdList;
+      }
+      const conclusionId = getConclusionIdFromChangeEntry(changeEntry);
+      changeIdList.push({
+        id: conclusionId,
+        changeId: changeEntry.id
+      });
+    }
+
+    function getOrMakeList(dictionary, key) {
+      let list = dictionary[key];
+      if (!list) {
+        list = [];
+        dictionary[key] = list;
+      }
+      return list;
     }
 
     function updateSplitMaps(changeEntries, direction, keepMap, splitMap, deleteMap, isCurrent) {
       let keepChangeEntry = changeEntries[0];
       let splitChangeEntry = changeEntries[1];
-      // let personId = changeEntry.personId;
-      // let changeId = changeEntry.id;
       switch (direction) {
         case DIR_KEEP:
           if (!isCurrent) {
@@ -3176,7 +3220,7 @@ const TYPE_ORDINANCE = "Ordinances"; // linked ordinance
         case DIR_MOVE:
           addToChangeIdMap(splitMap, splitChangeEntry);
           if (isCurrent) {
-            deleteMap.push(keepChangeEntry.id);
+            deleteMap.push(keepChangeEntry ? keepChangeEntry.id : splitChangeEntry.id);
           }
           break;
         case DIR_COPY:
@@ -3189,19 +3233,22 @@ const TYPE_ORDINANCE = "Ordinances"; // linked ordinance
     }
 
     function getRelationshipIdFromChangeEntry(changeEntry) {
+      if (!changeEntry) {
+        return null;
+      }
       let gedcomx = changeEntry.content.gedcomx;
       let rel = gedcomx[CHILD_REL];
       if (!rel) {
-        rel = gedcomx[COUPLE_REL];
+        rel = gedcomx[RELATIONSHIPS];
       }
-      return extractType(rel.identifiers["http://gedcomx.org/Primary"][0]);
+      return extractType(rel[0].identifiers["http://gedcomx.org/Primary"][0]);
     }
 
     // Add the relationship IDs to the appropriate lists
     // relIdsToCopy - list of relationship IDs to copy to the split person
     // relIdsToDelete - list of relationship IDs to delete from the keep person
     function updateSplitLists(changeEntries, direction, relIdsToCopy, relIdsToDelete) {
-      let keepRelationshipId = getRelationshipIdFromChangeEntry(changeEntries[0]);
+      //future: let keepRelationshipId = getRelationshipIdFromChangeEntry(changeEntries[0]);
       let splitRelationshipId = getRelationshipIdFromChangeEntry(changeEntries[1]);
 
       //future: let keepList = this.idsOfParentChildRelationshipsToEdit;
@@ -3212,7 +3259,7 @@ const TYPE_ORDINANCE = "Ordinances"; // linked ordinance
         case DIR_MOVE:
           relIdsToCopy.push(splitRelationshipId);
           //future: if isCurrent then:
-          relIdsToDelete.push(keepRelationshipId);
+          relIdsToDelete.push(splitRelationshipId);
           break;
         case DIR_COPY:
           //future: if !isCurrent then: relIdsToAdd.push(keepRelationshipId);
@@ -3221,7 +3268,7 @@ const TYPE_ORDINANCE = "Ordinances"; // linked ordinance
       }
     }
 
-    function copyOrMoveChangeEntry(element, changeEntries, isCurrent) {
+    const copyOrMoveChangeEntry = (element, changeEntries, isCurrent) => {
       switch (element.type) {
         case TYPE_NAME:
         case TYPE_FACT:
@@ -3260,36 +3307,37 @@ const TYPE_ORDINANCE = "Ordinances"; // linked ordinance
     let [keepPersonIds, splitPersonIds] = getKeepAndSplitPersonIds(grouper);
 
     for (let element of split.elements) {
-      let isCurrent = !element.isExtra();
-      let infoString = getElementInfoString(element);
-      let infoPersonChangeMap = typeInfoPersonIdChangeEntryMap.get(element.type);
-      if (infoPersonChangeMap) {
-        // Map of personId -> latest change entry with that info string for that person ID.
-        let personChangeMap = infoPersonChangeMap.get(infoString);
-        // If there are multiple person IDs with the same info string, then
-        //  a) find the most recent one where the personId is in the group that the element is in
-        //     (i.e., in the keep group if the element is a keep or copy element; or in the split
-        //     group if the element is a split or copy element).
-        //  b) If the person ID isn't in the right group, take the most recent from the other group.
-        //  c) If there isn't a change log entry at all that has the info, then this info is coming
-        //     from a source instead, so it will go in the "conclusionsToAdd" list.
-        let changeEntries = chooseBestChangeEntry(personChangeMap, keepPersonIds, splitPersonIds, element.direction);
+      if (element.isSelected) {
+        let isCurrent = !element.isExtra();
+        let infoString = getElementInfoString(element);
+        let infoPersonChangeMap = typeInfoPersonIdChangeEntryMap.get(element.type);
+        if (infoPersonChangeMap) {
+          // Map of personId -> latest change entry with that info string for that person ID.
+          let personChangeMap = infoPersonChangeMap.get(infoString);
+          // If there are multiple person IDs with the same info string, then
+          //  a) find the most recent one where the personId is in the group that the element is in
+          //     (i.e., in the keep group if the element is a keep or copy element; or in the split
+          //     group if the element is a split or copy element).
+          //  b) If the person ID isn't in the right group, take the most recent from the other group.
+          //  c) If there isn't a change log entry at all that has the info, then this info is coming
+          //     from a source instead, so it will go in the "conclusionsToAdd" list.
+          let changeEntries = personChangeMap ? chooseBestChangeEntry(personChangeMap, keepPersonIds, splitPersonIds, element.direction) : null;
 
-        if (changeEntries) {
-          copyOrMoveChangeEntry(element, changeEntries, isCurrent);
+          if (changeEntries) {
+            copyOrMoveChangeEntry(element, changeEntries, isCurrent);
+          } else {
+            // This info is coming from a source, so add it to the appropriate list of conclusions to add.
+            let tfConclusion = new TfConclusion(element.type, element.item);
+            if (!isCurrent && (element.direction === DIR_KEEP || element.direction === DIR_COPY)) {
+              this.conclusionsToAddToCombined.push(tfConclusion);
+            }
+            if (element.direction === DIR_MOVE || element.direction === DIR_COPY) {
+              this.conclusionsToAddToExtracted.push(tfConclusion);
+            }
+          }
         } else {
-          // This info is coming from a source, so add it to the appropriate list of conclusions to add.
-          let tfConclusion = new TfConclusion(element.type, element.item);
-          if (!isCurrent && (element.direction === DIR_KEEP || element.direction === DIR_COPY)) {
-            this.conclusionsToAddToCombined.push(tfConclusion);
-          }
-          if (element.direction === DIR_MOVE || element.direction === DIR_COPY) {
-            this.conclusionsToAddToExtracted.push(tfConclusion);
-          }
+          console.log("No infoPersonChangeMap for " + element.type + ": " + infoString);
         }
-      }
-      else {
-        console.log("No infoPersonChangeMap for " + element.type + ": " + infoString);
       }
     }
     /*
@@ -5774,6 +5822,11 @@ function updateGedcomx(gedcomx, entry, isOrig) {
       case "Create-Person":
       // Do nothing: We already have a GedcomX record with an empty person of this ID to start with.
       case "Create-EvidenceReference":
+      case "Update-EvidenceReference":
+      case "Delete-EvidenceReference":
+      case "Create-DiscussionReference":
+      case "Update-DiscussionReference":
+      case "Delete-DiscussionReference":
         // Do nothing: We aren't handling memories at the moment.
         break;
       case "Create-Note":

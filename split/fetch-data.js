@@ -4,7 +4,7 @@
  * Recursively fetch a person's change log entries, including following 'next' links, and fetching the
  *   change logs of any persons who merged into this one.
  * @param personId - Person ID to fetch change log for
- * @param context - Object with personId, baseUrl and optionally sessionId
+ * @param context - Object with personId, baseUrl and optionally sessionId (and optional production session ID if using beta)
  * @param changeLogMap - Map of personId to list of change log entries for that person id.
  * @param fetching - list of person IDs currently being fetched.
  * @param $mainTable - JQuery element to put the resulting HTML into when ready
@@ -31,6 +31,10 @@ function fetchChangeLog(personId, context, changeLogMap, fetching, $mainTable, n
     url: url,
     success:function(gedcomx){
       receiveChangeLog(gedcomx, personId, context, changeLogMap, fetching, $mainTable, nextUrl);
+    },
+    error:function() {
+      console.log("Failed to fetch change log for main person: " + personId);
+      receiveChangeLog(null, personId, context, changeLogMap, fetching, $mainTable, nextUrl);
     }
   });
 
@@ -78,6 +82,7 @@ function handleIfFinishedFetching(fetching, context, changeLogMap, $mainTable) {
     // So create the Html.
     makeMainHtml(context, changeLogMap, $mainTable);
     hasRestoreInChangeLog = allEntries.some(entry => entry.title && entry.title.includes("Restore"));
+    hasMemory = allEntries.some(entry => entry.title && entry.title.includes("Person Evidence Reference"));
     if (hasRestoreInChangeLog) {
       alert("This person has a 'Restore' in the change log. You can evaluate the person, but the tool can't handle splitting them yet.");
     }
@@ -288,26 +293,7 @@ function receiveSourceDescription(gedcomx, context, fetching, sourceUrl, sourceM
     let sourceInfo = sourceMap[sourceUrl];
     sourceInfo.setSourceDescription(gedcomx.sourceDescriptions[0]);
     if (sourceInfo.personaArk && sourceInfo.personaArk.includes("ark:/61903/")) {
-      fetching.push(sourceInfo.personaArk);
-      // Got source description, which has the persona Ark, so now fetch that.
-      $.ajax({
-        beforeSend: function (request) {
-          request.setRequestHeader("Accept", "application/json");
-          // request.setRequestHeader("User-Agent", "ACE Record Fixer");
-          // request.setRequestHeader("Fs-User-Agent-Chain", "ACE Record Fixer");
-          if (context.sessionId) {
-            request.setRequestHeader("Authorization", "Bearer " + context.sessionId);
-          }
-        },
-        dataType: "json",
-        url: sourceInfo.personaArk,
-        success: function (gedcomx) {
-          receivePersona(gedcomx, context, fetching, sourceInfo);
-        },
-        error: function() {
-          receivePersona(null, context, fetching, sourceInfo);
-        }
-      });
+      fetchPersona(fetching, sourceInfo, sourceInfo.personaArk, context, context.sessionId);
     }
     if (fetching.length) {
       setStatus("Fetching " + fetching.length + "/" + sourceMap.size + " sources...");
@@ -315,6 +301,88 @@ function receiveSourceDescription(gedcomx, context, fetching, sourceUrl, sourceM
     else {
       finishedReceivingSources();
     }
+  }
+  else {
+    console.log("Failed to fetch source description for " + sourceUrl);
+  }
+}
+
+function fetchPersona(fetching, sourceInfo, personaUrlToUse, context, betaOrProdSessionId) {
+  fetching.push(personaUrlToUse);
+  // Got source description, which has the persona Ark, so now fetch that.
+  $.ajax({
+    beforeSend: function (request) {
+      request.setRequestHeader("Accept", "application/json");
+      // request.setRequestHeader("User-Agent", "ACE Record Fixer");
+      // request.setRequestHeader("Fs-User-Agent-Chain", "ACE Record Fixer");
+      if (context.sessionId) {
+        request.setRequestHeader("Authorization", "Bearer " + betaOrProdSessionId);
+      }
+    },
+    dataType: "json",
+    url: personaUrlToUse,
+    success: function (gedcomx) {
+      receivePersona(gedcomx, context, fetching, sourceInfo, personaUrlToUse);
+    },
+    error: function () {
+      receivePersona(null, context, fetching, sourceInfo, personaUrlToUse);
+    }
+  });
+}
+
+function receivePersona(gedcomx, context, fetching, sourceInfo, personaUrlToUse) {
+  fetching.splice(fetching.indexOf(personaUrlToUse), 1);
+  if (gedcomx) {
+    fixEventOrders(gedcomx);
+    sourceInfo.gedcomx = gedcomx;
+    let personaArk = getMainPersonaArk(gedcomx);
+    if (personaArk !== sourceInfo.personaArk) {
+      // This persona has been deprecated & forwarded or something, so update the 'ark' in sourceInfo to point to the new ark.
+      sourceInfo.personaArk = personaArk;
+    }
+    let person = findPersonInGx(gedcomx, personaArk);
+    sourceInfo.personId = person ? person.id : null;
+    sourceInfo.collectionName = getCollectionName(gedcomx);
+    sourceInfo.recordDate = getRecordDate(gedcomx);
+    sourceInfo.recordDateSortKey = sourceInfo.recordDate ? parseDateIntoNumber(sourceInfo.recordDate).toString() : null;
+    sourceInfo.stapledOrdinancePersonId = getStapledOrdinancePersonId(person);
+  }
+  else if (personaUrlToUse.includes("beta.familysearch.org") && context.prodSessionId) {
+    fetchPersona(fetching, sourceInfo, personaUrlToUse.replace("beta.familysearch.org", "www.familysearch.org"), context, context.prodSessionId);
+  }
+  else {
+    console.log("Failed to fetch persona at " + personaUrlToUse + ". Creating fake gedcomx");
+    let fakePerson = {
+      id: shortenPersonArk(sourceInfo.personaArk),
+      identifiers : { "http://gedcomx.org/Persistent" : sourceInfo.personaArk}
+    };
+    let name = extractPersonaNameFromSourceTitle(sourceInfo.title);
+    if (name) {
+      fakePerson.names = [{ nameForms: [{ fullText: name }] }];
+    }
+    sourceInfo.gedcomx = {
+      description: "#sd_p1",
+      persons: [fakePerson],
+      sourceDescriptions: [ {
+          id: "sd_p1",
+          about: sourceInfo.personaArk,
+          //componentOf: { description: "#sd_rec" }, ... and then add a record source description
+          resourceType: "http://gedcomx.org/Person",
+          titles: [{ lang: "en", value: sourceInfo.title }],
+          identifiers: { "http://gedcomx.org/Persistent" : [ sourceInfo.personaArk ]
+        }
+      }]
+    };
+    if (!sourceInfo.collectionName) {
+      sourceInfo.collectionName = sourceInfo.title;
+    }
+    sourceInfo.personId = fakePerson.id;
+  }
+  if (fetching.length) {
+    setStatus("Fetching " + fetching.length + "/" + Object.keys(sourceMap).length + " sources...");
+  }
+  else {
+    finishedReceivingSources(context);
   }
 }
 
@@ -340,29 +408,20 @@ function getCollectionName(gedcomx) {
   return collectionTitle;
 }
 
-function receivePersona(gedcomx, context, fetching, sourceInfo) {
-  if (gedcomx) {
-    fixEventOrders(gedcomx);
-    sourceInfo.gedcomx = gedcomx;
-    let personaArk = getMainPersonaArk(gedcomx);
-    if (personaArk !== sourceInfo.personaArk) {
-      // This persona has been deprecated & forwarded or something, so update the 'ark' in sourceInfo to point to the new ark.
-      sourceInfo.personaArk = personaArk;
-    }
-    let person = findPersonInGx(gedcomx, personaArk);
-    sourceInfo.personId = person ? person.id : null;
-    sourceInfo.collectionName = getCollectionName(gedcomx);
-    sourceInfo.recordDate = getRecordDate(gedcomx);
-    sourceInfo.recordDateSortKey = sourceInfo.recordDate ? parseDateIntoNumber(sourceInfo.recordDate).toString() : null;
-    sourceInfo.stapledOrdinancePersonId = getStapledOrdinancePersonId(person);
+function extractPersonaNameFromSourceTitle(title) {
+  // Find the first instance of " in " in title, and get the substring before that.
+  let inIndex = title.indexOf(" in ");
+  if (inIndex > 0) {
+    return title.substring(0, inIndex);
   }
-  fetching.splice(fetching.indexOf(sourceInfo.personaArk), 1);
-  if (fetching.length) {
-    setStatus("Fetching " + fetching.length + "/" + Object.keys(sourceMap).length + " sources...");
+  let commaIndex = title.indexOf(", \"");
+  if (commaIndex <= 0) {
+    commaIndex = title.indexOf(",");
   }
-  else {
-    finishedReceivingSources(context);
+  if (commaIndex > 0) {
+    return title.substring(0, commaIndex);
   }
+  return "<Unknown name>";
 }
 
 function getRecordDate(gedcomx) {
@@ -465,7 +524,7 @@ function fetchRelativeSources(context) {
 
   setStatus("Fetching " + fetching.length + " relatives' sources...");
   for (let relativeId of relativeMap.keys()) {
-    let sourceUrl = "https://www.familysearch.org/platform/tree/persons/" + relativeId + "/sources";
+    let sourceUrl = context.baseUrl + relativeId + "/sources";
     $.ajax({
       beforeSend: function(request) {
         request.setRequestHeader("Accept", "application/json");

@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>FamilySearch Time Machine</title>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-    <script src="https://code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
-    <script src="../gx-util.js"></script>
-    <script src="../graph/ark-util.js"></script>
+  <meta charset="UTF-8">
+  <title>FamilySearch Time Machine</title>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
+  <script src="../gx-util.js"></script>
+  <script src="../graph/ark-util.js"></script>
   <script src="time-machine.js"></script>
   <script src="fetch-data.js"></script>
   <script src="ordinance.js"></script>
-    <link rel="stylesheet" type="text/css" href="time-machine.css">
-<script type="text/javascript">
+  <link rel="stylesheet" type="text/css" href="time-machine.css">
+  <script type="text/javascript">
   $(document).ready(function(){
     let $status = $("#status");
     let params = window.location.search;
@@ -31,10 +31,11 @@
     let shouldFetchOrdinances = urlParams.has('ord');
     if (url) {
       let sessionId = urlParams.get('sessionId');
-      buildSplitter(url, sessionId, $("#main-table"), $status, shouldFetchOrdinances);
+      let prodSessionId = urlParams.get('prodSessionId');
+      buildSplitter(url, sessionId, $("#main-table"), $status, shouldFetchOrdinances, prodSessionId);
     }
   });
-</script>
+  </script>
 </head>
 <body>
   <div id="main-table"></div>
