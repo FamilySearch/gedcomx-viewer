@@ -4,14 +4,13 @@
  * Recursively fetch a person's change log entries, including following 'next' links, and fetching the
  *   change logs of any persons who merged into this one.
  * @param personId - Person ID to fetch change log for
- * @param context - Object with personId, baseUrl and optionally sessionId (and optional production session ID if using beta)
  * @param changeLogMap - Map of personId to list of change log entries for that person id.
  * @param fetching - list of person IDs currently being fetched.
  * @param $mainTable - JQuery element to put the resulting HTML into when ready
  * @param nextUrl - "next" Url for a person's change log, if this is a next link call (none => fetch person's change log from scratch)
  * @param shouldFetchOrdinances - flag for whether to fetch ordinances (currently only works within FamilySearch VPN).
  */
-function fetchChangeLog(personId, context, changeLogMap, fetching, $mainTable, nextUrl, shouldFetchOrdinances) {
+function fetchChangeLog(personId, changeLogMap, fetching, $mainTable, nextUrl, shouldFetchOrdinances) {
   if (!nextUrl && (changeLogMap.hasOwnProperty(personId) || fetching.includes(personId))) {
     return; // Already took care of this one
   }
@@ -30,16 +29,16 @@ function fetchChangeLog(personId, context, changeLogMap, fetching, $mainTable, n
     dataType: "json",
     url: url,
     success:function(gedcomx){
-      receiveChangeLog(gedcomx, personId, context, changeLogMap, fetching, $mainTable, nextUrl);
+      receiveChangeLog(gedcomx, personId, changeLogMap, fetching, $mainTable, nextUrl);
     },
     error:function() {
       console.log("Failed to fetch change log for main person: " + personId);
-      receiveChangeLog(null, personId, context, changeLogMap, fetching, $mainTable, nextUrl);
+      receiveChangeLog(null, personId, changeLogMap, fetching, $mainTable, nextUrl);
     }
   });
 
   if (shouldFetchOrdinances) {
-    fetchOrdinances(personId, fetching, context, changeLogMap, $mainTable);
+    fetchOrdinances(personId, fetching, changeLogMap, $mainTable);
   }
 }
 
@@ -47,13 +46,12 @@ function fetchChangeLog(personId, context, changeLogMap, fetching, $mainTable, n
  * Receive a change log GedcomX from an Ajax request.
  * @param gedcomx - GedcomX of the change log
  * @param personId - Person ID whose change log is being fetched
- * @param context - Object with personId, baseUrl and optionally sessionId
  * @param changeLogMap - Map of person ID -> list of change log entries for that person id.
  * @param fetching - List of person IDs currently being fetched
  * @param $mainTable - JQuery element to put the resulting HTML into when ready
  * @param receivedNextUrl - flag for whether this is a 'next' URL.
  */
-function receiveChangeLog(gedcomx, personId, context, changeLogMap, fetching, $mainTable, receivedNextUrl) {
+function receiveChangeLog(gedcomx, personId, changeLogMap, fetching, $mainTable, receivedNextUrl) {
   modifyStatusMessage(fetching, personId, "Fetching" + (receivedNextUrl ? " next" : "") + " change log for " + personId, "Received" + (receivedNextUrl ? " next" : "") + " change log for " + personId);
   if (gedcomx) {
     let changeLogEntries = makeChangeLogEntries(gedcomx);
@@ -63,36 +61,36 @@ function receiveChangeLog(gedcomx, personId, context, changeLogMap, fetching, $m
     changeLogMap[personId] = changeLogEntries;
     let nextUrl = "next" in gedcomx.links ? gedcomx.links.next.href : null;
     if (nextUrl) {
-      fetchChangeLog(personId, context, changeLogMap, fetching, $mainTable, nextUrl);
+      fetchChangeLog(personId, changeLogMap, fetching, $mainTable, nextUrl);
     }
     let mergedIds = getNewMergeIds(personId, changeLogEntries);
     for (let newMergeId of mergedIds) {
-      fetchChangeLog(newMergeId, context, changeLogMap, fetching, $mainTable);
+      fetchChangeLog(newMergeId, changeLogMap, fetching, $mainTable);
     }
   }
   else {
     console.log("Warning: Failed to fetch gedcomx for " + personId);
   }
-  handleIfFinishedFetching(fetching, context, changeLogMap, $mainTable);
+  handleIfFinishedFetching(fetching, changeLogMap, $mainTable);
 }
 
-function handleIfFinishedFetching(fetching, context, changeLogMap, $mainTable) {
+function handleIfFinishedFetching(fetching, changeLogMap, $mainTable) {
   if (fetching.length === 0) {
     // All the change logs that needed to be fetched have now been fetched, and this is the last one.
     // So create the Html.
-    makeMainHtml(context, changeLogMap, $mainTable);
+    makeMainHtml(changeLogMap, $mainTable);
     hasRestoreInChangeLog = allEntries.some(entry => entry.title && entry.title.includes("Restore"));
     hasMemory = allEntries.some(entry => entry.title && entry.title.includes("Person Evidence Reference"));
     if (hasRestoreInChangeLog) {
       alert("This person has a 'Restore' in the change log. You can evaluate the person, but the tool can't handle splitting them yet.");
     }
     // Then, kick off the fetching of relatives and sources info, and update the table when done.
-    fetchRelativesAndSources(changeLogMap, context);
+    fetchRelativesAndSources(changeLogMap);
   }
 }
 
 
-function fetchOrdinances(personId, fetching, context, changeLogMap, $mainTable) {
+function fetchOrdinances(personId, fetching, changeLogMap, $mainTable) {
   updateStatus("Fetching ordinances from TF for " + personId);
   fetching.push(personId + "-tf");
   let url = "https://" + (context.baseUrl.includes("beta.familysearch") ? "beta" : "www")
@@ -110,17 +108,17 @@ function fetchOrdinances(personId, fetching, context, changeLogMap, $mainTable) 
     url: url,
     success: function(tf) {
       console.log("Success in fetching tf person " + personId);
-      receiveOrdinances(tf, personId, context, changeLogMap, fetching, $mainTable);
+      receiveOrdinances(tf, personId, changeLogMap, fetching, $mainTable);
     },
     error: function() {
       console.log("Failed to fetch tf person " + personId);
-      receiveOrdinances(null, personId, context, changeLogMap, fetching, $mainTable);
+      receiveOrdinances(null, personId, changeLogMap, fetching, $mainTable);
     }
   });
-  fetchOrdinanceEntityRefs(personId, fetching, context, changeLogMap, $mainTable);
+  fetchOrdinanceEntityRefs(personId, fetching, changeLogMap, $mainTable);
 }
 
-function fetchOrdinanceEntityRefs(personId, fetching, context, changeLogMap, $mainTable, nextToken) {
+function fetchOrdinanceEntityRefs(personId, fetching, changeLogMap, $mainTable, nextToken) {
   updateStatus("Fetching ordinance entity refs for " + personId);
   fetching.push(personId + "-ows-refs");
   let owsRefsUrl = "https://" + (context.baseUrl.includes("beta.familysearch") ? "beta" : "www")
@@ -141,11 +139,11 @@ function fetchOrdinanceEntityRefs(personId, fetching, context, changeLogMap, $ma
     url: owsRefsUrl,
     success: function(tf) {
       console.log("Success in fetching tf person " + personId);
-      receiveOrdinanceEntityRefs(tf, personId, context, changeLogMap, fetching, $mainTable);
+      receiveOrdinanceEntityRefs(tf, personId, changeLogMap, fetching, $mainTable);
     },
     error: function() {
       console.log("Failed to fetch tf person " + personId);
-      receiveOrdinanceEntityRefs(null, personId, context, changeLogMap, fetching, $mainTable);
+      receiveOrdinanceEntityRefs(null, personId, changeLogMap, fetching, $mainTable);
     }
   });
 }
@@ -185,7 +183,7 @@ function fetchOrdinanceEntityRefs(personId, fetching, context, changeLogMap, $ma
         .uri (owsId, like "ows.MC7B-XRV")
    Then fetch the OWS for each ordinance reference.
  */
-function receiveOrdinances(ordinancesJson, personId, context, changeLogMap, fetching, $mainTable) {
+function receiveOrdinances(ordinancesJson, personId, changeLogMap, fetching, $mainTable) {
   if (ordinancesJson) {
     modifyStatusMessage(fetching, personId + "-tf", "Fetching ordinances from TF for " + personId, "Received ordinances from TF for " + personId);
 
@@ -201,10 +199,10 @@ function receiveOrdinances(ordinancesJson, personId, context, changeLogMap, fetc
   else {
     modifyStatusMessage(fetching, personId + "-tf", "Fetching ordinances from TF for " + personId, "Failed to receive ordinances from TF for " + personId);
   }
-  handleIfFinishedFetching(fetching, context, changeLogMap, $mainTable);
+  handleIfFinishedFetching(fetching, changeLogMap, $mainTable);
 }
 
-function receiveOrdinanceEntityRefs(changesJson, personId, context, changeLogMap, fetching, $mainTable) {
+function receiveOrdinanceEntityRefs(changesJson, personId, changeLogMap, fetching, $mainTable) {
   if (changesJson) {
     modifyStatusMessage(fetching, personId + "-ows-refs", "Fetching ordinance entity refs for " + personId, "Received ordinance entity refs for " + personId);
     for (let change of getList(changesJson, "changes")) {
@@ -223,7 +221,7 @@ function receiveOrdinanceEntityRefs(changesJson, personId, context, changeLogMap
     }
     if (!changesJson.lastPage) {
       if (changesJson.nextToken) {
-        fetchOrdinanceEntityRefs(personId, fetching, context, changeLogMap, $mainTable, changesJson.nextToken);
+        fetchOrdinanceEntityRefs(personId, fetching, changeLogMap, $mainTable, changesJson.nextToken);
       }
       else {
         console.log("Warning: No next token for ordinance entity refs change log for " + personId);
@@ -233,10 +231,10 @@ function receiveOrdinanceEntityRefs(changesJson, personId, context, changeLogMap
   else {
     modifyStatusMessage(fetching, personId + "-ows-refs", "Fetching ordinance entity refs for " + personId, "Failed to receive ordinance entity refs for " + personId);
   }
-  handleIfFinishedFetching(fetching, context, changeLogMap, $mainTable);
+  handleIfFinishedFetching(fetching, changeLogMap, $mainTable);
 }
 
-function fetchRelativesAndSources(changeLogMap, context) {
+function fetchRelativesAndSources(changeLogMap) {
   // Populate sourceMap[sourceUrl] = null, and relativeMap[relativeId].
   // so that the keys of these maps can be used to fill in the values.
   for (let personId of Object.keys(changeLogMap)) {
@@ -266,34 +264,33 @@ function fetchRelativesAndSources(changeLogMap, context) {
         dataType: "json",
         url: sourceUrl,
         success: function (gedcomx) {
-          receiveSourceDescription(gedcomx, context, fetching, sourceUrl, sourceMap);
+          receiveSourceDescription(gedcomx, fetching, sourceUrl, sourceMap);
         },
         error: function () {
-          receiveSourceDescription(null, context, fetching, sourceUrl, sourceMap)
+          receiveSourceDescription(null, fetching, sourceUrl, sourceMap)
         }
       });
     }
   }
   else {
-    finishedReceivingSources(context);
+    finishedReceivingSources();
   }
 }
 
 /**
  * Receive a SourceDescription from an AJAX call.
  * @param gedcomx - GedcomX containing the SourceDescription
- * @param context - Context info such as session ID.
  * @param fetching - List of sourceUrls still being fetched.
  * @param sourceUrl - SourceUrl fetched for this call
  * @param sourceMap - (Global) map of sourceUrl -> SourceInfo for that source (which is filled out here).
  */
-function receiveSourceDescription(gedcomx, context, fetching, sourceUrl, sourceMap) {
+function receiveSourceDescription(gedcomx, fetching, sourceUrl, sourceMap) {
   fetching.splice(fetching.indexOf(sourceUrl), 1);
   if (gedcomx && "sourceDescriptions" in gedcomx && gedcomx.sourceDescriptions.length) {
     let sourceInfo = sourceMap[sourceUrl];
     sourceInfo.setSourceDescription(gedcomx.sourceDescriptions[0]);
     if (sourceInfo.personaArk && sourceInfo.personaArk.includes("ark:/61903/")) {
-      fetchPersona(fetching, sourceInfo, sourceInfo.personaArk, context, context.sessionId);
+      fetchPersona(fetching, sourceInfo, sourceInfo.personaArk, context.sessionId);
     }
     if (fetching.length) {
       setStatus("Fetching " + fetching.length + "/" + sourceMap.size + " sources...");
@@ -307,7 +304,7 @@ function receiveSourceDescription(gedcomx, context, fetching, sourceUrl, sourceM
   }
 }
 
-function fetchPersona(fetching, sourceInfo, personaUrlToUse, context, betaOrProdSessionId) {
+function fetchPersona(fetching, sourceInfo, personaUrlToUse, betaOrProdSessionId) {
   fetching.push(personaUrlToUse);
   // Got source description, which has the persona Ark, so now fetch that.
   $.ajax({
@@ -322,15 +319,15 @@ function fetchPersona(fetching, sourceInfo, personaUrlToUse, context, betaOrProd
     dataType: "json",
     url: personaUrlToUse,
     success: function (gedcomx) {
-      receivePersona(gedcomx, context, fetching, sourceInfo, personaUrlToUse);
+      receivePersona(gedcomx, fetching, sourceInfo, personaUrlToUse);
     },
     error: function () {
-      receivePersona(null, context, fetching, sourceInfo, personaUrlToUse);
+      receivePersona(null, fetching, sourceInfo, personaUrlToUse);
     }
   });
 }
 
-function receivePersona(gedcomx, context, fetching, sourceInfo, personaUrlToUse) {
+function receivePersona(gedcomx, fetching, sourceInfo, personaUrlToUse) {
   fetching.splice(fetching.indexOf(personaUrlToUse), 1);
   if (gedcomx) {
     fixEventOrders(gedcomx);
@@ -348,7 +345,7 @@ function receivePersona(gedcomx, context, fetching, sourceInfo, personaUrlToUse)
     sourceInfo.stapledOrdinancePersonId = getStapledOrdinancePersonId(person);
   }
   else if (personaUrlToUse.includes("beta.familysearch.org") && context.prodSessionId) {
-    fetchPersona(fetching, sourceInfo, personaUrlToUse.replace("beta.familysearch.org", "www.familysearch.org"), context, context.prodSessionId);
+    fetchPersona(fetching, sourceInfo, personaUrlToUse.replace("beta.familysearch.org", "www.familysearch.org"), context.prodSessionId);
   }
   else {
     console.log("Failed to fetch persona at " + personaUrlToUse + ". Creating fake gedcomx");
@@ -382,7 +379,7 @@ function receivePersona(gedcomx, context, fetching, sourceInfo, personaUrlToUse)
     setStatus("Fetching " + fetching.length + "/" + Object.keys(sourceMap).length + " sources...");
   }
   else {
-    finishedReceivingSources(context);
+    finishedReceivingSources();
   }
 }
 
@@ -501,7 +498,7 @@ function getMainPersonaArk(gedcomx) {
   }
 }
 
-function finishedReceivingSources(context) {
+function finishedReceivingSources() {
   clearStatus();
   $("#" + SOURCES_VIEW).html(getSourcesViewHtml());
   split = new Split(mergeGrouper.mergeGroups[0].personRows[0].gedcomx);
@@ -509,7 +506,7 @@ function finishedReceivingSources(context) {
   updateComboViewHtml();
   makeTableHeadersDraggable();
   animateRows()
-  fetchRelativeSources(context);
+  fetchRelativeSources();
 }
 
 // Begin fetching the list of source descriptions for each relative,
@@ -519,7 +516,7 @@ function finishedReceivingSources(context) {
 // For example, say person A has husband B in Family Tree; and that a marriage record R has a bride X and groom Y;
 //   If X is attached to A, then if Y is also attached to B, then we can say that this source "supports" the
 //   Couple relationship between A&B, because X&Y are a couple and A=X and B=Y.
-function fetchRelativeSources(context) {
+function fetchRelativeSources() {
   let fetching = [...relativeMap.keys()];
 
   setStatus("Fetching " + fetching.length + " relatives' sources...");
@@ -535,17 +532,17 @@ function fetchRelativeSources(context) {
       dataType: "json",
       url: sourceUrl,
       success:function(gedcomx){
-        receiveRelativeSources(gedcomx, context, fetching, relativeId);
+        receiveRelativeSources(gedcomx, fetching, relativeId);
       },
       error: function() {
         console.log("Failed to fetch sources for relative at " + sourceUrl);
-        receiveRelativeSources(null, context, fetching, relativeId);
+        receiveRelativeSources(null, fetching, relativeId);
       }
     });
   }
 }
 
-function receiveRelativeSources(gedcomx, context, fetching, relativeId) {
+function receiveRelativeSources(gedcomx, fetching, relativeId) {
   fetching.splice(fetching.indexOf(relativeId), 1);
   if (gedcomx && "sourceDescriptions" in gedcomx && gedcomx.sourceDescriptions.length) {
     let relativeInfo = relativeMap.get(relativeId);

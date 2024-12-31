@@ -59,11 +59,12 @@ let $statusDiv = null;
 let hasRestoreInChangeLog = false;
 // Flag for whether there is a memory (i.e. "Person Evidence Reference") in any of the change logs.
 let hasMemory = false;
+let context = null;
 
 // Fetch the change log entries for the person given by the change log URL.
 function buildSplitter(changeLogUrl, sessionId, $mainTable, $status, shouldFetchOrdinances, prodSessionId) {
   $statusDiv = $status;
-  let context = parsePersonUrl(changeLogUrl);
+  context = parsePersonUrl(changeLogUrl);
   mainPersonId = context.personId;
   if (sessionId) {
     context["sessionId"] = sessionId;
@@ -79,7 +80,7 @@ function buildSplitter(changeLogUrl, sessionId, $mainTable, $status, shouldFetch
   updateStatus("Fetching change logs...");
   // Recursively fetch this person's change log and that of anyone merged in.
   // Once last change log has been fetched, the last ajax call will call makeChangeLogHtml()
-  fetchChangeLog(context.personId, context, changeLogMap, fetching, $mainTable, null, shouldFetchOrdinances);
+  fetchChangeLog(context.personId, changeLogMap, fetching, $mainTable, null, shouldFetchOrdinances);
 }
 
 let sourceInfoIndex = 0;
@@ -141,7 +142,7 @@ function getCurrentTab() {
   return viewList[$("#tabs").tabs("option", "active")];
 }
 
-function makeMainHtml(context, changeLogMap, $mainTable) {
+function makeMainHtml(changeLogMap, $mainTable) {
   let personMinMaxTs = {};
   let personIds = [];
   allEntries = combineEntries(context.personId, changeLogMap, personIds, personMinMaxTs);
@@ -2871,6 +2872,7 @@ function performSplit(grouperId) {
   let splitObject = createSplitObject(grouper);
   if (confirm("Should we really pretend to split?")) {
     console.log("Pretending to split...");
+    //todo: PUT /person/{id}/split with the splitObject as the payload
   }
   else {
     console.log("Split cancelled.");
