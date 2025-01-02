@@ -59,9 +59,13 @@ let $statusDiv = null;
 let hasRestoreInChangeLog = false;
 // Flag for whether there is a memory (i.e. "Person Evidence Reference") in any of the change logs.
 let hasMemory = false;
+// Object with:
+// .personId - Current survivor person ID.
+// .sessionId, .prodSessionId (if using beta)
+// .baseUrl - https://beta(or www).familysearch.org/platform/tree/persons/
 let context = null;
 
-// Fetch the change log entries for the person given by the change log URL.
+// Fetch the change log entries for the person given by the change log URL (like https://beta(or www).familysearch.org/platform/tree/persons/B9Q5-P4H/changes)
 function buildSplitter(changeLogUrl, sessionId, $mainTable, $status, shouldFetchOrdinances, prodSessionId) {
   $statusDiv = $status;
   context = parsePersonUrl(changeLogUrl);
@@ -1260,7 +1264,7 @@ class DisplayOptions {
     // Flag for whether to show summaries of 'keep' and 'split' just above the split group (if any).
     this.shouldShowSummaries = false;
     // Flag for whether to show hidden values in the summary rows in the combo view. (Does not affect split view).
-    this.shouldExpandHiddenValues = false;
+    this.shouldExpandHiddenValues = true;
   }
 }
 
@@ -2870,8 +2874,42 @@ function performSplit(grouperId) {
   }
   let grouper = grouperMap[grouperId];
   let splitObject = createSplitObject(grouper);
-  if (confirm("Should we really pretend to split?")) {
-    console.log("Pretending to split...");
+  if (confirm("Should we really split?")) {
+    if (context.baseUrl.includes("beta")) {
+      let splitUrl = "https://beta.familysearch.org/service/tree/tf/person/" + mainPersonId + "/split";
+      let jsonData = JSON.stringify(splitObject);
+      $.ajax({
+        beforeSend: function(request) {
+          // request.setRequestHeader("Accept", "application/json");
+          // request.setRequestHeader("User-Agent", "ACE Record Fixer");
+          // request.setRequestHeader("Fs-User-Agent-Chain", "ACE Record Fixer");
+          if (context.sessionId) {
+            request.setRequestHeader("Authorization", "Bearer " + context.sessionId);
+          }
+        },
+        url: splitUrl,
+        type: "PUT",
+        contentType: "application/json",
+        data: jsonData,
+        success: function(data, textStatus, jqXHR) {
+          let splitPersonId = jqXHR.getResponseHeader("extracted-person-id");
+          console.log("Split successful. New person ID = " + splitPersonId);
+          // Pop up two new windows: one for the "keep" person and one for the "split" person.
+          // Use the URL https://beta.familysearch.org/tree/person/details/<keepPersonId> and <splitPersonId>
+          let detailsUrl = "https://" + (context.baseUrl.includes("beta") ? "beta" : "www") + ".familysearch.org/tree/person/details/";
+          window.open(detailsUrl + mainPersonId, "_blank");
+          window.open(detailsUrl + splitPersonId, "_blank");
+
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+          console.log("Split failed. Status code=" + jqXHR.status + ". Response text=" + jqXHR.responseText + ". Error=" + errorThrown);
+        }
+      });
+    }
+    else {
+      console.log("Pretending to split (not enabled in prod yet).");
+    }
+
     //todo: PUT /person/{id}/split with the splitObject as the payload
   }
   else {
@@ -2932,7 +2970,7 @@ function performSplit(grouperId) {
 // Object to use with the Split API
 class SplitObject {
   constructor(grouper) {
-    // Maps of personId -> list of {id: <conclusionId>, changeId: <changeId>} from that personId's change log to copy to the "split" ("extracted") person,
+    // Maps of personId -> list of <changeId> from that personId's change log to copy to the "split" ("extracted") person,
     //   or to add (aka "edit") to the "keep" ("combined") person.
     this.changeIdsOfConclusionsToCopyByPersonId = {};
     this.changeIdsOfEntityRefsToCopyByPersonId = {};
@@ -3130,9 +3168,7 @@ const TYPE_ORDINANCE = "Ordinances"; // linked ordinance
 
       let bestKeepEntry = null;
       let bestSplitEntry = null;
-      if (direction === DIR_KEEP || direction === DIR_COPY) {
-        bestKeepEntry = getLatestEntry(keepPersonIds, splitPersonIds);
-      }
+      bestKeepEntry = getLatestEntry(keepPersonIds, splitPersonIds);
       if (direction === DIR_MOVE || direction === DIR_COPY) {
         bestSplitEntry = getLatestEntry(splitPersonIds, keepPersonIds);
       }
@@ -3175,7 +3211,8 @@ const TYPE_ORDINANCE = "Ordinances"; // linked ordinance
 
     function getConclusionIdFromChangeEntry(changeEntry) {
       let gedcomx = changeEntry.content.gedcomx;
-      let person = gedcomx.persons[0];
+      // If this is a 'change', then there will be two persons: the original and the resulting.
+      let person = gedcomx.persons.length > 1 ? gedcomx.persons[1] : gedcomx.persons[0];
       if (person.gender) {
         return person.gender.id;
       }
@@ -3194,8 +3231,17 @@ const TYPE_ORDINANCE = "Ordinances"; // linked ordinance
         changeIdList = [];
         changeIdMap[changeEntry.personId] = changeIdList;
       }
+      changeIdList.push(changeEntry.id);
+    }
+
+    function addToItemChangeMap(itemChangeMap, changeEntry) {
+      let itemChangeList = getOrMakeList(itemChangeMap, changeEntry.personId);
+      if (!itemChangeList) {
+        itemChangeList = [];
+        itemChangeMap[changeEntry.personId] = itemChangeList;
+      }
       const conclusionId = getConclusionIdFromChangeEntry(changeEntry);
-      changeIdList.push({
+      itemChangeList.push({
         id: conclusionId,
         changeId: changeEntry.id
       });
@@ -3210,26 +3256,32 @@ const TYPE_ORDINANCE = "Ordinances"; // linked ordinance
       return list;
     }
 
-    function updateSplitMaps(changeEntries, direction, keepMap, splitMap, deleteMap, isCurrent) {
+    function updateSplitMaps(changeEntries, direction, keepItemChangeMap, splitChangeIdMap, deleteMap, isCurrent) {
       let keepChangeEntry = changeEntries[0];
       let splitChangeEntry = changeEntries[1];
       switch (direction) {
         case DIR_KEEP:
           if (!isCurrent) {
-            addToChangeIdMap(keepMap, keepChangeEntry);
+            addToItemChangeMap(keepItemChangeMap, keepChangeEntry);
           }
           break;
         case DIR_MOVE:
-          addToChangeIdMap(splitMap, splitChangeEntry);
+          addToChangeIdMap(splitChangeIdMap, splitChangeEntry);
           if (isCurrent) {
-            deleteMap.push(keepChangeEntry ? keepChangeEntry.id : splitChangeEntry.id);
+            if (!keepChangeEntry) {
+              console.log("Error: No keepChangeEntry for current value.");
+            }
+            else {
+              let conclusionId = getConclusionIdFromChangeEntry(keepChangeEntry);
+              deleteMap.push(conclusionId);
+            }
           }
           break;
         case DIR_COPY:
           if (!isCurrent) {
-            addToChangeIdMap(keepMap, keepChangeEntry);
+            addToItemChangeMap(keepItemChangeMap, keepChangeEntry);
           }
-          addToChangeIdMap(splitMap, splitChangeEntry);
+          addToChangeIdMap(splitChangeIdMap, splitChangeEntry);
           break;
       }
     }
