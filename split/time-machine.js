@@ -2898,8 +2898,11 @@ function performSplit(grouperId) {
           // Use the URL https://beta.familysearch.org/tree/person/details/<keepPersonId> and <splitPersonId>
           let detailsUrl = "https://" + (context.baseUrl.includes("beta") ? "beta" : "www") + ".familysearch.org/tree/person/details/";
           window.open(detailsUrl + mainPersonId, "_blank");
-          window.open(detailsUrl + splitPersonId, "_blank");
-
+          // Wait 1 second before opening the second window so that (a) the browser doesn't interpret this as spam, and
+          // (b) Family Tree has time to process the split and update the database.
+          setTimeout(function() {
+            window.open(detailsUrl + splitPersonId, "_blank");
+          }, 1000);
         },
         error: function(jqXHR, textStatus, errorThrown) {
           console.log("Split failed. Status code=" + jqXHR.status + ". Response text=" + jqXHR.responseText + ". Error=" + errorThrown);
@@ -3166,7 +3169,7 @@ const TYPE_ORDINANCE = "Ordinances"; // linked ordinance
         return latestEntry;
       }
 
-      let bestKeepEntry = null;
+      let bestKeepEntry;
       let bestSplitEntry = null;
       bestKeepEntry = getLatestEntry(keepPersonIds, splitPersonIds);
       if (direction === DIR_MOVE || direction === DIR_COPY) {
@@ -3558,16 +3561,8 @@ function getTypeNameFromTypeUri(uri) {
 
 function createSplitObject(grouper) {
   let split = new SplitObject(grouper);
-  console.log("Split object:\n" + JSON.stringify(split, null, 2));
-
-  // Map of changeId -> {type, info string, GedcomX item}
-  let changeIdMap = null;
   // Display the split object in the console for debugging.
-  //todo...
-  // For the keep person:
-  // - Find the root merge node (or the PersonRow for the person in the grouper) to get the GedcomX.
-  // - Get a map of info -> html for current info (conclusions, entity refs, notes).
-  // - Display (a) current info, (b) keep info, (c) split info
+  console.log("Split object:\n" + JSON.stringify(split, null, 2));
   return split;
 }
 
