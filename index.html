@@ -1108,7 +1108,7 @@
 
       let type = $("#edit-record-metadata-type").val();
       let url = "http://gedcomx.org/";
-      if (type === "PrayerCard") {
+      if (type === "PrayerCard" || type === "AbjurationOathRecord") {
         url = "http://familysearch.org/types/records/";
       }
       if (type && type !== url + type) {
@@ -4086,6 +4086,7 @@
           <option value="PrayerCard">Prayer Card</option>
           <option value="Probate">Probate</option>
           <option value="RelatedDocument">RelatedDocument</option>
+          <option value="AbjurationOathRecord">Religious Abjuration Records</option>
           <option value="ReligiousCreeds">ReligiousCreeds</option>
           <option value="Residence">Residence</option>
           <option value="Roll">Roll</option>
