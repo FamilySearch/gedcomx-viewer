@@ -2923,32 +2923,31 @@ function performSplit(grouperId) {
 /*
   TfPersonSplitSpecification, from tf-json-binding:
   // -- Extracted person specifications. Things to add to the "split" person.
-  private Map<String, List<String>> changeIdsOfConclusionsToCopyByPersonId;
-  private Map<String, List<String>> changeIdsOfEntityRefsToCopyByPersonId;
-  private Map<String, List<String>> changeIdsOfNotesToCopyByPersonId;
+  Map<String, List<String>> changeIdsOfConclusionsToCopyByPersonId;
+  Map<String, List<String>> changeIdsOfEntityRefsToCopyByPersonId;
+  Map<String, List<String>> changeIdsOfNotesToCopyByPersonId;
 
-  private List<TfConclusion> conclusionsToAddToCombined; // Conclusions to copy from a source persona to the "keep" person.
+  // Conclusions to copy from a source persona to the "split" person.
+  List<TfConclusion> conclusionsToAddToExtracted;
 
-  private List<String> idsOfCoupleRelationshipsToCopy;
-  private List<String> idsOfParentChildRelationshipsToCopy;
-
-  private List<TfConclusion> conclusionsToAddToExtracted; // Conclusions to copy from a source persona to the "split" person.
+  List<String> idsOfCoupleRelationshipsToCopy;
+  List<String> idsOfParentChildRelationshipsToCopy;
 
   // -- Combined person specifications. Things to add to the "keep" person.
-  // (TfItemChange.id = conclusionId, .changeId = changeId)
-  private Map<String, List<TfItemChange>> changeIdsOfConclusionsToEditByPersonId;
-  private Map<String, List<TfItemChange>> changeIdsOfEntityRefsToEditByPersonId;
-  private Map<String, List<TfItemChange>> changeIdsOfNotesToEditByPersonId;
+  Map<String, String> changeIdsOfConclusionsToAddToCombinedByPersonId;
+  Map<String, String> changeIdsOfEntityRefsToAddToCombinedByPersonId;
+  Map<String, String> changeIdsOfNotesToAddToCombinedByPersonId;
 
-  // Things to delete off of the "Combined"/"keep" person (usually just things copied/moved to the "split" person).
-  private List<String> idsOfConclusionsToDelete;
-  private List<String> idsOfEntityRefsToDelete;
-  private List<String> idsOfNotesToDelete;
+  // Conclusions to copy from a source persona to the "keep" person.
+  List<TfConclusion> conclusionsToAddToCombined;
 
-  private List<TfConclusion> conclusionsToAddToCombined;
+  // Things to delete off of the "Combined"/"keep" person (usually things copied/moved to the "split" person).
+  List<String> idsOfConclusionsToDelete;
+  List<String> idsOfEntityRefsToDelete;
+  List<String> idsOfNotesToDelete;
 
-  private List<String> idsOfCoupleRelationshipsToDelete;
-  private List<String> idsOfParentChildRelationshipsToDelete;
+  List<String> idsOfCoupleRelationshipsToDelete;
+  List<String> idsOfParentChildRelationshipsToDelete;
 
 {
   "changeIdsOfConclusionsToCopyByPersonId": {
@@ -2979,10 +2978,10 @@ class SplitObject {
     this.changeIdsOfEntityRefsToCopyByPersonId = {};
     this.changeIdsOfNotesToCopyByPersonId = {};
 
-    // Maps of personId -> list of {id: conclusionId, changeId: changeId).
-    this.changeIdsOfConclusionsToEditByPersonId = {};
-    this.changeIdsOfEntityRefsToEditByPersonId = {};
-    this.changeIdsOfNotesToEditByPersonId = {};
+    // Maps of personId -> list of changeIds to add to the combined person.
+    this.changeIdsOfConclusionsToAddToCombinedByPersonId = {};
+    this.changeIdsOfEntityRefsToAddToCombinedByPersonId = {};
+    this.changeIdsOfNotesToAddToCombinedByPersonId = {};
 
     // Lists of TfConclusion objects, created from conclusions on source personas rather than from Family Tree change log entries.
     //   (Similar to GedcomX, but see above for differences.)
@@ -3237,19 +3236,6 @@ const TYPE_ORDINANCE = "Ordinances"; // linked ordinance
       changeIdList.push(changeEntry.id);
     }
 
-    function addToItemChangeMap(itemChangeMap, changeEntry) {
-      let itemChangeList = getOrMakeList(itemChangeMap, changeEntry.personId);
-      if (!itemChangeList) {
-        itemChangeList = [];
-        itemChangeMap[changeEntry.personId] = itemChangeList;
-      }
-      const conclusionId = getConclusionIdFromChangeEntry(changeEntry);
-      itemChangeList.push({
-        id: conclusionId,
-        changeId: changeEntry.id
-      });
-    }
-
     function getOrMakeList(dictionary, key) {
       let list = dictionary[key];
       if (!list) {
@@ -3265,7 +3251,7 @@ const TYPE_ORDINANCE = "Ordinances"; // linked ordinance
       switch (direction) {
         case DIR_KEEP:
           if (!isCurrent) {
-            addToItemChangeMap(keepItemChangeMap, keepChangeEntry);
+            addToChangeIdMap(keepItemChangeMap, keepChangeEntry);
           }
           break;
         case DIR_MOVE:
@@ -3282,7 +3268,7 @@ const TYPE_ORDINANCE = "Ordinances"; // linked ordinance
           break;
         case DIR_COPY:
           if (!isCurrent) {
-            addToItemChangeMap(keepItemChangeMap, keepChangeEntry);
+            addToChangeIdMap(keepItemChangeMap, keepChangeEntry);
           }
           addToChangeIdMap(splitChangeIdMap, splitChangeEntry);
           break;
@@ -3331,7 +3317,7 @@ const TYPE_ORDINANCE = "Ordinances"; // linked ordinance
         case TYPE_FACT:
         case TYPE_GENDER:
           updateSplitMaps(changeEntries, element.direction,
-            this.changeIdsOfConclusionsToEditByPersonId,
+            this.changeIdsOfConclusionsToAddToCombinedByPersonId,
             this.changeIdsOfConclusionsToCopyByPersonId, this.idsOfConclusionsToDelete, isCurrent);
           break;
         case TYPE_PARENTS:
@@ -3345,11 +3331,11 @@ const TYPE_ORDINANCE = "Ordinances"; // linked ordinance
           break;
         case TYPE_SOURCE:
         case TYPE_ORDINANCE:
-          updateSplitMaps(changeEntries, element.direction, this.changeIdsOfEntityRefsToEditByPersonId,
+          updateSplitMaps(changeEntries, element.direction, this.changeIdsOfEntityRefsToAddToCombinedByPersonId,
             this.changeIdsOfEntityRefsToCopyByPersonId, this.idsOfEntityRefsToDelete, isCurrent);
           break;
         case TYPE_NOTE:
-          updateSplitMaps(changeEntries, element.direction, this.changeIdsOfNotesToEditByPersonId,
+          updateSplitMaps(changeEntries, element.direction, this.changeIdsOfNotesToAddToCombinedByPersonId,
             this.changeIdsOfNotesToCopyByPersonId, this.idsOfNotesToDelete, isCurrent);
           break;
       }
@@ -3371,7 +3357,7 @@ const TYPE_ORDINANCE = "Ordinances"; // linked ordinance
         if (infoPersonChangeMap) {
           // Map of personId -> latest change entry with that info string for that person ID.
           let personChangeMap = infoPersonChangeMap.get(infoString);
-          // If there are multiple person IDs with the same info string, then
+          // If there are multiple person IDs with the same info string in their change logs, then
           //  a) find the most recent one where the personId is in the group that the element is in
           //     (i.e., in the keep group if the element is a keep or copy element; or in the split
           //     group if the element is a split or copy element).
@@ -3948,20 +3934,7 @@ class Element {
     if (this.elementSource) {
       return true;
     }
-    switch(this.item.status) {
-      case ORIG_STATUS:          // Part of the original identity.
-      case ADDED_STATUS:         // Added after original identity, or after most recent merge
-      case CHANGED_STATUS:       // Gender changed (M<: // Deleted a value added after the original identity, but before the most recent merge.
-      case MERGE_ORIG_STATUS:    // On original identity of duplicate and brought in during merge
-      case MERGE_ADDED_STATUS:   // Added after original identity of duplicate and brought in during merge
-      case KEPT_ORIG_STATUS:     // On original identity of survivor and kept during merge
-      case KEPT_ADDED_STATUS:    // Added after original identity of survivor and kept during merge
-        return false;
-      case MERGE_DELETED_STATUS: // On duplicate but deleted before the most recent merge
-      case KEPT_DELETED_STATUS:  // On survivor but deleted before the most recent merge
-        return true;
-    }
-    // return !!this.elementSource;
+    return !isCurrentStatus(this.item);
   }
 }
 
@@ -4126,6 +4099,19 @@ class Split {
         }
       }
     }
+    function countCurrent(list) {
+      // Count the number of elements in the given list that have ".status" elements that indicate that the value is a
+      //   currently-active status.
+      let current = 0;
+      if (list) {
+        for (let item of list) {
+          if (isCurrentStatus(item)) {
+            current++;
+          }
+        }
+      }
+      return current;
+    }
 
     // --- initElements()...
     let elementIndex = 0;
@@ -4133,12 +4119,12 @@ class Split {
     let person = gedcomx.persons[0];
     let extraNames = [];
     let allFacts = copyObject(person.facts);
-    populateExtraNamesAndFacts();
+    populateExtraNamesAndFacts(); // adds to extraNames and allFacts
     fixEventOrder({"facts" : allFacts});
     addElements(person.names, TYPE_NAME, extraNames.length > 0);
     addElements(extraNames, TYPE_NAME);
     addElement(person.gender, TYPE_GENDER);
-    addElements(allFacts, TYPE_FACT, allFacts && allFacts.length > (person.facts ? person.facts.length : 0));
+    addElements(allFacts, TYPE_FACT, allFacts && allFacts.length > countCurrent(person.facts));
     addRelationshipElements(gedcomx); // future: find other relationships that were removed along the way.
     if (person.sources) {
       person.sources.sort(compareSourceReferences);
@@ -4490,7 +4476,7 @@ function getElementHtml(element, personId, shouldDisplay) {
       break;
     case TYPE_GENDER:
       let gender = element.item;
-      elementHtml = "&nbsp;" + encode( gender.type ? extractType(gender.type) : "Unknown");
+      elementHtml = "&nbsp;" + encode(gender.type ? extractType(gender.type) : "Unknown");
       break;
     case TYPE_FACT:
       elementHtml = "&nbsp;" + getFactHtml(element.item, true, false);
@@ -4546,7 +4532,9 @@ function getExtraValueCheckbox(element) {
 function wrapTooltip(element, mainHtml, tooltipHtml) {
   let undecidedClass = element.direction === DIR_NULL ? " undecided" : "";
   if (!tooltipHtml) {
-    return "<td class='identity-gx " + undecidedClass + "'>" + mainHtml + "</td>";
+    return "<td class='identity-gx " + undecidedClass + "'>" +
+      (element.isExtra() ? getExtraValueCheckbox(element) : "") +
+      mainHtml + "</td>";
   }
   return "<td class='split-extra tooltip" + undecidedClass + "'>"
     + getExtraValueCheckbox(element)
@@ -5730,6 +5718,12 @@ const MERGE_DELETED_STATUS= 'merge-deleted'; // On duplicate but deleted before 
 const KEPT_ORIG_STATUS    = 'kept-orig'; // On original identity of survivor and kept during merge
 const KEPT_ADDED_STATUS   = 'kept-added'; // Added after original identity of survivor and kept during merge
 const KEPT_DELETED_STATUS = 'kept-deleted'; // On survivor but deleted before the most recent merge
+
+function isCurrentStatus(element) {
+  return element.status === ORIG_STATUS     || element.status === ADDED_STATUS || element.status === CHANGED_STATUS
+    || element.status === MERGE_ORIG_STATUS || element.status === MERGE_ADDED_STATUS
+    || element.status === KEPT_ORIG_STATUS  || element.status === KEPT_ADDED_STATUS;
+}
 
 // Tell whether an object (fact or relationship) should be included, based on
 // 1) 'status', the object's status and
