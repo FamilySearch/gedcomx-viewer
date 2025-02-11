@@ -1906,7 +1906,7 @@ class PersonRow {
     return parentsList.join("<br>");
   }
 
-  getRowPersonCells(gedcomx, personId, rowClass, usedColumns, bottomClass, allRowsClass, rowSpan, splitDirection) {
+  getRowPersonCells(gedcomx, personId, rowClass, usedColumns, bottomClass, allRowsClass, rowSpan, isKeep) {
     function addColumn(key, rowspan, content, extraClass) {
       if (usedColumns.has(key)) {
         html += "<td class='" + rowClass + extraClass + "'" + rowspan + ">" + (content ? content : "") + "</td>";
@@ -1937,12 +1937,12 @@ class PersonRow {
         + makeButton("=", DIR_COPY, element)
         + (isKeep ? makeButton("↓", DIR_MOVE, element) : "") + " ";
       if (displayOptions.shouldExpandHiddenValues) {
-        const elementId = 'element-checkbox-' + element.elementIndex
+        const elementId = 'element-checkbox-' + element.elementIndex + (isKeep ? "-keep" : "-split");
         // Add checkbox for information that is not on the current merged person.
         buttonsHtml += "<input id='" + elementId + "'"
           + (element.isExtra() ? "" : " class='current-value-checkbox'")
-          + " type='checkbox' onchange='toggleElement(" + element.elementIndex + ")'"
-          + (element.isSelected ? " checked" : "") + "> "
+          + " type='checkbox' onchange='toggleElement(" + element.elementIndex + ", " + (isKeep ? "true" : "false") + ")'"
+          + (element.getSelected(isKeep) ? " checked" : "") + "> "
           + "<label for='" + elementId + "'></label>"; // so that label::before works in current-value-checkbox class.
       }
       return buttonsHtml;
@@ -1965,7 +1965,7 @@ class PersonRow {
         + (isFacts ? "" : getButtonsHtml(item, isKeep)) + contentHtml + "</div>";
     }
 
-    function getSummaryNamesHtml(person) {
+    function getSummaryNamesHtml(person, isKeep) {
       function getNameFormsHtml(name) {
         // Combine multiple name forms into a single string separated by "/", like "Kim Jeong-Un / 김정은 / 金正恩".
         let nameFormHtmls = [];
@@ -1981,7 +1981,7 @@ class PersonRow {
         for (let n = 0; n < person.names.length; n++) {
           let name = person.names[n];
           if (shouldDisplaySummaryElement(name)) {
-            namesHtmlList.push(wrapElement(name, splitDirection === DIR_KEEP, getNameFormsHtml(name)));
+            namesHtmlList.push(wrapElement(name, isKeep, getNameFormsHtml(name)));
           }
         }
         namesHtml += namesHtmlList.join("<br>");
@@ -1992,27 +1992,27 @@ class PersonRow {
       return namesHtml + "</td>\n";
     }
 
-    function getSummaryFactsHtml(person) {
+    function getSummaryFactsHtml(person, isKeep) {
       let factsHtml = "<td class='" + rowClass + bottomClass + "'" + rowSpan + ">";
       if (person.facts && person.facts.length > 0) {
         for (let fact of person.facts) {
           if (shouldDisplaySummaryElement(fact)) {
-            factsHtml += wrapElement(fact, splitDirection === DIR_KEEP, getFactHtml(fact, true, false)) + "<br>";
+            factsHtml += wrapElement(fact, isKeep, getFactHtml(fact, true, false)) + "<br>";
           }
         }
       }
       return factsHtml + "</td>\n";
     }
 
-    function getSummaryParentsHtml(direction) {
+    function getSummaryParentsHtml(isKeep) {
       if (usedColumns.has("father-name") || usedColumns.has("mother-name")) {
         // Instead of a list of father names in one column, and a list of mother names in the other,
         //   put each pair of parents on each line, like "Fred Williams & Judy Smith", and let the couple be selectable.
         let parentsHtml = "<td class='" + rowClass + bottomClass + "'" + rowSpan +
           (usedColumns.has("father-name") && usedColumns.has("mother-name") ? " colspan='2'" : "") + ">";
         for (let element of split.elements) {
-          if (element.type === TYPE_PARENTS && (element.direction === direction || element.direction === DIR_COPY)) {
-            parentsHtml += wrapElement(element, direction === DIR_KEEP, getParentsHtml(element.item, encode(" & "))) + "<br>\n";
+          if (element.type === TYPE_PARENTS && (element.direction === DIR_COPY || (isKeep && element.direction === DIR_KEEP) || (!isKeep && element.direction === DIR_MOVE))) {
+            parentsHtml += wrapElement(element, isKeep, getParentsHtml(element.item, encode(" & "))) + "<br>\n";
           }
         }
         return parentsHtml + "</td>\n";
@@ -2033,9 +2033,9 @@ class PersonRow {
     // === getRowPersonCells ===
     let html = "";
     if (this.isSummaryRow()) {
-      html += getSummaryNamesHtml(this.person);
-      html += getSummaryFactsHtml(this.person);
-      html += getSummaryParentsHtml(splitDirection);
+      html += getSummaryNamesHtml(this.person, isKeep);
+      html += getSummaryFactsHtml(this.person, isKeep);
+      html += getSummaryParentsHtml(isKeep);
     }
     else if (this.isNoteRow) {
       html += "<td class='note-row " + rowClass + bottomClass + "'" + getNoteColspan() + " id='note-row-cell-" + this.id + "'>" +
@@ -2062,8 +2062,8 @@ class PersonRow {
         let spouseFactsHtml = spouseFamily.spouse ? spouseFamily.spouse.facts : "";
         if (this.isSummaryRow()) {
           // Wrap the spouse name and facts in a div that can be animated. Also add buttons to the spouseNameHtml.
-          spouseNameHtml = wrapElement(spouseFamily.spouse.coupleRelationship, splitDirection === DIR_KEEP, spouseNameHtml);
-          spouseFactsHtml = wrapElement(spouseFamily.spouse.coupleRelationship, splitDirection === DIR_KEEP, spouseFactsHtml, true);
+          spouseNameHtml = wrapElement(spouseFamily.spouse.coupleRelationship, isKeep, spouseNameHtml);
+          spouseFactsHtml = wrapElement(spouseFamily.spouse.coupleRelationship, isKeep, spouseFactsHtml, true);
         }
         addColumn("spouse-name", childrenRowSpan, spouseNameHtml, familyBottomClass);
         addColumn("spouse-facts", childrenRowSpan, spouseFactsHtml, familyBottomClass);
@@ -2079,8 +2079,8 @@ class PersonRow {
             let childFactsHtml = child.facts;
             if (this.isSummaryRow()) {
               // Wrap the child name and facts in a div that can be animated. Also add buttons to the childNameHtml.
-              childNameHtml = wrapElement(child.childAndParentsRelationship, splitDirection === DIR_KEEP, childNameHtml);
-              childFactsHtml = wrapElement(child.childAndParentsRelationship, splitDirection === DIR_KEEP, childFactsHtml, true);
+              childNameHtml = wrapElement(child.childAndParentsRelationship, isKeep, childNameHtml);
+              childFactsHtml = wrapElement(child.childAndParentsRelationship, isKeep, childFactsHtml, true);
             }
             addColumn(COLUMN_CHILD_NAME, "", childNameHtml, childBottomClass);
             addColumn(COLUMN_CHILD_FACTS, "", childFactsHtml, childBottomClass);
@@ -2352,7 +2352,7 @@ class PersonRow {
 
     // Person info
     let rowClass = this.isNoteRow ? 'note-row' : 'identity-gx';
-    html += this.getRowPersonCells(this.gedcomx, this.personId, rowClass, usedColumns, bottomClass, this.id, rowSpan, isKeep ? DIR_KEEP : DIR_MOVE);
+    html += this.getRowPersonCells(this.gedcomx, this.personId, rowClass, usedColumns, bottomClass, this.id, rowSpan, isKeep);
     html += "</tr>\n";
     return html;
   }
@@ -2859,20 +2859,47 @@ function updateSummaryRows() {
   splitPersonRow = makeSummaryPersonRow(false);
 }
 
-function performSplit(grouperId) {
+function bothSidesHaveName() {
+  let keepHasName = false;
+  let splitHasName = false;
+  for (let element of split.elements) {
+    if (element.type === TYPE_NAME) {
+      let dir = element.getEffectiveDirection();
+      if (dir === DIR_KEEP || dir === DIR_COPY) {
+        keepHasName = true;
+      }
+      if (dir === DIR_COPY || dir === DIR_MOVE) {
+        splitHasName = true;
+      }
+    }
+  }
+  return keepHasName && splitHasName;
+}
+function hasSplitProblem() {
   if (hasMemory && hasRestoreInChangeLog) {
     alert("This person has a memory and a 'Restore' in the change log, and the split tool can't handle those yet.");
-    return;
+    return true;
   }
   if (hasMemory) {
     alert("This person has a memory, and the split tool can't handle that yet.");
-    return;
+    return true;
   }
   if (hasRestoreInChangeLog) {
     alert("This person has a 'Restore' in the change log, and the split tool can't handle that yet.");
+    return true;
+  }
+  if (!bothSidesHaveName()) {
+    alert("Both people must have a name selected in order to do a split.");
+    return true;
+  }
+  return false;
+}
+
+function performSplit(grouperId) {
+  let grouper = grouperMap[grouperId];
+  if (hasSplitProblem(grouper)) {
     return;
   }
-  let grouper = grouperMap[grouperId];
   let splitObject = createSplitObject(grouper);
   if (confirm("Should we really split?")) {
     if (context.baseUrl.includes("beta")) {
@@ -2894,26 +2921,31 @@ function performSplit(grouperId) {
         success: function(data, textStatus, jqXHR) {
           let splitPersonId = jqXHR.getResponseHeader("extracted-person-id");
           console.log("Split successful. New person ID = " + splitPersonId);
-          // Pop up two new windows: one for the "keep" person and one for the "split" person.
+          // Pop up three new windows: a post-split analysis page, one for the "keep" person and one for the "split" person.
+
+          window.open("https://beta.familysearch.org/en/tree/person/changelog/split-analysis/" + mainPersonId + "/" + splitPersonId, "_blank");
           // Use the URL https://beta.familysearch.org/tree/person/details/<keepPersonId> and <splitPersonId>
           let detailsUrl = "https://" + (context.baseUrl.includes("beta") ? "beta" : "www") + ".familysearch.org/tree/person/details/";
-          window.open(detailsUrl + mainPersonId, "_blank");
           // Wait 1 second before opening the second window so that (a) the browser doesn't interpret this as spam, and
           // (b) Family Tree has time to process the split and update the database.
           setTimeout(function() {
-            window.open(detailsUrl + splitPersonId, "_blank");
+            window.open(detailsUrl + mainPersonId, "_blank");
           }, 1000);
+          setTimeout(function() {
+            window.open(detailsUrl + splitPersonId, "_blank");
+          }, 2000);
         },
         error: function(jqXHR, textStatus, errorThrown) {
-          console.log("Split failed. Status code=" + jqXHR.status + ". Response text=" + jqXHR.responseText + ". Error=" + errorThrown);
+          let errorMessage = "Split failed. Status code=" + jqXHR.status + ". Response text=" + jqXHR.responseText
+          + "." + (errorThrown && errorThrown.length > 0 ? "Error=" + errorThrown : "");
+          console.log(errorMessage);
+          alert(errorMessage);
         }
       });
     }
     else {
       console.log("Pretending to split (not enabled in prod yet).");
     }
-
-    //todo: PUT /person/{id}/split with the splitObject as the payload
   }
   else {
     console.log("Split cancelled.");
@@ -3312,30 +3344,31 @@ const TYPE_ORDINANCE = "Ordinances"; // linked ordinance
     }
 
     const copyOrMoveChangeEntry = (element, changeEntries, isCurrent) => {
+      let effectiveDirection = element.getEffectiveDirection();
       switch (element.type) {
         case TYPE_NAME:
         case TYPE_FACT:
         case TYPE_GENDER:
-          updateSplitMaps(changeEntries, element.direction,
+          updateSplitMaps(changeEntries, effectiveDirection,
             this.changeIdsOfConclusionsToAddToCombinedByPersonId,
             this.changeIdsOfConclusionsToCopyByPersonId, this.idsOfConclusionsToDelete, isCurrent);
           break;
         case TYPE_PARENTS:
         case TYPE_CHILD:
-          updateSplitLists(changeEntries, element.direction, this.idsOfParentChildRelationshipsToCopy,
+          updateSplitLists(changeEntries, effectiveDirection, this.idsOfParentChildRelationshipsToCopy,
             this.idsOfParentChildRelationshipsToDelete);
           break;
         case TYPE_SPOUSE:
-          updateSplitLists(changeEntries, element.direction, this.idsOfCoupleRelationshipsToCopy,
+          updateSplitLists(changeEntries, effectiveDirection, this.idsOfCoupleRelationshipsToCopy,
             this.idsOfCoupleRelationshipsToDelete);
           break;
         case TYPE_SOURCE:
         case TYPE_ORDINANCE:
-          updateSplitMaps(changeEntries, element.direction, this.changeIdsOfEntityRefsToAddToCombinedByPersonId,
+          updateSplitMaps(changeEntries, effectiveDirection, this.changeIdsOfEntityRefsToAddToCombinedByPersonId,
             this.changeIdsOfEntityRefsToCopyByPersonId, this.idsOfEntityRefsToDelete, isCurrent);
           break;
         case TYPE_NOTE:
-          updateSplitMaps(changeEntries, element.direction, this.changeIdsOfNotesToAddToCombinedByPersonId,
+          updateSplitMaps(changeEntries, effectiveDirection, this.changeIdsOfNotesToAddToCombinedByPersonId,
             this.changeIdsOfNotesToCopyByPersonId, this.idsOfNotesToDelete, isCurrent);
           break;
       }
@@ -3350,7 +3383,7 @@ const TYPE_ORDINANCE = "Ordinances"; // linked ordinance
     let [keepPersonIds, splitPersonIds] = getKeepAndSplitPersonIds(grouper);
 
     for (let element of split.elements) {
-      if (element.isSelected) {
+      if (element.isSelectedForKeep || element.isSelectedForSplit) {
         let isCurrent = !element.isExtra();
         let infoString = getElementInfoString(element);
         let infoPersonChangeMap = typeInfoPersonIdChangeEntryMap.get(element.type);
@@ -3371,10 +3404,10 @@ const TYPE_ORDINANCE = "Ordinances"; // linked ordinance
           } else {
             // This info is coming from a source, so add it to the appropriate list of conclusions to add.
             let tfConclusion = new TfConclusion(element.type, element.item);
-            if (!isCurrent && (element.direction === DIR_KEEP || element.direction === DIR_COPY)) {
+            if (!isCurrent && element.isSelectedForKeep && (element.direction === DIR_KEEP || element.direction === DIR_COPY)) {
               this.conclusionsToAddToCombined.push(tfConclusion);
             }
-            if (element.direction === DIR_MOVE || element.direction === DIR_COPY) {
+            if (element.isSelectedForSplit && (element.direction === DIR_MOVE || element.direction === DIR_COPY)) {
               this.conclusionsToAddToExtracted.push(tfConclusion);
             }
           }
@@ -3921,11 +3954,43 @@ class Element {
     this.sourceInfo = null;
     // Flag for whether this element is 'selected', so that it will show even when collapsed.
     // This also means it will be kept on the resulting person(s), even though 'elementSource' would otherwise cause it to be ignored.
-    this.isSelected = false;
+    // Separate selections are allowed for the 'keep' and 'split' sides.
+    this.isSelectedForKeep = false;
+    this.isSelectedForSplit = false;
+  }
+
+  getSelected(isKeep) {
+    return isKeep ? this.isSelectedForKeep : this.isSelectedForSplit;
+  }
+
+  getEffectiveDirection() {
+    // The direction can be < (DIR_KEEP), = (DIR_COPY), > (DIR_MOVE), or ? (DIR_NULL).
+    // But if isSelectedForKeep is false, then DIR_KEEP is like DIR_NULL, and DIR_COPY is like DIR_MOVE (or DIR_NULL if both false).
+    // Similarly, if isSelectedForSplit is false, then DIR_COPY is like DIR_KEEP, and DIR_MOVE is like DIR_NULL.
+    if (!this.isSelectedForKeep && !this.isSelectedForSplit) {
+      return DIR_NULL;
+    }
+    if (!this.isSelectedForKeep) {
+      if (this.direction === DIR_KEEP) {
+        return DIR_NULL;
+      }
+      else if (this.direction === DIR_COPY) {
+        return DIR_MOVE;
+      }
+    }
+    else if (!this.isSelectedForSplit) {
+      if (this.direction === DIR_MOVE) {
+        return DIR_NULL;
+      }
+      else if (this.direction === DIR_COPY) {
+        return DIR_KEEP;
+      }
+    }
+    return this.direction;
   }
 
   isVisible() {
-    return !this.isExtra() || this.isSelected;
+    return !this.isExtra() || this.isSelectedForKeep || this.isSelectedForSplit;
   }
 
   // Tell whether this element is an "extra" value that can be hidden, i.e., one from a source, or a value that
@@ -3982,7 +4047,7 @@ class Split {
       elements.push(element);
       if (!element.isExtra()) {
         // By default, select all elements that are on the current, combined person.
-        element.isSelected = true;
+        element.isSelectedForKeep = true;
       }
       return element;
     }
@@ -4123,7 +4188,9 @@ class Split {
     fixEventOrder({"facts" : allFacts});
     addElements(person.names, TYPE_NAME, extraNames.length > 0);
     addElements(extraNames, TYPE_NAME);
-    addElement(person.gender, TYPE_GENDER);
+    let genderElement = addElement(person.gender, TYPE_GENDER);
+    genderElement.direction = DIR_COPY;
+    genderElement.isSelectedForSplit = true;
     addElements(allFacts, TYPE_FACT, allFacts && allFacts.length > countCurrent(person.facts));
     addRelationshipElements(gedcomx); // future: find other relationships that were removed along the way.
     if (person.sources) {
@@ -4331,8 +4398,8 @@ function moveElement(direction, elementId) {
   //=== moveElement ===
   let element = split.elements[elementId];
   element.direction = direction;
-  if (element.direction !== DIR_KEEP && element.isExtra() && !element.isSelected) {
-    element.isSelected = true;
+  if (element.direction !== DIR_KEEP && element.isExtra() && !element.isSelectedForSplit) {
+    element.isSelectedForSplit = true;
   }
   if (element.type === TYPE_SPOUSE) {
     moveChildrenOfSpouse();
@@ -4360,17 +4427,33 @@ function isSingleValuedElement(element) {
   return false;
 }
 
-function toggleElement(elementId) {
+function toggleElement(elementId, isKeep) {
   const element = split.elements[elementId];
-  element.isSelected = !element.isSelected;
-  if (element.isSelected && isSingleValuedElement(element)) {
-    // If this is a single-valued element, then deselect all other elements of the same type,
-    //   for elements that are the same direction or both directions.
-    for (let i = 0; i < split.elements.length; i++) {
-      const otherElement = split.elements[i];
-      if (i !== elementId && otherElement.type === element.type && otherElement.item.type === element.item.type &&
+  if (isKeep) {
+    element.isSelectedForKeep = !element.isSelectedForKeep;
+    if (element.isSelectedForKeep && isSingleValuedElement(element)) {
+      // If this is a single-valued element, then deselect all other elements of the same type,
+      //   for elements that are the same direction or both directions.
+      for (let i = 0; i < split.elements.length; i++) {
+        const otherElement = split.elements[i];
+        if (i !== elementId && otherElement.type === element.type && otherElement.item.type === element.item.type &&
           (otherElement.direction === element.direction || otherElement.direction === DIR_COPY || element.direction === DIR_COPY)) {
-        split.elements[i].isSelected = false;
+          split.elements[i].isSelectedForKeep = false;
+        }
+      }
+    }
+  }
+  else {
+    element.isSelectedForSplit = !element.isSelectedForSplit;
+    if (element.isSelectedForSplit && isSingleValuedElement(element)) {
+      // If this is a single-valued element, then deselect all other elements of the same type,
+      //   for elements that are the same direction or both directions.
+      for (let i = 0; i < split.elements.length; i++) {
+        const otherElement = split.elements[i];
+        if (i !== elementId && otherElement.type === element.type && otherElement.item.type === element.item.type &&
+          (otherElement.direction === element.direction || otherElement.direction === DIR_COPY || element.direction === DIR_COPY)) {
+          split.elements[i].isSelectedForSplit = false;
+        }
       }
     }
   }
@@ -4434,13 +4517,13 @@ function getSplitViewHtml() {
     if (isExpanded || element.isVisible()) {
       html += "<tr>";
       // Left column.
-      html += getElementHtml(element, split.personId, element.direction !== DIR_MOVE);
+      html += getElementHtml(element, split.personId, element.direction !== DIR_MOVE, true);
 
       // Center buttons
       html += "<td class='identity-gx'>" + makeButton("<", DIR_KEEP, element) + " " + makeButton("=", DIR_COPY, element) + " " + makeButton(">", DIR_MOVE, element) + "</td>";
 
       // Right column
-      html += getElementHtml(element, split.personId, element.direction === DIR_COPY || element.direction === DIR_MOVE);
+      html += getElementHtml(element, split.personId, element.direction === DIR_COPY || element.direction === DIR_MOVE, false);
     }
     prevElement = element;
   }
@@ -4459,7 +4542,7 @@ function getParentsHtml(relationship, delimiterHtml = "<br>&nbsp;") {
   return parentHtmls.join(delimiterHtml);
 }
 
-function getElementHtml(element, personId, shouldDisplay) {
+function getElementHtml(element, personId, shouldDisplay, isKeep) {
 
   if (!shouldDisplay) {
     return "<td class='identity-gx'></td>";
@@ -4500,7 +4583,7 @@ function getElementHtml(element, personId, shouldDisplay) {
       else {
         elementHtml = encode(sourceInfo.collectionName);
       }
-      return wrapTooltip(element, elementHtml, sourceInfo.gedcomx ? getGedcomxSummary(sourceInfo.gedcomx, sourceInfo.personId) : null);
+      return wrapTooltip(element, elementHtml, sourceInfo.gedcomx ? getGedcomxSummary(sourceInfo.gedcomx, sourceInfo.personId) : null, isKeep);
     case TYPE_NOTE:
       elementHtml = getSimpleNoteHtml(element.item);
       break;
@@ -4509,7 +4592,7 @@ function getElementHtml(element, personId, shouldDisplay) {
       elementHtml = ows.getOrdinancesHtml();
       break;
   }
-  return wrapTooltip(element, elementHtml, element.elementSource ? encode(element.elementSource) : null);
+  return wrapTooltip(element, elementHtml, element.elementSource ? encode(element.elementSource) : null, isKeep);
 }
 
 function getSimpleNoteHtml(note) {
@@ -4523,21 +4606,21 @@ function getSimpleNoteHtml(note) {
   return pair.join(": ");
 }
 
-function getExtraValueCheckbox(element) {
+function getExtraValueCheckbox(element, isKeep) {
   return "<input id='extra-" + element.elementIndex + "' type='checkbox' " +
     (element.isExtra() ? "" : " class='current-value-checkbox'")
-    + "onchange='toggleElement(" + element.elementIndex + ")'" + (element.isSelected ? " checked" : "") + ">";
+    + "onchange='toggleElement(" + element.elementIndex + ", " + (isKeep ? "true" : "false") + ")'" + (element.getSelected(isKeep) ? " checked" : "") + ">";
 }
 
-function wrapTooltip(element, mainHtml, tooltipHtml) {
+function wrapTooltip(element, mainHtml, tooltipHtml, isKeep) {
   let undecidedClass = element.direction === DIR_NULL ? " undecided" : "";
   if (!tooltipHtml) {
     return "<td class='identity-gx " + undecidedClass + "'>" +
-      (element.isExtra() ? getExtraValueCheckbox(element) : "") +
+      (element.isExtra() ? getExtraValueCheckbox(element, isKeep) : "") +
       mainHtml + "</td>";
   }
   return "<td class='split-extra tooltip" + undecidedClass + "'>"
-    + getExtraValueCheckbox(element)
+    + getExtraValueCheckbox(element, isKeep)
     + "<label for='extra-" + element.elementIndex + "' class='tooltip'>" + mainHtml + "<span class='tooltiptext'>" + tooltipHtml + "</span></label></td>";
 }
 
@@ -4596,7 +4679,7 @@ function getVerticalGrouperHtml(grouper) {
     let html = (isKeep ? "" : makeButton("<", DIR_KEEP, element))
     + makeButton("=", DIR_COPY, element)
     + (isKeep ? makeButton(">", DIR_MOVE, element) : "");
-    let checkbox = getExtraValueCheckbox(element);
+    let checkbox = getExtraValueCheckbox(element, isKeep);
     return html + (checkbox ? checkbox : " ");
   }
 
