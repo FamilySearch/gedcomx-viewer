@@ -3814,6 +3814,41 @@ function splitOnInfoInGroup(tabId, keepRows, splitRows) {
     setDirectionBasedOnInclusion(element, shouldKeep, shouldMove, false, false);
   }
 
+  function ensureNameSelected() {
+    // Make sure that the 'keep' and 'split' persons both have a name selected, if there is one in their list.
+    // A split can't happen unless both people have a name.
+    let keepHasName = false;
+    let splitHasName = false;
+    let firstKeepElement = null;
+    let firstSplitElement = null;
+    for (let element of split.elements) {
+      if (element.type === TYPE_NAME) {
+        if (element.direction === DIR_KEEP || element.direction === DIR_COPY) {
+          if (element.isSelectedForKeep) {
+            keepHasName = true;
+          }
+          if (!firstKeepElement) {
+            firstKeepElement = element;
+          }
+        }
+        if (element.direction === DIR_MOVE || element.direction === DIR_COPY) {
+          if (element.isSelectedForSplit) {
+            splitHasName = true;
+          }
+          if (!firstSplitElement) {
+            firstSplitElement = element;
+          }
+        }
+      }
+    }
+    if (!keepHasName && firstKeepElement) {
+      firstKeepElement.isSelectedForKeep = true;
+    }
+    if (!splitHasName && firstSplitElement) {
+      firstSplitElement.isSelectedForSplit = true;
+    }
+  }
+
   //--- splitOnInfoInGroup() ---
   // Set of source ID numbers that are being kept or split out
   let keepSourceIds = new Set();
@@ -3896,6 +3931,7 @@ function splitOnInfoInGroup(tabId, keepRows, splitRows) {
         break;
     }
   }
+  ensureNameSelected();
   updateSummaryRows();
 }
 
