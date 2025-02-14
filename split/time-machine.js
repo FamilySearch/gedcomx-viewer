@@ -4459,6 +4459,9 @@ function toggleSplitExpanded(elementIndex) {
 }
 
 function isSingleValuedElement(element) {
+  if (element.type === TYPE_NAME) {
+    return true;
+  }
   if (element.type === TYPE_FACT) {
     const factType = extractType(element.item.type);
     return factType === "Birth" || factType === "Christening" || factType === "Death" || factType === "Burial";
