@@ -2017,6 +2017,7 @@ class PersonRow {
         }
         return parentsHtml + "</td>\n";
       }
+      return "";
     }
 
     function getNoteColspan() {
@@ -2342,7 +2343,7 @@ class PersonRow {
       }
       if (tabId !== SOURCES_VIEW) {
         // Person ID
-        html += "<td " + rowClasses + rowSpan + colspan + "'>" + this.getPersonIdHtml(shouldIndent) + "</td>";
+        html += "<td " + rowClasses + rowSpan + colspan + ">" + this.getPersonIdHtml(shouldIndent) + "</td>";
       }
     }
     if (tabId === MERGE_VIEW || tabId === FLAT_VIEW) {
@@ -2921,19 +2922,8 @@ function performSplit(grouperId) {
         success: function(data, textStatus, jqXHR) {
           let splitPersonId = jqXHR.getResponseHeader("extracted-person-id");
           console.log("Split successful. New person ID = " + splitPersonId);
-          // Pop up three new windows: a post-split analysis page, one for the "keep" person and one for the "split" person.
-
+          // Pop up a split analysis tool. From there, a user can also pop open the two person's pages if they want to.
           window.open("https://beta.familysearch.org/en/tree/person/changelog/split-analysis/" + mainPersonId + "/" + splitPersonId, "_blank");
-          // Use the URL https://beta.familysearch.org/tree/person/details/<keepPersonId> and <splitPersonId>
-          let detailsUrl = "https://" + (context.baseUrl.includes("beta") ? "beta" : "www") + ".familysearch.org/tree/person/details/";
-          // Wait 1 second before opening the second window so that (a) the browser doesn't interpret this as spam, and
-          // (b) Family Tree has time to process the split and update the database.
-          setTimeout(function() {
-            window.open(detailsUrl + mainPersonId, "_blank");
-          }, 1000);
-          setTimeout(function() {
-            window.open(detailsUrl + splitPersonId, "_blank");
-          }, 2000);
         },
         error: function(jqXHR, textStatus, errorThrown) {
           let errorMessage = "Split failed. Status code=" + jqXHR.status + ". Response text=" + jqXHR.responseText
