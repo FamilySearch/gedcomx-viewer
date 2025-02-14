@@ -4118,6 +4118,31 @@ class Split {
       }
     }
 
+    function alreadyHasFact(facts, newFact) {
+      if (facts) {
+        let newFactString = getFactString(newFact);
+        for (let fact of facts) {
+          let factString = getFactString(fact);
+          if (factString === newFactString) {
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+
+    function copyFacts(facts) {
+      let newFacts = [];
+      if (facts) {
+        for (let fact of facts) {
+          if (!alreadyHasFact(newFacts, fact)) {
+            newFacts.push(copyObject(fact));
+          }
+        }
+      }
+      return newFacts;
+    }
+
     function populateExtraNamesAndFacts() {
       // Tell whether the given newName already exists in names[] (i.e., if they have the same full text on the first name form)
       function alreadyHasName(names, newName) {
@@ -4129,18 +4154,6 @@ class Split {
               if (targetText === fullText) {
                 return true;
               }
-            }
-          }
-        }
-        return false;
-      }
-      function alreadyHasFact(facts, newFact) {
-        if (facts) {
-          let newFactString = getFactString(newFact);
-          for (let fact of facts) {
-            let factString = getFactString(fact);
-            if (factString === newFactString) {
-              return true;
             }
           }
         }
@@ -4209,7 +4222,7 @@ class Split {
     let elements = [];
     let person = gedcomx.persons[0];
     let extraNames = [];
-    let allFacts = copyObject(person.facts);
+    let allFacts = copyFacts(person.facts);
     populateExtraNamesAndFacts(); // adds to extraNames and allFacts
     fixEventOrder({"facts" : allFacts});
     addElements(person.names, TYPE_NAME, extraNames.length > 0);
