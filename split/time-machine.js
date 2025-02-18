@@ -2639,6 +2639,7 @@ function updateTabsHtml() {
   updateFlatViewHtml(sourceGrouper);
   updateFlatViewHtml(comboGrouper);
   updateSplitViewHtml();
+  makeTableHeadersDraggable();
 }
 
 // Map of rowId -> {x, y} of where that row was last time.
@@ -4563,7 +4564,7 @@ function getSplitViewHtml() {
   }
   // -- getSplitViewHtml()
   let html = "<table class='split-table'>\n";
-  html += "<thead><tr><th>Person to keep</th><th></th><th>Person to split out</th></tr></thead>\n";
+  html += "<thead><tr><th id='person-to-keep' class='drag-width'>Person to keep</th><th></th><th id='person-to-split' class='drag-width'>Person to split out</th></tr></thead>\n";
   html += "<tbody>";
   let prevElement = null;
   let isExpanded = false;
