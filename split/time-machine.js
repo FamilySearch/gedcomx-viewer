@@ -4406,14 +4406,14 @@ function getFullText(name) {
   return fullText ? fullText : "<no name>";
 }
 
-function moveElement(direction, elementId) {
+function moveElement(newDirection, elementId) {
 
   // When moving a spouse, move all the children of that spouse as well. They can be moved back individually.
   function moveChildrenOfSpouse() {
     for (let i = elementId + 1; i < split.elements.length; i++) {
       let childElement = split.elements[i];
       if (childElement.type === TYPE_CHILD && childElement.famId === element.famId) {
-        childElement.direction = direction;
+        childElement.direction = newDirection;
       } else {
         return;
       }
@@ -4436,9 +4436,27 @@ function moveElement(direction, elementId) {
 
   //=== moveElement ===
   let element = split.elements[elementId];
-  element.direction = direction;
-  if (element.direction !== DIR_KEEP && element.isExtra() && !element.isSelectedForSplit) {
+  let currentDirection = element.direction;
+  if (element.direction === newDirection) {
+    console.log("Element " + elementId + " already has direction " + newDirection);
+    return;
+  }
+  element.direction = newDirection;
+  let addingToKeep  = element.isSelectedForSplit && (newDirection === DIR_KEEP || newDirection === DIR_COPY) && (currentDirection === DIR_MOVE || currentDirection === DIR_NULL)
+  let addingToSplit = element.isSelectedForKeep  && (newDirection === DIR_MOVE || newDirection === DIR_COPY) && (currentDirection === DIR_KEEP || currentDirection === DIR_NULL);
+  if (addingToKeep) {
+    element.isSelectedForKeep = true;
+    uncheckElementsOfSameSingleValuedType(elementId, true);
+  }
+  else if (addingToSplit) {
     element.isSelectedForSplit = true;
+    uncheckElementsOfSameSingleValuedType(elementId, false);
+  }
+  if (newDirection === DIR_KEEP) {
+    element.isSelectedForSplit = false;
+  }
+  if (newDirection === DIR_MOVE) {
+    element.isSelectedForKeep = false;
   }
   if (element.type === TYPE_SPOUSE) {
     moveChildrenOfSpouse();
@@ -4469,34 +4487,36 @@ function isSingleValuedElement(element) {
   return false;
 }
 
+function uncheckElementsOfSameSingleValuedType(elementId, isKeep) {
+  // If this is a single-valued element, then deselect all other elements of the same type,
+  //   for elements that are the same direction or both directions.
+  const element = split.elements[elementId];
+  if (isSingleValuedElement(element)) {
+    for (let i = 0; i < split.elements.length; i++) {
+      const otherElement = split.elements[i];
+      if (i !== elementId && otherElement.type === element.type && otherElement.item.type === element.item.type) {
+        if (isKeep) {
+          otherElement.isSelectedForKeep = false;
+        } else {
+          otherElement.isSelectedForSplit = false;
+        }
+      }
+    }
+  }
+}
+
 function toggleElement(elementId, isKeep) {
   const element = split.elements[elementId];
   if (isKeep) {
     element.isSelectedForKeep = !element.isSelectedForKeep;
     if (element.isSelectedForKeep && isSingleValuedElement(element)) {
-      // If this is a single-valued element, then deselect all other elements of the same type,
-      //   for elements that are the same direction or both directions.
-      for (let i = 0; i < split.elements.length; i++) {
-        const otherElement = split.elements[i];
-        if (i !== elementId && otherElement.type === element.type && otherElement.item.type === element.item.type &&
-          (otherElement.direction === element.direction || otherElement.direction === DIR_COPY || element.direction === DIR_COPY)) {
-          split.elements[i].isSelectedForKeep = false;
-        }
-      }
+      uncheckElementsOfSameSingleValuedType(elementId, true);
     }
   }
   else {
     element.isSelectedForSplit = !element.isSelectedForSplit;
     if (element.isSelectedForSplit && isSingleValuedElement(element)) {
-      // If this is a single-valued element, then deselect all other elements of the same type,
-      //   for elements that are the same direction or both directions.
-      for (let i = 0; i < split.elements.length; i++) {
-        const otherElement = split.elements[i];
-        if (i !== elementId && otherElement.type === element.type && otherElement.item.type === element.item.type &&
-          (otherElement.direction === element.direction || otherElement.direction === DIR_COPY || element.direction === DIR_COPY)) {
-          split.elements[i].isSelectedForSplit = false;
-        }
-      }
+      uncheckElementsOfSameSingleValuedType(elementId, false);
     }
   }
   updateSummaryRows();
