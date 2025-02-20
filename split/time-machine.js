@@ -5483,8 +5483,9 @@ function findPersonInGx(gedcomx, personId) {
         return person;
       }
     }
+    throw new Error("Could not find person with id " + personId);
   }
-  throw new Error("Could not find person with id " + personId);
+  return null;
 }
 
 // Compare two date strings, if they can both be parsed. Return -1 or 1 if they were both parsed and are different; or 0 otherwise.
