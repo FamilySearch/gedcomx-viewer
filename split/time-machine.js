@@ -13,7 +13,7 @@
 //   L25C-9Z7 - Guy with multiple ordinances.
 //   GT54-3CQ - Guy with stapled ordinances & a Restore
 //   LBNB-8MR - Kaziah Anderson. 2 ows, 1 note, main ID not first in list.
-
+//   B9Q5-P4H - Jim-Bob in beta
 /*
   Cases still not handled yet:
   - Cases where any of the persons in the merge hierarchy have a "Restore".
@@ -87,6 +87,11 @@ function buildSplitter(changeLogUrl, sessionId, $mainTable, $status, shouldFetch
   fetchChangeLog(context.personId, changeLogMap, fetching, $mainTable, null, shouldFetchOrdinances);
 }
 
+function isPersonaArk(ark) {
+  return ark && ark.includes("ark:") && ark.includes("61903") &&
+    (!ark.includes("/3:1:") && (!ark.includes("/3:2:")));
+}
+
 let sourceInfoIndex = 0;
 
 class SourceInfo {
@@ -95,6 +100,7 @@ class SourceInfo {
     this.title = null;
     this.isExtraction = null;
     this.personaArk = null;
+    this.sourceUrl = null; // URL of an attached source, if it is not a persona. Null if it is a persona.
     this.gedcomx = null;
     this.recordDate = null;
     this.recordDateSortKey = null;
@@ -107,6 +113,11 @@ class SourceInfo {
     this.title = ("titles" in sd && sd.titles.length && "value" in sd.titles[0]) ? sd.titles[0].value : "";
     this.isExtraction = sd.resourceType === "FSREADONLY";
     this.personaArk = ("about" in sd) ? sd.about : null;
+    if (this.personaArk && !isPersonaArk(this.personaArk)) {
+      // An attached source appears to be either an image Ark or not an Ark at all. So remember the URL, but don't make it a persona Ark.
+      this.sourceUrl = this.personaArk;
+      this.personaArk = null;
+    }
   }
 }
 
@@ -1545,14 +1556,14 @@ class PersonRow {
     personRowMap[this.id] = this;
     grouperMap[this.id] = grouper;
     this.sortKey = "";
-    this.person = findPersonInGx(gedcomx, personId);
+    this.person = gedcomx ? findPersonInGx(gedcomx, personId) : null;
     this.personId = personId;
     this.sourceInfo = sourceInfo;
     this.gedcomx = gedcomx;
     this.mergeNode = mergeNode;
     this.isSelected = false;
     this.origOrder = 0;
-    this.note = "";
+    this.comments = "";
     this.updatePersonDisplay();
 
     this.indent = indent;
@@ -1563,7 +1574,7 @@ class PersonRow {
     // List of PersonRow for Ordinance Work Sets that were first attached to this person ID.
     this.childOwsRows = [];
     // Parent in merge hierarchy
-    this.parentRow = parentRow;
+    this.parentRow = parentRow; // used just for debugging
     this.childRows = [];
     if (parentRow) {
       parentRow.childRows.push(this);
@@ -1764,7 +1775,7 @@ class PersonRow {
       case COLUMN_CHILD_NAME:         sortKey = getFirstChildName(this.families);       break;
       case COLUMN_CHILD_FACTS:        sortKey = getFirstChildFactDate(this.families);   break;
       case COLUMN_CHILD_FACTS_PLACE:  sortKey = getFirstChildFactPlace(this.families);  break;
-      case COLUMN_NOTES:              sortKey = this.note;                              break;
+      case COLUMN_COMMENTS:           sortKey = this.comments;                          break;
     }
     if (sortKey === "<no name>") {
       sortKey = null; // Make no-name items sort to bottom.
@@ -2042,6 +2053,10 @@ class PersonRow {
       html += "<td class='note-row " + rowClass + bottomClass + "'" + getNoteColspan() + " id='note-row-cell-" + this.id + "'>" +
         this.getNoteRowContentHtml() + "</td>\n";
     }
+    else if (this.isNonPersonaSourceRow()) {
+      html += "<td class='source-row " + rowClass + bottomClass + "'" + getNoteColspan() + ">" +
+        this.getNonPersonaSourceRowHtml() + "</td>\n";
+    }
     else {
       html += "<td class='" + rowClass + bottomClass + "'" + rowSpan + ">" + this.personDisplay.name + "</td>\n";
       addColumn("person-facts", rowSpan, this.personDisplay.facts, bottomClass);
@@ -2050,12 +2065,12 @@ class PersonRow {
     }
 
     let isFirstSpouse = true;
-    let noteCellHtmlHolder = this.getNoteCellHtml(rowClass, bottomClass, rowSpan);
+    let commentsCellHtmlHolder = this.getCommentsCellHtml(rowClass, bottomClass, rowSpan);
 
-    if (this.families.length > 0 && !this.isNoteRow) {
+    if (this.families.length > 0 && this.isPersonRow()) {
       for (let spouseIndex = 0; spouseIndex < this.families.length; spouseIndex++) {
         let spouseFamily = this.families[spouseIndex];
-        isFirstSpouse = startNewRowIfNotFirst(isFirstSpouse, allRowsClass, noteCellHtmlHolder, this.isSummaryRow());
+        isFirstSpouse = startNewRowIfNotFirst(isFirstSpouse, allRowsClass, commentsCellHtmlHolder, this.isSummaryRow());
         let familyBottomClass = spouseIndex === this.families.length - 1 ? bottomClass : "";
         let childrenRowSpan = getRowspanParameter(displayOptions.shouldShowChildren ? spouseFamily.children.length : 1);
 
@@ -2073,7 +2088,7 @@ class PersonRow {
           let isFirstChild = true;
           for (let childIndex = 0; childIndex < spouseFamily.children.length; childIndex++) {
             let child = spouseFamily.children[childIndex];
-            isFirstChild = startNewRowIfNotFirst(isFirstChild, allRowsClass, noteCellHtmlHolder, this.isSummaryRow());
+            isFirstChild = startNewRowIfNotFirst(isFirstChild, allRowsClass, commentsCellHtmlHolder, this.isSummaryRow());
             let childBottomClass = childIndex === spouseFamily.children.length - 1 ? familyBottomClass : "";
 
             let childNameHtml = child.name;
@@ -2092,23 +2107,23 @@ class PersonRow {
         }
       }
     }
-    else if (!this.isNoteRow) {
+    else if (this.isPersonRow()) {
       addColumn(COLUMN_SPOUSE_NAME, "", "", bottomClass);
       addColumn(COLUMN_SPOUSE_FACTS, "", "", bottomClass);
       addColumn(COLUMN_CHILD_NAME, "", "", bottomClass);
       addColumn(COLUMN_CHILD_FACTS, "", "", bottomClass);
     }
-    if (noteCellHtmlHolder.length > 0) {
-      html += noteCellHtmlHolder.pop();
+    if (commentsCellHtmlHolder.length > 0) {
+      html += commentsCellHtmlHolder.pop();
     }
     return html;
   }
 
-  getNoteCellHtml(rowClass, bottomClass, rowspan) {
-    let noteId = this.id + "-note";
-    return ["<td class='note " + rowClass + bottomClass + "' onclick='doNotSelect(event)' contenteditable='true'" + rowspan
-    + " id='" + noteId + "' onkeyup='updateNote(\"" + this.id + "\", \"" + noteId + "\")'>"
-    + encode(this.note) + "</td>"];
+  getCommentsCellHtml(rowClass, bottomClass, rowspan) {
+    let commentsId = this.id + "-comments";
+    return ["<td class='comments " + rowClass + bottomClass + "' onclick='doNotSelect(event)' contenteditable='true'" + rowspan
+    + " id='" + commentsId + "' onkeyup='updateComments(\"" + this.id + "\", \"" + commentsId + "\")'>"
+    + encode(this.comments) + "</td>"];
   }
 
   toggleSelection() {
@@ -2159,6 +2174,10 @@ class PersonRow {
     return this.sourceInfo;
   }
 
+  isNonPersonaSourceRow() {
+    return this.sourceInfo && !this.sourceInfo.personaArk;
+  }
+
   isOwsRow() {
     return this.ows;
   }
@@ -2169,6 +2188,10 @@ class PersonRow {
 
   getIdClass() {
     return "cell-" + this.id;
+  }
+
+  isPersonRow() {
+    return !this.isNoteRow && !this.isNonPersonaSourceRow();
   }
 
   getCellClass(tabId) {
@@ -2241,6 +2264,24 @@ class PersonRow {
       }
     }
     return html + encode(text).replaceAll("\n", "<br>");
+  }
+
+  getNonPersonaSourceRowHtml() {
+    let title = this.sourceInfo.title;
+    if (!title) {
+      title = this.sourceInfo.sourceUrl;
+      if (!title) {
+        title = "(Source with no title)";
+      }
+    }
+    let html = "";
+    if (this.sourceInfo.sourceUrl) {
+      html += "Source: <a href='" + this.sourceInfo.sourceUrl + "' target='_blank'>" + encode(title) + "</a>";
+    }
+    else {
+      html += encode(title);
+    }
+    return html.replaceAll("\n", "<br>");
   }
 
   getRecordDateHtml(rowSpan, clickInfo) {
@@ -2352,7 +2393,7 @@ class PersonRow {
     }
 
     // Person info
-    let rowClass = this.isNoteRow ? 'note-row' : 'identity-gx';
+    let rowClass = this.isNoteRow ? 'note-row' : (this.isNonPersonaSourceRow() ? 'source-row' : 'identity-gx');
     html += this.getRowPersonCells(this.gedcomx, this.personId, rowClass, usedColumns, bottomClass, this.id, rowSpan, isKeep);
     html += "</tr>\n";
     return html;
@@ -2500,12 +2541,12 @@ function updateMergeRows(mergeNode, indent, maxIndent, isDupNode, mergeRows, sho
     mergeRows.push(mergeRow);
     if (personSourcesMap) {
       for (let sourceInfo of getList(personSourcesMap, mergeNode.personId)) {
-        if (!sourceInfo.personaArk) {
-          continue;
-        }
         let shortPersonaArk = shortenPersonArk(sourceInfo.personaArk);
-        if (!shortPersonaArk.includes(":")) {
-          continue; // unexpected format.
+        if (!shortPersonaArk || !shortPersonaArk.includes(":")) {
+          // non-persona source or not a valid persona ark, so make a generic source row
+          let sourceRow = new PersonRow(null, mergeNode.personId, null, 0, 0, false, null, sourceInfo, null);
+          mergeRows.push(sourceRow);
+          continue;
         }
         let persona = findPersonInGx(sourceInfo.gedcomx, shortPersonaArk);
         let personaId = persona.id;
@@ -3024,8 +3065,8 @@ class SplitObject {
     //If the relationship is no longer used, then we need to know which person ID in the relationship is the one
     //  being replaced by the "keep" ("combined") person's ID.
     //So we might decide that we should instead create a list of relationship objects to add rather than relationship IDs to resurrect.
-    //todo: this.idsOfCoupleRelationshipsToEdit = [];
-    //todo: this.idsOfParentChildRelationshipsToEdit = [];
+    //todo: this.idsOfCoupleRelationshipsToAddToCombined = [];
+    //todo: this.idsOfParentChildRelationshipsToAddToCombined = [];
 
     // List of change IDs for conclusions, entity refs and notes to delete from the combined person
     this.idsOfConclusionsToDelete = [];
@@ -3433,9 +3474,6 @@ const TYPE_ORDINANCE = "Ordinances"; // linked ordinance
          => Find change entry with information about the relationship, and create a new relationship with the
             same person IDs (except with the keep or split person's id), same conclusions.
             But give attribution to the user doing the split, since they are the ones creating the relationship now.
-    => Figure out which split.elements are 'current', so we know when to delete, etc...
-    todo: - Instead of "edit", should we have separate "replace" and "add" lists?
-    todo: Make sure the 'keep' person gets at least one name.
     */
   }
 }
@@ -3942,7 +3980,7 @@ const COLUMN_SPOUSE_FACTS_PLACE = "spouse-facts-place";
 const COLUMN_CHILD_NAME         = "child-name";
 const COLUMN_CHILD_FACTS        = "child-facts";
 const COLUMN_CHILD_FACTS_PLACE  = "child-facts-place";
-const COLUMN_NOTES              = "notes";
+const COLUMN_COMMENTS           = "comments";
 
 // Direction to move each element
 const DIR_KEEP = "keep"; // keep on the "survivor".
@@ -3958,7 +3996,7 @@ const TYPE_PARENTS = "Parents"; // child-and-parents relationship from the perso
 const TYPE_SPOUSE = "Spouse"; // Couple relationship to a spouse
 const TYPE_CHILD = "Children"; // child-and-parents relationship to a child
 const TYPE_SOURCE = "Sources"; // attached source
-const TYPE_NOTE = "Notes";
+const TYPE_NOTE = "Notes"; // Notes on person
 const TYPE_ORDINANCE = "Ordinances"; // linked ordinance
 
 // One element of information from the original GedcomX that is either kept on the old person, or copied or moved out to the new person.
@@ -4712,10 +4750,10 @@ function updateGroupName(groupId) {
   mergeGroup.groupName = $mergeGroupLabelNode.text();
 }
 
-function updateNote(personRowId, noteId) {
+function updateComments(personRowId, commentsId) {
   let personRow = personRowMap[personRowId];
-  let $note = $("#" + noteId);
-  personRow.note = $note.text();
+  let $comments = $("#" + commentsId);
+  personRow.comments = $comments.text();
 }
 
 function deleteEmptyGroup(groupId) {
@@ -5121,8 +5159,8 @@ function getVerticalGrouperHtml(grouper) {
   addSpouseFamilyRows();
 
   // Notes
-  addRow(COLUMN_NOTES, "Notes", true,
-    personRow => personRow.getNoteCellHtml('identity-gx', '', ''));
+  addRow(COLUMN_COMMENTS, "Comments", true,
+    personRow => personRow.getCommentsCellHtml('identity-gx', '', ''));
   html += "</table>\n";
   return html;
 }
@@ -5264,7 +5302,7 @@ function getTableHeader(grouper, shouldIndent) {
     headerHtml(grouper, COLUMN_SPOUSE_FACTS, "Spouse facts") +
     headerHtml(grouper, COLUMN_CHILD_NAME, "Children") +
     headerHtml(grouper, COLUMN_CHILD_FACTS, "Child facts") +
-    headerHtml(grouper, COLUMN_NOTES, "Notes", true);
+    headerHtml(grouper, COLUMN_COMMENTS, "Comments", true);
   return html;
 }
 
@@ -5413,7 +5451,7 @@ function getInitialGedcomx(personId) {
 }
 
 function shortenPersonArk(personArk) {
-  return personArk.replaceAll(/.*[/]/g, "").replaceAll(/^4:1:/g, "")
+  return personArk ? personArk.replaceAll(/.*[/]/g, "").replaceAll(/^4:1:/g, "") : null;
 }
 
 function getPersonId(person) {
@@ -6211,23 +6249,26 @@ Shows the attached sources and the information that each contains about the pers
 <h3>Combo view (usually best)</h3>
 Combines the Flat view and Sources view.
 <ul>
-  <li>Sort by Person Id to sort the Family Tree persons by person ID, and then show under each of them, which
+  <li>Sort by Person ID to sort the Family Tree persons by person ID, and then show, under each of them, which
   sources were first attached to that person ID (and sort those by record date).</li>
   <li>This is probably the best view to work in most of the time, as it lets you use the sources to make good
   decisions, but also lets you decide on the Family Tree persons as well.</li>
-  <li>Click on the purple "Preview split" button to apply information from that group to the Split view.</li>
+  <li>Click on the "Preview split" button to apply information from that group to the Split view.</li>
   <li>This will also create two "Summary" rows: One with the person to "keep", and the other with the person to "split out."</li>
   <ul>
     <li>Click the up or down arrows next to a name, fact, pair of parents, spouse or child to move that information to the
         other group, or click "=" to copy it to both.</li>
-    <li>Values with a checkbox next to them are from a source or from a person that was merged out of existence.
+    <li>Values with a normal checkbox next to them are from a source or from a person that was merged out of existence.
         Check those values to keep them.</li>
     <li>Toggle the "Show extra values" checkbox to show or hide these extra values.</li>
+    <li>Values with a red checkbox are current values on the combined person. They turn red when unchecked to warn the
+        user of data being removed from the current person.</li>
   </ul>
 </ul>
 <h3>Split view</h3>
 <p>This screen lets you decide, for every bit of information, whether it should remain with the existing person,
-be split out to the new person, or be copied so that it is on both (if the information is true about both people).</p>
+be split out to the new person, or be copied so that it is on both (if the information is true about both people).
+(All of this functionality can be done using the summary rows in the Combo View, so this screen may no longer be necessary).</p>
 <p>Since it would be difficult to know how to best split things up if doing it by hand, use one of the other
   views and click on "Preview split" to pre-populate the decisions in the Split view, and then fine-tune it by hand.</p>
 <ul>
@@ -6241,8 +6282,9 @@ be split out to the new person, or be copied so that it is on both (if the infor
       It may be easier to make decisions in the Combo view, where you can see the information from the other views.</li>
 </ul>
 <h3>Actually fixing a munged person</h3>
-The tool unfortunately does not actually split a person for real at this time. It is meant to be a prototype to
-quickly explore ideas on how to help someone quickly and correctly split a munged person. For now, you can use
+The tool currently allows users with special permissions to perform splits, but so far only on beta.familysearch.org. 
+It was originally meant to be a prototype to quickly explore ideas on how to help someone quickly and correctly split a 
+munged person. For now, anyone can use
 it to figure out what the persons are supposed to look like, and then do a "restore" on one of the former persons
 and use this tool to help you add missing information to the restored person, and remove wrong information from
 the remaining one.

@@ -333,16 +333,23 @@ function receivePersona(gedcomx, fetching, sourceInfo, personaUrlToUse) {
     fixEventOrders(gedcomx);
     sourceInfo.gedcomx = gedcomx;
     let personaArk = getMainPersonaArk(gedcomx);
-    if (personaArk !== sourceInfo.personaArk) {
-      // This persona has been deprecated & forwarded or something, so update the 'ark' in sourceInfo to point to the new ark.
-      sourceInfo.personaArk = personaArk;
+    if (personaArk) {
+      if (personaArk !== sourceInfo.personaArk) {
+        // This persona has been deprecated & forwarded or something, so update the 'ark' in sourceInfo to point to the new ark.
+        sourceInfo.personaArk = personaArk;
+      }
+      let person = findPersonInGx(gedcomx, personaArk);
+      sourceInfo.personId = person ? person.id : null;
+      sourceInfo.collectionName = getCollectionName(gedcomx);
+      sourceInfo.recordDate = getRecordDate(gedcomx);
+      sourceInfo.recordDateSortKey = sourceInfo.recordDate ? parseDateIntoNumber(sourceInfo.recordDate).toString() : null;
+      sourceInfo.stapledOrdinancePersonId = getStapledOrdinancePersonId(person);
     }
-    let person = findPersonInGx(gedcomx, personaArk);
-    sourceInfo.personId = person ? person.id : null;
-    sourceInfo.collectionName = getCollectionName(gedcomx);
-    sourceInfo.recordDate = getRecordDate(gedcomx);
-    sourceInfo.recordDateSortKey = sourceInfo.recordDate ? parseDateIntoNumber(sourceInfo.recordDate).toString() : null;
-    sourceInfo.stapledOrdinancePersonId = getStapledOrdinancePersonId(person);
+    else {
+      console.log("Failed to find main persona ark in " + personaUrlToUse + ". Treating as non-persona source.");
+      sourceInfo.personaArk = null;
+      sourceInfo.sourceUrl = personaUrlToUse;
+    }
   }
   else if (personaUrlToUse.includes("beta.familysearch.org") && context.prodSessionId) {
     fetchPersona(fetching, sourceInfo, personaUrlToUse.replace("beta.familysearch.org", "www.familysearch.org"), context.prodSessionId);
@@ -496,6 +503,7 @@ function getMainPersonaArk(gedcomx) {
     }
     return getIdentifier(sd);
   }
+  return null;
 }
 
 function finishedReceivingSources() {
