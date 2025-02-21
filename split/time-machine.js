@@ -238,6 +238,10 @@ function makeTableHeadersDraggable() {
     resizingTable = columnStart.attr("id") === "drag-table" ? findTable(columnStart) : null;
     tableStartSize = resizingTable ? resizingTable.width() : null;
     $(columnStart).addClass("resizing");
+  }).on("mouseenter", function() {
+    $(this).css("cursor", "col-resize");
+  }).on("mouseleave", function() {
+    $(this).css("cursor", "default");
   });
 
   $(document).mousemove(function(e) {
