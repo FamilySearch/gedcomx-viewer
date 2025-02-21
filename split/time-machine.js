@@ -2984,6 +2984,77 @@ function performSplit(grouperId) {
   }
 }
 
+// Get a tuple [type, info] for the given change entry, where type is TYPE_NAME, TYPE_FACT, TYPE_GENDER, etc.;
+//   and the info is a string suitable for display in the dump() method, and also unique enough to distinguish it
+//   from other entries of the same type that are the same info (fact type/date/place, note subject/text, etc.)
+function getEntryChangeTypeAndInfo(entry) {
+  let changeInfo = entry.changeInfo[0];
+  let operation = extractType(getProperty(changeInfo, "operation"));
+  let resultingId = getProperty(changeInfo, "resulting.resourceId");
+  if (operation === "Create" || operation === "Update") {
+    let objectType = extractType(getProperty(changeInfo, "objectType"));
+    let objectModifier = extractType(getProperty(changeInfo, "objectModifier"));
+    if (objectModifier === "Person" && objectType !== "NotAMatch") {
+      let entryPerson = findPersonByLocalId(entry, resultingId);
+      if (entryPerson.hasOwnProperty("facts") && entryPerson.facts.length === 1) {
+        return [TYPE_FACT, getFactString(entryPerson.facts[0])];
+      }
+      else {
+        switch (objectType) {
+          case "BirthName":
+          case "Nickname":
+            return [TYPE_NAME, getPersonName(entryPerson)];
+          case "Gender":
+            return [TYPE_GENDER, entryPerson.gender.type ? extractType(entryPerson.gender.type) : "Unknown"];
+          case "SourceReference":
+            return [TYPE_SOURCE, getSourceString(sourceMap[entryPerson.sources[0].description])];
+          case "Note":
+            let note = entryPerson.notes[0];
+            return [TYPE_NOTE, (note.subject ? note.subject : "<no subject>") + ": " + (note.text ? note.text : "<no text>")];
+        }
+      }
+    }
+    else if (objectModifier === "Couple" && (objectType === "Couple" || objectType.startsWith("Spouse"))) {
+      const rel = findCoupleRelationship(entry, resultingId);
+      if (rel) {
+        const relationshipId = extractType(rel.identifiers["http://gedcomx.org/Primary"][0]);
+        return [TYPE_SPOUSE, relationshipId];
+      }
+      else {
+        console.log("Warning: Could not find Couple relationship with resultingId " + resultingId);
+      }
+    }
+    else if (objectModifier === "ChildAndParentsRelationship") {
+      const rel = findChildAndParentsRelationship(entry, resultingId);
+      if (rel) {
+        const relationshipId = extractType(rel.identifiers["http://gedcomx.org/Primary"][0]);
+        if (objectType === "ChildAndParentsRelationship") {
+          if (rel.child && rel.child.resourceId === entry.personId) {
+            objectType = "Child";
+          }
+          else if (rel.parent1 && rel.parent1.resourceId === entry.personId) {
+            objectType = "Parent1";
+          }
+          else if (rel.parent2 && rel.parent2.resourceId === entry.personId) {
+            objectType = "Parent2";
+          }
+        }
+        switch (objectType) {
+          case "Parent1":
+          case "Parent2":
+            return [TYPE_PARENTS, relationshipId];
+          case "Child":
+            return [TYPE_CHILD, relationshipId];
+        }
+      }
+      else {
+        console.log("Warning: Could not find relationship with resultingId " + resultingId);
+      }
+    }
+  }
+  return [null, null];
+}
+
 /*
   TfPersonSplitSpecification, from tf-json-binding:
   // -- Extracted person specifications. Things to add to the "split" person.
@@ -3032,6 +3103,13 @@ function performSplit(grouperId) {
   }
 }
  */
+
+function getSourceString(sourceInfo) {
+  let title = sourceInfo.title ? sourceInfo.title : "<no title>";
+  let url = sourceInfo.personaArk ? sourceInfo.personaArk : sourceInfo.sourceUrl;
+
+  return title + ": " + (url ? url : "<no url>");
+}
 
 // Object to use with the Split API
 class SplitObject {
@@ -3092,80 +3170,6 @@ const TYPE_ORDINANCE = "Ordinances"; // linked ordinance
 
    */
   initSplitObject(grouper) {
-    function getSourceString(sourceDescription) {
-      let title = sourceDescription.titles ? sourceDescription.titles[0].value : null;
-      let ark = sourceDescription.identifiers ? sourceDescription.identifiers["http://gedcomx.org/Persistent"][0] : null;
-      return joinNonNullElements([title, ark], ": ");
-    }
-
-    function getEntryChangeTypeAndInfo(entry) {
-      let changeInfo = entry.changeInfo[0];
-      let operation = extractType(getProperty(changeInfo, "operation"));
-      let resultingId = getProperty(changeInfo, "resulting.resourceId");
-      if (operation === "Create" || operation === "Update") {
-        let objectType = extractType(getProperty(changeInfo, "objectType"));
-        let objectModifier = extractType(getProperty(changeInfo, "objectModifier"));
-        if (objectModifier === "Person" && objectType !== "NotAMatch") {
-          let entryPerson = findPersonByLocalId(entry, resultingId);
-          if (entryPerson.hasOwnProperty("facts") && entryPerson.facts.length === 1) {
-            return [TYPE_FACT, getFactString(entryPerson.facts[0])];
-          }
-          else {
-            switch (objectType) {
-              case "BirthName":
-              case "Nickname":
-                return [TYPE_NAME, getPersonName(entryPerson)];
-              case "Gender":
-                return [TYPE_GENDER, entryPerson.gender.type ? extractType(entryPerson.gender.type) : "Unknown"];
-              case "SourceReference":
-                return [TYPE_SOURCE, getSourceString(entryPerson.sources[0])];
-              case "Note":
-                let note = entryPerson.notes[0];
-                return [TYPE_NOTE, joinNonNullElements([note.subject, note.text], ": ")];
-            }
-          }
-        }
-        else if (objectModifier === "Couple" && (objectType === "Couple" || objectType.startsWith("Spouse"))) {
-          const rel = findCoupleRelationship(entry, resultingId);
-          if (rel) {
-            const relationshipId = extractType(rel.identifiers["http://gedcomx.org/Primary"][0]);
-            return [TYPE_SPOUSE, relationshipId];
-          }
-          else {
-            console.log("Warning: Could not find Couple relationship with resultingId " + resultingId);
-          }
-        }
-        else if (objectModifier === "ChildAndParentsRelationship") {
-          const rel = findChildAndParentsRelationship(entry, resultingId);
-          if (rel) {
-            const relationshipId = extractType(rel.identifiers["http://gedcomx.org/Primary"][0]);
-            if (objectType === "ChildAndParentsRelationship") {
-              if (rel.child && rel.child.resourceId === entry.personId) {
-                objectType = "Child";
-              }
-              else if (rel.parent1 && rel.parent1.resourceId === entry.personId) {
-                objectType = "Parent1";
-              }
-              else if (rel.parent2 && rel.parent2.resourceId === entry.personId) {
-                objectType = "Parent2";
-              }
-            }
-            switch (objectType) {
-              case "Parent1":
-              case "Parent2":
-                return [TYPE_PARENTS, relationshipId];
-              case "Child":
-                return [TYPE_CHILD, relationshipId];
-            }
-          }
-          else {
-            console.log("Warning: Could not find relationship with resultingId " + resultingId);
-          }
-        }
-      }
-      return [null, null];
-    }
-
     function getElementInfoString(element) {
       switch (element.type) {
         case TYPE_NAME:
@@ -3185,8 +3189,11 @@ const TYPE_ORDINANCE = "Ordinances"; // linked ordinance
           const coupleRelationship = element.item;
           return extractType(coupleRelationship.identifiers["http://gedcomx.org/Primary"][0])
         case TYPE_SOURCE:
-          const sourceDescription = element.item;
-          return getSourceString(sourceDescription);
+          const sourceInfo = sourceMap[element.item.description];
+          return getSourceString(sourceInfo);
+        case TYPE_NOTE:
+          const note = element.item;
+          return (note.subject ? note.subject : "<no subject>") + ": " + (note.text ? note.text : "<no text>");
         case TYPE_ORDINANCE:
           const ows = element.item;
           return ows.owsId;
@@ -3406,48 +3413,101 @@ const TYPE_ORDINANCE = "Ordinances"; // linked ordinance
       }
     }
 
+    function getElementSingleValueKey(element) {
+      if (isSingleValuedElement(element)) {
+        if (element.type === TYPE_NAME) {
+          return TYPE_NAME;
+        } else if (element.type === TYPE_FACT) {
+          return element.type + ":" + extractType(element.item.type);
+        }
+      }
+      return null;
+    }
+
+    function isKeep(element) {
+      return (element.direction === DIR_KEEP || element.direction === DIR_COPY) &&
+        (element.isSelectedForKeep || (element.type !== TYPE_NAME && element.type !== TYPE_FACT));
+    }
+
+    function getCurrentConclusionIdsToDelete() {
+      // Get a list of current conclusion IDs to delete.
+      // If an element is "current" and not selected for "keep", then it needs to be deleted
+      // UNLESS it is single-valued and another element with the same key is selected for "keep".
+      // In that case, it will be replaced automatically by the API.
+      let conclusionIdsToDelete = new Set();
+      let newSingleValuedKeys = new Set();
+      for (let element of split.elements) {
+        if (!isCurrentStatus(element)) {
+          let singleValuedKey = getElementSingleValueKey(element);
+          if (singleValuedKey) {
+            // A new single-valued conclusion is being added to the combined person, so remember
+            //   what kind of single value it is (name, fact:birth, fact:death, etc.).
+            newSingleValuedKeys.add(singleValuedKey);
+          }
+        }
+      }
+      for (let element of split.elements) {
+        if (isCurrentStatus(element) && !isKeep(element)) {
+          let singleValueKey = getElementSingleValueKey(element);
+          if (!singleValueKey || !newSingleValuedKeys.has(singleValueKey)) {
+            conclusionIdsToDelete.add(element.item.id);
+          }
+        }
+      }
+      return conclusionIdsToDelete;
+    }
+
     //=============================================================================================================
     // ==== initSplitObject ====
     // - map of type -> info string -> person Id -> change entry, which is the LATEST change entry with that info string
-    //    for that person Id.
+    //    from that person ID's change log.
     const typeInfoPersonIdChangeEntryMap = getTypeInfoPersonChangeMap();
 
     let [keepPersonIds, splitPersonIds] = getKeepAndSplitPersonIds(grouper);
 
     for (let element of split.elements) {
-      if (element.isSelectedForKeep || element.isSelectedForSplit) {
-        let isCurrent = !element.isExtra();
-        let infoString = getElementInfoString(element);
-        let infoPersonChangeMap = typeInfoPersonIdChangeEntryMap.get(element.type);
-        if (infoPersonChangeMap) {
-          // Map of personId -> latest change entry with that info string for that person ID.
-          let personChangeMap = infoPersonChangeMap.get(infoString);
-          // If there are multiple person IDs with the same info string in their change logs, then
-          //  a) find the most recent one where the personId is in the group that the element is in
-          //     (i.e., in the keep group if the element is a keep or copy element; or in the split
-          //     group if the element is a split or copy element).
-          //  b) If the person ID isn't in the right group, take the most recent from the other group.
-          //  c) If there isn't a change log entry at all that has the info, then this info is coming
-          //     from a source instead, so it will go in the "conclusionsToAdd" list.
-          let changeEntries = personChangeMap ? chooseBestChangeEntry(personChangeMap, keepPersonIds, splitPersonIds, element.direction) : null;
+      let isCurrent = !element.isExtra();
+      let infoString = getElementInfoString(element);
+      let infoPersonChangeMap = typeInfoPersonIdChangeEntryMap.get(element.type);
+      // Map of personId -> latest change entry with that info string for that person ID.
+      let personChangeMap = infoPersonChangeMap ? infoPersonChangeMap.get(infoString) : null;
+      // If there are multiple person IDs with the same info string in their change logs, then
+      //  a) find the most recent one where the personId is in the group that the element is in
+      //     (i.e., in the keep group if the element is a keep or copy element; or in the split
+      //     group if the element is a split or copy element).
+      //  b) If the person ID isn't in the right group, take the most recent from the other group.
+      //  c) If there isn't a change log entry at all that has the info, then this info is coming
+      //     from a source instead, so it will go in the "conclusionsToAdd" list.
+      let changeEntries = personChangeMap ? chooseBestChangeEntry(personChangeMap, keepPersonIds, splitPersonIds, element.direction) : null;
 
+      if (element.type === TYPE_NAME || element.type === TYPE_FACT || element.type === TYPE_GENDER) {
+        if (element.isSelectedForKeep || element.isSelectedForSplit) {
           if (changeEntries) {
             copyOrMoveChangeEntry(element, changeEntries, isCurrent);
           } else {
             // This info is coming from a source, so add it to the appropriate list of conclusions to add.
             let tfConclusion = new TfConclusion(element.type, element.item);
-            if (!isCurrent && element.isSelectedForKeep && (element.direction === DIR_KEEP || element.direction === DIR_COPY)) {
+            if (isCurrent) {
+              console.log("Error: element 'isCurrent', but did not have a corresponding change entry.");
+            }
+            if (element.isSelectedForKeep && (element.direction === DIR_KEEP || element.direction === DIR_COPY)) {
               this.conclusionsToAddToCombined.push(tfConclusion);
             }
             if (element.isSelectedForSplit && (element.direction === DIR_MOVE || element.direction === DIR_COPY)) {
               this.conclusionsToAddToExtracted.push(tfConclusion);
             }
           }
-        } else {
-          console.log("No infoPersonChangeMap for " + element.type + ": " + infoString);
         }
       }
+      else {
+        // Handle relationships, sources, notes and ordinances.
+        copyOrMoveChangeEntry(element, changeEntries, isCurrent);
+      }
     }
+    for (let conclusionId of getCurrentConclusionIdsToDelete()) {
+      this.idsOfConclusionsToDelete.push(conclusionId);
+    }
+
     /*
     todo: Filter out changes that are already on the keep person, i.e., currently conclusions, entity refs or ordinances.
     todo: Figure out what to do about 'main' vs. 'alternate' names.
@@ -3607,10 +3667,172 @@ function getTypeNameFromTypeUri(uri) {
   return formattedWords.join(' ');
 }
 
+function dumpSplit(split) {
+  // Display the split object in the console for debugging.
+  //console.log("Split object:\n" + JSON.stringify(split, null, 2));
+  function gatherChangeIdsByPersonId() {
+    // Get a combined map of personId -> set of change IDs referenced in any of the copy or add maps.
+    function addToCombinedMap(personIdChangeIdsMap) {
+      for (let personId of Object.keys(personIdChangeIdsMap)) {
+        let changeIds = personIdChangeIdsMap[personId];
+        if (!combinedMap.has(personId)) {
+          combinedMap.set(personId, new Set());
+        }
+        for (const changeId of changeIds) {
+          combinedMap.get(personId).add(changeId);
+        }
+      }
+    }
+
+    let combinedMap = new Map();
+    addToCombinedMap(split.changeIdsOfConclusionsToCopyByPersonId);
+    addToCombinedMap(split.changeIdsOfEntityRefsToCopyByPersonId);
+    addToCombinedMap(split.changeIdsOfNotesToCopyByPersonId);
+    addToCombinedMap(split.changeIdsOfConclusionsToAddToCombinedByPersonId);
+    addToCombinedMap(split.changeIdsOfEntityRefsToAddToCombinedByPersonId);
+    addToCombinedMap(split.changeIdsOfNotesToAddToCombinedByPersonId);
+
+    return combinedMap;
+  }
+
+  function getInfoMap(personIdChangeIdsMap) {
+    // Map of personId -> changeId -> String to display for that change ID.
+    let infoMap = new Map();
+    for (let entry of allEntries) {
+      let personId = entry.personId;
+      let changeId = entry.id;
+      let changeIdsSet = personIdChangeIdsMap.get(personId);
+      if (changeIdsSet && changeIdsSet.has(changeId)) {
+        let info = getEntryChangeTypeAndInfo(entry)[1];
+        if (!infoMap.has(personId)) {
+          infoMap.set(personId, new Map());
+        }
+        infoMap.get(personId).set(changeId, info);
+      }
+    }
+    return infoMap;
+  }
+
+  function getRelInfoMap(coupleRelIds, parentChildRelIds) {
+    // Map of couple relationship ID => string to display
+    let coupleRelInfoMap = new Map();
+    // Map of parent-child relationship ID => string to display
+    let parentChildRelInfoMap = new Map();
+    for (let entry of allEntries) {
+      let changeInfo = entry.changeInfo[0];
+      let resultingId = getProperty(changeInfo, "resulting.resourceId");
+
+      let rel = findCoupleRelationship(entry, resultingId);
+      if (rel) {
+        let relationshipId = extractType(getPrimaryIdentifier(rel));
+        if (coupleRelIds.has(relationshipId)) {
+          coupleRelInfoMap.set(relationshipId, getCoupleRelationshipString(rel, entry.content.gedcomx.persons));
+        }
+      }
+
+      rel = findChildAndParentsRelationship(entry, resultingId);
+      if (rel) {
+        let relationshipId = extractType(getPrimaryIdentifier(rel));
+        if (parentChildRelIds.has(relationshipId)) {
+          parentChildRelInfoMap.set(relationshipId, getParentChildRelationshipString(rel, entry.content.gedcomx.persons));
+        }
+      }
+    }
+    return [coupleRelInfoMap, parentChildRelInfoMap];
+  }
+
+  function getCoupleRelationshipString(rel, persons) {
+    return "Couple: " + getRelativeName(rel["person1"], persons) + " & " + getRelativeName(rel["person2"], persons);
+  }
+
+  function getParentChildRelationshipString(rel, persons) {
+    return "Parent-child: " + getRelativeName(rel["parent1"], persons) + " & " + getRelativeName(rel["parent2"], persons)
+      + ", child: " + getRelativeName(rel["child"], persons);
+  }
+
+  function getRelativeName(personReference, persons) {
+    if (personReference && persons) {
+      let personId = personReference.resourceId;
+      for (let person of persons) {
+        if (person.id === personId) {
+          return getPersonName(person);
+        }
+      }
+    }
+    return "<none>";
+  }
+
+  function combineLists(list1, list2) {
+    let relIdSet = new Set();
+    for (let relId of list1) {
+      relIdSet.add(relId);
+    }
+    for (let relId of list2) {
+      relIdSet.add(relId);
+    }
+    return relIdSet;
+  }
+
+  function dumpMap(name) {
+    let dict = split[name];
+    if (Object.keys(dict).length > 0) {
+      console.log(name + ":");
+      for (let personId of Object.keys(dict)) {
+        let changeIdList = dict[personId];
+        console.log('  ' + personId + ':');
+        let changeIdInfoMap = personIdChangeIdInfoMap.get(personId);
+        for (const changeId of changeIdList) {
+          console.log('    ' + changeId + " - " + changeIdInfoMap.get(changeId));
+        }
+      }
+    }
+    else {
+      console.log(name + ': (none)');
+    }
+  }
+
+  function dumpConclusions(listName) {
+    let list = split[listName];
+    console.log(listName + ": " + ((list && list.length > 0) ? JSON.stringify(list, null, 2) : "[]"));
+  }
+
+  function dumpRels(name, relInfoMap) {
+    if (relInfoMap.size > 0) {
+      console.log(name + ":");
+      for (const [relId, relInfo] of relInfoMap.entries()) {
+        console.log('  ' + relId + " - " + relInfo);
+      }
+    }
+    else {
+      console.log( name + ": (none)");
+    }
+  }
+
+  let personIdChangeIdsMap = gatherChangeIdsByPersonId();
+  let personIdChangeIdInfoMap = getInfoMap(personIdChangeIdsMap);
+  dumpMap("changeIdsOfConclusionsToCopyByPersonId");
+  dumpMap("changeIdsOfEntityRefsToCopyByPersonId");
+  dumpMap("changeIdsOfNotesToCopyByPersonId");
+  dumpMap("changeIdsOfConclusionsToAddToCombinedByPersonId");
+  dumpMap("changeIdsOfEntityRefsToAddToCombinedByPersonId");
+  dumpMap("changeIdsOfNotesToAddToCombinedByPersonId");
+
+  dumpConclusions("conclusionsToAddToExtracted");
+  dumpConclusions("conclusionsToAddToCombined");
+
+  let coupleRelIds = combineLists(split.idsOfCoupleRelationshipsToCopy, split.idsOfCoupleRelationshipsToDelete);
+  let parentChildRelIds = combineLists(split.idsOfParentChildRelationshipsToCopy, split.idsOfParentChildRelationshipsToDelete);
+  let [coupleRelInfoMap, parentChildRelInfoMap] = getRelInfoMap(coupleRelIds, parentChildRelIds);
+  //TODO: Why aren't any relationships being copied?
+  dumpRels("idsOfCoupleRelationshipsToCopy", coupleRelInfoMap);
+  dumpRels("idsOfParentChildRelationshipsToCopy", parentChildRelInfoMap);
+  dumpRels("idsOfCoupleRelationshipsToDelete", coupleRelInfoMap);
+  dumpRels("idsOfParentChildRelationshipsToDelete", parentChildRelInfoMap);
+}
+
 function createSplitObject(grouper) {
   let split = new SplitObject(grouper);
-  // Display the split object in the console for debugging.
-  console.log("Split object:\n" + JSON.stringify(split, null, 2));
+  dumpSplit(split);
   return split;
 }
 
@@ -5236,8 +5458,8 @@ function getGroupHeadingHtml(personGroup, groupIndex) {
     + encode(personGroup.groupName) + "</div>"
     // "Add to Group" button
     + "<button class='add-to-group-button' onclick='moveSelectedToGroup(\"" + personGroup.groupId + "\")'>Add to group</button>"
-    // "Apply to Split" button
-    + (groupIndex < 1 || isEmptyGroup ? "" : "<button class='apply-button' onclick='splitOnGroup(\"" + personGroup.groupId + "\")'>Preview split</button>");
+    // "Preview Split" button
+    + (groupIndex < 1 ? "" : "<button class='apply-button' onclick='splitOnGroup(\"" + personGroup.groupId + "\")'>Preview split</button>");
 }
 
 function sortColumn(columnName, grouperId) {
@@ -5435,6 +5657,7 @@ function getRelativeHtml(relativeId, timestamp) {
 function joinNonNullElements(list, delimiter) {
   return list.filter(Boolean).join(delimiter);
 }
+
 // ====================================================================
 // ============ GedcomX manipulation (no HTML) =========================
 
