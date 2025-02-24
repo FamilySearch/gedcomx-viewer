@@ -3115,6 +3115,36 @@ function getSourceString(sourceInfo) {
   return title + ": " + (url ? url : "<no url>");
 }
 
+function getElementInfoString(element) {
+  switch (element.type) {
+    case TYPE_NAME:
+      const name = element.item;
+      return getPersonName({names: [name]}); // simulate person object with just a name
+    case TYPE_FACT:
+      const fact = element.item;
+      return getFactString(fact);
+    case TYPE_GENDER:
+      const gender = element.item;
+      return gender.type ? extractType(gender.type) : "Unknown"
+    case TYPE_PARENTS:
+    case TYPE_CHILD:
+      const parentsAndChildRelationship = element.item;
+      return extractType(parentsAndChildRelationship.identifiers["http://gedcomx.org/Primary"][0]);
+    case TYPE_SPOUSE:
+      const coupleRelationship = element.item;
+      return extractType(coupleRelationship.identifiers["http://gedcomx.org/Primary"][0])
+    case TYPE_SOURCE:
+      const sourceInfo = sourceMap[element.item.description];
+      return getSourceString(sourceInfo);
+    case TYPE_NOTE:
+      const note = element.item;
+      return (note.subject ? note.subject : "<no subject>") + ": " + (note.text ? note.text : "<no text>");
+    case TYPE_ORDINANCE:
+      const ows = element.item;
+      return ows.owsId;
+  }
+}
+
 // Object to use with the Split API
 class SplitObject {
   constructor(grouper) {
@@ -3174,36 +3204,6 @@ const TYPE_ORDINANCE = "Ordinances"; // linked ordinance
 
    */
   initSplitObject(grouper) {
-    function getElementInfoString(element) {
-      switch (element.type) {
-        case TYPE_NAME:
-          const name = element.item;
-          return getPersonName({names: [name]}); // simulate person object with just a name
-        case TYPE_FACT:
-          const fact = element.item;
-          return getFactString(fact);
-        case TYPE_GENDER:
-          const gender = element.item;
-          return gender.type ? extractType(gender.type) : "Unknown"
-        case TYPE_PARENTS:
-        case TYPE_CHILD:
-          const parentsAndChildRelationship = element.item;
-          return extractType(parentsAndChildRelationship.identifiers["http://gedcomx.org/Primary"][0]);
-        case TYPE_SPOUSE:
-          const coupleRelationship = element.item;
-          return extractType(coupleRelationship.identifiers["http://gedcomx.org/Primary"][0])
-        case TYPE_SOURCE:
-          const sourceInfo = sourceMap[element.item.description];
-          return getSourceString(sourceInfo);
-        case TYPE_NOTE:
-          const note = element.item;
-          return (note.subject ? note.subject : "<no subject>") + ": " + (note.text ? note.text : "<no text>");
-        case TYPE_ORDINANCE:
-          const ows = element.item;
-          return ows.owsId;
-      }
-    }
-
     function getKeepAndSplitPersonIds(grouper) {
       let keepPersonIds = [];
       let splitPersonIds = [];
@@ -3366,7 +3366,7 @@ const TYPE_ORDINANCE = "Ordinances"; // linked ordinance
     // relIdsToCopy - list of relationship IDs to copy to the split person
     // relIdsToDelete - list of relationship IDs to delete from the keep person
     function updateSplitLists(changeEntries, direction, relIdsToCopy, relIdsToDelete) {
-      //future: let keepRelationshipId = getRelationshipIdFromChangeEntry(changeEntries[0]);
+      let keepRelationshipId = getRelationshipIdFromChangeEntry(changeEntries[0]);
       let splitRelationshipId = getRelationshipIdFromChangeEntry(changeEntries[1]);
 
       //future: let keepList = this.idsOfParentChildRelationshipsToEdit;
@@ -3377,11 +3377,14 @@ const TYPE_ORDINANCE = "Ordinances"; // linked ordinance
         case DIR_MOVE:
           relIdsToCopy.push(splitRelationshipId);
           //future: if isCurrent then:
-          relIdsToDelete.push(splitRelationshipId);
+          relIdsToDelete.push(keepRelationshipId);
           break;
         case DIR_COPY:
           //future: if !isCurrent then: relIdsToAdd.push(keepRelationshipId);
           relIdsToCopy.push(splitRelationshipId);
+          break;
+        case DIR_NULL:
+          relIdsToDelete.push(keepRelationshipId);
           break;
       }
     }
@@ -3433,15 +3436,10 @@ const TYPE_ORDINANCE = "Ordinances"; // linked ordinance
         (element.isSelectedForKeep || (element.type !== TYPE_NAME && element.type !== TYPE_FACT));
     }
 
-    function getCurrentConclusionIdsToDelete() {
-      // Get a list of current conclusion IDs to delete.
-      // If an element is "current" and not selected for "keep", then it needs to be deleted
-      // UNLESS it is single-valued and another element with the same key is selected for "keep".
-      // In that case, it will be replaced automatically by the API.
-      let conclusionIdsToDelete = new Set();
+    function getNewSingleValuedKeys() {
       let newSingleValuedKeys = new Set();
       for (let element of split.elements) {
-        if (!isCurrentStatus(element)) {
+        if (!isCurrentStatus(element.item)) {
           let singleValuedKey = getElementSingleValueKey(element);
           if (singleValuedKey) {
             // A new single-valued conclusion is being added to the combined person, so remember
@@ -3450,8 +3448,18 @@ const TYPE_ORDINANCE = "Ordinances"; // linked ordinance
           }
         }
       }
+      return newSingleValuedKeys;
+    }
+
+    function getCurrentConclusionIdsToDelete() {
+      // Get a list of current conclusion IDs to delete.
+      // If an element is "current" and not selected for "keep", then it needs to be deleted
+      // UNLESS it is single-valued and another element with the same key is selected for "keep".
+      // In that case, it will be replaced automatically by the API.
+      let conclusionIdsToDelete = new Set();
+      let newSingleValuedKeys = getNewSingleValuedKeys();
       for (let element of split.elements) {
-        if (isCurrentStatus(element) && !isKeep(element)) {
+        if (isCurrentStatus(element.item) && !isKeep(element) && element.isConclusion()) {
           let singleValueKey = getElementSingleValueKey(element);
           if (!singleValueKey || !newSingleValuedKeys.has(singleValueKey)) {
             conclusionIdsToDelete.add(element.item.id);
@@ -3484,7 +3492,7 @@ const TYPE_ORDINANCE = "Ordinances"; // linked ordinance
       //     from a source instead, so it will go in the "conclusionsToAdd" list.
       let changeEntries = personChangeMap ? chooseBestChangeEntry(personChangeMap, keepPersonIds, splitPersonIds, element.direction) : null;
 
-      if (element.type === TYPE_NAME || element.type === TYPE_FACT || element.type === TYPE_GENDER) {
+      if (element.isConclusion()) {
         if (element.isSelectedForKeep || element.isSelectedForSplit) {
           if (changeEntries) {
             copyOrMoveChangeEntry(element, changeEntries, isCurrent);
@@ -3591,23 +3599,24 @@ class TfConclusion {
   constructor(elementType, item) {
     switch (elementType) {
       case TYPE_NAME:
-        this.type = "NAME";
+        this.conclusionType = "NAME";
         this.value = {
           type: item.type,
           nameForms: copyObject(item.nameForms)
         };
         break;
       case TYPE_GENDER:
-        this.type = "GENDER";
+        this.conclusionType = "GENDER";
         this.value = {
           type: item.type
         };
         break;
       case TYPE_FACT:
-        this.type = "FACT";
+        this.conclusionType = "FACT";
         this.value = {};
-        if (TfFactTypes.has(item.type)) {
-          this.value.type = item.type;
+        if (tfFactTypeMap.has(item.type)) {
+          // Convert from GedcomX fact type URI, like "http://gedcomx.org/Birth" to TF enum value like "BIRTH"
+          this.value.type = tfFactTypeMap.get(item.type);
         }
         else {
           this.value.type = "USER_DEFINED";
@@ -3624,32 +3633,41 @@ class TfConclusion {
         }
         break;
       default:
-        console.log("Waring: Unsupported element type " + elementType + " in TfConclusion");
+        console.log("Warning: Unsupported element type " + elementType + " in TfConclusion");
     }
   }
 }
 
-const TfFactTypes = new Set([
-  "http://gedcomx.org/Birth",
-  "http://gedcomx.org/Christening",
-  "http://gedcomx.org/Death",
-  "http://gedcomx.org/Burial",
-  "http://gedcomx.org/Stillbirth",
-  "http://gedcomx.org/BarMitzvah",
-  "http://gedcomx.org/BatMitzvah",
-  "http://gedcomx.org/Immigration",
-  "http://gedcomx.org/MilitaryService",
-  "http://gedcomx.org/Naturalization",
-  "http://gedcomx.org/Residence",
-  "http://gedcomx.org/Religion",
-  "http://gedcomx.org/Occupation",
-  "http://gedcomx.org/Cremation",
-  "http://gedcomx.org/Caste",
-  "http://gedcomx.org/Clan",
-  "http://gedcomx.org/NationalId",
-  "http://gedcomx.org/Nationality",
-  "http://gedcomx.org/PhysicalDescription",
-  "http://gedcomx.org/Ethnicity"
+const tfFactTypeMap = new Map([
+  ["http://gedcomx.org/Birth", "BIRTH"],
+  ["http://gedcomx.org/Christening", "CHRISTENING"],
+  ["http://gedcomx.org/Death", "DEATH"],
+  ["http://gedcomx.org/Burial", "BURIAL"],
+  ["http://gedcomx.org/Stillbirth", "STILLBIRTH"],
+  ["http://gedcomx.org/BarMitzvah", "BAR_MITZVAH"],
+  ["http://gedcomx.org/BatMitzvah", "BAT_MITZVAH"],
+  ["http://gedcomx.org/Immigration", "IMMIGRATION"],
+  ["http://gedcomx.org/MilitaryService", "MILITARY_SERVICE"],
+  ["http://gedcomx.org/Naturalization", "NATURALIZATION"],
+  ["http://gedcomx.org/Residence", "RESIDENCE"],
+  ["http://gedcomx.org/Religion", "RELIGION"],
+  ["http://gedcomx.org/Occupation", "OCCUPATION"],
+  ["http://gedcomx.org/Cremation", "CREMATION"],
+  ["http://gedcomx.org/Caste", "CASTE"],
+  ["http://gedcomx.org/Clan", "CLAN"],
+  ["http://gedcomx.org/NationalId", "NATIONAL_ID"],
+  ["http://gedcomx.org/Nationality", "NATIONALITY"],
+  ["http://gedcomx.org/PhysicalDescription", "PHYSICAL_DESCRIPTION"],
+  ["http://gedcomx.org/Ethnicity", "ETHNICITY"],
+  ["http://familysearch.org/v1/Affiliation", "AFFILIATION"],
+  ["http://familysearch.org/v1/BirthOrder", "BIRTH_ORDER"],
+  ["http://familysearch.org/v1/DiedBeforeEight", "DIED_BEFORE_EIGHT"],
+  ["http://familysearch.org/v1/LifeSketch", "LIFE_SKETCH"],
+  ["http://familysearch.org/v1/NoCoupleRelationships", "NO_COUPLE_RELATIONSHIPS"],
+  ["http://familysearch.org/v1/NoChildren", "NO_CHILDREN"],
+  ["http://familysearch.org/v1/TitleOfNobility", "TITLE_OF_NOBILITY"],
+  ["http://gedcomx.org/Tribe", "TRIBE_NAME"], // Note: TF didn't have this map, even though it's a standard GedcomX type.
+  ["http://familysearch.org/v1/TribeName", "TRIBE_NAME;"]
 ]);
 
 // Convert a URI like "http://familysearch.org/types/facts/WorkhouseAdmission" to "Workhouse admission".
@@ -3671,7 +3689,7 @@ function getTypeNameFromTypeUri(uri) {
   return formattedWords.join(' ');
 }
 
-function dumpSplit(split) {
+function dumpSplit(splitObject) {
   // Display the split object in the console for debugging.
   //console.log("Split object:\n" + JSON.stringify(split, null, 2));
   function gatherChangeIdsByPersonId() {
@@ -3689,12 +3707,12 @@ function dumpSplit(split) {
     }
 
     let combinedMap = new Map();
-    addToCombinedMap(split.changeIdsOfConclusionsToCopyByPersonId);
-    addToCombinedMap(split.changeIdsOfEntityRefsToCopyByPersonId);
-    addToCombinedMap(split.changeIdsOfNotesToCopyByPersonId);
-    addToCombinedMap(split.changeIdsOfConclusionsToAddToCombinedByPersonId);
-    addToCombinedMap(split.changeIdsOfEntityRefsToAddToCombinedByPersonId);
-    addToCombinedMap(split.changeIdsOfNotesToAddToCombinedByPersonId);
+    addToCombinedMap(splitObject.changeIdsOfConclusionsToCopyByPersonId);
+    addToCombinedMap(splitObject.changeIdsOfEntityRefsToCopyByPersonId);
+    addToCombinedMap(splitObject.changeIdsOfNotesToCopyByPersonId);
+    addToCombinedMap(splitObject.changeIdsOfConclusionsToAddToCombinedByPersonId);
+    addToCombinedMap(splitObject.changeIdsOfEntityRefsToAddToCombinedByPersonId);
+    addToCombinedMap(splitObject.changeIdsOfNotesToAddToCombinedByPersonId);
 
     return combinedMap;
   }
@@ -3729,7 +3747,7 @@ function dumpSplit(split) {
       let rel = findCoupleRelationship(entry, resultingId);
       if (rel) {
         let relationshipId = extractType(getPrimaryIdentifier(rel));
-        if (coupleRelIds.has(relationshipId)) {
+        if (coupleRelIds.has(relationshipId) && !coupleRelInfoMap.has(relationshipId)) {
           coupleRelInfoMap.set(relationshipId, getCoupleRelationshipString(rel, entry.content.gedcomx.persons));
         }
       }
@@ -3737,7 +3755,7 @@ function dumpSplit(split) {
       rel = findChildAndParentsRelationship(entry, resultingId);
       if (rel) {
         let relationshipId = extractType(getPrimaryIdentifier(rel));
-        if (parentChildRelIds.has(relationshipId)) {
+        if (parentChildRelIds.has(relationshipId) && !parentChildRelInfoMap.has(relationshipId)) {
           parentChildRelInfoMap.set(relationshipId, getParentChildRelationshipString(rel, entry.content.gedcomx.persons));
         }
       }
@@ -3778,7 +3796,7 @@ function dumpSplit(split) {
   }
 
   function dumpMap(name) {
-    let dict = split[name];
+    let dict = splitObject[name];
     if (Object.keys(dict).length > 0) {
       console.log(name + ":");
       for (let personId of Object.keys(dict)) {
@@ -3796,42 +3814,121 @@ function dumpSplit(split) {
   }
 
   function dumpConclusions(listName) {
-    let list = split[listName];
+    let list = splitObject[listName];
     console.log(listName + ": " + ((list && list.length > 0) ? JSON.stringify(list, null, 2) : "[]"));
   }
 
   function dumpRels(name, relInfoMap) {
-    if (relInfoMap.size > 0) {
+    let relIdsToDelete = splitObject[name];
+    if (relIdsToDelete.length > 0) {
       console.log(name + ":");
-      for (const [relId, relInfo] of relInfoMap.entries()) {
-        console.log('  ' + relId + " - " + relInfo);
+      if (relIdsToDelete) {
+        for (let relId of relIdsToDelete) {
+          console.log('  ' + relId + " - " + relInfoMap.get(relId));
+        }
       }
     }
     else {
-      console.log( name + ": (none)");
+      console.log( name + ": []");
     }
   }
 
+  function dumpIdsOfConclusionsToDelete(idsOfConclusionsToDelete) {
+    if (idsOfConclusionsToDelete.length > 0) {
+      console.log("idsOfConclusionsToDelete:");
+      for (let element of split.elements) {
+        if (element.isConclusion()) {
+          let conclusionId = element.item.id;
+          if (idsOfConclusionsToDelete.includes(conclusionId)) {
+            if (element.isSelectedForKeep && (element.direction === DIR_KEEP || element.direction === DIR_COPY)) {
+              console.log("Error: Conclusion to delete is selected for keep: " + element.item.id);
+            }
+            console.log("  " + conclusionId + " - " + getElementInfoString(element));
+          }
+        }
+      }
+    }
+    else {
+      console.log("idsOfConclusionsToDelete: []");
+    }
+  }
+
+  function dumpIdsOfEntityRefsToDelete(idsOfEntityRefsToDelete) {
+    if (idsOfEntityRefsToDelete.length > 0) {
+      console.log("idsOfEntityRefsToDelete:");
+      for (let element of split.elements) {
+        if (element.type === TYPE_SOURCE || element.type === TYPE_ORDINANCE) {
+          let entityRefId = element.item.id;
+          if (idsOfEntityRefsToDelete.includes(entityRefId)) {
+            if (element.isSelectedForKeep && (element.direction === DIR_KEEP || element.direction === DIR_COPY)) {
+              console.log("Error: Entity ref to delete is selected for keep: " + element.item.id);
+            }
+            console.log("  " + entityRefId + " - " + getElementInfoString(element));
+          }
+          else if (!element.isSelectedForKeep || element.direction === DIR_KEEP || element.direction === DIR_COPY) {
+            console.log("Warning: not deleting entity ref that seems like it should be deleted? - " + getElementInfoString(element));
+          }
+        }
+      }
+    }
+    else {
+      console.log("idsOfEntityRefsToDelete: []");
+    }
+  }
+
+  function dumpIdsOfNotesToDelete(idsOfNotesToDelete) {
+    if (idsOfNotesToDelete.length > 0) {
+      console.log("idsOfNotesToDelete:");
+      for (let element of split.elements) {
+        if (element.type === TYPE_NOTE) {
+          let noteId = element.item.id;
+          if (idsOfNotesToDelete.includes(noteId)) {
+            if (element.isSelectedForKeep && (element.direction === DIR_KEEP || element.direction === DIR_COPY)) {
+              console.log("Error: Note to delete is selected for keep: " + element.item.id);
+            }
+            console.log("  " + noteId + " - " + getElementInfoString(element));
+          }
+          else if (!element.isSelectedForKeep || element.direction === DIR_KEEP || element.direction === DIR_COPY) {
+            console.log("Warning: not deleting entity ref that seems like it should be deleted? - " + getElementInfoString(element));
+          }
+        }
+      }
+    }
+    else {
+      console.log("idsOfNotesToDelete: []");
+    }
+  }
+
+  //==== dumpSplit =============
   let personIdChangeIdsMap = gatherChangeIdsByPersonId();
   let personIdChangeIdInfoMap = getInfoMap(personIdChangeIdsMap);
   dumpMap("changeIdsOfConclusionsToCopyByPersonId");
-  dumpMap("changeIdsOfEntityRefsToCopyByPersonId");
+  dumpMap("changeIdsOfEntityRefsToCopyByPersonId"); // todo: make sure this includes ordinances
   dumpMap("changeIdsOfNotesToCopyByPersonId");
+  dumpConclusions("conclusionsToAddToExtracted");
+
   dumpMap("changeIdsOfConclusionsToAddToCombinedByPersonId");
   dumpMap("changeIdsOfEntityRefsToAddToCombinedByPersonId");
   dumpMap("changeIdsOfNotesToAddToCombinedByPersonId");
-
-  dumpConclusions("conclusionsToAddToExtracted");
   dumpConclusions("conclusionsToAddToCombined");
 
-  let coupleRelIds = combineLists(split.idsOfCoupleRelationshipsToCopy, split.idsOfCoupleRelationshipsToDelete);
-  let parentChildRelIds = combineLists(split.idsOfParentChildRelationshipsToCopy, split.idsOfParentChildRelationshipsToDelete);
+  dumpIdsOfConclusionsToDelete(splitObject.idsOfConclusionsToDelete);
+  dumpIdsOfEntityRefsToDelete(splitObject.idsOfEntityRefsToDelete);
+  dumpIdsOfNotesToDelete(splitObject.idsOfNotesToDelete);
+
+  let coupleRelIds = combineLists(splitObject.idsOfCoupleRelationshipsToCopy, splitObject.idsOfCoupleRelationshipsToDelete);
+  let parentChildRelIds = combineLists(splitObject.idsOfParentChildRelationshipsToCopy, splitObject.idsOfParentChildRelationshipsToDelete);
   let [coupleRelInfoMap, parentChildRelInfoMap] = getRelInfoMap(coupleRelIds, parentChildRelIds);
-  //TODO: Why aren't any relationships being copied?
+
   dumpRels("idsOfCoupleRelationshipsToCopy", coupleRelInfoMap);
   dumpRels("idsOfParentChildRelationshipsToCopy", parentChildRelInfoMap);
+
   dumpRels("idsOfCoupleRelationshipsToDelete", coupleRelInfoMap);
   dumpRels("idsOfParentChildRelationshipsToDelete", parentChildRelInfoMap);
+  console.log();
+  console.log("Split Object JSON:");
+  console.log(JSON.stringify(splitObject, null, 2));
+  console.log();
 }
 
 function createSplitObject(grouper) {
@@ -4250,6 +4347,10 @@ class Element {
     this.isSelectedForSplit = false;
   }
 
+  isConclusion() {
+    return this.type === TYPE_FACT || this.type === TYPE_GENDER || this.type === TYPE_NAME;
+  }
+
   getSelected(isKeep) {
     return isKeep ? this.isSelectedForKeep : this.isSelectedForSplit;
   }
@@ -4490,13 +4591,19 @@ class Split {
     let allFacts = copyFacts(person.facts);
     populateExtraNamesAndFacts(); // adds to extraNames and allFacts
     fixEventOrder({"facts" : allFacts});
+
     addElements(person.names, TYPE_NAME, extraNames.length > 0);
     addElements(extraNames, TYPE_NAME);
+
     let genderElement = addElement(person.gender, TYPE_GENDER);
     genderElement.direction = DIR_COPY;
+    genderElement.isSelectedForKeep = true;
     genderElement.isSelectedForSplit = true;
+
     addElements(allFacts, TYPE_FACT, allFacts && allFacts.length > countCurrent(person.facts));
+
     addRelationshipElements(gedcomx); // future: find other relationships that were removed along the way.
+
     if (person.sources) {
       person.sources.sort(compareSourceReferences);
       addElements(person.sources, TYPE_SOURCE);
@@ -6131,10 +6238,10 @@ const KEPT_ORIG_STATUS    = 'kept-orig'; // On original identity of survivor and
 const KEPT_ADDED_STATUS   = 'kept-added'; // Added after original identity of survivor and kept during merge
 const KEPT_DELETED_STATUS = 'kept-deleted'; // On survivor but deleted before the most recent merge
 
-function isCurrentStatus(element) {
-  return element.status === ORIG_STATUS     || element.status === ADDED_STATUS || element.status === CHANGED_STATUS
-    || element.status === MERGE_ORIG_STATUS || element.status === MERGE_ADDED_STATUS
-    || element.status === KEPT_ORIG_STATUS  || element.status === KEPT_ADDED_STATUS;
+function isCurrentStatus(item) {
+  return item.status === ORIG_STATUS     || item.status === ADDED_STATUS || item.status === CHANGED_STATUS
+    || item.status === MERGE_ORIG_STATUS || item.status === MERGE_ADDED_STATUS
+    || item.status === KEPT_ORIG_STATUS  || item.status === KEPT_ADDED_STATUS;
 }
 
 // Tell whether an object (fact or relationship) should be included, based on
