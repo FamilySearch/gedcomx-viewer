@@ -1339,6 +1339,36 @@
       $("#new-person").modal("show");
     };
 
+    editHooks.movePerson = function(sourcePersonId, destPersonId) {
+      function getPersonIndex(personId) {
+        if (personId) {
+          for (let i = 0; i < doc.persons.length; i++) {
+            if (doc.persons[i].id === personId) {
+              return i;
+            }
+          }
+        }
+        return doc.persons.length;
+      }
+
+      let doc = editor.get();
+      if (!doc || !doc.persons) {
+        return;
+      }
+      let sourcePersonIndex = getPersonIndex(sourcePersonId);
+      let sourcePerson = doc.persons.splice(sourcePersonIndex, 1)[0]; // remove from the original position
+      let destPersonIndex = getPersonIndex(destPersonId);
+      if (destPersonIndex === -1) {
+        // If the destination person was not found, just append to the end of the list.
+        doc.persons.push(sourcePerson);
+      }
+      else {
+        // Otherwise, insert before the destination person.
+        doc.persons.splice(destPersonIndex, 0, sourcePerson);
+      }
+      updateRecord(doc);
+    }
+
     /*
       UpdatePersonNameFromHighlight
       Gets the text area of 'source-document' and checks for highlighted text. Then parses into 'new-person' modal
@@ -2953,6 +2983,9 @@
       // });
 
       $("#record").on("drop", function(je) {
+        if (draggedPersonId) {
+          return;
+        }
         let e = je.originalEvent;
         e.preventDefault();
         e.stopPropagation();
@@ -2969,11 +3002,17 @@
         }
         uploadGedcomx(files);
       }).on("dragover", function(je) {
+        if (draggedPersonId) {
+          return;
+        }
         let e = je.originalEvent;
         e.preventDefault();
         e.stopPropagation();
         $(this).addClass("dragging");
       }).on("dragleave", function(je) {
+        if (draggedPersonId) {
+          return;
+        }
         let e = je.originalEvent;
         e.preventDefault();
         e.stopPropagation();

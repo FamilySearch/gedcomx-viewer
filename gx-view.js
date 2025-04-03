@@ -239,11 +239,87 @@ function buildPersonsUI(doc, idMap, path, editHooks) {
   for (let i = 0; i < doc.persons.length; i++) {
     persons.append(buildPersonUI(doc, doc.persons[i], idMap, path + '[' + i + "]", editHooks));
   }
+  persons.append(makeEmptyPersonDropZone());
   return persons;
+}
+
+function makeEmptyPersonDropZone() {
+  let emptyPerson = div({ class: "person card m-3 empty-drop-zone", id: "empty-person-drop-zone", text: "Move to end" });
+  emptyPerson.hide();
+  emptyPerson.on('dragover', function (ev) {
+    if (draggedPersonId) {
+      // Allow dropping on this element.
+      ev.preventDefault(); // Necessary to allow dropping
+      // Visually indicate this is a valid drop target
+      emptyPerson.addClass("highlight-drop-zone");
+    }
+  }).on('dragleave', function (ev) {
+    if (draggedPersonId) {
+      emptyPerson.removeClass("highlight-drop-zone");
+    }
+  }).on('drop', function (ev) {
+    if (draggedPersonId) {
+      ev.preventDefault(); // Prevent default handling of the drop
+      let sourcePersonId = draggedPersonId;
+      if (sourcePersonId) {
+        // Call a function to handle the move to the end of the list.
+        editHooks.movePerson(sourcePersonId, null); // Move to end
+      }
+      ev.stopPropagation();
+    }
+    finishDraggingPerson();
+  });
+  return emptyPerson;
+}
+
+let draggedPersonId = null;
+
+function makePersonCardDraggable(personCard) {
+  const personId = personCard.attr("id");
+  personCard.attr('draggable', true);
+  personCard.on('dragstart', function (ev) {
+    draggedPersonId = personId;
+    $("#empty-person-drop-zone").show();
+  })
+  personCard.on('dragover', function (ev) {
+    if (draggedPersonId && personId !== draggedPersonId) {
+      ev.preventDefault(); // Necessary to allow dropping
+      personCard.addClass("highlight-drop-zone");
+    }
+  })
+  personCard.on('dragleave', function (ev) {
+    if (draggedPersonId && personId !== draggedPersonId) {
+      personCard.removeClass("highlight-drop-zone");
+    }
+  })
+  personCard.on('drop', function (ev) {
+    console.log("Dropped on person card: " + personId);
+    if (draggedPersonId && personId !== draggedPersonId) {
+      ev.preventDefault(); // Prevent default handling of the drop
+      let sourcePersonId = draggedPersonId; //ev.dataTransfer.getData("text/plain"); // Get the id of the dragged person
+      if (sourcePersonId && sourcePersonId !== personId) {
+        editHooks.movePerson(sourcePersonId, personId); // Call a function to handle the move
+      }
+      ev.stopPropagation();
+    }
+    finishDraggingPerson();
+  }).on('dragend', function (ev) {
+    finishDraggingPerson();
+  })
+}
+
+function finishDraggingPerson() {
+  if (draggedPersonId) {
+    draggedPersonId = null;
+    $("#empty-person-drop-zone").hide().removeClass("highlight-drop-zone"); // Hide the empty drop zone after the drop
+    console.log("Done dragging");
+  }
 }
 
 function buildPersonUI(doc, person, idMap, path, editHooks) {
   let personCard = div({ class: "person card m-3", id: encode(person.id)} );
+  makePersonCardDraggable(personCard);
+
   let personCardBody = div({class: "card-body p-0"}).appendTo(personCard);
   let personCardTitle =  $("<h3/>", {class: "card-title card-header"}).appendTo(personCardBody);
 
@@ -340,7 +416,9 @@ function buildPrincipalBadge(person, path, editHooks) {
 
 function buildPersonIdBadge(person, idMap) {
   let localId = idMap[person.id];
-  return span({class: "local-pid badge badge-pill badge-info"}).append(span({class: "oi oi-person", title: "person", "aria-hidden": "true"})).append($("<small/>").text(localId));
+  return span({class: "local-pid badge badge-pill badge-info"})
+    .append(span({class: "oi oi-person", title: "person", "aria-hidden": "true"}))
+    .append($("<small/>").text(localId));
 }
 
 function buildNamesUI(person, path, editHooks) {

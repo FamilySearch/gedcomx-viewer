@@ -92,3 +92,10 @@ pre {
     font-weight: normal;
     text-decoration: none;
 }
+
+.highlight-drop-zone {
+    /* Highlight for drop zones when dragging */
+    outline: 2px dashed lightblue; /* Blue dashed outline */
+    outline-offset: 2px; /* Adjust to fit within the element */
+    background-color: lightyellow; /* Light blue background for visibility */
+}
